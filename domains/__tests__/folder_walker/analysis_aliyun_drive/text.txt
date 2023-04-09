@@ -1,0 +1,30 @@
+normal01 __root/name1/s01/e01.mp4__@@正常1
+	- 大理寺日志
+	- 地下交通站
+	- 一起同过窗
+normal02 __root/name1/e01.mp4__@@正常2
+	- 风犬少年的天空
+	- 还珠格格
+normal04 __root/name1/name1.e01.mp4@@正常4
+	- 风起洛阳
+	- 还珠格格
+	- 毛骗
+normal06 __root/name1/s01/s01.e01.mp4@@正常6
+	- 毛骗
+normal07 __root/name1/s01.e01.mp4@@正常7
+	- 第九节课
+normal09 __root/name1/s01/name1.s01.e01.mp4@@正常9
+	- 毛骗
+	- 无心法师
+	- 一起同过窗
+normal10 __root/name1/name1.s01.e01.mp4@@正常10
+	- 老友记
+	- 还珠格格
+	- 鸡毛飞上天
+	- 风吹半夏
+
+tip03 __root/name1/s02/name1.s01.e01.mp4@@需要提示3
+	- 大理寺日志
+	- 魔幻手机
+tip04 __root/name2/s01/name1.s01.e01.mp4@@需要提示4
+	- 魔幻手机
