@@ -1,12 +1,12 @@
 {
-  "name": "avideo",
+  "name": "@family-flix/api",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3100",
     "build": "next build",
     "check": "tsc --noEmit",
-    "start": "next start --port 8001",
+    "start": "next start --port 3200",
     "schedule": "vite-node scripts/schedule",
     "lint": "next lint",
     "test": "vitest run"
@@ -56,8 +56,7 @@
     "tailwind-merge": "^1.10.0",
     "tailwindcss-animate": "^1.0.5",
     "tapable": "^2.2.1",
-    "typescript": "4.9.4",
-    "xgplayer": "^2.32.2"
+    "typescript": "4.9.4"
   },
   "devDependencies": {
     "@tailwindcss/line-clamp": "^0.4.2",
@@ -69,6 +68,7 @@
     "autoprefixer": "^10.4.13",
     "husky": "^8.0.3",
     "postcss": "^8.4.21",
+    "prisma": "^4.12.0",
     "tailwindcss": "^3.2.4",
     "vite-node": "^0.28.3",
     "vitest": "^0.28.2"

@@ -1,3 +1,6 @@
+/**
+ * @file 对比本地数据库和云盘的文件差异
+ */
 require("dotenv").config();
 
 import { DiffTypes } from "@/domains/folder_differ";
@@ -7,7 +10,12 @@ import { store } from "@/store/sqlite";
 import { diff_folder_with_drive_folder } from "./diff_folder_with_drive";
 
 async function main() {
-  const effects_on_drive_res = await diff_folder_with_drive_folder({}, store);
+  const effects_on_drive_res = await diff_folder_with_drive_folder(
+    {
+      drives: [],
+    },
+    store
+  );
   if (effects_on_drive_res.error) {
     return;
   }

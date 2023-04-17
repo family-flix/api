@@ -139,10 +139,6 @@ const TVProfileInAdminPage = () => {
                           console.log(episode);
                         },
                       },
-                      // {
-                      //   label: "播放",
-                      //   on_click() {},
-                      // },
                     ]}
                   >
                     <div className="mt-8 space-y-4 ">

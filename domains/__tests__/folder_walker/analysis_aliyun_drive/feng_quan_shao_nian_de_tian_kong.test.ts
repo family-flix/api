@@ -6,7 +6,7 @@ import {
   data,
   id,
 } from "@/domains/__tests__/mock/feng_quan_shao_nian_de_tian_kong";
-import { analysis_aliyun_drive } from "@/domains/walker/analysis_aliyun_drive";
+import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 
 import { test_store as store } from "../../store";
 
@@ -48,7 +48,7 @@ describe("detect a tv dir", () => {
     if (adding_res.error) {
       return;
     }
-    const r = await analysis_aliyun_drive({
+    const r = await walk_drive({
       user_id,
       drive_id,
       client: fetch_files_factory({

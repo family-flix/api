@@ -891,12 +891,12 @@ export async function get_tv_profile_with_first_season_by_id(
  * @param options
  * @returns
  */
-async function find_first_matched_tv_of_tmdb(
+export async function find_first_matched_tv_of_tmdb(
   name: string,
-  options: {
+  options: Partial<{
     /** TMDB token */
     token: string;
-  }
+  }>
 ) {
   const { token } = options;
   const tmdb_client = new TMDBClient({

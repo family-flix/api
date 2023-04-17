@@ -101,28 +101,43 @@ const MemberManagePage = () => {
                           return null;
                         }
                         return (
-                          <div className="space-y-4">
+                          <div className="mt-4 space-y-4">
                             {links.map((link) => {
-                              const { id, link: url, used } = link;
+                              const { id, token, used } = link;
                               return (
-                                <div key={id} className="flex items-center">
-                                  {used ? null : (
-                                    <div className="mr-4">
-                                      <CopyAndCheckIcon
-                                        on_click={() => {
-                                          copy(url);
-                                        }}
-                                      />
-                                    </div>
-                                  )}
-                                  <div
-                                    className={cn(
-                                      "w-full text-sm break-all whitespace-pre-wrap",
-                                      used ? "line-through" : ""
-                                    )}
-                                  >
-                                    {url}
-                                  </div>
+                                <div key={id} className="space-y-2">
+                                  {[
+                                    "https://dev.funzm.com",
+                                    "https://video-pc-dev.funzm.com",
+                                    "http://video.funzm.com",
+                                    "http://beta.funzm.com",
+                                  ].map((prefix) => {
+                                    const url = `${prefix}${token}`;
+                                    return (
+                                      <div
+                                        key={id}
+                                        className="flex items-center"
+                                      >
+                                        {used ? null : (
+                                          <div className="mr-4">
+                                            <CopyAndCheckIcon
+                                              on_click={() => {
+                                                copy(url);
+                                              }}
+                                            />
+                                          </div>
+                                        )}
+                                        <div
+                                          className={cn(
+                                            "w-full text-sm break-all whitespace-pre-wrap",
+                                            used ? "line-through" : ""
+                                          )}
+                                        >
+                                          {url}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               );
                             })}

@@ -4,7 +4,7 @@
 import dayjs from "dayjs";
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { analysis_aliyun_drive } from "@/domains/walker/analysis_aliyun_drive";
+import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 import { store_factory } from "@/store";
 
 import { notice_error, notice_push_deer } from "./notice";
@@ -71,7 +71,7 @@ export async function walk_added_files(
         type: type === FileType.File ? "file" : "folder",
       };
     });
-    const r = await analysis_aliyun_drive({
+    const r = await walk_drive({
       user_id,
       drive_id: id,
       files,

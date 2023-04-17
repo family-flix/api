@@ -133,7 +133,7 @@ gray:
 		git merge $$branch && \
 		git push && \
 		git checkout $$branch;
-	@ echo "\n🚧自动发布中，可在此查看进度 http://ci.wpt.la/job/xcx-wpt/";
+	@ echo "\n🚧自动发布中";
 
 # 新建gray分支
 newGray:
@@ -146,7 +146,7 @@ newGray:
 		git merge $$branch && \
 		git push --set-upstream origin gray --force && \
 		git checkout $$branch;
-	@ echo "\n🚧自动发布中，可在此查看进度 http://ci.wpt.la/job/xcx-wpt/";
+	@ echo "\n🚧自动发布中";
 
 
 pre:
@@ -156,7 +156,7 @@ pre:
 	git checkout -b prepublish;
 	git push origin prepublish --force;
 	git checkout main;
-	@ echo "\n🚧自动发布中，可在此查看进度 http://ci.wpt.la/job/xcx-wpt/";
+	@ echo "\n🚧自动发布中";
 
 reset:
 	@echo "------以下为你的commit信息-------"

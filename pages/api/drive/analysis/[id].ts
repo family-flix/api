@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { analysis_aliyun_drive } from "@/domains/walker/analysis_aliyun_drive";
+import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { store } from "@/store/sqlite";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
@@ -40,7 +40,7 @@ export default async function handler(
     drive_id,
     store,
   });
-  const resp = await analysis_aliyun_drive({
+  const resp = await walk_drive({
     drive_id,
     user_id,
     client,

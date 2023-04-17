@@ -1,7 +1,6 @@
 /**
  * @file 对比两次遍历文件夹的差异
  */
-require("dotenv").config();
 import {
   AliyunDriveFile,
   AliyunDriveFolder,
@@ -99,7 +98,8 @@ export class FolderDiffer {
       "[DOMAIN](FolderDiffer)prev files and cur files",
       prev_files.map((f) => f.name),
       cur_files.map((f) => f.name),
-      this.maybe_deleting
+      Object.keys(this.maybe_deleting),
+      Object.keys(this.maybe_adding)
     );
     // log("[DOMAIN](FolderDiffer)effect length", this.effects.length);
     if (r1.data.length === 0 && r2.data.length === 0) {
@@ -185,7 +185,7 @@ export class FolderDiffer {
       return;
     }
     if (prev_files.length !== 0 && cur_files.length === 0) {
-      const maybe_deleting = prev_files
+      const map = prev_files
         .map((file) => {
           const unique_key = file.context
             .map((f) => f[this.unique_key])
@@ -201,9 +201,24 @@ export class FolderDiffer {
             ...c,
           };
         }, {});
+      for (let i = 0; i < prev_files.length; i += 1) {
+        const prev_file = prev_files[i];
+        const unique_key = prev_file.context
+          .map((f) => f[this.unique_key])
+          .concat(prev_file[this.unique_key])
+          .join("/");
+        if (this.maybe_adding[unique_key]) {
+          log(
+            "[DOMAIN](FolderDiffer)existing maybe adding, so delete it",
+            this.maybe_adding[unique_key].name
+          );
+          delete this.maybe_adding[unique_key];
+          delete map[unique_key];
+        }
+      }
       this.maybe_deleting = {
         ...this.maybe_deleting,
-        ...maybe_deleting,
+        ...map,
       };
       await this.run();
       return;

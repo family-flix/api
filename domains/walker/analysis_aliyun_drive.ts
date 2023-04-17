@@ -1,5 +1,5 @@
 /**
- * @file 遍历指定阿里云盘并索引、保存影片
+ * @file 刮削指定阿里云盘
  */
 import { throttle } from "lodash/fp";
 
@@ -20,21 +20,28 @@ import {
   need_skip_the_file_when_walk,
 } from "./utils";
 
-export async function analysis_aliyun_drive(options: {
+/** 刮削网盘云盘 */
+export async function walk_drive(options: {
+  /** 用户 id */
   user_id: string;
+  /** 网盘 id */
   drive_id: string;
-  /** 仅需要处理的文件夹/文件 */
+  /** 不全量刮削网盘，仅处理这些文件夹/文件 */
   files?: {
+    /** 文件名 */
     name: string;
+    /** 文件类型 */
     type: string;
   }[];
   /**
    * 用来遍历文件夹的客户端
    */
   client: AliyunDriveClient;
+  /** 存储 */
   store: ReturnType<typeof store_factory>;
+  /** 从 TMDB 搜索到匹配的结果后，是否需要将海报等图片上传到 cdn */
   need_upload_image?: boolean;
-  /** 是否等待完成 */
+  /** 是否等待完成（默认都不等待，单测时可以等待） */
   wait_complete?: boolean;
 }) {
   const {
@@ -46,7 +53,6 @@ export async function analysis_aliyun_drive(options: {
     need_upload_image = true,
     wait_complete = false,
   } = options;
-  const { operation } = store;
   const check_need_stop = throttle(3000, async (id) => {
     const r = await store.find_async_task({ id });
     if (r.error) {
@@ -126,12 +132,14 @@ export async function analysis_aliyun_drive(options: {
           break;
         }
       }
+      // console.log("check need filter file", cur_file.name, need_skip_file);
       // console.log("[INFO]need skip", cur_file.name, need_skip_file);
       return need_skip_file;
     };
   }
   walker.on_file = async (folder) => {
     const { name } = folder;
+    // console.log('[]walk on file', name);
     await adding_folder_when_walk(folder, { user_id, drive_id }, store);
     await store.delete_tmp_folder({
       name,
@@ -139,10 +147,16 @@ export async function analysis_aliyun_drive(options: {
       user_id,
     });
   };
+  walker.on_error = (file) => {
+    console.log('[]walk on error', file.name);
+  };
+  walker.on_warning = (file) => {
+    console.log('[]walk on warning', file.name);
+  };
   let count = 0;
   walker.on_episode = async (tasks) => {
+    console.log('[]walk on episode', tasks.episode.file_name);
     const r = await check_need_stop(async_task_id);
-    // console.log("checked need stop", r?.data);
     if (r && r.data) {
       need_stop = true;
       walker.stop = true;
@@ -152,16 +166,17 @@ export async function analysis_aliyun_drive(options: {
     count += 1;
     return;
   };
-  // walker.on_movie = async (tasks) => {
-  //   const r = await check_need_stop(async_task_id);
-  //   if (r && r.data) {
-  //     need_stop = true;
-  //     walker.stop = true;
-  //     return;
-  //   }
-  //   await adding_episode_when_walk(tasks, { user_id, drive_id }, store);
-  //   return;
-  // };
+  walker.on_movie = async (tasks) => {
+    console.log('[]walk on movie', tasks);
+    // const r = await check_need_stop(async_task_id);
+    // if (r && r.data) {
+    //   need_stop = true;
+    //   walker.stop = true;
+    //   return;
+    // }
+    // await adding_episode_when_walk(tasks, { user_id, drive_id }, store);
+    // return;
+  };
   const folder = new AliyunDriveFolder(folder_id, {
     client,
   });
@@ -174,14 +189,17 @@ export async function analysis_aliyun_drive(options: {
       await stop_task_and_clear(async_task_id);
       return;
     }
-    await hidden_empty_tv({ user_id, drive_id, async_task_id }, operation);
+    await hidden_empty_tv(
+      { user_id, drive_id, async_task_id },
+      store.operation
+    );
     if (need_stop) {
       await stop_task_and_clear(async_task_id);
       return;
     }
     log("[](analysis_aliyun_drive)before search_tv_in_tmdb_then_update_tv");
     await search_tv_in_tmdb_then_update_tv(
-      { user_id, drive_id, need_upload_image, operation },
+      { user_id, drive_id, need_upload_image, operation: store.operation },
       {
         on_stop() {
           return Result.Ok(need_stop);
@@ -192,7 +210,7 @@ export async function analysis_aliyun_drive(options: {
       await stop_task_and_clear(async_task_id);
       return;
     }
-    await merge_same_tv_and_episodes({ user_id, drive_id }, operation, {
+    await merge_same_tv_and_episodes({ user_id, drive_id }, store.operation, {
       on_stop() {
         return Result.Ok(need_stop);
       },
@@ -201,7 +219,7 @@ export async function analysis_aliyun_drive(options: {
       await stop_task_and_clear(async_task_id);
       return;
     }
-    await hidden_empty_tv({ user_id, drive_id }, operation);
+    await hidden_empty_tv({ user_id, drive_id }, store.operation);
     await store.update_async_task(async_task_id, {
       status: "Finished",
     });

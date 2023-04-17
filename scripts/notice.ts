@@ -70,22 +70,25 @@ export async function notice_push_deer(
 /**
  * 向 push deer 推送错误提示信息
  */
-export function notice_error(result: Result<unknown> | string | Error) {
+export function notice_error(
+  result: Result<unknown> | string | Error,
+  reason: string = ""
+) {
   if (typeof result === "string") {
     return notice_push_deer({
       title: "ERROR",
-      markdown: result,
+      markdown: reason + result,
     });
   }
   if (result instanceof Error) {
     return notice_push_deer({
       title: "ERROR",
-      markdown: result.message,
+      markdown: reason + result.message,
     });
   }
   const msg = result.error === null ? "Unknown error?" : result.error.message;
   return notice_push_deer({
     title: "ERROR",
-    markdown: msg,
+    markdown: reason + msg,
   });
 }

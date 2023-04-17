@@ -208,6 +208,7 @@ export async function search_tv_in_tmdb(
       original_name: string;
       overview: string;
       poster_path: string;
+      first_air_date: string;
       searched_tv_id: string;
     }>
   >(`/api/tmdb/search`, {
@@ -270,13 +271,17 @@ export async function fetch_members(params: FetchParams) {
       const { links } = member;
       return {
         ...member,
-        links: links.map((link) => {
-          const { link: pathname } = link;
-          return {
-            ...link,
-            link: `${window.location.protocol}//${window.location.host}${pathname}`,
-          };
-        }),
+        tokenCount: links.length,
+        links: links
+          .map((link) => {
+            const { link: pathname } = link;
+            return {
+              ...link,
+              link: `${window.location.protocol}//${window.location.host}${pathname}`,
+              token: pathname,
+            };
+          })
+          .filter((t) => !t.used),
       };
     }),
   });

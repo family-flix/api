@@ -6,6 +6,7 @@ import { Result, Unpacked, UnpackedResult } from "@/types";
 import { query_stringify } from "@/utils";
 
 const API_HOST = "https://api.themoviedb.org/3";
+// const API_HOST = 'https://proxy-tmdb.litao.workers.dev/';
 export type Language = "zh-CN" | "en-US";
 export type TMDBRequestCommentPart = {
   /** tmdb api key */

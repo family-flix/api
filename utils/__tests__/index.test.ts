@@ -947,6 +947,17 @@ describe("提取视频信息", () => {
       episode_name: "",
     });
   });
+  test("01国语.mp4", () => {
+    const name = "01国语.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E01",
+      episode_name: "",
+    });
+  });
 });
 
 describe.skip("是否是季数", () => {
