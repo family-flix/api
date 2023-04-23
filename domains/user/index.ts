@@ -1,120 +1,112 @@
-import { Result } from "@/types";
-import {
-  fetch_user_profile,
-  get_token,
-  login,
-  validate_member_token,
-} from "./services";
+import Joi from "joi";
 
-export class CurUser {
-  _is_login: boolean = false;
-  user: {
-    username: string;
-    avatar: string;
-    token: string;
-  } | null = null;
-  token: string = "";
-  values: Partial<{ email: string; password: string }> = {};
+import { prisma } from "@/store";
+import { Result, resultify } from "@/types";
+import { random_string } from "@/utils";
 
-  constructor() {
-    if (typeof window === "undefined") {
-      return;
+import { Credentials } from "./services";
+import { compare, prepare } from "./utils";
+import { encode_token } from "./jwt";
+
+const credentialsSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{8,30}$")).required(),
+});
+
+export class User {
+  nickname: string = "unknown";
+  /** token 秘钥 */
+  secret: string;
+
+  constructor(options: Partial<{ secret: string }>) {
+    const { secret = "FLIX" } = options;
+    if (!secret) {
+      throw new Error("Missing token secret");
     }
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    this._is_login = !!user;
-    this.user = user;
-    this.token = user ? user.token : "";
-  }
-  get is_login() {
-    return this._is_login;
-  }
-  input_email(value: string) {
-    this.values.email = value;
-  }
-  input_password(value: string) {
-    this.values.password = value;
-  }
-  async login() {
-    const { email, password } = this.values;
-    if (!email) {
-      return Result.Err("Missing email");
-    }
-    if (!password) {
-      return Result.Err("Missing password");
-    }
-    const r = await login({ email, password });
-    if (r.error) {
-      this.notice_error(r);
-      return r;
-    }
-    // this.values = {};
-    this._is_login = true;
-    this.user = r.data;
-    this.token = r.data.token;
-    localStorage.setItem("user", JSON.stringify(r.data));
-    return Result.Ok(r.data);
-  }
-  /**
-   * 以成员身份登录
-   */
-  async login_in_member(token: string) {
-    if (this._is_login) {
-      return Result.Ok(this.user);
-    }
-    const r = await validate_member_token(token);
-    if (r.error) {
-      this.notice_error(r);
-      return r;
-    }
-    const t = r.data.token;
-    this.user = {
-      username: "",
-      avatar: "",
-      token: t,
-    };
-    this._is_login = true;
-    localStorage.setItem("user", JSON.stringify(r.data));
-    this.token = t;
-    return Result.Ok({ ...this.user });
-  }
-  logout() {}
-  async register() {
-    const { email, password } = this.values;
-    if (!email) {
-      return Result.Err("Missing email");
-    }
-    if (!password) {
-      return Result.Err("Missing password");
-    }
-    // const r = await login({ email, password });
-    // this.values = {};
-    // if (r.error) {
-    //   this.notice_error(r);
-    //   return r;
-    // }
-    // this.user = r.data;
-    // this.token = r.data.token;
-    // localStorage.setItem("user", JSON.stringify(r.data));
-    return Result.Ok(null);
-  }
-  async fetch_profile() {
-    if (!this._is_login) {
-      return Result.Err("请先登录");
-    }
-    const r = await fetch_user_profile();
-    if (r.error) {
-      return r;
-    }
-    console.log(r.data);
+    this.secret = secret;
   }
 
-  notice_error(result: Result<null> | string) {
-    if (typeof result === "string") {
-      alert(result);
-      return;
+  /** 补全信息 */
+  async register(values: Partial<{ email: string; password: string }>) {
+    const r = await resultify(
+      credentialsSchema.validateAsync.bind(credentialsSchema)
+    )(values);
+    if (r.error) {
+      return Result.Err(r.error);
     }
-    alert(result.error.message);
+    const { email, password: pw } = values as Credentials;
+    const existing_user = await prisma.credential.findUnique({
+      where: { email },
+    });
+    if (existing_user !== null) {
+      return Result.Err("该邮箱已注册");
+    }
+    const { password, salt } = await prepare(pw);
+    const created_user = await prisma.user.create({
+      data: {
+        id: random_string(15),
+      },
+    });
+    const { id: user_id } = created_user;
+    const nickname = email.split("@").shift();
+    await prisma.credential.create({
+      data: {
+        id: random_string(15),
+        user_id: created_user.id,
+        email,
+        password,
+        salt,
+      },
+    });
+    await prisma.profile.create({
+      data: {
+        id: random_string(15),
+        user_id: created_user.id,
+        nickname,
+      },
+    });
+    const token = await encode_token({
+      token: {
+        id: created_user.id,
+      },
+      secret: this.secret,
+    });
+    return Result.Ok({
+      id: user_id,
+      token,
+    });
+  }
+  /** 密码登录 */
+  async login_with_password(
+    values: Partial<{ email: string; password: string }>
+  ) {
+    const r = await resultify(
+      credentialsSchema.validateAsync.bind(credentialsSchema)
+    )(values);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { email, password } = values as Credentials;
+    const credential = await prisma.credential.findUnique({
+      where: { email },
+      include: {
+        user: true,
+      },
+    });
+    if (credential === null) {
+      return Result.Err("该邮箱不存在");
+    }
+    const matched = await compare(credential, password);
+    if (!matched) {
+      return Result.Err("密码错误");
+    }
+    const { id: user_id } = credential.user;
+    const token = await encode_token({
+      token: {
+        id: user_id,
+      },
+      secret: this.secret,
+    });
+    return Result.Ok({ id: user_id, token });
   }
 }
-
-export const user = new CurUser();

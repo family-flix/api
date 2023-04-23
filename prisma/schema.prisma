@@ -7,437 +7,493 @@ datasource db {
         url      = env("DATABASE_PATH")
 }
 
-model drive {
-        id               String  @id
-        created          String  @default("")
-        updated          String  @default("")
+model Drive {
+        id               String    @id
+        created          DateTime  @default(now())
+        updated          DateTime  @default(now())
         // 网盘名称（备注）
-        name             String? @default("")
+        name             String?   @default("")
         // 阿里云对网盘的唯一标志，每次请求都需要带上该参数
-        drive_id         String? @default("")
+        drive_id         String?   @default("")
         // 阿里云对网盘在该设备下的id？
-        device_id        String? @default("")
+        device_id        String?   @default("")
         // 网盘 user_id
-        aliyun_user_id   String? @default("")
+        aliyun_user_id   String?   @default("")
         // 网盘提供的名称
-        user_name        String? @default("")
+        user_name        String?   @default("")
         // 网盘提供的名称
-        nick_name        String? @default("")
+        nick_name        String?   @default("")
         // 网盘提供的头像
-        avatar           String? @default("")
+        avatar           String?   @default("")
         // 网盘提供的
-        app_id           String? @default("")
+        app_id           String?   @default("")
         // 总大小
-        total_size       Float?  @default(0)
+        total_size       Float?    @default(0)
         // 已使用
-        used_size        Float?  @default(0)
+        used_size        Float?    @default(0)
         // 是否禁用
-        invalid          Float?  @default(0)
+        invalid          Float?    @default(0)
         // 最近一次索引该网盘的时间
-        latest_analysis  String? @default("")
+        latest_analysis  DateTime?
         // 网盘用于存放影视剧的目录
-        root_folder_name String? @default("")
+        root_folder_name String?   @default("")
         // 网盘用于存放影视剧的目录 file_id
-        root_folder_id   String? @default("")
+        root_folder_id   String?   @default("")
+
         // 属于哪个用户
-        user_id          String? @default("")
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
 
-        @@index([created])
+        DriveToken    DriveToken[]
+        DriveAnalysis DriveAnalysis[]
+        DriveCheckIn  DriveCheckIn[]
+        TV            TV[]
+        Episode       Episode[]
+        Movie         Movie[]
+        Folder        Folder[]
+        TmpFolder     TmpFolder[]
 }
 
-model drive_token {
-        id            String  @id
-        created       String  @default("")
-        updated       String  @default("")
-        access_token  String? @default("")
-        refresh_token String? @default("")
-        expired_at    String? @default("")
+model DriveToken {
+        id            String   @id
+        created       DateTime @default(now())
+        updated       DateTime @default(now())
+        access_token  String
+        refresh_token String
+        expired_at    String?  @default("")
+
         // 关联 drive 表
-        drive_id      String? @default("")
-
-        @@index([created])
+        drive_id String
+        drive    Drive  @relation(fields: [drive_id], references: [id])
 }
 
-model async_task {
-        id             String  @id
-        created        String  @default("")
-        updated        String  @default("")
-        status         String? @default("")
-        error_messages String? @default("")
-        unique_id      String? @default("")
-        desc           String? @default("")
-        need_stop      Float?  @default(0)
+model AsyncTask {
+        id             String   @id
+        created        DateTime @default(now())
+        updated        DateTime @default(now())
+        status         String?  @default("")
+        error_messages String?  @default("")
+        unique_id      String
+        desc           String?  @default("")
+        need_stop      Float?   @default(0)
+
         // 关联 user 表
-        user_id        String? @default("")
-
-        @@index([created])
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
 }
 
-model drive_analysis {
-        id       String  @id
-        created  String  @default("")
-        updated  String  @default("")
-        drive_id String? @default("")
+model DriveAnalysis {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
 
-        @@index([created])
+        drive_id String
+        drive    Drive  @relation(fields: [drive_id], references: [id])
 }
 
-model drive_check_in {
-        id         String  @id
-        created    String  @default("")
-        updated    String  @default("")
+model DriveCheckIn {
+        id         String    @id
+        created    DateTime  @default(now())
+        updated    DateTime  @default(now())
         // 签到时间
-        checked_at String? @default("")
-        // 关联 drive 表
-        drive_id   String? @default("")
+        checked_at DateTime?
 
-        @@index([created])
+        // 关联 drive 表
+        drive_id String
+        drive    Drive  @relation(fields: [drive_id], references: [id])
 }
 
-model episode {
-        id             String  @id
-        created        String  @default("")
-        updated        String  @default("")
+model Episode {
+        id             String   @id
+        created        DateTime @default(now())
+        updated        DateTime @default(now())
         // 第几集
-        episode        String? @default("")
+        episode        String
         // 第几季
-        season         String? @default("")
+        season         String
         // 网盘文件信息
-        file_id        String? @default("")
-        file_name      String? @default("")
-        parent_file_id String? @default("")
-        parent_paths   String? @default("")
-        size           Float?  @default(0)
-        // 关联 tv 表
-        tv_id          String? @default("")
-        // 关联 drive 表
-        drive_id       String? @default("")
-        // 关联 user 表
-        user_id        String? @default("")
+        file_id        String
+        file_name      String
+        parent_file_id String
+        parent_paths   String
+        size           Float?   @default(0)
 
-        @@index([created])
+        // 关联 tv 表
+        tv_id String
+        tv    TV     @relation(fields: [tv_id], references: [id])
+
+        // 关联 drive 表
+        drive_id String
+        drive    Drive  @relation(fields: [drive_id], references: [id])
+
+        // 关联 user 表
+        user_id     String
+        user        User          @relation(fields: [user_id], references: [id])
+        PlayHistory PlayHistory[]
 }
 
-model folder {
-        id             String  @id
-        created        String  @default("")
-        updated        String  @default("")
+model Folder {
+        id             String   @id
+        created        DateTime @default(now())
+        updated        DateTime @default(now())
         // 文件 id
-        file_id        String? @default("")
+        file_id        String?  @default("")
         // 文件名称
-        name           String? @default("")
+        name           String?  @default("")
         // 父文件夹 file_id
-        parent_file_id String? @default("")
+        parent_file_id String?  @default("")
         // 0文件夹 1文件
-        type           Float?  @default(0)
+        type           Float?   @default(0)
         // 文件大小
-        size           Float?  @default(0)
+        size           Float?   @default(0)
+
         // 关联 drive 表
-        drive_id       String? @default("")
+        drive_id String
+        drive    Drive  @relation(fields: [drive_id], references: [id])
+
         // 关联 user 表
-        user_id        String? @default("")
-
-        @@index([created])
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
 }
 
-model log {
-        id      String  @id
-        created String  @default("")
-        updated String  @default("")
-        title   String? @default("")
-
-        @@index([created])
+model Log {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+        title   String
 }
 
-model member {
-        id       String  @id
-        created  String  @default("")
-        updated  String  @default("")
+model Member {
+        id       String   @id
+        created  DateTime @default(now())
+        updated  DateTime @default(now())
         // 成员邮箱
-        email    String? @default("")
+        email    String?  @default("")
         // 成员名字
-        name     String? @default("")
+        name     String?  @default("")
         // 成员备注
-        remark   String? @default("")
+        remark   String?  @default("")
         // 是否禁用
-        disabled Float?  @default(0)
-        // 关联 user 表
-        owner_id String? @default("")
+        disabled Float?   @default(0)
 
-        @@index([created])
+        // 关联 user 表
+        user_id       String
+        user          User            @relation(fields: [user_id], references: [id])
+        MemberToken   MemberToken[]
+        PlayHistory   PlayHistory[]
+        RecommendedTV RecommendedTV[]
 }
 
-model member_token {
-        id         String  @id
-        created    String  @default("")
-        updated    String  @default("")
+model MemberToken {
+        id         String   @id
+        created    DateTime @default(now())
+        updated    DateTime @default(now())
         // 成员授权凭证
-        token      String? @default("")
+        token      String
         // 该 token 是否被使用
-        used       Float?  @default(0)
+        used       Float?   @default(0)
         // 过期时间
-        expired_at String? @default("")
-        // 关联 member 表
-        member_id  String? @default("")
+        expired_at String?  @default("")
 
-        @@index([created])
+        // 关联 member 表
+        member_id String
+        member    Member @relation(fields: [member_id], references: [id])
 }
 
-model movie {
-        id                String  @id
-        created           String  @default("")
-        updated           String  @default("")
+model Movie {
+        id            String   @id
+        created       DateTime @default(now())
+        updated       DateTime @default(now())
         // 电影名称
-        name              String? @default("")
+        name          String?  @default("")
         // 电影原始名称/外文名称
-        original_name     String? @default("")
+        original_name String?  @default("")
+
         // 关联 user 表
-        user_id           String? @default("")
-        // 关联 drive 表
-        drive_id          String? @default("")
+        user_id  String
+        user     User   @relation(fields: [user_id], references: [id])
         // 关联 searched_movie 表
-        searched_movie_id String? @default("")
+        // searched_movie_id String? @default("")
+        // 关联 drive 表
+        drive_id String
+        drive    Drive  @relation(fields: [drive_id], references: [id])
 
-        @@index([created])
+        PlayHistory PlayHistory[]
 }
 
-model play_history {
-        id           String  @id
-        created      String  @default("")
-        updated      String  @default("")
+model PlayHistory {
+        id           String   @id
+        created      DateTime @default(now())
+        updated      DateTime @default(now())
         // 当前播放的影片总时长
-        duration     Float?  @default(0)
+        duration     Float?   @default(0)
         // 当前播放进度
-        current_time Float?  @default(0)
-        // 关联 episode 表
-        episode_id   String? @default("")
+        current_time Float?   @default(0)
+
         // 关联 member 表
-        member_id    String? @default("")
+        member_id  String
+        member     Member   @relation(fields: [member_id], references: [id])
         // 关联 tv 表
-        tv_id        String? @default("")
+        tv_id      String?  @default("")
+        tv         TV?      @relation(fields: [tv_id], references: [id])
+        // 关联 episode 表
+        episode_id String?  @default("")
+        episode    Episode? @relation(fields: [episode_id], references: [id])
         // 关联 movie 表
-        movie_id     String? @default("")
-
-        @@index([created])
+        movie_id   String?  @default("")
+        movie      Movie?   @relation(fields: [movie_id], references: [id])
 }
 
-model recommended_tv {
-        id        String  @id
-        created   String  @default("")
-        updated   String  @default("")
-        sort      Float?  @default(0)
-        tv_id     String? @default("")
-        member_id String? @default("")
+model RecommendedTV {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+        sort    Float?   @default(0)
 
-        @@index([created])
+        tv_id     String
+        tv        TV     @relation(fields: [tv_id], references: [id])
+        member_id String
+        member    Member @relation(fields: [member_id], references: [id])
 }
 
-model searched_season {
-        id             String  @id
-        created        String  @default("")
-        updated        String  @default("")
+model SearchedSeason {
+        id               String           @id
+        created          DateTime         @default(now())
+        updated          DateTime         @default(now())
         // 首播日期
-        air_date       String? @default("")
+        air_date         String?          @default("")
         // 该季总集数
-        episode_count  Float?  @default(0)
+        episode_count    Float?           @default(0)
         // 季名称
-        name           String? @default("")
+        name             String?          @default("")
         // 季描述
-        overview       String? @default("")
+        overview         String?          @default("")
         // 季海报
-        poster_path    String? @default("")
+        poster_path      String?          @default("")
         // 季数
-        season_number  Float?  @default(0)
+        season_number    Float?           @default(0)
         // tmdb 记录 id
-        tmdb_id        Float?  @default(0)
+        tmdb_id          Float?           @default(0)
         // tmdb 记录 tv id
-        tmdb_tv_id     Float?  @default(0)
+        tmdb_tv_id       Float?           @default(0)
+        tv_need_complete TVNeedComplete[]
+
         // 关联 searched_tv 表
-        searched_tv_id String? @default("")
-
-        @@index([created])
+        searched_tv_id String     @default("")
+        searched_tv    SearchedTV @relation(fields: [searched_tv_id], references: [id])
 }
 
-model searched_tv {
-        id                String  @id
-        created           String  @default("")
-        updated           String  @default("")
+model SearchedTV {
+        id                String   @id
+        created           DateTime @default(now())
+        updated           DateTime @default(now())
         // tmdb 记录 id
-        tmdb_id           Float?  @default(0)
+        tmdb_id           Float?   @default(0)
         // 电视剧名称
-        name              String? @default("")
+        name              String?  @default("")
         // 电视剧原始名称/外文名称
-        original_name     String? @default("")
+        original_name     String?  @default("")
         // 描述
-        overview          String? @default("")
+        overview          String?  @default("")
         // 海报地址
-        poster_path       String? @default("")
+        poster_path       String?  @default("")
         // 背景图片
-        backdrop_path     String? @default("")
+        backdrop_path     String?  @default("")
         // 首播日期
-        first_air_date    String? @default("")
+        first_air_date    String?  @default("")
         // 原始语言，可用来区分日剧、国产还是美剧等
-        original_language String? @default("")
+        original_language String?  @default("")
         // 评分
-        popularity        Float?  @default(0)
+        popularity        Float?   @default(0)
         // 评分
-        vote_average      Float?  @default(0)
+        vote_average      Float?   @default(0)
         // 评分
-        vote_count        Float?  @default(0)
+        vote_count        Float?   @default(0)
 
-        @@index([created])
+        tv_need_complete      TVNeedComplete[]
+        searched_season       SearchedSeason[]
+        searched_tv_with_name SearchedTVWithName[]
+        tv                    TV[]
 }
 
-model searched_tv_with_name {
-        id             String  @id
-        created        String  @default("")
-        updated        String  @default("")
-        name           String? @default("")
-        original_name  String? @default("")
-        searched_tv_id String? @default("")
+model SearchedTVWithName {
+        id            String   @id
+        created       DateTime @default(now())
+        updated       DateTime @default(now())
+        name          String?  @default("")
+        original_name String?  @default("")
 
-        @@index([created])
+        searched_tv_id String     @default("")
+        searched_tv    SearchedTV @relation(fields: [searched_tv_id], references: [id])
 }
 
-// 废弃
-model season {
-        id        String  @id
-        created   String  @default("")
-        season    String? @default("")
-        updated   String  @default("")
-        file_id   String? @default("")
-        file_name String? @default("")
-        tv_id     String? @default("")
-
-        @@index([created])
-}
-
-model shared_file {
-        id      String  @id
-        created String  @default("")
-        updated String  @default("")
+model SharedFile {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
         // 分享链接名称
-        title   String? @default("")
+        title   String
         // 分享链接
-        url     String? @default("")
-        // 关联 user 表
-        user_id String? @default("")
+        url     String
 
-        @@index([created])
+        // 关联 user 表
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
 }
 
-model shared_file_in_progress {
-        id             String  @id
-        created        String  @default("")
-        updated        String  @default("")
+model SharedFileInProgress {
+        id             String   @id
+        created        DateTime @default(now())
+        updated        DateTime @default(now())
         // 关联的分享文件夹 file_id
-        file_id        String? @default("")
+        file_id        String
         // 关联的分享文件夹名称
-        name           String? @default("")
+        name           String
         // 关联的目标文件夹 file_id
-        target_file_id String? @default("")
+        target_file_id String?  @default("")
         // 是否已完结
-        complete       Float?  @default(0)
+        complete       Float?   @default(0)
         // 分享文件夹所属 url
-        url            String? @default("")
+        url            String
         // 该分享文件夹是否失效
-        need_update    Float?  @default(0)
-        // 关联 user 表
-        user_id        String? @default("")
+        need_update    Float?   @default(0)
 
-        @@index([created])
+        // 关联 user 表
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
 }
 
 // 在后台转存后分享文件夹后，在这里会新增一条记录，下次自动索引网盘时仅索引该表内记录
-model tmp_folder {
-        id           String  @id
-        created      String  @default("")
-        updated      String  @default("")
+model TmpFolder {
+        id           String   @id
+        created      DateTime @default(now())
+        updated      DateTime @default(now())
         // 文件夹/文件 名称
-        name         String? @default("")
+        name         String
         // 0文件夹 1文件
-        type         Float?  @default(0)
+        type         Float?   @default(0)
         // 父文件夹路径
-        parent_paths String? @default("")
-        // 关联 user 表
-        user_id      String? @default("")
-        // 关联 drive 表
-        drive_id     String? @default("")
+        parent_paths String
 
-        @@index([created])
+        // 关联 drive 表
+        drive_id String
+        drive    Drive  @relation(fields: [drive_id], references: [id])
+
+        // 关联 user 表
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
 }
 
-model tv {
-        id             String  @id
-        created        String  @default("")
-        updated        String  @default("")
+model TV {
+        id            String   @id
+        created       DateTime @default(now())
+        updated       DateTime @default(now())
         // 根据文件夹/文件名称推测出的电视剧名称
-        name           String? @default("")
+        name          String?  @default("")
         // 根据文件夹/文件名称推测出的电视剧原始名称或外文译名
-        original_name  String? @default("")
+        original_name String?  @default("")
         // 从哪个文件夹推断
-        file_id        String? @default("")
+        file_id       String?  @default("")
         // 从哪个文件夹推断
-        file_name      String? @default("")
+        file_name     String?  @default("")
         // 正确的电视剧名称
-        correct_name   String? @default("")
+        correct_name  String?  @default("")
         // 是否隐藏
-        hidden         Float?  @default(0)
+        hidden        Float?   @default(0)
+
         // 关联 searched_tv 表
-        searched_tv_id String? @default("")
-        // 关联 user 表
-        user_id        String? @default("")
+        searched_tv_id String?
+        searched_tv    SearchedTV? @relation(fields: [searched_tv_id], references: [id])
         // 关联 drive 表
-        drive_id       String? @default("")
-
-        @@index([created])
-}
-
-model tv_need_complete {
-        id                 String  @id
-        created            String  @default("")
-        updated            String  @default("")
-        // 总集数
-        episode_count      Float?  @default(0)
-        // 当前集数
-        cur_count          Float?  @default(0)
+        drive_id       String
+        drive          Drive       @relation(fields: [drive_id], references: [id])
         // 关联 user 表
-        user_id            String? @default("")
-        // 关联 searched_tv 表
-        searched_tv_id     String? @default("")
+        user_id        String
+        user           User        @relation(fields: [user_id], references: [id])
+
+        Episode       Episode[]
+        PlayHistory   PlayHistory[]
+        RecommendedTV RecommendedTV[]
+}
+
+model TVNeedComplete {
+        id            String @id
+        created       String @default("")
+        updated       String @default("")
+        // 总集数
+        episode_count Float? @default(0)
+        // 当前集数
+        cur_count     Float? @default(0)
+
         // 关联 searchd_season 表
-        searched_season_id String? @default("")
+        searched_season_id String
+        searched_season    SearchedSeason @relation(fields: [searched_season_id], references: [id])
 
-        @@index([created])
+        // 关联 searched_tv 表
+        searched_tv_id String
+        searched_tv    SearchedTV @relation(fields: [searched_tv_id], references: [id])
+
+        // 关联 user 表
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
 }
 
-model user {
-        id                     String  @id
-        created                String  @default("")
-        updated                String  @default("")
-        avatar                 String? @default("")
-        email                  String  @default("")
-        emailVisibility        Boolean @default(false)
-        lastResetSentAt        String  @default("")
-        lastVerificationSentAt String  @default("")
-        name                   String? @default("")
-        passwordHash           String
-        tokenKey               String  @unique(map: "__pb_users_auth__tokenKey_idx")
-        username               String  @unique(map: "__pb_users_auth__username_idx")
-        verified               Boolean @default(false)
+model Account {
+        id                  String  @id
+        type                String
+        provider            String
+        provider_account_id String
+        refresh_token       String?
+        access_token        String?
+        expires_at          Int?
+        token_type          String?
+        scope               String?
+        id_token            String?
+        session_state       String?
 
-        @@index([created])
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
+
+        @@unique([provider, provider_account_id])
+        @@index([user_id], map: "accounts_user_id_fkey")
 }
 
-model admin {
-        id              String @id
-        avatar          Int    @default(0)
-        email           String @unique(map: "sqlite_autoindex__admins_2")
-        tokenKey        String @unique(map: "sqlite_autoindex__admins_3")
-        passwordHash    String
-        lastResetSentAt String @default("")
-        created         String @default("")
-        updated         String @default("")
+model Credential {
+        id       String  @id
+        password String
+        salt     String
+        verified Boolean @default(false)
+        email    String  @unique
 
-        @@map("admin")
+        user_id String @unique
+        user    User   @relation(fields: [user_id], references: [id])
+}
+
+model Profile {
+        id       String  @id
+        nickname String?
+        avatar   String?
+        user_id  String  @unique
+        user     User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model User {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        credential              Credential?
+        profile                 Profile?
+        accounts                Account[]
+        drives                  Drive[]
+        tv                      TV[]
+        tv_need_complete        TVNeedComplete[]
+        async_task              AsyncTask[]
+        episode                 Episode[]
+        folder                  Folder[]
+        member                  Member[]
+        movie                   Movie[]
+        shared_file             SharedFile[]
+        shared_file_in_progress SharedFileInProgress[]
+        tmp_folder              TmpFolder[]
 }

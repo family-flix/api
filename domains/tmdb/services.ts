@@ -5,8 +5,8 @@ import axios from "axios";
 import { Result, Unpacked, UnpackedResult } from "@/types";
 import { query_stringify } from "@/utils";
 
-const API_HOST = "https://api.themoviedb.org/3";
-// const API_HOST = 'https://proxy-tmdb.litao.workers.dev/';
+// const API_HOST = "https://api.themoviedb.org/3";
+const API_HOST = "https://proxy.funzm.com/api/tmdb/3";
 export type Language = "zh-CN" | "en-US";
 export type TMDBRequestCommentPart = {
   /** tmdb api key */
@@ -138,7 +138,7 @@ export async function search_tv_in_tmdb(
       adult?: boolean;
     }[];
   }>(endpoint, query);
-  // '/search/tv?api_key=c2e5d34999e27f8e0ef18421aa5dec38&language=zh-CN&query=Modern%20Family&page=1&include_adult=false'
+  // '/search/tv?api_key=XXX&language=zh-CN&query=Modern%20Family&page=1&include_adult=false'
   const { error, data } = result;
   if (error) {
     return Result.Err(error.message);

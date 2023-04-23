@@ -5,8 +5,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { pocket_base } from "@/store/pocketbase";
 import { response_error_factory } from "@/utils/backend";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -17,33 +17,19 @@ export default async function handler(
     email: string;
     password: string;
   }>;
-  if (!email || !password) {
-    return e("Missing required filed");
+  const user = new User({ secret: process.env.TOKEN_SECRET });
+  const r = await user.register({ email, password });
+  if (r.error) {
+    return e(r);
   }
-  try {
-    const resp = await pocket_base
-      .collection("users")
-      .authWithPassword(email, password);
-    const {
-      record: { id, username, name, avatar, verified, created },
+  const { id, token } = r.data;
+  return res.status(200).json({
+    code: 0,
+    msg: "",
+    data: {
+      id,
+      email,
       token,
-    } = resp;
-    return res.status(200).json({
-      code: 0,
-      msg: "",
-      data: {
-        id,
-        username,
-        name,
-        email,
-        avatar,
-        verified,
-        created,
-        token,
-      },
-    });
-  } catch (err) {
-    const error = err as Error;
-    return e(error.message);
-  }
+    },
+  });
 }

@@ -41,9 +41,17 @@ export default async function handler(
     return e("No matched member token");
   }
   const member_token = link_resp.data;
-  if (member_token.used) {
-    return e("该授权链接已被使用");
-  }
+  // if (member_token.used) {
+  //   res.status(200).json({
+  //     code: 0,
+  //     msg: "",
+  //     data: {
+  //       is_member: true,
+  //       token,
+  //     },
+  //   });
+  //   return;
+  // }
   const member_token_resp = parse_token(token);
   if (member_token_resp.error) {
     return e(member_token_resp);

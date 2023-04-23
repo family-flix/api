@@ -1,5 +1,3 @@
-import { Response } from "@list-helper/core/typing";
-
 export type Resp<T> = {
   data: T extends null ? null : T;
   error: T extends null ? Error : null;
@@ -43,6 +41,19 @@ export const Result = {
     return result;
   },
 };
+
+/** 将一个返回 promise 的函数转换成返回 Result 的函数 */
+export function resultify(fn: Function) {
+  return async (...args: unknown[]) => {
+    try {
+      const r = await fn(...args);
+      return Result.Ok(r);
+    } catch (err) {
+      const e = err as Error;
+      return Result.Err(e.message);
+    }
+  };
+}
 
 export type Unpacked<T> = T extends (infer U)[]
   ? U

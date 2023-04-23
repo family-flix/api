@@ -2,7 +2,7 @@
  * @file 阿里云盘
  * @doc https://www.yuque.com/aliyundrive/zpfszx
  */
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
 
 import { Result } from "@/types";
@@ -36,15 +36,16 @@ const COMMENT_HEADERS = {
   "x-mini-wua":
     "iMgQmyQ0xADdEBzKwoGPtradgjIKF60kuQM769eBYB2c50VY3P9sTHE9tE0cGiP5vuxcym4QSf7t9oByybyv6yjXYIVOyToCAp95eIvBq5wBbCWvYsWC59frqvGYDlw7wmbOPxp04i3dZUs3Af6Y2dQDY+TG5eOUXMeaMAT7qFkinOA==",
   "user-agent":
-    "AliApp(AYSD/4.1.3) com.alicloud.smartdrive/4.1.3 Version/16.3 Channel/201200 Language/en-CN /iOS Mobile/iPhone12,3",
-  referer: "https://www.aliyundrive.com/",
-  origin: "https://www.aliyundrive.com/",
+    "AliApp(AYSD/4.4.0) com.alicloud.smartdrive/4.4.0 Version/16.3 Channel/201200 Language/en-CN /iOS Mobile/iPhone12,3",
+  referer: "https://aliyundrive.com/",
+  origin: "https://aliyundrive.com/",
 };
 
 type RequestClient = {
   get: <T>(
     url: string,
-    query?: Record<string, string | number | undefined>
+    query?: Record<string, string | number | undefined | null>,
+    extra?: Partial<AxiosRequestConfig>
   ) => Promise<Result<T>>;
   post: <T>(
     url: string,
@@ -104,7 +105,7 @@ export class AliyunDriveClient {
       timeout: 6000,
     });
     this.request = {
-      get: async (endpoint, query) => {
+      get: async (endpoint, query, extra: Partial<AxiosRequestConfig> = {}) => {
         const url = `${endpoint}${query ? "?" + query_stringify(query) : ""}`;
         const headers = {
           ...COMMENT_HEADERS,
@@ -115,6 +116,7 @@ export class AliyunDriveClient {
         try {
           const resp = await client.get(url, {
             headers,
+            ...extra,
           });
           return Result.Ok(resp.data);
         } catch (err) {
@@ -122,7 +124,6 @@ export class AliyunDriveClient {
           const { response, message } = error;
           console.error("\n");
           console.error(url);
-          // console.error(headers);
           console.error(
             "GET request failed, because",
             response?.status,
@@ -453,6 +454,31 @@ export class AliyunDriveClient {
     }
     return Result.Ok(result.data);
   }
+  /** 获取指定视频在指定秒数下的缩略图 */
+  async generate_thumbnail(values: { file_id: string; cur_time: string }) {
+    const { file_id, cur_time } = values;
+    await this.ensure_initialized();
+    const result = await this.request.get<{ responseUrl: string }>(
+      API_HOST + "/v2/file/download",
+      {
+        drive_id: this.aliyun_drive_id,
+        file_id,
+        video_thumbnail_process: `video/snapshot,t_${cur_time},f_jpg,w_480,ar_auto,m_fast`,
+      },
+      {
+        headers: {
+          authorization: this.access_token,
+          accept: "image/webp,image/avif,image/*,*/*;q=0.8",
+        },
+        responseType: "stream",
+      }
+    );
+    if (result.error) {
+      return result;
+    }
+    return Result.Ok(result.data);
+  }
+
   cached_share_token: Record<string, string> = {};
   /**
    * @param url 分享链接
