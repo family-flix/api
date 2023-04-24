@@ -1100,11 +1100,11 @@ export function is_video_file(filename: string) {
 }
 
 export function query_stringify(
-  query: Record<string, string | number | undefined>
+  query: Record<string, string | number | undefined | null>
 ) {
   return Object.keys(query)
     .filter((key) => {
-      return query[key] !== undefined;
+      return query[key] !== undefined && query[key] !== null;
     })
     .map((key) => {
       return `${key}=${encodeURIComponent(query[key]!)}`;

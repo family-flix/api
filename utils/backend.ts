@@ -1,8 +1,8 @@
-import jwt from "jsonwebtoken";
-import jwt_decode from "jwt-decode";
+// import jwt from "jsonwebtoken";
+// import jwt_decode from "jwt-decode";
 import { NextApiResponse } from "next";
 
-import { Result } from "@/types";
+import { Result, resultify } from "@/types";
 // import { store } from "@/store/sqlite";
 // import {
 //   RecordCommonPart,
@@ -11,30 +11,35 @@ import { Result } from "@/types";
 //   TVRecord,
 // } from "@/store/types";
 import { bytes_to_size, find_resolution_from_paths } from ".";
+import { decode_token } from "@/domains/user/jwt";
 
 /**
  * 解析 token
  */
-export function parse_token(token?: string) {
+export async function parse_token({
+  token,
+  secret,
+}: {
+  token?: string;
+  secret: string;
+}) {
   if (!token) {
     return Result.Err("Missing auth token");
   }
-  try {
-    const user = jwt_decode<{
-      id: string;
-      is_member: number;
-    }>(token);
-    if (user.id) {
-      return Result.Ok({
-        id: user.id,
-        member_id: user.id,
-        is_member: user.is_member ? 1 : 0,
-      });
-    }
-    return Result.Err("invalid token");
-  } catch (err) {
+  const user_res = await resultify(decode_token)({ token, secret });
+  if (user_res.error) {
+    return Result.Err(user_res.error);
+  }
+  const user = user_res.data;
+  if (user === null) {
     return Result.Err("invalid token");
   }
+  if (user.id) {
+    return Result.Ok({
+      id: user.id,
+    });
+  }
+  return Result.Err("invalid token");
 }
 
 /**
@@ -42,11 +47,11 @@ export function parse_token(token?: string) {
  * @param payload
  * @returns
  */
-export function generate_token(payload: Record<string, number | string>) {
-  const secret = "test";
-  const token = jwt.sign(payload, secret);
-  return Result.Ok(token);
-}
+// export function generate_token(payload: Record<string, number | string>) {
+//   const secret = "test";
+//   const token = jwt.sign(payload, secret);
+//   return Result.Ok(token);
+// }
 
 export function response_error_factory(res: NextApiResponse) {
   return (result: Result<unknown> | string | Error) => {

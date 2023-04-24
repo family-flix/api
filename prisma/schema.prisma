@@ -12,21 +12,21 @@ model Drive {
         created          DateTime  @default(now())
         updated          DateTime  @default(now())
         // 网盘名称（备注）
-        name             String?   @default("")
+        name             String?
         // 阿里云对网盘的唯一标志，每次请求都需要带上该参数
-        drive_id         String?   @default("")
+        drive_id         String    @unique
         // 阿里云对网盘在该设备下的id？
-        device_id        String?   @default("")
+        device_id        String
         // 网盘 user_id
-        aliyun_user_id   String?   @default("")
+        aliyun_user_id   String
         // 网盘提供的名称
-        user_name        String?   @default("")
+        user_name        String
         // 网盘提供的名称
-        nick_name        String?   @default("")
+        nick_name        String
         // 网盘提供的头像
-        avatar           String?   @default("")
+        avatar           String
         // 网盘提供的
-        app_id           String?   @default("")
+        app_id           String
         // 总大小
         total_size       Float?    @default(0)
         // 已使用
@@ -36,22 +36,25 @@ model Drive {
         // 最近一次索引该网盘的时间
         latest_analysis  DateTime?
         // 网盘用于存放影视剧的目录
-        root_folder_name String?   @default("")
+        root_folder_name String?
         // 网盘用于存放影视剧的目录 file_id
-        root_folder_id   String?   @default("")
+        root_folder_id   String?
 
         // 属于哪个用户
         user_id String
         user    User   @relation(fields: [user_id], references: [id])
 
-        DriveToken    DriveToken[]
-        DriveAnalysis DriveAnalysis[]
-        DriveCheckIn  DriveCheckIn[]
-        TV            TV[]
-        Episode       Episode[]
-        Movie         Movie[]
-        Folder        Folder[]
-        TmpFolder     TmpFolder[]
+        // drive_token_id String      @unique
+        // drive_token    DriveToken @relation(fields: [drive_token_id], references: [drive_id])
+        drive_token DriveToken?
+
+        drive_analysis DriveAnalysis[]
+        drive_check_in DriveCheckIn[]
+        tv             TV[]
+        episode        Episode[]
+        movie          Movie[]
+        folder         Folder[]
+        tmp_folder     TmpFolder[]
 }
 
 model DriveToken {
@@ -60,10 +63,10 @@ model DriveToken {
         updated       DateTime @default(now())
         access_token  String
         refresh_token String
-        expired_at    String?  @default("")
+        expired_at    Float
 
         // 关联 drive 表
-        drive_id String
+        drive_id String @unique
         drive    Drive  @relation(fields: [drive_id], references: [id])
 }
 

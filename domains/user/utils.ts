@@ -79,6 +79,8 @@ export async function prepare(password: string) {
 // }
 
 import { Crypto } from "@peculiar/webcrypto";
+import { Result, resultify } from "@/types";
+import { decode_token } from "./jwt";
 
 // import type { Algorithms } from "@/lib/utils/types";
 
@@ -439,4 +441,33 @@ export const decode = (input: ArrayBufferView | ArrayBuffer, stream = false) =>
 
 export function byteLength(input?: string): number {
   return input ? Encoder.encode(input).byteLength : 0;
+}
+
+/**
+ * 解析 token
+ */
+export async function parse_token({
+  token,
+  secret,
+}: {
+  token?: string;
+  secret: string;
+}) {
+  if (!token) {
+    return Result.Err("Missing auth token");
+  }
+  const user_res = await resultify(decode_token)({ token, secret });
+  if (user_res.error) {
+    return Result.Err(user_res.error);
+  }
+  const user = user_res.data;
+  if (user === null) {
+    return Result.Err("invalid token");
+  }
+  if (user.id) {
+    return Result.Ok({
+      id: user.id,
+    });
+  }
+  return Result.Err("invalid token");
 }

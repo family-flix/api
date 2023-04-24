@@ -28,7 +28,6 @@ export default async function handler(
     msg: "",
     data: {
       id,
-      email,
       token,
     },
   });

@@ -39,3 +39,18 @@ export interface PartialVideo {
   /** m3u8 文件地址 */
   url: string;
 }
+
+export type AliyunDrivePayload = {
+  app_id: string;
+  drive_id: string;
+  device_id: string;
+  access_token: string;
+  refresh_token: string;
+  avatar: string;
+  nick_name: string;
+  aliyun_user_id: string;
+  user_name: string;
+  // root_folder_id?: string;
+  // total_size?: number;
+  // used_size?: number;
+};

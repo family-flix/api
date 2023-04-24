@@ -8,7 +8,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { Result } from "@/types";
 import { query_stringify } from "@/utils";
 import { log } from "@/logger/log";
-import { AliyunDriveRecord, RecordCommonPart } from "@/store/types";
+import { AliyunDriveRecord } from "@/store/types";
 import { store_factory } from "@/store";
 
 import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo } from "./types";
@@ -82,8 +82,11 @@ export class AliyunDriveClient {
   share_token: string | null = null;
   share_token_expired_at: number | null = null;
   /** 数据库表 aliyun_drive 记录 */
-  profile: (AliyunDriveRecord & RecordCommonPart) | null = null;
-  /** 数据库操作 */
+  profile: AliyunDriveRecord | null = null;
+  /**
+   * 数据库操作
+   * 由于 drive 依赖 access_token、refresh_token，必须有一个外部持久存储
+   */
   store: ReturnType<typeof store_factory>;
 
   constructor(options: {
@@ -96,7 +99,7 @@ export class AliyunDriveClient {
       throw new Error("Missing methods fetch store");
     }
     if (!drive_id) {
-      throw new Error("Missing drive_id");
+      throw new Error("缺少 drive id 参数");
     }
     // this.user_id = user_id;
     this.db_drive_id = drive_id;
@@ -194,10 +197,8 @@ export class AliyunDriveClient {
     // console.log("[]init - drive_id", this.db_drive_id);
     const aliyun_drive_resp = await this.store.find_aliyun_drive({
       id: this.db_drive_id,
-      // user_id: this.user_id,
     });
     if (aliyun_drive_resp.error) {
-      // console.log("initialize drive failed", aliyun_drive_resp.error.message);
       return aliyun_drive_resp.error;
     }
     if (!aliyun_drive_resp.data) {
@@ -209,7 +210,7 @@ export class AliyunDriveClient {
     this.aliyun_drive_id = drive_id;
     this.device_id = device_id;
     const aliyun_drive_token_resp = await this.store.find_aliyun_drive_token({
-      aliyun_drive_id: id,
+      drive_id: id,
     });
     if (aliyun_drive_token_resp.error) {
       return aliyun_drive_token_resp;
@@ -728,18 +729,18 @@ export class AliyunDriveClient {
     if (r.error) {
       return r;
     }
-    const r1 = await this.store.delete_folder({
-      file_id,
-    });
-    if (r1.error) {
-      return r1;
-    }
-    const r2 = await this.store.delete_episode({
-      file_id,
-    });
-    if (r2.error) {
-      return r2;
-    }
+    // const r1 = await this.store.delete_folder({
+    //   file_id,
+    // });
+    // if (r1.error) {
+    //   return r1;
+    // }
+    // const r2 = await this.store.delete_episode({
+    //   file_id,
+    // });
+    // if (r2.error) {
+    //   return r2;
+    // }
     return Result.Ok(null);
   }
   /**

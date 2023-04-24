@@ -1,15 +1,12 @@
 /**
- * @file 删除播放记录
+ * @file 刷新指定云盘信息
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { store } from "@/store/sqlite";
-
-const { find_aliyun_drive } = store;
+import { response_error_factory } from "@/utils/backend";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,23 +18,17 @@ export default async function handler(
   if (!drive_id) {
     return e("Missing drive id");
   }
-  const t_resp = parse_token(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t = await User.New(authorization);
+  if (t.error) {
+    return e(t);
   }
-  const { id: user_id } = t_resp.data;
-  const drive_resp = await find_aliyun_drive({
-    id: drive_id,
-    user_id,
-  });
-  if (drive_resp.error) {
-    return e(drive_resp);
+  const user = t.data;
+  const d = await user.get_drive(drive_id);
+  if (d.error) {
+    return e(d);
   }
-  const client = new AliyunDriveClient({
-    drive_id,
-    store: store,
-  });
-  const r = await client.refresh_profile();
+  const drive = d.data;
+  const r = await drive.refresh_profile();
   if (r.error) {
     return e(r);
   }
