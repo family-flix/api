@@ -10,7 +10,7 @@ import {
   response_error_factory,
   user_id_or_member_id,
 } from "@/utils/backend";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 export default async function handler(
   req: NextApiRequest,

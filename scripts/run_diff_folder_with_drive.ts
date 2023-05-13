@@ -5,7 +5,7 @@ require("dotenv").config();
 
 import { DiffTypes } from "@/domains/folder_differ";
 import { log } from "@/logger/log";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 import { diff_folder_with_drive_folder } from "./diff_folder_with_drive";
 

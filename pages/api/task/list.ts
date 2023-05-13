@@ -5,10 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
-import { store } from "@/store/sqlite";
-
-const { find_async_task_with_pagination } = store;
+import { response_error_factory } from "@/utils/backend";
+import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,16 +19,16 @@ export default async function handler(
     page: string;
     page_size: string;
   }>;
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const r1 = await find_async_task_with_pagination(
+  const r1 = await store.find_async_task_with_pagination(
     { user_id },
     {
       page: Number(page),
-      size: Number(page_size),
+      page_size: Number(page_size),
       sorts: [
         {
           key: "created",

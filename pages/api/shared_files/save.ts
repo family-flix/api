@@ -6,8 +6,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -36,7 +37,7 @@ export default async function handler(
   if (!drive_id) {
     return e("请指定转存到哪个网盘");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
@@ -83,7 +84,7 @@ export default async function handler(
     drive_id,
     user_id,
     type: 0,
-    parent_path: "",
+    parent_paths: "",
   });
   if (file_name.includes("更新中")) {
     const r4 = await store.find_shared_files_in_progress({

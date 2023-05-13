@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 (async () => {
   // const name = '女武神';

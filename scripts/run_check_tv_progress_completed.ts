@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 import { check_tv_in_progress_is_completed } from "./patch_tv_in_progress";
 

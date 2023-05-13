@@ -3,7 +3,7 @@
  */
 require("dotenv").config();
 import { RecordCommonPart, SearchedTVRecord } from "@/store/types";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
 import { qiniu_upload_online_file } from "@/utils/back_end";

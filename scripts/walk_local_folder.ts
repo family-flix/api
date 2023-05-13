@@ -6,7 +6,7 @@ require("dotenv").config();
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import { FolderWalker } from "@/domains/walker";
 import { folder_client } from "@/store";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 async function main() {
   const drive_folder = {

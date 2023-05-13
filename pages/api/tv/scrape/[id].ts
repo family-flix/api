@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { search_special_tv_in_tmdb_then_update_tv } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 export default async function handler(
   req: NextApiRequest,
@@ -37,7 +37,7 @@ export default async function handler(
     name,
     original_name,
     correct_name,
-    operation: store.operation,
+    store: store.operation,
     token: process.env.TMDB_TOKEN,
   });
   if (r.error) {

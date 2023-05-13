@@ -10,7 +10,7 @@ import {
   parse_token,
   response_error_factory,
 } from "@/utils/backend";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 const { find_tv, find_episode } = store;
 

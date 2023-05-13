@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { build_link_between_shared_files_with_folder } from "@/domains/walker/utils";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 export default async function handler(
   req: NextApiRequest,

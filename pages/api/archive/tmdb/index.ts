@@ -5,11 +5,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { search_tv_in_tmdb_then_update_tv } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
 import { merge_same_tv_and_episodes } from "@/domains/walker/merge_same_tv_and_episode";
 import { hidden_empty_tv } from "@/domains/walker/clean_empty_records";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,7 +24,7 @@ export default async function handler(
     return e("Missing aliyun_drive_id");
   }
   const { authorization } = req.headers;
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
@@ -31,7 +32,7 @@ export default async function handler(
   const r1 = await search_tv_in_tmdb_then_update_tv({
     user_id,
     drive_id: aliyun_drive_id,
-    operation: store.operation,
+    store,
   });
   if (r1.error) {
     return e(r1);
@@ -41,17 +42,17 @@ export default async function handler(
       user_id,
       drive_id: aliyun_drive_id,
     },
-    store.operation
+    store
   );
   if (r2.error) {
     return e(r2);
   }
   const r3 = await hidden_empty_tv(
     {
-      user_id: t_resp.data.member_id,
+      user_id: t_resp.data.id,
       drive_id: aliyun_drive_id,
     },
-    store.operation
+    store
   );
   if (r3.error) {
     return e(r3.error);

@@ -8,7 +8,7 @@ import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { extra_searched_tv_field } from "@/domains/walker/utils";
 import { PartialSearchedTVFromTMDB } from "@/domains/tmdb/services";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 export default async function handler(
   req: NextApiRequest,

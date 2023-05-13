@@ -3,9 +3,9 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import { TMDBClient } from "@/domains/tmdb";
+import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
-import { FetchParams } from "@list-helper/core/typing";
+import { response_error_factory } from "@/utils/backend";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
@@ -21,21 +21,23 @@ export default async function handler(
   const {
     keyword,
     page = 1,
-    pageSize = 20,
-  } = req.query as FetchParams & Partial<{ keyword: string }>;
+    page_size: pageSize = 20,
+  } = req.query as Partial<{
+    keyword: string;
+    page: string;
+    page_size: string;
+  }>;
   if (!keyword) {
     return e("Missing keyword");
   }
-  const r_token = parse_token(authorization);
+  const r_token = await User.New(authorization);
   if (r_token.error) {
     return e(r_token);
   }
-  // log("search tmdb with", keyword);
   const r = await tmdb.search_tv(keyword as string);
   if (r.error) {
     return e(r);
   }
-  // log("search tmdb with", keyword, "success");
   res.status(200).json({
     code: 0,
     msg: "",

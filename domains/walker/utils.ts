@@ -11,12 +11,7 @@ import {
   parse_filename_for_video,
 } from "@/utils";
 import { log } from "@/logger/log";
-import { store_factory } from "@/store";
-import {
-  StoreOperation,
-  record_pagination_factory,
-  process_db_value,
-} from "@/store/operations";
+import { pagination_factory, store_factory } from "@/store";
 import {
   TVRecord,
   EpisodeRecord,
@@ -24,7 +19,7 @@ import {
   SharedFilesInProgressRecord,
 } from "@/store/types";
 import { qiniu_upload_online_file } from "@/utils/back_end";
-import { Result } from "@/types";
+import { Result, resultify } from "@/types";
 
 import { patch_tv_in_progress } from "./patch_tv_in_progress";
 
@@ -66,113 +61,6 @@ export function extra_searched_tv_field(tv: PartialSearchedTVFromTMDB) {
     vote_average,
     vote_count,
   };
-}
-
-export async function get_first_episode(
-  tv_id: string,
-  season: string = "S01",
-  user_id: string,
-  store: ReturnType<typeof store_factory>
-) {
-  const seasons_resp = await store.find_seasons(
-    {
-      tv_id,
-    },
-    {
-      sorts: [
-        {
-          key: "season",
-          order: "ASC",
-        },
-      ],
-    }
-  );
-  if (seasons_resp.error) {
-    return seasons_resp;
-  }
-  const matched_season = (() => {
-    const seasons = seasons_resp.data;
-    if (seasons.length === 0) {
-      return null;
-    }
-    if (seasons.length === 1) {
-      return seasons[0];
-    }
-    const season_1 = seasons.find((s) => s.season === season);
-    if (season_1) {
-      return season_1;
-    }
-    return seasons[0];
-  })();
-  if (matched_season === null) {
-    return Result.Err("No episodes at all");
-  }
-  const episodes_resp = await store.find_episodes(
-    {
-      tv_id,
-      season: matched_season.season,
-    },
-    {
-      sorts: [
-        {
-          key: "episode",
-          order: "DESC",
-        },
-      ],
-    }
-  );
-  if (episodes_resp.error) {
-    return episodes_resp;
-  }
-  const first_episode = (() => {
-    if (episodes_resp.data.length === 0) {
-      // 如果第一季没有，应该取第二季，依次顺延
-      return null;
-    }
-    if (episodes_resp.data.length === 1) {
-      const first = episodes_resp.data[0];
-      return {
-        id: first.id,
-        season: {
-          id: matched_season.id,
-          season: matched_season.season,
-        },
-        episode: first.episode,
-        file_id: first.file_id,
-        file_name: first.file_name,
-      };
-    }
-    const matched_first_episode = episodes_resp.data.find(
-      (e) => e.episode === "E01"
-    );
-    if (!matched_first_episode) {
-      const first = episodes_resp.data[0];
-      return {
-        id: first.id,
-        season: {
-          id: matched_season.id,
-          season: matched_season.season,
-        },
-        episode: first.episode,
-        file_id: first.file_id,
-        file_name: first.file_name,
-      };
-    }
-    return {
-      id: matched_first_episode.id,
-      season: {
-        id: matched_season.id,
-        season: matched_season.season,
-      },
-      episode: matched_first_episode.episode,
-      file_id: matched_first_episode.file_id,
-      file_name: matched_first_episode.file_name,
-    };
-  })();
-  if (first_episode === null) {
-    return Result.Err("No episode");
-  }
-  return Result.Ok(first_episode);
 }
 
 /**
@@ -315,54 +203,6 @@ function is_episode_changed(
 }
 
 /**
- * 根据 season 查找匹配的 season 记录并返回 id，如果没有则创建 season 并返回 id
- * @param season
- * @param tv_id
- * @returns
- */
-async function get_season_id_by_season_and_tv_id(
-  season: SearchedEpisode["season"],
-  tv_id: string,
-  store: ReturnType<typeof store_factory>
-) {
-  const existing_season_resp = await store.find_season({
-    tv_id,
-    season: season.season,
-  });
-  if (existing_season_resp.error) {
-    log(
-      "[ERROR]find season request failed",
-      existing_season_resp.error.message
-    );
-    return Result.Err("[ERROR]find season request failed");
-  }
-  let season_resp = await (async () => {
-    const existing_season = existing_season_resp.data;
-    if (existing_season) {
-      log("season existing, using it's id", {
-        id: existing_season.id,
-      });
-      return Result.Ok({ id: existing_season.id });
-    }
-    const adding_season_resp = await store.add_season({
-      tv_id,
-      season: season.season,
-    });
-    if (adding_season_resp.error) {
-      log("adding season request failed", adding_season_resp.error);
-      return Result.Err("[ERROR]adding season request failed");
-    }
-    return Result.Ok({ id: adding_season_resp.data.id });
-  })();
-  if (season_resp.error) {
-    log("[ERROR]adding season request failed", season_resp.error.message);
-    return Result.Err("[ERROR]adding season request failed");
-  }
-  const season_id = season_resp.data.id;
-  return Result.Ok({ id: season_id });
-}
-
-/**
  * 根据名称找 tv 记录，找到则返回 id，没找到就创建并返回 id
  * @param tv
  * @param extra
@@ -375,14 +215,22 @@ async function get_tv_id_by_name(
 ) {
   log("[UTIL]get_tv_id_by_name start", tv.name || tv.original_name);
   const { user_id, drive_id } = extra;
-  const sql = `SELECT * FROM tv WHERE name != '' AND name ${process_db_value(
-    tv.name
-  )} OR original_name != '' AND original_name ${process_db_value(
-    tv.original_name
-  )} AND user_id = '${user_id}' AND drive_id = '${drive_id}'`;
-  const existing_tv_resp = await store.operation.get<
-    TVRecord & RecordCommonPart
-  >(sql);
+  const existing_tv_resp = await resultify(
+    store.prisma.tV.findFirst.bind(store.prisma.tV)
+  )({
+    where: {
+      OR: [
+        {
+          name: tv.name,
+        },
+        {
+          original_name: tv.original_name,
+        },
+      ],
+      user_id,
+      drive_id,
+    },
+  });
   if (existing_tv_resp.error) {
     log("[ERROR]find tv request failed", existing_tv_resp.error.message);
     return existing_tv_resp;
@@ -428,18 +276,8 @@ async function add_tv_and_season(
     return tv_id_resp;
   }
   const tv_id = tv_id_resp.data.id;
-  const season_id_resp = await get_season_id_by_season_and_tv_id(
-    season,
-    tv_id,
-    store
-  );
-  if (season_id_resp.error) {
-    return season_id_resp;
-  }
-  const season_id = season_id_resp.data.id;
   return Result.Ok({
     tv_id,
-    season_id,
   });
 }
 
@@ -929,9 +767,9 @@ export async function find_first_matched_tv_of_tmdb(
  */
 export async function search_tv_in_tmdb(
   tv: {
-    correct_name?: string;
-    name: string;
-    original_name: string;
+    correct_name?: string | null;
+    name: string | null;
+    original_name: string | null;
   },
   option: Partial<{
     store: ReturnType<typeof store_factory>;
@@ -979,13 +817,20 @@ export async function search_tv_in_tmdb(
     return Result.Err("search result is empty");
   }
   const searched_tv = tv_result;
-  const prev_searched_tv_res = await store.find_searched_tv(
-    {
-      name: searched_tv.name,
-      original_name: searched_tv.original_name,
+  const prev_searched_tv_res = await resultify(
+    store.prisma.searchedTV.findFirst.bind(store.prisma.searchedTV)
+  )({
+    where: {
+      OR: [
+        {
+          name: searched_tv.name,
+        },
+        {
+          original_name: searched_tv.original_name,
+        },
+      ],
     },
-    "OR"
-  );
+  });
   if (prev_searched_tv_res.error) {
     return Result.Err(prev_searched_tv_res.error.message);
   }
@@ -1147,7 +992,7 @@ export function build_folder_tree(records: EpisodeRecord[]) {
  * @returns
  */
 export async function walk_table_with_pagination<T>(
-  method: ReturnType<typeof record_pagination_factory>,
+  method: ReturnType<typeof pagination_factory>,
   options: {
     body?: Record<string, unknown>;
     on_handle: (v: T) => Promise<void>;
@@ -1319,19 +1164,18 @@ export function extra_name_form_pending(
  */
 export async function find_matched_tv_in_tmdb(
   options: ExtraUserAndDriveInfo & {
-    operation: StoreOperation;
+    store: ReturnType<typeof store_factory>;
     need_upload_image?: boolean;
   },
   event_handlers: EventHandlers = {}
 ) {
-  const { drive_id, user_id, need_upload_image, operation } = options;
-  const { find_tv_with_pagination, update_tv } = store_factory(operation);
+  const { drive_id, user_id, need_upload_image, store } = options;
   const { on_error } = event_handlers;
   let no_more = false;
   let page = 1;
   do {
     log("start find matched tmdb tv");
-    const tvs_resp = await find_tv_with_pagination(
+    const tvs_resp = await store.find_tv_with_pagination(
       {
         searched_tv_id: "null",
         user_id,
@@ -1367,82 +1211,12 @@ export async function find_matched_tv_in_tmdb(
         );
         continue;
       }
-      const r2 = await update_tv(tv.id, {
+      const r2 = await store.update_tv(tv.id, {
         searched_tv_id: r1.data.id,
       });
       if (r2.error) {
         return Result.Err(
           ["[ERROR]update tv searched_tv_id failed", r2.error.message].join(" ")
-        );
-      }
-    }
-    page += 1;
-  } while (no_more === false);
-  return Result.Ok(null);
-}
-
-/**
- * 搜索 tmdb 找到 tv 匹配的结果
- * @param extra
- * @param op
- * @param event_handlers
- * @returns
- */
-export async function find_matched_tmp_tv_in_tmdb(
-  options: ExtraUserAndDriveInfo & {
-    need_upload_image?: boolean;
-    operation: StoreOperation;
-  },
-  event_handlers: EventHandlers = {}
-) {
-  const { user_id, drive_id, async_task_id, operation, need_upload_image } =
-    options;
-  const { find_tmp_tv_with_pagination, update_tmp_tv } =
-    store_factory(operation);
-  const { on_error } = event_handlers;
-  let no_more = false;
-  let page = 1;
-  do {
-    log("start find matched tmdb tmp tv", page);
-    const tvs_resp = await find_tmp_tv_with_pagination(
-      {
-        searched_tv_id: "null",
-        user_id,
-        async_task_id,
-      },
-      { page, size: 20 }
-    );
-    if (tvs_resp.error) {
-      return tvs_resp;
-    }
-    no_more = tvs_resp.data.no_more;
-    for (let i = 0; i < tvs_resp.data.list.length; i += 1) {
-      const tv = tvs_resp.data.list[i];
-      const r1 = await search_tv_in_tmdb(
-        {
-          name: tv.name,
-          original_name: tv.original_name,
-        },
-        {
-          token: process.env.TMDB_TOKEN,
-          need_upload_image,
-        }
-      );
-      if (r1.error) {
-        log(
-          "[ERROR]search_tv_in_tmdb_then_save failed, because",
-          r1.error.message
-        );
-        continue;
-      }
-      const r2 = await update_tmp_tv(tv.id, {
-        searched_tv_id: r1.data.id,
-      });
-      if (r2.error) {
-        return Result.Err(
-          ["[ERROR]update tmp tv searched_tv_id failed", r2.error.message].join(
-            " "
-          )
         );
       }
     }
@@ -1531,23 +1305,55 @@ export async function find_duplicate_episodes(
   if (!drive_res.data) {
     return Result.Err("No matched record of drive");
   }
-  const resp = await store.operation.all<
-    (EpisodeRecord & {
-      history_id: string;
-    })[]
-  >(
-    `SELECT e.*,pp.id as history_id
-      FROM episode e
-      LEFT JOIN play_progress pp ON pp.episode_id = e.id
-      WHERE (e.file_name,e.parent_paths) IN (
-	SELECT file_name,parent_paths
-	FROM episode
-	WHERE drive_id = '${drive_id}'
-	GROUP BY file_name,parent_paths
-	HAVING COUNT(*) > 1
-      )
-      ORDER BY e.file_name,e.parent_paths;`
-  );
+  const parent_paths = (
+    await store.prisma.episode.groupBy({
+      by: ["file_name", "parent_paths"],
+      having: {
+        file_name: {
+          _count: {
+            gt: 1,
+          },
+        },
+      },
+      where: {
+        drive_id,
+      },
+      _count: {
+        file_name: true,
+        parent_paths: true,
+      },
+    })
+  ).map((r) => r.parent_paths);
+  const resp = await resultify(
+    store.prisma.episode.findMany.bind(store.prisma.episode)
+  )({
+    select: {
+      id: true,
+      file_name: true,
+      parent_paths: true,
+      play_histories: true,
+      // PlayHistory: true,
+      // PlayHistory: {
+      //   select: {
+      //     id: true,
+      //   },
+      // },
+    },
+    where: {
+      AND: [
+        { drive_id },
+        {
+          parent_paths: {
+            in: parent_paths,
+          },
+        },
+      ],
+    },
+    orderBy: {
+      file_name: "asc",
+      parent_paths: "asc",
+    },
+  });
   if (resp.error) {
     return Result.Err(resp.error);
   }
@@ -1556,13 +1362,15 @@ export async function find_duplicate_episodes(
     return Result.Ok({} as DuplicateEpisodes);
   }
   const r = episodes.reduce((total, cur) => {
-    const { id, file_id, file_name, parent_paths, history_id } = cur;
+    const { id, file_id, file_name, parent_paths } = cur;
     const k = `${file_name}/${parent_paths}`;
     total[k] = total[k] || [];
     if (total[k].length === 0) {
       total[k].push({
         id,
-        has_play: !!history_id,
+        has_play: false,
+        // has_play: PlayHistory.id !!history_id,
+        // has_play: !!PlayHistory,
         first: true,
         file_name,
         file_id,
@@ -1573,7 +1381,9 @@ export async function find_duplicate_episodes(
     total[k].push({
       id,
       file_name,
-      has_play: !!history_id,
+      has_play: false,
+      // has_play: !!history_id,
+      // has_play: !!PlayHistory,
       file_id,
       parent_paths,
     });

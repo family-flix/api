@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 import { walk_added_files } from "./walk_added_files";
 

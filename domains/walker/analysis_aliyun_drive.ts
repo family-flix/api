@@ -53,6 +53,18 @@ export async function walk_drive(options: {
     need_upload_image = true,
     wait_complete = false,
   } = options;
+  const drive_resp = await store.find_aliyun_drive({
+    id: drive_id,
+  });
+  if (drive_resp.error) {
+    return drive_resp;
+  }
+  if (!drive_resp.data) {
+    return Result.Err("没有匹配的云盘记录");
+  }
+  if (!drive_resp.data.root_folder_id) {
+    return Result.Err("请先设置索引目录");
+  }
   const check_need_stop = throttle(3000, async (id) => {
     const r = await store.find_async_task({ id });
     if (r.error) {
@@ -72,18 +84,6 @@ export async function walk_drive(options: {
       status: "Pause",
     });
   }
-  const drive_resp = await store.find_aliyun_drive({
-    id: drive_id,
-  });
-  if (drive_resp.error) {
-    return drive_resp;
-  }
-  if (!drive_resp.data) {
-    return Result.Err("No matched record of drive");
-  }
-  if (!drive_resp.data.root_folder_id) {
-    return Result.Err("请先设置索引目录");
-  }
   const { root_folder_id: folder_id } = drive_resp.data;
   const existing_task_resp = await store.find_async_task({
     unique_id: drive_id,
@@ -97,7 +97,7 @@ export async function walk_drive(options: {
     return Result.Err("任务正在进行中");
   }
   const add_async_task_resp = await store.add_async_task({
-    desc: `刮削 ${drive_resp.data.user_name} 云盘${
+    desc: `索引 ${drive_resp.data.user_name} 云盘${
       files.length ? " - 仅" + files.map((f) => f.name).join("、") : ""
     }`,
     unique_id: drive_id,
@@ -148,14 +148,14 @@ export async function walk_drive(options: {
     });
   };
   walker.on_error = (file) => {
-    console.log('[]walk on error', file.name);
+    console.log("[]walk on error", file.name);
   };
   walker.on_warning = (file) => {
-    console.log('[]walk on warning', file.name);
+    console.log("[]walk on warning", file.name);
   };
   let count = 0;
   walker.on_episode = async (tasks) => {
-    console.log('[]walk on episode', tasks.episode.file_name);
+    console.log("[]walk on episode", tasks.episode.file_name);
     const r = await check_need_stop(async_task_id);
     if (r && r.data) {
       need_stop = true;
@@ -167,7 +167,7 @@ export async function walk_drive(options: {
     return;
   };
   walker.on_movie = async (tasks) => {
-    console.log('[]walk on movie', tasks);
+    console.log("[]walk on movie", tasks);
     // const r = await check_need_stop(async_task_id);
     // if (r && r.data) {
     //   need_stop = true;
@@ -186,20 +186,19 @@ export async function walk_drive(options: {
     // @todo 如果 detect 由于内部调用 folder.next() 报错，这里没有处理会导致一直 pending
     await walker.detect(folder);
     if (count === 0) {
-      await stop_task_and_clear(async_task_id);
+      await store.update_async_task(async_task_id, {
+        status: "Finished",
+      });
       return;
     }
-    await hidden_empty_tv(
-      { user_id, drive_id, async_task_id },
-      store.operation
-    );
+    await hidden_empty_tv({ user_id, drive_id, async_task_id }, store);
     if (need_stop) {
       await stop_task_and_clear(async_task_id);
       return;
     }
     log("[](analysis_aliyun_drive)before search_tv_in_tmdb_then_update_tv");
     await search_tv_in_tmdb_then_update_tv(
-      { user_id, drive_id, need_upload_image, operation: store.operation },
+      { user_id, drive_id, need_upload_image, store },
       {
         on_stop() {
           return Result.Ok(need_stop);
@@ -210,7 +209,7 @@ export async function walk_drive(options: {
       await stop_task_and_clear(async_task_id);
       return;
     }
-    await merge_same_tv_and_episodes({ user_id, drive_id }, store.operation, {
+    await merge_same_tv_and_episodes({ user_id, drive_id }, store, {
       on_stop() {
         return Result.Ok(need_stop);
       },
@@ -219,7 +218,7 @@ export async function walk_drive(options: {
       await stop_task_and_clear(async_task_id);
       return;
     }
-    await hidden_empty_tv({ user_id, drive_id }, store.operation);
+    await hidden_empty_tv({ user_id, drive_id }, store);
     await store.update_async_task(async_task_id, {
       status: "Finished",
     });

@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 const { find_aliyun_drive } = store;
 

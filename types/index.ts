@@ -43,11 +43,12 @@ export const Result = {
 };
 
 /** 将一个返回 promise 的函数转换成返回 Result 的函数 */
-export function resultify(fn: Function) {
-  return async (...args: unknown[]) => {
+export function resultify<F extends (...args: any[]) => Promise<any>>(fn: F) {
+  return async (...args: Parameters<F>) => {
     try {
-      const r = await fn(...args);
-      return Result.Ok(r);
+      const data = await fn(...args);
+      const r = Result.Ok(data) as Result<Unpacked<ReturnType<F>>>;
+      return r;
     } catch (err) {
       const e = err as Error;
       return Result.Err(e.message);
@@ -80,3 +81,13 @@ export type ListResponse<T> = {
 
 export type RequestedResource<T extends (...args: any[]) => any> =
   UnpackedResult<Unpacked<ReturnType<T>>>;
+
+export interface JSONArray extends Array<JSONValue> {}
+export type JSONValue =
+  | string
+  | number
+  | boolean
+  | JSONObject
+  | JSONArray
+  | null;
+export type JSONObject = { [Key in string]?: JSONValue };

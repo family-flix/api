@@ -1,5 +1,5 @@
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 (async () => {
   const drive_id = "Xqr39EL7PZvXQKr";

@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp, Result } from "@/types";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 import { parse_token, response_error_factory } from "@/utils/backend";
 
 export default async function handler(

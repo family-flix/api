@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 import { find_tv_need_complete } from "./find_tv_need_complete";
 

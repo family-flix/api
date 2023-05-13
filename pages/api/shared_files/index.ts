@@ -1,13 +1,14 @@
 /**
- * @file 获取分享的文件列表
+ * @file 获取分享文件列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
-import { store } from "@/store/sqlite";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { User } from "@/domains/user";
+import { store } from "@/store";
+import { response_error_factory } from "@/utils/backend";
+import { BaseApiResp } from "@/types";
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,19 +28,21 @@ export default async function handler(
   if (!url) {
     return e("缺少分享链接参数");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const drives_resp = await store.find_aliyun_drives({ user_id });
-  if (drives_resp.error) {
-    return e(drives_resp);
-  }
-  if (drives_resp.data.length === 0) {
-    return e("Please add drive first");
-  }
-  const drive = drives_resp.data[0];
+  const drives_resp = await store.find_aliyun_drive({ user_id });
+  // const drives_resp = await prisma.drive.findFirst({
+  //   where: {
+  //     user_id,
+  //   },
+  // });
+  // if (drives_resp === null) {
+  //   return e("还未添加网盘，请先前往添加网盘");
+  // }
+  const drive = drives_resp.data;
   const client = new AliyunDriveClient({ drive_id: drive.id, store });
   const r1 = await client.prepare_fetch_shared_files(url);
   if (r1.error) {

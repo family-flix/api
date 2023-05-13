@@ -255,7 +255,7 @@ export class AliyunDriveClient {
   async refresh_profile() {
     await this.ensure_initialized();
     if (this.profile === null) {
-      return Result.Err("Please invoke init first");
+      return Result.Err("请先初始化云盘信息");
     }
     const r = await this.request.post<{
       drive_used_size: number;
@@ -267,13 +267,13 @@ export class AliyunDriveClient {
       sbox_drive_used_size: number;
     }>(API_HOST + "/adrive/v1/user/driveCapacityDetails");
     if (r.error) {
-      return r;
+      return Result.Err(r.error);
     }
     const { drive_total_size, drive_used_size } = r.data;
-    await this.store.update_aliyun_drive(this.profile.id, {
-      total_size: drive_total_size,
-      used_size: drive_used_size,
-    });
+    // await this.store.update_aliyun_drive(this.profile.id, {
+    //   total_size: drive_total_size,
+    //   used_size: drive_used_size,
+    // });
     this.profile.used_size = drive_used_size;
     this.profile.total_size = drive_total_size;
     return Result.Ok(this.profile);
@@ -342,6 +342,29 @@ export class AliyunDriveClient {
     }
     return Result.Ok(r.data);
   }
+  /** 添加文件夹 */
+  async add_folder(params: { parent_file_id?: string; name: string }) {
+    const { parent_file_id = "root", name } = params;
+    if (!name) {
+      return Result.Err("缺少文件夹名称");
+    }
+    await this.ensure_initialized();
+    const r = await this.request.post(
+      API_HOST + "/adrive/v2/file/createWithFolders",
+      {
+        check_name_mode: "refuse",
+        drive_id: this.aliyun_drive_id,
+        name,
+        parent_file_id,
+        type: "folder",
+      }
+    );
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    return Result.Ok(null);
+  }
+
   /** 获取一个文件的详细信息，包括其路径 */
   async fetch_file_profile(file_id: string) {
     await this.ensure_initialized();
@@ -499,7 +522,7 @@ export class AliyunDriveClient {
     const matched_share_id = url.match(/\/s\/([a-zA-Z0-9]{1,})$/);
     if (!matched_share_id) {
       return Result.Err(
-        "Invalid url, it must includes share_id like hFgvpSXzCYd at the end of url"
+        "Invalid url, it must includes share_id like 'hFgvpSXzCYd' at the end of url"
       );
     }
     const share_id = matched_share_id[1];

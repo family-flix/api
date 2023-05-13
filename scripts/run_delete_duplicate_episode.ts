@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 import { delete_duplicate_episode } from "./delete_duplicate_episode";
 
 async function main() {

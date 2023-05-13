@@ -17,8 +17,7 @@ export default async function handler(
     email: string;
     password: string;
   }>;
-  const user = new User({ secret: process.env.TOKEN_SECRET });
-  const r = await user.login_with_password({ email, password });
+  const r = await User.NewWithPassword({ email, password });
   if (r.error) {
     return e(r);
   }

@@ -6,9 +6,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
-import { parse_token, response_error_factory } from "@/utils/backend";
-import { store } from "@/store/sqlite";
+import { response_error_factory } from "@/utils/backend";
+import { store } from "@/store";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,19 +22,19 @@ export default async function handler(
     target_folder: string;
   }>;
   if (!drive_id) {
-    return e("Missing aliyun_drive_id");
+    return e("缺少云盘 id 参数");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const drive_res = await store.find_aliyun_drive({ id: drive_id, user_id });
+  const drive_res = await store.find_aliyun_drive({ id: drive_id });
   if (drive_res.error) {
     return e(drive_res);
   }
   if (!drive_res.data) {
-    return e("No matched record of drive");
+    return e("没有找到匹配的云盘记录");
   }
   const { root_folder_id } = drive_res.data;
   const client = new AliyunDriveClient({

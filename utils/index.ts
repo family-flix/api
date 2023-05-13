@@ -1115,6 +1115,10 @@ export function query_stringify(
 const defaultRandomAlphabet =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+/** 返回一条随机作为记录 id 的 15 位字符串 */
+export function r_id() {
+  return random_string(15);
+}
 /**
  * 返回一个指定长度的随机字符串
  * @param length

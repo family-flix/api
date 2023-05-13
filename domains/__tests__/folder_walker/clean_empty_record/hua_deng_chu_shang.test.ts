@@ -7,6 +7,7 @@ import { test_store as store } from "../../store";
 import { sleep } from "@/utils/flow";
 import { merge_same_tv_and_episodes } from "@/domains/walker/merge_same_tv_and_episode";
 import { hidden_empty_tv } from "@/domains/walker/clean_empty_records";
+import { ModelKeys } from "@/store";
 
 describe("clean empty record", () => {
   const { user_id, drive_id } = {
@@ -14,18 +15,18 @@ describe("clean empty record", () => {
     drive_id: "123",
   };
   beforeEach(async () => {
-    const tables = [
-      "aliyun_drive",
+    const tables: ModelKeys[] = [
+      "drive",
       "episode",
       "season",
-      "tv",
+      "tV",
       "folder",
-      "searched_tv",
-      "async_task",
+      "searchedTV",
+      "asyncTask",
     ];
     for (let i = 0; i < tables.length; i += 1) {
       const table = tables[i];
-      await store.operation.clear_dataset(table);
+      await store.clear_dataset(table);
     }
   });
   test("华灯初上", async () => {
@@ -127,15 +128,12 @@ describe("clean empty record", () => {
     expect(tvs_res.error).toBe(null);
     const tvs = tvs_res.data;
     expect(tvs.length).toBe(2);
-    const r = await merge_same_tv_and_episodes(
-      { user_id, drive_id },
-      store.operation
-    );
+    const r = await merge_same_tv_and_episodes({ user_id, drive_id }, store);
     if (r.error) {
       return;
     }
     expect(r.error).toBe(null);
-    const r2 = await hidden_empty_tv({ user_id, drive_id }, store.operation);
+    const r2 = await hidden_empty_tv({ user_id, drive_id }, store);
     expect(r2.error).toBe(null);
     if (r2.error) {
       return;

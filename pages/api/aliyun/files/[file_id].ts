@@ -11,7 +11,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 type SimpleAliyunDriveFile = {
   file_id: string;

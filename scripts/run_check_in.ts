@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 import { check_in } from "./check_in";
 

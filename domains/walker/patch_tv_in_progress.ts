@@ -98,7 +98,7 @@ export async function patch_tv_in_progress(
         const paths = context.map((f) => f.name).join("/");
         const existing_res = await store.find_tmp_folder({
           name,
-          parent_path: paths,
+          parent_paths: paths,
           user_id,
         });
         if (existing_res.error) {
@@ -210,7 +210,7 @@ SELECT * FROM cte WHERE level = ${names.length - 1};`;
         const r4 = await store.add_tmp_folder({
           name: file.name,
           type: type === "file" ? 1 : 0,
-          parent_path,
+          parent_paths: parent_path,
           user_id,
           drive_id,
         });

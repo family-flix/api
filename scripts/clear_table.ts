@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 import { parse_argv } from "@/utils/backend";
 
 function main() {

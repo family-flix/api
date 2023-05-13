@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 import {
   patch_shared_files,
   check_tv_in_progress_is_completed,

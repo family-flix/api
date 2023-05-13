@@ -8,7 +8,7 @@ import { BaseApiResp, Result } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store_factory } from "@/store";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 async function delete_episode_and_file(
   episode: { file_id: string },

@@ -6,7 +6,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,12 +19,12 @@ export default async function handler(
   if (!id) {
     return e("缺少网盘 id 参数");
   }
-  const t_res = parse_token(authorization);
-  if (t_res.error) {
-    return e(t_res);
+  const t = await User.New(authorization);
+  if (t.error) {
+    return e(t);
   }
-  const { id: user_id } = t_res.data;
-  const drive_res = await store.find_aliyun_drive({ id, user_id });
+  const { id: user_id } = t.data;
+  const drive_res = await store.find_aliyun_drive({ id });
   if (drive_res.error) {
     return e(drive_res);
   }

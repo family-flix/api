@@ -8,7 +8,8 @@ import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { merge_same_tv_and_episodes } from "@/domains/walker/merge_same_tv_and_episode";
 import { hidden_empty_tv } from "@/domains/walker/clean_empty_records";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,7 +23,7 @@ export default async function handler(
   if (!drive_id) {
     return e("Missing aliyun_drive_id");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
@@ -32,12 +33,12 @@ export default async function handler(
       user_id,
       drive_id,
     },
-    store.operation
+    store
   );
   if (r1.error) {
     return e(r1);
   }
-  const r2 = await hidden_empty_tv({ user_id, drive_id }, store.operation);
+  const r2 = await hidden_empty_tv({ user_id, drive_id }, store);
   if (r2.error) {
     return e(r2);
   }

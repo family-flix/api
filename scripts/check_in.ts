@@ -1,7 +1,6 @@
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { Result } from "@/types";
-import { store_factory } from "@/store";
-import { AliyunDriveRecord, RecordCommonPart } from "@/store/types";
+import { prisma, store_factory } from "@/store";
 
 import { notice_push_deer } from "./notice";
 
@@ -16,12 +15,37 @@ export async function check_in(store: ReturnType<typeof store_factory>) {
       (SELECT drive_check_in.drive_id 
        FROM drive_check_in 
        WHERE date(drive_check_in.checked_at) = date('now'))`;
-  const drives_resp = await store.operation.all<
-    (AliyunDriveRecord & RecordCommonPart)[]
-  >(sql);
-  if (drives_resp.error) {
-    return drives_resp;
-  }
+  const data = await prisma.drive.findMany({
+    select: {
+      id: true,
+      name: true,
+      user_name: true,
+    },
+    where: {
+      NOT: {
+        id: {
+          in: await prisma.driveCheckIn
+            .findMany({
+              where: {
+                checked_at: {
+                  // 表示「checked_at时间在今天内」这个条件
+                  gte:
+                    new Date().toISOString().substr(0, 10) + "T00:00:00.000Z",
+                  lt: new Date().toISOString().substr(0, 10) + "T23:59:59.999Z",
+                },
+              },
+            })
+            .then((res) => res.map((item) => item.drive_id)),
+        },
+      },
+    },
+  });
+  // if (drives_resp.error) {
+  //   return drives_resp;
+  // }
+  const drives_resp = {
+    data,
+  };
   const drives_success: string[] = [];
   for (let i = 0; i < drives_resp.data.length; i += 1) {
     const drive = drives_resp.data[i];

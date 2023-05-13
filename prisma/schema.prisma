@@ -130,9 +130,21 @@ model Episode {
         drive    Drive  @relation(fields: [drive_id], references: [id])
 
         // 关联 user 表
-        user_id     String
-        user        User          @relation(fields: [user_id], references: [id])
-        PlayHistory PlayHistory[]
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
+
+        play_histories PlayHistory[]
+}
+
+model Season {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        season String
+
+        tv_id String
+        tv    TV     @relation(fields: [tv_id], references: [id])
 }
 
 model Folder {
@@ -221,7 +233,7 @@ model Movie {
         drive_id String
         drive    Drive  @relation(fields: [drive_id], references: [id])
 
-        PlayHistory PlayHistory[]
+        play_histories PlayHistory[]
 }
 
 model PlayHistory {
@@ -335,9 +347,9 @@ model SharedFile {
         created DateTime @default(now())
         updated DateTime @default(now())
         // 分享链接名称
-        title   String
+        title   String?
         // 分享链接
-        url     String
+        url     String   @unique
 
         // 关联 user 表
         user_id String
@@ -414,9 +426,10 @@ model TV {
         user_id        String
         user           User        @relation(fields: [user_id], references: [id])
 
-        Episode       Episode[]
-        PlayHistory   PlayHistory[]
-        RecommendedTV RecommendedTV[]
+        episodes        Episode[]
+        play_histories  PlayHistory[]
+        recommended_tvs RecommendedTV[]
+        seasons         Season[]
 }
 
 model TVNeedComplete {

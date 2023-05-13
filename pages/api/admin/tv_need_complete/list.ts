@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp, Result } from "@/types";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 import {
   exchange_user_id,
   parse_token,

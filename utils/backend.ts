@@ -3,7 +3,7 @@
 import { NextApiResponse } from "next";
 
 import { Result, resultify } from "@/types";
-// import { store } from "@/store/sqlite";
+// import { store } from "@/store";
 // import {
 //   RecordCommonPart,
 //   SeasonRecord,

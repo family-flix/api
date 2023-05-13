@@ -11,7 +11,7 @@ import {
   upload_tmdb_images,
 } from "@/domains/walker/utils";
 import { PartialSearchedTVFromTMDB } from "@/domains/tmdb/services";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 export default async function handler(
   req: NextApiRequest,

@@ -1,3 +1,6 @@
+/**
+ * @file 网盘所有逻辑
+ */
 import Joi from "joi";
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
@@ -103,7 +106,7 @@ export class Drive {
     }
     const r = await prisma.drive.findUnique({
       where: {
-        drive_id: this.id,
+        id: this.id,
       },
     });
     if (r === null) {
@@ -113,7 +116,7 @@ export class Drive {
   }
 
   /**
-   * 刷新网盘 token
+   * 获取网盘详情并更新到数据库
    */
   async refresh_profile() {
     if (this.id === null) {
@@ -128,16 +131,22 @@ export class Drive {
       return Result.Err(r);
     }
     const { total_size, used_size } = r.data;
-    await prisma.drive.update({
+    const d = await prisma.drive.update({
       where: {
-        drive_id: this.id,
+        id: this.id,
       },
       data: {
         total_size,
         used_size,
       },
+      select: {
+        avatar: true,
+        user_name: true,
+        used_size: true,
+        total_size: true,
+      },
     });
-    return Result.Ok(null);
+    return Result.Ok(d);
   }
 
   /**
@@ -197,8 +206,8 @@ export class Drive {
           }
         );
       }
-      const drive = new AliyunDriveClient({ drive_id, store });
-      const file_res = await drive.fetch_file(root_folder_id);
+      const client = new AliyunDriveClient({ drive_id, store });
+      const file_res = await client.fetch_file(root_folder_id);
       if (file_res.error) {
         return Result.Err(file_res.error);
       }

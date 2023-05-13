@@ -3,7 +3,7 @@ require("dotenv").config();
 import CronJob from "cron";
 import dayjs from "dayjs";
 
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 import { check_in } from "./check_in";
 import {

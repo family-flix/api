@@ -5,10 +5,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
-import { store } from "@/store/sqlite";
-
-const { find_aliyun_drives_with_pagination } = store;
+import { response_error_factory } from "@/utils/backend";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,14 +14,13 @@ export default async function handler(
 ) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const t_resp = parse_token(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  const query = req.query as { page: string; page_size: string };
+  const t = await User.New(authorization);
+  if (t.error) {
+    return e(t);
   }
-  const { id: user_id } = t_resp.data;
-  const r = await find_aliyun_drives_with_pagination({
-    user_id,
-  });
+  const user = t.data;
+  const r = await user.list_drives_with_pagination(query);
   if (r.error) {
     return e(r);
   }

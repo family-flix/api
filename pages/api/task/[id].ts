@@ -7,7 +7,8 @@ import dayjs from "dayjs";
 
 import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
+import { User } from "@/domains/user";
 
 const { find_async_task, update_async_task } = store;
 
@@ -21,7 +22,7 @@ export default async function handler(
   if (!id) {
     return e("Missing async_task_id in task/[id].ts");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }

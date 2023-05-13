@@ -2,7 +2,7 @@ require("dotenv").config();
 
 import dayjs from "dayjs";
 
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 async function main() {
   const users_res = await store.find_users();

@@ -1,7 +1,7 @@
 require("dotenv").config();
 import { walk_table_with_pagination } from "@/domains/walker/utils";
 import { store_factory } from "@/store";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 import { EpisodeRecord, RecordCommonPart } from "@/store/types";
 
 async function main() {

@@ -3,7 +3,7 @@
  */
 require("dotenv").config();
 import { RecordCommonPart, SharedFilesInProgressRecord } from "@/store/types";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
 import { AliyunDriveClient } from "@/domains/aliyundrive";

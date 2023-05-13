@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory, analysis_tv } from "@/utils/backend";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 const { find_async_task, find_searched_tv, find_tmp_tvs, find_tmp_episodes } =
   store;

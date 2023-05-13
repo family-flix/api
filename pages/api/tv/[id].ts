@@ -9,7 +9,7 @@ import {
   parse_token,
   response_error_factory,
 } from "@/utils/backend";
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 import { get_tv_profile_with_first_season_by_id } from "@/domains/walker/utils";
 
 export default async function handler(

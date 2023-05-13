@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-import { store } from "@/store/sqlite";
+import { store } from "@/store";
 
 export async function find_same_tvs() {
   const users_res = await store.find_users();
