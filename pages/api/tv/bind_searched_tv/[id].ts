@@ -12,6 +12,7 @@ import {
 } from "@/domains/walker/utils";
 import { PartialSearchedTVFromTMDB } from "@/domains/tmdb/services";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,7 +25,7 @@ export default async function handler(
   if (!id) {
     return e("Missing id");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }

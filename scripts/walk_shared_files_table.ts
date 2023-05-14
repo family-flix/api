@@ -2,11 +2,7 @@
  * @file 遍历 searched_tv 表进行操作
  */
 require("dotenv").config();
-import {
-  RecordCommonPart,
-  SharedFilesInProgressRecord,
-  SharedFilesRecord,
-} from "@/store/types";
+import { RecordCommonPart, SharedFilesRecord } from "@/store/types";
 import { store } from "@/store";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
@@ -14,7 +10,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import dayjs from "dayjs";
 
 async function run() {
-  const drives_res = await store.find_aliyun_drives();
+  const drives_res = await store.find_aliyun_drives({});
   if (drives_res.error) {
     return;
   }

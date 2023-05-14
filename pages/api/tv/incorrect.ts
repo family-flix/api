@@ -7,8 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-
-const { find_tv_with_pagination } = store;
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,14 +23,14 @@ export default async function handler(
   if (!authorization) {
     return e("please login");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const resp = await find_tv_with_pagination(
+  const resp = await store.find_tv_with_pagination(
     {
-      searched_tv_id: "null",
+      searched_tv: undefined,
       user_id,
     },
     { page: Number(page), size: Number(page_size) }
