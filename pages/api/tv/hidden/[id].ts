@@ -1,12 +1,13 @@
 /**
- * @file 删除播放记录
+ * @file 将指定电视剧设置为不可见
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,7 +19,7 @@ export default async function handler(
   if (!id) {
     return e("缺少电视剧 id 参数");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }

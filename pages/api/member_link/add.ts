@@ -5,12 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import {
-  generate_token,
-  parse_token,
-  response_error_factory,
-} from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 const { add_member_link, find_member } = store;
 
@@ -23,7 +20,7 @@ export default async function handler(
   const { id } = req.body as Partial<{
     id: string;
   }>;
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
@@ -31,14 +28,14 @@ export default async function handler(
     return e("Missing member id");
   }
   const { id: user_id } = t_resp.data;
-  const member_r = await find_member({ id, owner_id: user_id });
+  const member_r = await find_member({ id, user_id });
   if (member_r.error) {
     return e(member_r);
   }
   if (!member_r.data) {
     return e("No matched record");
   }
-  const token_resp = generate_token({ id, is_member: 1 });
+  const token_resp = await User.Token({ id });
   if (token_resp.error) {
     return e(token_resp);
   }

@@ -1,12 +1,13 @@
 /**
- * @file 获取 tv 列表
+ * @file 获取成员的推荐 tv 列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp, Result } from "@/types";
 import { store } from "@/store";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,14 +20,11 @@ export default async function handler(
   }>;
   const { all, get } = store.operation;
   const { authorization } = req.headers;
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
-  const { member_id, is_member } = t_resp.data;
-  if (!is_member) {
-    return e("只有成员才能获取推荐影片列表");
-  }
+  const { id: member_id } = t_resp.data;
   const condition = ` tv.id IN (SELECT recommended_tv.tv_id FROM recommended_tv WHERE member_id = '${member_id}')`;
   const count_resp = await (async () => {
     const simple_sql2 = `SELECT COUNT(*) count FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id WHERE ${condition};`;

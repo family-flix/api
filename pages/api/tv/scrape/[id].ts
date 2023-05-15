@@ -5,9 +5,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { search_special_tv_in_tmdb_then_update_tv } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,7 +20,7 @@ export default async function handler(
   if (!id) {
     return e("缺少 id 参数");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
@@ -37,7 +38,7 @@ export default async function handler(
     name,
     original_name,
     correct_name,
-    store: store.operation,
+    store,
     token: process.env.TMDB_TOKEN,
   });
   if (r.error) {

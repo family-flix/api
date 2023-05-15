@@ -5,9 +5,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { build_link_between_shared_files_with_folder } from "@/domains/walker/utils";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -33,7 +34,7 @@ export default async function handler(
   if (!url) {
     return e("缺少分享链接参数");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }

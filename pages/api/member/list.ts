@@ -5,8 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,15 +19,13 @@ export default async function handler(
     page: string;
     page_size: string;
   }>;
-  const { all } = store.operation;
-
-  const token_resp = parse_token(authorization);
+  const token_resp = await User.New(authorization);
   if (token_resp.error) {
     return e(token_resp);
   }
   const { id: user_id } = token_resp.data;
   const r1 = await store.find_member_with_pagination(
-    { owner_id: user_id },
+    { user_id },
     {
       page: Number(page),
       size: Number(page_size),
@@ -54,24 +53,24 @@ export default async function handler(
         };
       });
     }
-    const fields =
-      "tv.id,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.poster_path,searched_tv.first_air_date";
-    const r3 = await all<
-      {
-        id: string;
-        name: string;
-        original_name: string;
-        poster_path: string;
-      }[]
-    >(
-      `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id WHERE tv.id IN (SELECT recommended_tv.tv_id FROM recommended_tv WHERE member_id = '${id}');`
-    );
-    // @ts-ignore
-    member.recommended_tvs = [];
-    if (r3.data && r3.data.length) {
-      // @ts-ignore
-      member.recommended_tvs = r3.data;
-    }
+    // const fields =
+    //   "tv.id,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.poster_path,searched_tv.first_air_date";
+    // const r3 = await all<
+    //   {
+    //     id: string;
+    //     name: string;
+    //     original_name: string;
+    //     poster_path: string;
+    //   }[]
+    // >(
+    //   `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id WHERE tv.id IN (SELECT recommended_tv.tv_id FROM recommended_tv WHERE member_id = '${id}');`
+    // );
+    // // @ts-ignore
+    // member.recommended_tvs = [];
+    // if (r3.data && r3.data.length) {
+    //   // @ts-ignore
+    //   member.recommended_tvs = r3.data;
+    // }
   }
   res.status(200).json({ code: 0, msg: "", data: r1.data });
 }

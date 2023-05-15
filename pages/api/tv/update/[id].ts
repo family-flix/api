@@ -1,14 +1,15 @@
 /**
- * @file 删除播放记录
+ * @file 更新未知电视剧详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { extra_searched_tv_field } from "@/domains/walker/utils";
 import { PartialSearchedTVFromTMDB } from "@/domains/tmdb/services";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,7 +22,7 @@ export default async function handler(
   if (!id) {
     return e("Missing id");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }

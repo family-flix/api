@@ -5,12 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import {
-  parse_token,
-  response_error_factory,
-  user_id_or_member_id,
-} from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,14 +18,13 @@ export default async function handler(
   const { tv_id } = req.query as Partial<{
     tv_id: string;
   }>;
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
-  const { user_id, member_id } = user_id_or_member_id(t_res.data);
+  const { id: member_id } = t_res.data;
   const history_res = await store.find_history({
     tv_id,
-    user_id,
     member_id,
   });
   if (history_res.error) {

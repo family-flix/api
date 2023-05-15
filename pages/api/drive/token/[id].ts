@@ -1,5 +1,5 @@
 /**
- * @file 删除播放记录
+ * @file 获取指定网盘详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { parse_token, response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { AliyunDriveRecord } from "@/store/types";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,7 +23,7 @@ export default async function handler(
   if (!refresh_token) {
     return e("Missing refresh_token");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
@@ -36,7 +36,7 @@ export default async function handler(
     return e("No matched record of drive");
   }
   const r = await store.find_aliyun_drive_token({
-    aliyun_drive_id: drive_res.data.id,
+    drive_id: drive_res.data.id,
   });
   if (r.error) {
     return e(r);

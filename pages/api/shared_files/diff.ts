@@ -5,15 +5,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp, Result } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
-import { FilesRecord } from "@/store/types";
-import { DiffTypes, FolderDiffer } from "@/domains/folder_differ";
-import { log } from "@/logger/log";
-import { is_video_file } from "@/utils";
 import { patch_tv_in_progress } from "@/domains/walker/patch_tv_in_progress";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -38,7 +33,7 @@ export default async function handler(
   if (!file_name) {
     return e("请传入要分析的文件名称");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }

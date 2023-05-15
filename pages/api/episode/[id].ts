@@ -5,12 +5,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import {
-  exchange_user_id,
-  parse_token,
-  response_error_factory,
-} from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { User } from "@/domains/user";
+import { Member } from "@/domains/user/member";
 
 const { find_tv, find_episode } = store;
 
@@ -28,15 +26,11 @@ export default async function handler(
     return e("Missing tv id");
   }
   const { authorization } = req.headers;
-  const t_resp = parse_token(authorization);
+  const t_resp = await Member.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
-  const id_resp = await exchange_user_id(t_resp.data);
-  if (id_resp.error) {
-    return e(id_resp);
-  }
-  const { id: user_id } = id_resp.data;
+  const { id: user_id } = t_resp.data;
   // console.log("[Endpoint]episode/[id]", user_id, t_resp.data);
   const episodes_resp = await find_episode({
     id,

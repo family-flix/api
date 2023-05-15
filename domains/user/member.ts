@@ -3,7 +3,6 @@ import Joi, { Err } from "joi";
 import { Drive } from "@/domains/drive";
 import { List } from "@/domains/list";
 import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
-import { AliyunDriveRecord } from "@/store/types";
 import { Result, resultify } from "@/types";
 import { random_string } from "@/utils";
 import { store } from "@/store";
@@ -19,7 +18,7 @@ const credentialsSchema = Joi.object({
 
 type UserUniqueID = string;
 
-export class User {
+export class Member {
   /** 用户 id */
   id: UserUniqueID;
   nickname: string = "unknown";
@@ -39,13 +38,22 @@ export class User {
     }
     const r = await parse_token({
       token,
-      secret: User.SECRET,
+      secret: Member.SECRET,
     });
     if (r.error) {
       return Result.Err(r.error);
     }
     const id = r.data.id as UserUniqueID;
-    const user = new User({ id, token });
+    const existing = await resultify(
+      store.prisma.member.findUnique.bind(store.prisma.member)
+    )({ where: { id } });
+    if (existing.error) {
+      return Result.Err(existing.error);
+    }
+    if (existing.data === null) {
+      return Result.Err("不存在该记录");
+    }
+    const user = new Member({ id, token });
     return Result.Ok(user);
   }
   static async NewWithPassword(
@@ -76,9 +84,9 @@ export class User {
       token: {
         id: user_id,
       },
-      secret: User.SECRET,
+      secret: Member.SECRET,
     });
-    const user = new User({ id: user_id, token });
+    const user = new Member({ id: user_id, token });
     return Result.Ok(user);
   }
   static async Add(values: Partial<{ email: string; password: string }>) {
@@ -123,7 +131,7 @@ export class User {
       token: {
         id: created_user.id,
       },
-      secret: User.SECRET,
+      secret: Member.SECRET,
     });
     return Result.Ok({
       id: user_id,
@@ -137,7 +145,7 @@ export class User {
         token: {
           id,
         },
-        secret: User.SECRET,
+        secret: Member.SECRET,
       });
       return Result.Ok(token);
     } catch (err) {
@@ -160,34 +168,4 @@ export class User {
   async login_with_password(
     values: Partial<{ email: string; password: string }>
   ) {}
-
-  /** 添加云盘 */
-  async add_drive(body: { payload: AliyunDrivePayload }) {
-    const { payload } = body;
-    return Drive.Add({ ...payload, user_id: this.id });
-  }
-  /** 根据 id 获取一个 Drive 实例 */
-  async get_drive(id?: string) {
-    if (!id) {
-      return Result.Err("缺少 drive id 参数");
-    }
-    return Drive.New({ id, user_id: this.id });
-  }
-  /** 按分页返回该用户所有网盘 */
-  async list_drives_with_pagination(
-    params: Partial<{
-      page: string;
-      page_size: string;
-    }>
-  ) {
-    const { page = 1, page_size = 10 } = params;
-    const core = new List(store.prisma.drive, {
-      page: Number(page),
-      page_size: Number(page_size),
-      search: {
-        user_id: this.id,
-      },
-    });
-    return core.fetch();
-  }
 }

@@ -1,4 +1,6 @@
-import { generate_token, parse_token } from "@/utils/backend";
+// import { generate_token, parse_token } from "@/utils/backend";
+
+import { User } from "@/domains/user";
 
 // (async () => {
 //   const payload = {
@@ -11,10 +13,10 @@ import { generate_token, parse_token } from "@/utils/backend";
 //   console.log(token.data);
 // })();
 
-(() => {
+(async () => {
   const token =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMyIsImlhdCI6MTY3NzU2NTk5Mn0.Eh_1ymdTjjj0np2ivRg1BuW-cbVNnqEOhIHaSj_pG6g";
-  const r = parse_token(token);
+  const r = await User.New(token);
   if (r.error) {
     console.log(r.error.message);
     return;

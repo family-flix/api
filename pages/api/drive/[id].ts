@@ -1,11 +1,11 @@
 /**
- * @file 删除播放记录
+ * @file 获取网盘详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 

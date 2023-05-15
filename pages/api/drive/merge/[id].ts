@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { merge_same_tv_and_episodes } from "@/domains/walker/merge_same_tv_and_episode";
 import { hidden_empty_tv } from "@/domains/walker/clean_empty_records";
 import { store } from "@/store";

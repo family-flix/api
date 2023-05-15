@@ -167,7 +167,7 @@ export function pagination_factory<T extends PrismaClient[ModelKeys]>(
         key: string;
         order: "DESC" | "ASC";
       }[];
-    }
+    } = {}
   ) => {
     const { page = 1, page_size = 10, size = page_size, sorts = [] } = extra;
     const core = new List(model, {

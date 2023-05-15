@@ -5,8 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 const { add_member } = store;
 
@@ -24,7 +25,7 @@ export default async function handler(
   if (!remark) {
     return e("Missing remark");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
@@ -33,7 +34,7 @@ export default async function handler(
     remark,
     name,
     email,
-    owner_id: user_id,
+    user_id,
     disabled: 0,
   });
   if (r.error) {

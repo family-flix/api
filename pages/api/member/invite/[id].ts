@@ -5,8 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 const { find_member } = store;
 
@@ -20,12 +21,12 @@ export default async function handler(
   if (!id) {
     return e("Missing id");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const member_resp = await find_member({ id, owner_id: user_id });
+  const member_resp = await find_member({ id, user_id });
   if (member_resp.error) {
     return e(member_resp);
   }

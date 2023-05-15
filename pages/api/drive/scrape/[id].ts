@@ -5,10 +5,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { search_tv_in_tmdb_then_update_tv } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,7 +22,7 @@ export default async function handler(
   if (!drive_id) {
     return e("Missing aliyun_drive_id");
   }
-  const t_resp = parse_token(authorization);
+  const t_resp = await User.New(authorization);
   if (t_resp.error) {
     return e(t_resp);
   }
@@ -30,7 +30,7 @@ export default async function handler(
   const resp = await search_tv_in_tmdb_then_update_tv({
     drive_id,
     user_id,
-    operation: store.operation,
+    store,
   });
   if (resp.error) {
     return e(resp);

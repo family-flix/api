@@ -5,12 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import {
-  parse_token,
-  response_error_factory,
-  user_id_or_member_id,
-} from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { Member } from "@/domains/user/member";
 
 const { add_history, find_history, update_history } = store;
 
@@ -37,13 +34,14 @@ export default async function handler(
   if (!episode_id) {
     return e("missing episode_id");
   }
-  const r_token = parse_token(authorization);
-  if (r_token.error) {
-    return e(r_token);
+  const t_resp = await Member.New(authorization);
+  if (t_resp.error) {
+    return e(t_resp);
   }
+  const { id: member_id } = t_resp.data;
   const existing_play_resp = await find_history({
     tv_id,
-    ...user_id_or_member_id(r_token.data),
+    member_id,
   });
   if (existing_play_resp.error) {
     return e(existing_play_resp);
@@ -54,7 +52,7 @@ export default async function handler(
       episode_id,
       current_time,
       duration,
-      ...user_id_or_member_id(r_token.data),
+      member_id,
     });
     if (adding_resp.error) {
       return e(adding_resp);

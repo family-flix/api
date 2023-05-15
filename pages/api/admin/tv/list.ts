@@ -58,7 +58,7 @@ export default async function handler(
   )({
     // 连接条件
     where: {
-      // user_id,
+      user_id,
       // hidden: 0,
       searched_tv_id: {
         not: null,
@@ -103,7 +103,7 @@ export default async function handler(
     },
     // 连接条件
     where: {
-      // user_id,
+      user_id,
       // hidden: 0,
       searched_tv_id: {
         not: null,

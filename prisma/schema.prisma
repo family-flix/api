@@ -187,16 +187,17 @@ model Member {
         // 成员名字
         name     String?  @default("")
         // 成员备注
-        remark   String?  @default("")
+        remark   String   @unique
         // 是否禁用
         disabled Float?   @default(0)
 
         // 关联 user 表
-        user_id       String
-        user          User            @relation(fields: [user_id], references: [id])
-        MemberToken   MemberToken[]
-        PlayHistory   PlayHistory[]
-        RecommendedTV RecommendedTV[]
+        user_id String
+        user    User   @relation(fields: [user_id], references: [id])
+
+        member_tokens   MemberToken[]
+        play_histories  PlayHistory[]
+        recommended_tvs RecommendedTV[]
 }
 
 model MemberToken {

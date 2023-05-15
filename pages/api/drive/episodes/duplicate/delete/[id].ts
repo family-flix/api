@@ -5,10 +5,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp, Result } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store_factory } from "@/store";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 async function delete_episode_and_file(
   episode: { file_id: string },
@@ -48,7 +49,7 @@ export default async function handler(
   if (!id) {
     return e("缺少要删除的文件 file_id 参数");
   }
-  const t_res = parse_token(auth);
+  const t_res = await User.New(auth);
   if (t_res.error) {
     return e(t_res);
   }

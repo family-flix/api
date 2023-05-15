@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 

@@ -4,13 +4,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import {
-  exchange_user_id,
-  parse_token,
-  response_error_factory,
-} from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { get_tv_profile_with_first_season_by_id } from "@/domains/walker/utils";
+import { Member } from "@/domains/user/member";
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,16 +19,16 @@ export default async function handler(
   if (!id) {
     return e("请传入 id 参数");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await Member.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
-  const id_res = await exchange_user_id(t_res.data);
-  if (id_res.error) {
-    return e(id_res);
-  }
-  const { id: user_id } = id_res.data;
-  const r = await get_tv_profile_with_first_season_by_id(id, { user_id }, store);
+  const { id: user_id } = t_res.data;
+  const r = await get_tv_profile_with_first_season_by_id(
+    id,
+    { user_id },
+    store
+  );
   if (r.error) {
     return e(r);
   }

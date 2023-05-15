@@ -5,8 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { parse_token, response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { User } from "@/domains/user";
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,7 +19,7 @@ export default async function handler(
   if (!id) {
     return e("Missing drive id");
   }
-  const t_res = parse_token(authorization);
+  const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
@@ -31,7 +32,7 @@ export default async function handler(
     return e("No matched record of drive");
   }
   const drive_token_res = await store.find_aliyun_drive_token({
-    aliyun_drive_id: drive_res.data.id,
+    drive_id: drive_res.data.id,
   });
   if (drive_token_res.error) {
     return e(drive_token_res);
