@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { search_special_tv_in_tmdb_then_update } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
+import { add_tv_from_maybe_tv } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
@@ -30,14 +30,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("No matched record of tv");
   }
   const { id: tv_id, name, original_name, correct_name } = tv_res.data;
-  const r = await search_special_tv_in_tmdb_then_update({
-    id: tv_id,
-    name,
-    original_name,
-    correct_name,
-    store,
-    token: process.env.TMDB_TOKEN,
-  });
+  const r = await add_tv_from_maybe_tv(
+    {
+      id: tv_id,
+      name,
+      original_name,
+      correct_name,
+    },
+    {
+      store,
+      token: process.env.TMDB_TOKEN,
+    }
+  );
   if (r.error) {
     return e(r);
   }

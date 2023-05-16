@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { search_all_tv_in_tmdb_then_update_tv } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
+import { add_tv_from_maybe_tvs } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
 import { merge_same_tv_and_episodes } from "@/domains/walker/merge_same_tv_and_episode";
 import { hidden_empty_tv } from "@/domains/walker/clean_empty_records";
 import { store } from "@/store";
@@ -29,7 +29,7 @@ export default async function handler(
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const r1 = await search_all_tv_in_tmdb_then_update_tv({
+  const r1 = await add_tv_from_maybe_tvs({
     user_id,
     drive_id: aliyun_drive_id,
     store,

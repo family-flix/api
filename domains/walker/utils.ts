@@ -130,6 +130,12 @@ export async function build_link_between_shared_files_with_folder(
   return Result.Ok(null);
 }
 
+/**
+ * 影片文件是否发生改变
+ * @param existing_episode
+ * @param task
+ * @returns
+ */
 function is_episode_changed(existing_episode: EpisodeRecord, task: SearchedEpisode) {
   const { parent_file_id, episode: e, file_name, size, parent_paths, season } = existing_episode;
   const { episode } = task;
@@ -150,7 +156,7 @@ function is_episode_changed(existing_episode: EpisodeRecord, task: SearchedEpiso
  * @param extra
  * @returns
  */
-async function get_tv_id_by_name(
+async function get_maybe_tv_id_by_name(
   data: SearchedEpisode,
   extra: ExtraUserAndDriveInfo,
   store: ReturnType<typeof store_factory>
@@ -180,7 +186,7 @@ async function get_tv_id_by_name(
     },
   });
   if (existing_tv_res.error) {
-    log("[ERROR]find tv request failed", existing_tv_res.error.message);
+    // log("[ERROR]find tv request failed", existing_tv_res.error.message);
     return Result.Err(existing_tv_res.error);
   }
   if (existing_tv_res.data) {
@@ -198,10 +204,10 @@ async function get_tv_id_by_name(
   log(`[${episode.file_name}]`, "电视剧", tv.name || tv.original_name, "不存在，新增", body.name || body.original_name);
   const adding_tv_res = await store.add_maybe_tv(body);
   if (adding_tv_res.error) {
-    log("[ERROR]adding tv request failed", adding_tv_res.error.message);
+    // log("[ERROR]adding tv request failed", adding_tv_res.error.message);
     return Result.Err(adding_tv_res.error);
   }
-  log("[UTIL]get_tv_id_by_name end", tv.name || tv.original_name);
+  // log("[UTIL]get_tv_id_by_name end", tv.name || tv.original_name);
   log(`[${episode.file_name}]`, "为该视频文件新增电视剧", tv.name || tv.original_name, "成功");
   return Result.Ok(adding_tv_res.data);
 }
@@ -212,14 +218,14 @@ async function get_tv_id_by_name(
  * @param extra
  * @returns
  */
-async function add_tv_and_season(
+async function add_maybe_tv_and_season(
   data: SearchedEpisode,
   extra: ExtraUserAndDriveInfo,
   store: ReturnType<typeof store_factory>
 ) {
   const { tv, season, episode } = data;
   log(`[${episode.file_name}]`, "准备为该视频文件新增电视剧", tv.name || tv.original_name);
-  const tv_id_res = await get_tv_id_by_name(data, extra, store);
+  const tv_id_res = await get_maybe_tv_id_by_name(data, extra, store);
   if (tv_id_res.error) {
     return tv_id_res;
   }
@@ -274,7 +280,7 @@ export async function adding_episode_when_walk(
   const existing_episode = existing_episode_res.data;
   if (!existing_episode) {
     log(`[${data.episode.file_name}]`, "是新视频文件");
-    const tv_and_season_resp = await add_tv_and_season(data, extra, store);
+    const tv_and_season_resp = await add_maybe_tv_and_season(data, extra, store);
     if (tv_and_season_resp.error) {
       log("[ERROR]add_tv_and_season failed", tv_and_season_resp.error.message);
       return tv_and_season_resp;
@@ -326,7 +332,7 @@ export async function adding_episode_when_walk(
   if (is_tv_changed(existing_tv, tv)) {
     // prettier-ignore
     log(`[${data.episode.file_name}]`, "该视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
-    const tv_res = await get_tv_id_by_name(data, extra, store);
+    const tv_res = await get_maybe_tv_id_by_name(data, extra, store);
     if (tv_res.error) {
       return Result.Err(tv_res.error);
     }

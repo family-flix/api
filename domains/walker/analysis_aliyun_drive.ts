@@ -11,7 +11,7 @@ import { hidden_empty_tv } from "@/domains/walker/clean_empty_records";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import { log } from "@/logger/log";
 
-import { search_all_tv_in_tmdb_then_update_tv } from "./search_tv_in_tmdb_then_update_tv";
+import { add_tv_from_maybe_tvs } from "./search_tv_in_tmdb_then_update_tv";
 import { merge_same_tv_and_episodes } from "./merge_same_tv_and_episode";
 import { adding_file_when_walk, adding_episode_when_walk, need_skip_the_file_when_walk } from "./utils";
 
@@ -184,7 +184,7 @@ export async function walk_drive(options: {
     }
     // log("[](analysis_aliyun_drive)before search_tv_in_tmdb_then_update_tv");
     log("\n\n-------- 开始搜索电视剧信息 ---------\n\n");
-    await search_all_tv_in_tmdb_then_update_tv(
+    await add_tv_from_maybe_tvs(
       { user_id, drive_id, need_upload_image, store },
       {
         on_stop() {

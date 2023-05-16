@@ -132,10 +132,6 @@ model episode {
         parent_paths   String
         size           Float?   @default(0)
 
-        // 关联 tv 表
-        tv_id String
-        tv    tv     @relation(fields: [tv_id], references: [id], onDelete: Cascade)
-
         // 关联 drive 表
         drive_id String
         drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
@@ -144,9 +140,10 @@ model episode {
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+        maybe_tv_id String
+        maybe_tv    maybe_tv @relation(fields: [maybe_tv_id], references: [id], onDelete: Cascade)
+
         play_histories play_history[]
-        maybe_tv       maybe_tv?      @relation(fields: [maybe_tv_id], references: [id])
-        maybe_tv_id    String?
 
         @@map("Episode")
 }
@@ -256,8 +253,6 @@ model movie {
         // 关联 user 表
         user_id  String
         user     user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-        // 关联 searched_movie 表
-        // searched_movie_id String?
         // 关联 drive 表
         drive_id String
         drive    drive  @relation(fields: [drive_id], references: [id])
@@ -310,35 +305,36 @@ model recommended_tv {
 }
 
 model searched_season {
-        id               String             @id
-        created          DateTime           @default(now())
-        updated          DateTime           @default(now())
+        id            String   @id
+        created       DateTime @default(now())
+        updated       DateTime @default(now())
         // 首播日期
-        air_date         String?
+        air_date      String?
         // 该季总集数
-        episode_count    Float?             @default(0)
+        episode_count Float?   @default(0)
         // 季名称
-        name             String?
+        name          String?
         // 季描述
-        overview         String?
+        overview      String?
         // 季海报
-        poster_path      String?
+        poster_path   String?
         // 季数
-        season_number    Float?
+        season_number Float?
         // tmdb 记录 id
-        tmdb_id          Float?
+        tmdb_id       Float?
         // tmdb 记录 tv id
-        tmdb_tv_id       Float?
-        tv_need_complete tv_need_complete[]
+        tmdb_tv_id    Float?
 
-        // 关联 searched_tv 表
-        searched_tv_id String
-        searched_tv    searched_tv @relation(fields: [searched_tv_id], references: [id])
+        // 关联 tv_profile 表
+        tv_profile_id String
+        tv_profile    tv_profile @relation(fields: [tv_profile_id], references: [id])
+
+        tv_need_complete tv_need_complete[]
 
         @@map("SearchedSeason")
 }
 
-model searched_tv {
+model tv_profile {
         id                String   @id
         created           DateTime @default(now())
         updated           DateTime @default(now())
@@ -365,26 +361,26 @@ model searched_tv {
         // 评分
         vote_count        Float?   @default(0)
 
-        tv_need_complete      tv_need_complete[]
-        searched_season       searched_season[]
-        searched_tv_with_name searched_tv_with_name[]
-        tv                    tv?
-        maybe_tv              maybe_tv?
+        tv_need_complete tv_need_complete[]
+        searched_season  searched_season[]
+        snapshots        tv_profile_quick[]
+        tv               tv?
 
-        @@map("SearchedTV")
+        @@map("TVProfile")
 }
 
-model searched_tv_with_name {
+// 用名字将 tv_profile 关联起来，当在 tmdb 搜索时优先在该表中查询，提高搜索性能
+model tv_profile_quick {
         id            String   @id
         created       DateTime @default(now())
         updated       DateTime @default(now())
         name          String?
         original_name String?
 
-        searched_tv_id String
-        searched_tv    searched_tv @relation(fields: [searched_tv_id], references: [id])
+        tv_profile_id String
+        tv_profile    tv_profile @relation(fields: [tv_profile_id], references: [id])
 
-        @@map("SearchedTVWithName")
+        @@map("TVProfileQuick")
 }
 
 model shared_file {
@@ -470,17 +466,14 @@ model maybe_tv {
         can_search    Float?   @default(1)
 
         // 将该tv关联到另一个tv，目的是该 tv 匹配的电视剧信息，已经有另一个 tv 匹配上了，说明这两个其实是同一个 tv
-        tv_id          String?
-        tv             tv?          @relation(fields: [tv_id], references: [id])
-        // 关联 searched_tv 表
-        searched_tv_id String?      @unique
-        searched_tv    searched_tv? @relation(fields: [searched_tv_id], references: [id])
+        tv_id    String?
+        tv       tv?     @relation(fields: [tv_id], references: [id])
         // 关联 drive 表
-        drive_id       String
-        drive          drive        @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        drive_id String
+        drive    drive   @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         // 关联 user 表
-        user_id        String
-        user           user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user_id  String
+        user     user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         episodes       episode[]
         play_histories play_history[]
@@ -496,17 +489,16 @@ model tv {
         // 是否隐藏
         hidden  Float?   @default(0)
 
-        // 关联 searched_tv 表
-        searched_tv_id String?      @unique
-        searched_tv    searched_tv? @relation(fields: [searched_tv_id], references: [id])
+        // 关联 tv_profile 表
+        tv_profile_id String?
+        tv_profile    tv_profile? @relation(fields: [tv_profile_id], references: [id])
         // 关联 drive 表
-        drive_id       String
-        drive          drive        @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        drive_id      String
+        drive         drive       @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         // 关联 user 表
-        user_id        String
-        user           user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user_id       String
+        user          user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        episodes        episode[]
         play_histories  play_history[]
         recommended_tvs recommended_tv[]
         seasons         season[]
@@ -527,14 +519,12 @@ model tv_need_complete {
         // 关联 searchd_season 表
         searched_season_id String
         searched_season    searched_season @relation(fields: [searched_season_id], references: [id])
-
-        // 关联 searched_tv 表
-        searched_tv_id String
-        searched_tv    searched_tv @relation(fields: [searched_tv_id], references: [id])
-
+        // 关联 tv_profile 表
+        tv_profile_id      String
+        tv_profile         tv_profile      @relation(fields: [tv_profile_id], references: [id])
         // 关联 user 表
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id])
+        user_id            String
+        user               user            @relation(fields: [user_id], references: [id])
 
         @@map("TVNeedComplete")
 }
