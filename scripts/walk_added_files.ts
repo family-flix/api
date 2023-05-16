@@ -23,7 +23,7 @@ export async function walk_added_files(
     const drive = drives_res.data[i];
     const { id, user_id, user_name, latest_analysis } = drive;
     log("prepare process drive", id, user_name);
-    const tmp_folders_res = await store.find_tmp_folders(
+    const tmp_folders_res = await store.find_tmp_files(
       {
         drive_id: id,
       },

@@ -86,7 +86,7 @@ describe("detect a tv dir", () => {
       },
     ]);
     /** --------- 查看 tv --------- */
-    const tvs_resp = await store.find_tvs();
+    const tvs_resp = await store.find_maybe_tvs();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;

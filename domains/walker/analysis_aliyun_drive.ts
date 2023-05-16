@@ -13,7 +13,7 @@ import { log } from "@/logger/log";
 
 import { search_all_tv_in_tmdb_then_update_tv } from "./search_tv_in_tmdb_then_update_tv";
 import { merge_same_tv_and_episodes } from "./merge_same_tv_and_episode";
-import { adding_folder_when_walk, adding_episode_when_walk, need_skip_the_file_when_walk } from "./utils";
+import { adding_file_when_walk, adding_episode_when_walk, need_skip_the_file_when_walk } from "./utils";
 
 /** 索引云盘 */
 export async function walk_drive(options: {
@@ -124,8 +124,8 @@ export async function walk_drive(options: {
   walker.on_file = async (folder) => {
     const { name } = folder;
     // console.log('[]walk on file', name);
-    await adding_folder_when_walk(folder, { user_id, drive_id }, store);
-    await store.delete_tmp_folder({
+    await adding_file_when_walk(folder, { user_id, drive_id }, store);
+    await store.delete_tmp_file({
       name,
       drive_id,
       user_id,

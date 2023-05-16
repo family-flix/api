@@ -7,7 +7,7 @@ datasource db {
         url      = env("DATABASE_PATH")
 }
 
-model Drive {
+model drive {
         id               String    @id
         created          DateTime  @default(now())
         updated          DateTime  @default(now())
@@ -42,22 +42,25 @@ model Drive {
 
         // 属于哪个用户
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
 
         // drive_token_id String      @unique
         // drive_token    DriveToken @relation(fields: [drive_token_id], references: [drive_id])
-        drive_token DriveToken?
+        drive_token drive_token?
 
-        drive_analysis DriveAnalysis[]
-        drive_check_in DriveCheckIn[]
-        tv             TV[]
-        episode        Episode[]
-        movie          Movie[]
-        folder         Folder[]
-        tmp_folder     TmpFolder[]
+        drive_analysis drive_analysis[]
+        drive_check_in drive_check_in[]
+        tv             tv[]
+        episode        episode[]
+        movie          movie[]
+        folder         file[]
+        tmp_folder     tmp_file[]
+        maybe_tvs      maybe_tv[]
+
+        @@map("Drive")
 }
 
-model DriveToken {
+model drive_token {
         id            String   @id
         created       DateTime @default(now())
         updated       DateTime @default(now())
@@ -67,10 +70,12 @@ model DriveToken {
 
         // 关联 drive 表
         drive_id String @unique
-        drive    Drive  @relation(fields: [drive_id], references: [id])
+        drive    drive  @relation(fields: [drive_id], references: [id])
+
+        @@map("DriveToken")
 }
 
-model AsyncTask {
+model async_task {
         id             String   @id
         created        DateTime @default(now())
         updated        DateTime @default(now())
@@ -82,19 +87,23 @@ model AsyncTask {
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
+
+        @@map("AsyncTask")
 }
 
-model DriveAnalysis {
+model drive_analysis {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
 
         drive_id String
-        drive    Drive  @relation(fields: [drive_id], references: [id])
+        drive    drive  @relation(fields: [drive_id], references: [id])
+
+        @@map("DriveAnalysis")
 }
 
-model DriveCheckIn {
+model drive_check_in {
         id         String    @id
         created    DateTime  @default(now())
         updated    DateTime  @default(now())
@@ -103,10 +112,12 @@ model DriveCheckIn {
 
         // 关联 drive 表
         drive_id String
-        drive    Drive  @relation(fields: [drive_id], references: [id])
+        drive    drive  @relation(fields: [drive_id], references: [id])
+
+        @@map("DriveCheckIn")
 }
 
-model Episode {
+model episode {
         id             String   @id
         created        DateTime @default(now())
         updated        DateTime @default(now())
@@ -123,20 +134,24 @@ model Episode {
 
         // 关联 tv 表
         tv_id String
-        tv    TV     @relation(fields: [tv_id], references: [id], onDelete: Cascade)
+        tv    tv     @relation(fields: [tv_id], references: [id], onDelete: Cascade)
 
         // 关联 drive 表
         drive_id String
-        drive    Drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        play_histories PlayHistory[]
+        play_histories play_history[]
+        maybe_tv       maybe_tv?      @relation(fields: [maybe_tv_id], references: [id])
+        maybe_tv_id    String?
+
+        @@map("Episode")
 }
 
-model Season {
+model season {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
@@ -144,10 +159,15 @@ model Season {
         season String
 
         tv_id String
-        tv    TV     @relation(fields: [tv_id], references: [id])
+        tv    tv     @relation(fields: [tv_id], references: [id])
+
+        maybe_tv    maybe_tv? @relation(fields: [maybe_tv_id], references: [id])
+        maybe_tv_id String?
+
+        @@map("Season")
 }
 
-model Folder {
+model file {
         id             String   @id
         created        DateTime @default(now())
         updated        DateTime @default(now())
@@ -164,21 +184,25 @@ model Folder {
 
         // 关联 drive 表
         drive_id String
-        drive    Drive  @relation(fields: [drive_id], references: [id])
+        drive    drive  @relation(fields: [drive_id], references: [id])
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
+
+        @@map("File")
 }
 
-model Log {
+model log {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
         title   String
+
+        @@map("Log")
 }
 
-model Member {
+model member {
         id       String   @id
         created  DateTime @default(now())
         updated  DateTime @default(now())
@@ -193,14 +217,16 @@ model Member {
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        member_tokens   MemberToken[]
-        play_histories  PlayHistory[]
-        recommended_tvs RecommendedTV[]
+        member_tokens   member_token[]
+        play_histories  play_history[]
+        recommended_tvs recommended_tv[]
+
+        @@map("Member")
 }
 
-model MemberToken {
+model member_token {
         id         String   @id
         created    DateTime @default(now())
         updated    DateTime @default(now())
@@ -213,10 +239,12 @@ model MemberToken {
 
         // 关联 member 表
         member_id String
-        member    Member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+        @@map("MemberToken")
 }
 
-model Movie {
+model movie {
         id            String   @id
         created       DateTime @default(now())
         updated       DateTime @default(now())
@@ -227,17 +255,19 @@ model Movie {
 
         // 关联 user 表
         user_id  String
-        user     User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user     user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
         // 关联 searched_movie 表
         // searched_movie_id String?
         // 关联 drive 表
         drive_id String
-        drive    Drive  @relation(fields: [drive_id], references: [id])
+        drive    drive  @relation(fields: [drive_id], references: [id])
 
-        play_histories PlayHistory[]
+        play_histories play_history[]
+
+        @@map("Movie")
 }
 
-model PlayHistory {
+model play_history {
         id           String   @id
         created      DateTime @default(now())
         updated      DateTime @default(now())
@@ -248,38 +278,45 @@ model PlayHistory {
 
         // 关联 member 表
         member_id  String
-        member     Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        member     member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
         // 关联 tv 表
         tv_id      String?
-        tv         TV?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
+        tv         tv?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
         // 关联 episode 表
         episode_id String?
-        episode    Episode? @relation(fields: [episode_id], references: [id], onDelete: Cascade)
+        episode    episode? @relation(fields: [episode_id], references: [id], onDelete: Cascade)
         // 关联 movie 表
         movie_id   String?
-        movie      Movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
+        movie      movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
+
+        maybe_tv_id String?
+        maybe_tv    maybe_tv? @relation(fields: [maybe_tv_id], references: [id])
+
+        @@map("PlayHistory")
 }
 
-model RecommendedTV {
+model recommended_tv {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
         sort    Float?   @default(0)
 
         tv_id     String
-        tv        TV     @relation(fields: [tv_id], references: [id])
+        tv        tv     @relation(fields: [tv_id], references: [id])
         member_id String
-        member    Member @relation(fields: [member_id], references: [id])
+        member    member @relation(fields: [member_id], references: [id])
+
+        @@map("RecommendedTV")
 }
 
-model SearchedSeason {
-        id               String           @id
-        created          DateTime         @default(now())
-        updated          DateTime         @default(now())
+model searched_season {
+        id               String             @id
+        created          DateTime           @default(now())
+        updated          DateTime           @default(now())
         // 首播日期
         air_date         String?
         // 该季总集数
-        episode_count    Float?           @default(0)
+        episode_count    Float?             @default(0)
         // 季名称
         name             String?
         // 季描述
@@ -292,14 +329,16 @@ model SearchedSeason {
         tmdb_id          Float?
         // tmdb 记录 tv id
         tmdb_tv_id       Float?
-        tv_need_complete TVNeedComplete[]
+        tv_need_complete tv_need_complete[]
 
         // 关联 searched_tv 表
         searched_tv_id String
-        searched_tv    SearchedTV @relation(fields: [searched_tv_id], references: [id])
+        searched_tv    searched_tv @relation(fields: [searched_tv_id], references: [id])
+
+        @@map("SearchedSeason")
 }
 
-model SearchedTV {
+model searched_tv {
         id                String   @id
         created           DateTime @default(now())
         updated           DateTime @default(now())
@@ -326,13 +365,16 @@ model SearchedTV {
         // 评分
         vote_count        Float?   @default(0)
 
-        tv_need_complete      TVNeedComplete[]
-        searched_season       SearchedSeason[]
-        searched_tv_with_name SearchedTVWithName[]
-        tv                    TV?
+        tv_need_complete      tv_need_complete[]
+        searched_season       searched_season[]
+        searched_tv_with_name searched_tv_with_name[]
+        tv                    tv?
+        maybe_tv              maybe_tv?
+
+        @@map("SearchedTV")
 }
 
-model SearchedTVWithName {
+model searched_tv_with_name {
         id            String   @id
         created       DateTime @default(now())
         updated       DateTime @default(now())
@@ -340,10 +382,12 @@ model SearchedTVWithName {
         original_name String?
 
         searched_tv_id String
-        searched_tv    SearchedTV @relation(fields: [searched_tv_id], references: [id])
+        searched_tv    searched_tv @relation(fields: [searched_tv_id], references: [id])
+
+        @@map("SearchedTVWithName")
 }
 
-model SharedFile {
+model shared_file {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
@@ -354,10 +398,12 @@ model SharedFile {
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
+
+        @@map("SharedFile")
 }
 
-model SharedFileInProgress {
+model shared_file_in_progress {
         id             String   @id
         created        DateTime @default(now())
         updated        DateTime @default(now())
@@ -376,11 +422,13 @@ model SharedFileInProgress {
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
+
+        @@map("SharedFileInProgress")
 }
 
 // 在后台转存后分享文件夹后，在这里会新增一条记录，下次自动索引网盘时仅索引该表内记录
-model TmpFolder {
+model tmp_file {
         id           String   @id
         created      DateTime @default(now())
         updated      DateTime @default(now())
@@ -393,14 +441,16 @@ model TmpFolder {
 
         // 关联 drive 表
         drive_id String
-        drive    Drive  @relation(fields: [drive_id], references: [id])
+        drive    drive  @relation(fields: [drive_id], references: [id])
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
+
+        @@map("TmpFile")
 }
 
-model TV {
+model maybe_tv {
         id            String   @id
         created       DateTime @default(now())
         updated       DateTime @default(now())
@@ -419,23 +469,53 @@ model TV {
         // 是否可以搜索（搜索后没结果会置为 0，更新该记录后又置为1，避免重复搜索）
         can_search    Float?   @default(1)
 
+        // 将该tv关联到另一个tv，目的是该 tv 匹配的电视剧信息，已经有另一个 tv 匹配上了，说明这两个其实是同一个 tv
+        tv_id          String?
+        tv             tv?          @relation(fields: [tv_id], references: [id])
         // 关联 searched_tv 表
-        searched_tv_id String?     @unique
-        searched_tv    SearchedTV? @relation(fields: [searched_tv_id], references: [id])
+        searched_tv_id String?      @unique
+        searched_tv    searched_tv? @relation(fields: [searched_tv_id], references: [id])
         // 关联 drive 表
         drive_id       String
-        drive          Drive       @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        drive          drive        @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         // 关联 user 表
         user_id        String
-        user           User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user           user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        episodes        Episode[]
-        play_histories  PlayHistory[]
-        recommended_tvs RecommendedTV[]
-        seasons         Season[]
+        episodes       episode[]
+        play_histories play_history[]
+        seasons        season[]
+
+        @@map("MaybeTV")
 }
 
-model TVNeedComplete {
+model tv {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+        // 是否隐藏
+        hidden  Float?   @default(0)
+
+        // 关联 searched_tv 表
+        searched_tv_id String?      @unique
+        searched_tv    searched_tv? @relation(fields: [searched_tv_id], references: [id])
+        // 关联 drive 表
+        drive_id       String
+        drive          drive        @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        // 关联 user 表
+        user_id        String
+        user           user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        episodes        episode[]
+        play_histories  play_history[]
+        recommended_tvs recommended_tv[]
+        seasons         season[]
+        maybe_tvs       maybe_tv[]
+
+        @@map("TV")
+}
+
+model tv_need_complete {
         id            String   @id
         created       DateTime @default(now())
         updated       DateTime @default(now())
@@ -446,18 +526,20 @@ model TVNeedComplete {
 
         // 关联 searchd_season 表
         searched_season_id String
-        searched_season    SearchedSeason @relation(fields: [searched_season_id], references: [id])
+        searched_season    searched_season @relation(fields: [searched_season_id], references: [id])
 
         // 关联 searched_tv 表
         searched_tv_id String
-        searched_tv    SearchedTV @relation(fields: [searched_tv_id], references: [id])
+        searched_tv    searched_tv @relation(fields: [searched_tv_id], references: [id])
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
+
+        @@map("TVNeedComplete")
 }
 
-model Account {
+model account {
         id                  String  @id
         type                String
         provider            String
@@ -471,13 +553,14 @@ model Account {
         session_state       String?
 
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
 
         @@unique([provider, provider_account_id])
         @@index([user_id], map: "accounts_user_id_fkey")
+        @@map("Account")
 }
 
-model Credential {
+model credential {
         id       String  @id
         password String
         salt     String
@@ -485,34 +568,41 @@ model Credential {
         email    String  @unique
 
         user_id String @unique
-        user    User   @relation(fields: [user_id], references: [id])
+        user    user   @relation(fields: [user_id], references: [id])
+
+        @@map("Credential")
 }
 
-model Profile {
+model profile {
         id       String  @id
         nickname String?
         avatar   String?
         user_id  String  @unique
-        user     User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user     user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("Profile")
 }
 
-model User {
+model user {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        credential              Credential?
-        profile                 Profile?
-        accounts                Account[]
-        drives                  Drive[]
-        tv                      TV[]
-        tv_need_complete        TVNeedComplete[]
-        async_task              AsyncTask[]
-        episode                 Episode[]
-        folder                  Folder[]
-        member                  Member[]
-        movie                   Movie[]
-        shared_file             SharedFile[]
-        shared_file_in_progress SharedFileInProgress[]
-        tmp_folder              TmpFolder[]
+        credential              credential?
+        profile                 profile?
+        accounts                account[]
+        drives                  drive[]
+        tv                      tv[]
+        tv_need_complete        tv_need_complete[]
+        async_task              async_task[]
+        episode                 episode[]
+        folder                  file[]
+        member                  member[]
+        movie                   movie[]
+        shared_file             shared_file[]
+        shared_file_in_progress shared_file_in_progress[]
+        tmp_folder              tmp_file[]
+        maybe_tvs               maybe_tv[]
+
+        @@map("User")
 }

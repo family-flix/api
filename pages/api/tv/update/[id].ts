@@ -11,10 +11,7 @@ import { PartialSearchedTVFromTMDB } from "@/domains/tmdb/services";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
@@ -27,7 +24,7 @@ export default async function handler(
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const tv_resp = await store.find_tv({ id, user_id });
+  const tv_resp = await store.find_maybe_tv({ id, user_id });
   if (tv_resp.error) {
     return e(tv_resp);
   }
@@ -70,7 +67,7 @@ export default async function handler(
     }
     _searched_tv_id = r2.data.id;
   }
-  const r = await store.update_tv(id, {
+  const r = await store.update_maybe_tv(id, {
     searched_tv_id: _searched_tv_id,
   });
   if (r.error) {

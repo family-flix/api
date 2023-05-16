@@ -131,7 +131,7 @@ describe("detect a tv dir", () => {
     }
     expect(season_resp.data.map((s) => s.season)).toStrictEqual(["S01", "S01"]);
     /** --------- 查看 tv --------- */
-    const tvs_resp = await store.find_tvs();
+    const tvs_resp = await store.find_maybe_tvs();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;
@@ -155,7 +155,7 @@ describe("detect a tv dir", () => {
       },
     ]);
     /** --------- 查看文件夹 --------- */
-    const folders_resp = await store.find_folders(
+    const folders_resp = await store.find_files(
       {
         drive_id,
       },

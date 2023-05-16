@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 import relative_time from "dayjs/plugin/relativeTime";
 import chalk from "chalk";
-import { TVRecord } from "@/store/types";
+import { MaybeTVRecord } from "@/store/types";
 import { JSONObject, JSONValue } from "@/types";
 
 dayjs.extend(relative_time);
@@ -1249,4 +1249,17 @@ export function filter_undefined_key<T>(value: T): T {
     return acc;
   }, {} as T);
   return v;
+}
+
+/**
+ * 延迟指定时间
+ * @param delay 要延迟的时间，单位毫秒
+ * @returns
+ */
+export function sleep(delay: number = 1000) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(null);
+    }, delay);
+  });
 }

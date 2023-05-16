@@ -26,7 +26,7 @@ export default async function handler(
   }
   const { id: user_id } = t_res.data;
   const { name: parsed_name } = parse_filename_for_video(name, ["name"]);
-  const r = await store.find_folders({
+  const r = await store.find_files({
     name: `%${parsed_name}%`,
     user_id,
   });

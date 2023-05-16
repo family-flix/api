@@ -7,14 +7,14 @@ import { DiffTypes } from "@/domains/folder_differ";
 import { filter_undefined_key, find_recommended_pathname, is_video_file, parse_filename_for_video } from "@/utils";
 import { log } from "@/logger/log";
 import { pagination_factory, store_factory } from "@/store";
-import { TVRecord, EpisodeRecord, RecordCommonPart, SharedFilesInProgressRecord } from "@/store/types";
+import { MaybeTVRecord, EpisodeRecord, RecordCommonPart, SharedFilesInProgressRecord } from "@/store/types";
 import { qiniu_upload_online_file } from "@/utils/back_end";
 import { Result, resultify } from "@/types";
 
 import { patch_tv_in_progress } from "./patch_tv_in_progress";
 
 export type EventHandlers = Partial<{
-  on_tv: (tv: TVRecord & RecordCommonPart) => void;
+  on_tv: (tv: MaybeTVRecord & RecordCommonPart) => void;
   on_stop: () => Result<boolean>;
   on_error: (error_msg: string[]) => void;
 }>;
@@ -30,7 +30,7 @@ export type ExtraUserAndDriveInfo = {
  * @param extra
  * @returns
  */
-export async function adding_folder_when_walk(
+export async function adding_file_when_walk(
   folder: {
     file_id: string;
     name: string;
@@ -47,14 +47,14 @@ export async function adding_folder_when_walk(
   if (type === "file" && !is_video_file(name)) {
     return Result.Err("not video file");
   }
-  const existing_folder_resp = await store.find_folder({ file_id });
+  const existing_folder_resp = await store.find_file({ file_id });
   if (existing_folder_resp.error) {
     return Result.Err(existing_folder_resp.error);
   }
   if (existing_folder_resp.data) {
     return Result.Ok({ id: existing_folder_resp.data.id });
   }
-  const adding_resp = await store.add_folder({
+  const adding_resp = await store.add_file({
     file_id,
     name,
     parent_file_id,
@@ -101,7 +101,7 @@ export async function build_link_between_shared_files_with_folder(
   const { user_id, store } = extra;
   let f: string | undefined | null = target_file_id;
   if (!target_file_id) {
-    const res = await store.find_folder({ name });
+    const res = await store.find_file({ name });
     if (res.data) {
       f = res.data.file_id;
     }
@@ -159,7 +159,7 @@ async function get_tv_id_by_name(
   // log("[UTIL]get_tv_id_by_name start", tv.name || tv.original_name);
   const { user_id, drive_id } = extra;
   log(`[${episode.file_name}]`, "根据名称查找该电视剧", tv.name || tv.original_name);
-  const existing_tv_res = await resultify(store.prisma.tV.findFirst.bind(store.prisma.tV))({
+  const existing_tv_res = await resultify(store.prisma.maybe_tv.findFirst.bind(store.prisma.maybe_tv))({
     where: {
       OR: [
         {
@@ -196,7 +196,7 @@ async function get_tv_id_by_name(
     drive_id: extra.drive_id,
   });
   log(`[${episode.file_name}]`, "电视剧", tv.name || tv.original_name, "不存在，新增", body.name || body.original_name);
-  const adding_tv_res = await store.add_tv(body);
+  const adding_tv_res = await store.add_maybe_tv(body);
   if (adding_tv_res.error) {
     log("[ERROR]adding tv request failed", adding_tv_res.error.message);
     return Result.Err(adding_tv_res.error);
@@ -305,7 +305,7 @@ export async function adding_episode_when_walk(
   // episode existing, check does it need update
   // log("the episode has existing, so check does it need update");
   log(`[${data.episode.file_name}]`, "该视频文件已存在，判断是否需要更新");
-  const existing_tv_res = await store.find_tv({
+  const existing_tv_res = await store.find_maybe_tv({
     id: existing_episode.tv_id,
   });
   if (existing_tv_res.error) {
@@ -499,7 +499,7 @@ export async function get_tv_profile_with_first_season_by_id(
   if (!id) {
     return Result.Err("请传入 id 参数");
   }
-  const tv_res = await store.find_tv({
+  const tv_res = await store.find_maybe_tv({
     id,
     user_id,
   });
@@ -757,7 +757,7 @@ export async function search_tv_in_tmdb(
     return Result.Ok(null);
   }
   const searched_tv = tv_result;
-  const existing_searched_tv_res = await resultify(store.prisma.searchedTV.findFirst.bind(store.prisma.searchedTV))({
+  const existing_searched_tv_res = await resultify(store.prisma.searched_tv.findFirst.bind(store.prisma.searched_tv))({
     where: {
       tmdb_id: searched_tv.tmdb_id,
     },
@@ -925,7 +925,7 @@ export async function walk_table_with_pagination<T>(
   let no_more = false;
   let page = 1;
   do {
-    const resp = await method(body, { page, size: 20 });
+    const resp = await method({ where: { ...body } }, { page, size: 20 });
     if (resp.error) {
       return resp;
     }
@@ -1085,11 +1085,13 @@ export async function find_matched_tv_in_tmdb(
   let page = 1;
   do {
     log("start find matched tmdb tv");
-    const tvs_resp = await store.find_tv_with_pagination(
+    const tvs_resp = await store.find_maybe_tv_with_pagination(
       {
-        searched_tv_id: "null",
-        user_id,
-        drive_id,
+        where: {
+          searched_tv_id: null,
+          user_id,
+          drive_id,
+        },
       },
       { page, size: 20 }
     );
@@ -1118,7 +1120,7 @@ export async function find_matched_tv_in_tmdb(
       if (r1.data === null) {
         continue;
       }
-      const r2 = await store.update_tv(tv.id, {
+      const r2 = await store.update_maybe_tv(tv.id, {
         searched_tv_id: r1.data.id,
         can_search: 0,
       });
@@ -1312,7 +1314,7 @@ export async function patch_serialized_shared_folder(
   if (!target_file_id) {
     return Result.Err(`${shared_folder.name} 还没有关联网盘文件夹`);
   }
-  const matched_folder_res = await store.find_folder({
+  const matched_folder_res = await store.find_file({
     file_id: target_file_id,
     user_id,
   });
@@ -1377,7 +1379,7 @@ export async function patch_serialized_shared_folder(
  * @param next_tv
  * @returns
  */
-export function is_tv_changed(tv: TVRecord, next_tv: { name: string; original_name: string }) {
+export function is_tv_changed(tv: MaybeTVRecord, next_tv: { name: string; original_name: string }) {
   // log("判断视频文件所属的电视剧信息是否一致", [tv.name, tv.original_name, next_tv.name, next_tv.original_name]);
   const name = next_tv.name || null;
   const original_name = next_tv.original_name || null;

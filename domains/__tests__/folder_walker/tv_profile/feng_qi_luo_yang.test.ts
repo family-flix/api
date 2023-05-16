@@ -25,7 +25,7 @@ import {
   fetch_files_factory,
   get_tv_profile_with_first_season_by_id,
   adding_episode_when_walk,
-  adding_folder_when_walk,
+  adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/feng_qi_luo_yang";
 import { store_factory } from "@/store";
@@ -59,7 +59,7 @@ describe("detect a tv dir", () => {
     };
     detector.on_file = async (folder) => {
       handle_folder(folder);
-      adding_folder_when_walk(folder, fake_extra, store);
+      adding_file_when_walk(folder, fake_extra, store);
     };
     detector.on_episode = async (task) => {
       handle_episode(task);
@@ -79,7 +79,7 @@ describe("detect a tv dir", () => {
     }
 
     /** --------- 查看 tv --------- */
-    const tvs_resp = await store.find_tvs();
+    const tvs_resp = await store.find_maybe_tvs();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;

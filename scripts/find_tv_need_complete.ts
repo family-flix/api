@@ -14,31 +14,18 @@ export function find_tv_need_complete(store: ReturnType<typeof store_factory>) {
       const season_res = await store.find_searched_season_list({
         searched_tv_id: id,
       });
-      if (
-        season_res.error ||
-        !season_res.data ||
-        season_res.data.length === 0
-      ) {
-        console.log(
-          name || original_name,
-          "没有任何季，请先获取该电视剧季",
-          season_res.error?.message
-        );
+      if (season_res.error || !season_res.data || season_res.data.length === 0) {
+        console.log(name || original_name, "没有任何季，请先获取该电视剧季", season_res.error?.message);
         return;
       }
-      const r = await store.find_tv({ searched_tv_id: id });
+      const r = await store.find_maybe_tv({ searched_tv_id: id });
       if (r.error || !r.data) {
         console.log("网盘内不存在该电视剧", r.error?.message);
         return;
       }
       const { id: tv_id, user_id } = r.data;
       for (let i = 0; i < season_res.data.length; i += 1) {
-        const {
-          id: searched_season_id,
-          name: season_name,
-          episode_count,
-          season_number,
-        } = season_res.data[i];
+        const { id: searched_season_id, name: season_name, episode_count, season_number } = season_res.data[i];
         const season = (() => {
           if (season_number === 0) {
             return season_name;

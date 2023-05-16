@@ -41,12 +41,12 @@ export async function search_special_tv_in_tmdb_then_update(options: {
     return Result.Err(r1.error);
   }
   if (r1.data === null) {
-    store.update_tv(id, {
+    store.update_maybe_tv(id, {
       can_search: 0,
     });
     return Result.Err("没有匹配的记录");
   }
-  const r2 = await store.update_tv(id, {
+  const r2 = await store.update_maybe_tv(id, {
     searched_tv_id: r1.data.id,
     can_search: 0,
   });
@@ -76,12 +76,14 @@ export async function search_all_tv_in_tmdb_then_update_tv(
   await (async () => {
     do {
       // console.log("开始在 TMDB 上搜索匹配的电视剧信息");
-      const tvs_res = await store.find_tv_with_pagination(
+      const tvs_res = await store.find_maybe_tv_with_pagination(
         {
-          searched_tv_id: null,
-          can_search: 1,
-          user_id,
-          drive_id,
+          where: {
+            searched_tv_id: null,
+            can_search: 1,
+            user_id,
+            drive_id,
+          },
         },
         { page, size: 20 }
       );

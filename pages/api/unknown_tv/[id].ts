@@ -10,10 +10,7 @@ import { store } from "@/store";
 import { EpisodeRecord } from "@/store/types";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
@@ -25,7 +22,7 @@ export default async function handler(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const r = await store.find_tv({ id, user_id });
+  const r = await store.find_maybe_tv({ id, user_id });
   if (r.error) {
     return e(r);
   }

@@ -11,10 +11,7 @@ import { User } from "@/domains/user";
 
 // const { add_recommended_tv, find_tv, find_member } = store;
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { member_id, tv_id } = req.body as Partial<{
@@ -39,7 +36,7 @@ export default async function handler(
   if (!member_resp.data) {
     return e("No matched member");
   }
-  const tv_resp = await store.find_tv({ id: tv_id, user_id });
+  const tv_resp = await store.find_maybe_tv({ id: tv_id, user_id });
   if (tv_resp.error) {
     return e(tv_resp);
   }

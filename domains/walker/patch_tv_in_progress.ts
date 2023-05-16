@@ -96,7 +96,7 @@ export async function patch_tv_in_progress(
           continue;
         }
         const paths = context.map((f) => f.name).join("/");
-        const existing_res = await store.find_tmp_folder({
+        const existing_res = await store.find_tmp_file({
           name,
           parent_paths: paths,
           user_id,
@@ -207,7 +207,7 @@ SELECT * FROM cte WHERE level = ${names.length - 1};`;
           );
           continue;
         }
-        const r4 = await store.add_tmp_folder({
+        const r4 = await store.add_tmp_file({
           name: file.name,
           type: type === "file" ? 1 : 0,
           parent_paths: parent_path,

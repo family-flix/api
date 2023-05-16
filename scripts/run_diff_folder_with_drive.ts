@@ -29,7 +29,7 @@ async function main() {
       log("\n");
       log("[SCRIPT]process effect from diff", name, file_id, type);
       if (type === DiffTypes.Deleting) {
-        await store.delete_folder({
+        await store.delete_file({
           file_id,
         });
         log(`删除文件 '${name}' 成功`);

@@ -42,7 +42,7 @@ export default async function handler(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const folder_res = await store.find_folder({
+  const folder_res = await store.find_file({
     name: file_name,
     drive_id,
     user_id,
@@ -53,7 +53,7 @@ export default async function handler(
   if (folder_res.data) {
     return e("网盘内已有同名文件夹");
   }
-  const r2 = await store.find_tmp_folder({
+  const r2 = await store.find_tmp_file({
     name: file_name,
     drive_id,
     user_id,
@@ -79,7 +79,7 @@ export default async function handler(
   if (r1.error) {
     return e(r1);
   }
-  await store.add_tmp_folder({
+  await store.add_tmp_file({
     name: file_name,
     drive_id,
     user_id,

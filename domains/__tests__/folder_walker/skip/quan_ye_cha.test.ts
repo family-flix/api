@@ -4,7 +4,7 @@ import { describe, test, expect, vi, afterEach } from "vitest";
 import {
   fetch_files_factory,
   adding_episode_when_walk,
-  adding_folder_when_walk,
+  adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { FolderWalker } from "@/domains/walker";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
@@ -56,7 +56,7 @@ describe("detect a tv dir", () => {
     };
     walker.on_file = async (folder) => {
       handle_folder(folder);
-      await adding_folder_when_walk(folder, { user_id, drive_id }, test_store);
+      await adding_file_when_walk(folder, { user_id, drive_id }, test_store);
     };
     walker.on_episode = async (task) => {
       handle_episode(task);
@@ -127,7 +127,7 @@ describe("detect a tv dir", () => {
     }
     expect(season_resp.data.map((s) => s.season)).toStrictEqual(["SP"]);
     /** --------- 查看 tv --------- */
-    const tvs_resp = await test_store.find_tvs();
+    const tvs_resp = await test_store.find_maybe_tvs();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;
@@ -147,7 +147,7 @@ describe("detect a tv dir", () => {
       },
     ]);
     /** --------- 查看文件夹 --------- */
-    const folders_resp = await test_store.find_folders(
+    const folders_resp = await test_store.find_files(
       {
         drive_id,
       },

@@ -6,7 +6,7 @@ import { describe, test, expect, vi, afterEach } from "vitest";
 import { FolderWalker } from "@/domains/walker";
 import {
   adding_episode_when_walk,
-  adding_folder_when_walk,
+  adding_file_when_walk,
   fetch_files_factory,
 } from "@/domains/walker/utils";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
@@ -57,7 +57,7 @@ describe("detect a tv dir", () => {
     };
     const detector = new FolderWalker();
     detector.on_file = async (folder) => {
-      await adding_folder_when_walk(folder, { user_id, drive_id }, store);
+      await adding_file_when_walk(folder, { user_id, drive_id }, store);
     };
     const handle_err = vi.fn((v) => v);
     const handle_warning = vi.fn((v) => v);
@@ -117,14 +117,14 @@ describe("detect a tv dir", () => {
     }
     expect(season_resp.data.length).toBe(0);
     expect(season_resp.data.map((s) => s.season)).toStrictEqual([]);
-    const tvs_resp = await store.find_tvs();
+    const tvs_resp = await store.find_maybe_tvs();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;
     }
     expect(tvs_resp.data.length).toBe(0);
     expect(tvs_resp.data.map((t) => t.name)).toStrictEqual([]);
-    const folder_resp = await store.find_folders({ drive_id });
+    const folder_resp = await store.find_files({ drive_id });
     expect(folder_resp.error).toBe(null);
     if (folder_resp.error) {
       return;

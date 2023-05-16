@@ -58,7 +58,7 @@ export default async function handler(
     if (!r2.data) {
       return Result.Err("请先关联网盘内同名文件夹");
     }
-    const r3 = await store.find_folder({
+    const r3 = await store.find_file({
       file_id: r2.data.target_file_id,
       user_id,
     });

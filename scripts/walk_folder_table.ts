@@ -9,7 +9,7 @@ import { walk_table_with_pagination } from "@/domains/walker/utils";
 
 async function run() {
   await walk_table_with_pagination<FilesRecord>(
-    store.find_folder_with_pagination,
+    store.find_file_with_pagination,
     {
       async on_handle(folder) {
         const { id, drive_id } = folder;
@@ -21,7 +21,7 @@ async function run() {
           return;
         }
         const { user_id } = drive_res.data;
-        const r = await store.update_folder(id!, {
+        const r = await store.update_file(id!, {
           user_id,
         });
         if (r.error) {

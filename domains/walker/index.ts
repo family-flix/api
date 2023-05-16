@@ -3,10 +3,9 @@
  */
 import chalk from "chalk";
 
-import { is_video_file, parse_filename_for_video, noop, promise_noop } from "@/utils";
-import { Result } from "@/types";
 import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/aliyundrive/folder";
-import { sleep } from "@/utils/flow";
+import { Result } from "@/types";
+import { is_video_file, parse_filename_for_video, noop, promise_noop, sleep } from "@/utils";
 
 export type SearchedEpisode = {
   tv: {

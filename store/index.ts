@@ -1,59 +1,27 @@
 import { PrismaClient } from "@prisma/client";
 
 import { List } from "@/domains/list";
+import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import { Result, resultify, Unpacked } from "@/types";
 import { r_id } from "@/utils";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 
-type PrismaModel =
-  | PrismaClient["account"]
-  | PrismaClient["asyncTask"]
-  | PrismaClient["credential"]
-  | PrismaClient["drive"]
-  | PrismaClient["driveAnalysis"]
-  | PrismaClient["driveCheckIn"]
-  | PrismaClient["driveToken"]
-  | PrismaClient["episode"]
-  | PrismaClient["folder"]
-  | PrismaClient["log"]
-  | PrismaClient["member"]
-  | PrismaClient["memberToken"]
-  | PrismaClient["movie"]
-  | PrismaClient["playHistory"]
-  | PrismaClient["profile"]
-  | PrismaClient["recommendedTV"]
-  | PrismaClient["searchedTV"]
-  | PrismaClient["searchedSeason"]
-  | PrismaClient["searchedTVWithName"]
-  | PrismaClient["sharedFile"]
-  | PrismaClient["sharedFileInProgress"]
-  | PrismaClient["tV"]
-  | PrismaClient["season"]
-  | PrismaClient["tVNeedComplete"]
-  | PrismaClient["tmpFolder"]
-  | PrismaClient["user"];
-export type ModelKeys = keyof Omit<
-  PrismaClient,
-  | "$on"
-  | "$connect"
-  | "$disconnect"
-  | "$use"
-  | "$executeRaw"
-  | "$executeRawUnsafe"
-  | "$queryRaw"
-  | "$queryRawUnsafe"
-  | "$transaction"
->;
+import { ModelKeys } from "./types";
 
 function add_factory<T extends PrismaClient[ModelKeys]>(model: T, options: Partial<{ safe: boolean }> = {}) {
   const { safe } = options;
-  return async (data: Omit<Parameters<T["create"]>[0]["data"], "id">) => {
+  return async (
+    data: Omit<Parameters<T["create"]>[0]["data"], "id"> & {
+      // 仅测试环境可以传入 id 方便单测
+      id?: string;
+    }
+  ) => {
+    const { id, ...rest } = data;
     try {
       // @ts-ignore
       const created = (await model.create({
         data: {
-          id: r_id(),
-          ...data,
+          id: id || r_id(),
+          ...rest,
         },
       })) as Unpacked<ReturnType<T["create"]>>;
       return Result.Ok(created);
@@ -81,7 +49,7 @@ function update_factory<T extends PrismaClient[ModelKeys]>(model: T) {
   };
 }
 function first_factory<T extends PrismaClient[ModelKeys]>(model: T) {
-  return async (where: Parameters<T["update"]>[0]["data"] & { id?: string }) => {
+  return async (where: Parameters<T["update"]>[0]["data"] & { id?: string | null }) => {
     try {
       // @ts-ignore
       const r = (await model.findFirst({
@@ -96,7 +64,7 @@ function first_factory<T extends PrismaClient[ModelKeys]>(model: T) {
 }
 function many_factory<T extends PrismaClient[ModelKeys]>(model: T) {
   return async (
-    where: Parameters<T["update"]>[0]["data"] & { id?: string },
+    where: Parameters<T["update"]>[0]["data"] & { id?: string | null } = {},
     extra: Partial<{
       sorts: {
         key: string;
@@ -132,7 +100,7 @@ function many_factory<T extends PrismaClient[ModelKeys]>(model: T) {
   };
 }
 function delete_factory<T extends PrismaClient[ModelKeys]>(model: T) {
-  return async (search: Parameters<T["update"]>[0]["data"] & { id?: string }) => {
+  return async (search: Parameters<T["update"]>[0]["data"] & { id?: string | null }) => {
     try {
       // @ts-ignore
       const r = await model.delete({
@@ -147,7 +115,7 @@ function delete_factory<T extends PrismaClient[ModelKeys]>(model: T) {
 }
 export function pagination_factory<T extends PrismaClient[ModelKeys]>(model: T) {
   return async (
-    params: Parameters<T["update"]>[0]["data"] & {
+    params: Parameters<T["findMany"]>[0] & {
       id?: string;
     },
     extra: {
@@ -164,7 +132,7 @@ export function pagination_factory<T extends PrismaClient[ModelKeys]>(model: T) 
     const core = new List(model, {
       page: Number(page),
       page_size: Number(size),
-      search: params,
+      search: params.where || {},
       sorts,
     });
     const r = await core.fetch();
@@ -199,10 +167,10 @@ export const store_factory = (prisma: PrismaClient) => {
         }
       },
     },
-    add_aliyun_drive_token: add_factory<PrismaClient["driveToken"]>(prisma.driveToken),
-    update_aliyun_drive_token: update_factory<PrismaClient["driveToken"]>(prisma.driveToken),
-    find_aliyun_drive_token: first_factory<PrismaClient["driveToken"]>(prisma.driveToken),
-    find_aliyun_drives_token: many_factory<PrismaClient["driveToken"]>(prisma.driveToken),
+    add_aliyun_drive_token: add_factory<PrismaClient["drive_token"]>(prisma.drive_token),
+    update_aliyun_drive_token: update_factory<PrismaClient["drive_token"]>(prisma.drive_token),
+    find_aliyun_drive_token: first_factory<PrismaClient["drive_token"]>(prisma.drive_token),
+    find_aliyun_drives_token: many_factory<PrismaClient["drive_token"]>(prisma.drive_token),
 
     add_aliyun_drive: add_factory<PrismaClient["drive"]>(prisma.drive),
     update_aliyun_drive: update_factory<PrismaClient["drive"]>(prisma.drive),
@@ -210,14 +178,14 @@ export const store_factory = (prisma: PrismaClient) => {
     find_aliyun_drives: many_factory<PrismaClient["drive"]>(prisma.drive),
     find_aliyun_drives_with_pagination: pagination_factory<PrismaClient["drive"]>(prisma.drive),
 
-    add_async_task: add_factory<PrismaClient["asyncTask"]>(prisma.asyncTask),
-    update_async_task: update_factory<PrismaClient["asyncTask"]>(prisma.asyncTask),
-    find_async_task: first_factory<PrismaClient["asyncTask"]>(prisma.asyncTask),
-    find_async_tasks: many_factory<PrismaClient["asyncTask"]>(prisma.asyncTask),
-    delete_async_task: delete_factory<PrismaClient["asyncTask"]>(prisma.asyncTask),
-    find_async_task_with_pagination: pagination_factory<PrismaClient["asyncTask"]>(prisma.asyncTask),
+    add_async_task: add_factory<PrismaClient["async_task"]>(prisma.async_task),
+    update_async_task: update_factory<PrismaClient["async_task"]>(prisma.async_task),
+    find_async_task: first_factory<PrismaClient["async_task"]>(prisma.async_task),
+    find_async_tasks: many_factory<PrismaClient["async_task"]>(prisma.async_task),
+    delete_async_task: delete_factory<PrismaClient["async_task"]>(prisma.async_task),
+    find_async_task_with_pagination: pagination_factory<PrismaClient["async_task"]>(prisma.async_task),
 
-    add_check_in: add_factory<PrismaClient["driveCheckIn"]>(prisma.driveCheckIn),
+    add_check_in: add_factory<PrismaClient["drive_check_in"]>(prisma.drive_check_in),
 
     add_episode: add_factory<PrismaClient["episode"]>(prisma.episode),
     update_episode: update_factory<PrismaClient["episode"]>(prisma.episode),
@@ -233,19 +201,19 @@ export const store_factory = (prisma: PrismaClient) => {
     find_seasons: many_factory<PrismaClient["season"]>(prisma.season),
     find_seasons_with_pagination: pagination_factory<PrismaClient["season"]>(prisma.season),
 
-    add_history: add_factory<PrismaClient["playHistory"]>(prisma.playHistory),
-    update_history: update_factory<PrismaClient["playHistory"]>(prisma.playHistory),
-    delete_history: delete_factory<PrismaClient["playHistory"]>(prisma.playHistory),
-    find_history: first_factory<PrismaClient["playHistory"]>(prisma.playHistory),
-    find_histories: many_factory<PrismaClient["playHistory"]>(prisma.playHistory),
-    find_history_with_pagination: pagination_factory<PrismaClient["playHistory"]>(prisma.playHistory),
+    add_history: add_factory<PrismaClient["play_history"]>(prisma.play_history),
+    update_history: update_factory<PrismaClient["play_history"]>(prisma.play_history),
+    delete_history: delete_factory<PrismaClient["play_history"]>(prisma.play_history),
+    find_history: first_factory<PrismaClient["play_history"]>(prisma.play_history),
+    find_histories: many_factory<PrismaClient["play_history"]>(prisma.play_history),
+    find_history_with_pagination: pagination_factory<PrismaClient["play_history"]>(prisma.play_history),
 
-    add_member_link: add_factory<PrismaClient["memberToken"]>(prisma.memberToken),
-    update_member_link: update_factory<PrismaClient["memberToken"]>(prisma.memberToken),
-    delete_member_link: delete_factory<PrismaClient["memberToken"]>(prisma.memberToken),
-    find_member_link: first_factory<PrismaClient["memberToken"]>(prisma.memberToken),
-    find_member_links: many_factory<PrismaClient["memberToken"]>(prisma.memberToken),
-    find_member_link_with_pagination: pagination_factory<PrismaClient["memberToken"]>(prisma.memberToken),
+    add_member_link: add_factory<PrismaClient["member_token"]>(prisma.member_token),
+    update_member_link: update_factory<PrismaClient["member_token"]>(prisma.member_token),
+    delete_member_link: delete_factory<PrismaClient["member_token"]>(prisma.member_token),
+    find_member_link: first_factory<PrismaClient["member_token"]>(prisma.member_token),
+    find_member_links: many_factory<PrismaClient["member_token"]>(prisma.member_token),
+    find_member_link_with_pagination: pagination_factory<PrismaClient["member_token"]>(prisma.member_token),
 
     add_member: add_factory<PrismaClient["member"]>(prisma.member),
     update_member: update_factory<PrismaClient["member"]>(prisma.member),
@@ -259,42 +227,49 @@ export const store_factory = (prisma: PrismaClient) => {
     find_movie: first_factory<PrismaClient["movie"]>(prisma.movie),
     find_movies: many_factory<PrismaClient["movie"]>(prisma.movie),
 
-    add_recommended_tv: add_factory<PrismaClient["recommendedTV"]>(prisma.recommendedTV),
-    update_recommended_tv: update_factory<PrismaClient["recommendedTV"]>(prisma.recommendedTV),
-    delete_recommended_tv: delete_factory<PrismaClient["recommendedTV"]>(prisma.recommendedTV),
-    find_recommended_tv: first_factory<PrismaClient["recommendedTV"]>(prisma.recommendedTV),
-    find_recommended_tvs: many_factory<PrismaClient["recommendedTV"]>(prisma.recommendedTV),
-    find_recommended_tv_with_pagination: pagination_factory<PrismaClient["recommendedTV"]>(prisma.recommendedTV),
+    add_recommended_tv: add_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
+    update_recommended_tv: update_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
+    delete_recommended_tv: delete_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
+    find_recommended_tv: first_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
+    find_recommended_tvs: many_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
+    find_recommended_tv_with_pagination: pagination_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
 
-    add_searched_tv: add_factory<PrismaClient["searchedTV"]>(prisma.searchedTV),
-    update_searched_tv: update_factory<PrismaClient["searchedTV"]>(prisma.searchedTV),
-    find_searched_tv: first_factory<PrismaClient["searchedTV"]>(prisma.searchedTV),
-    find_searched_tvs: many_factory<PrismaClient["searchedTV"]>(prisma.searchedTV),
-    find_searched_tv_with_pagination: pagination_factory<PrismaClient["searchedTV"]>(prisma.searchedTV),
+    add_searched_tv: add_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
+    update_searched_tv: update_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
+    find_searched_tv: first_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
+    find_searched_tvs: many_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
+    find_searched_tv_with_pagination: pagination_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
 
-    add_shared_files: add_factory<PrismaClient["sharedFile"]>(prisma.sharedFile),
-    add_shared_files_safely: async (body: Omit<Parameters<PrismaClient["sharedFile"]["create"]>[0]["data"], "id">) => {
+    add_shared_files: add_factory<PrismaClient["shared_file"]>(prisma.shared_file),
+    add_shared_files_safely: async (body: Parameters<PrismaClient["shared_file"]["create"]>[0]["data"]) => {
       const { url } = body;
-      const existing = await prisma.sharedFile.findFirst({
+      const existing = await prisma.shared_file.findFirst({
         where: { url },
       });
       if (existing !== null) {
         return Result.Ok(existing);
       }
-      return add_factory<PrismaClient["sharedFile"]>(prisma.sharedFile)(body);
+      return add_factory<PrismaClient["shared_file"]>(prisma.shared_file)(body);
     },
-    update_shared_files: update_factory<PrismaClient["sharedFile"]>(prisma.sharedFile),
-    delete_shared_files: delete_factory<PrismaClient["sharedFile"]>(prisma.sharedFile),
-    find_shared_files: first_factory<PrismaClient["sharedFile"]>(prisma.sharedFile),
-    find_shared_files_list: many_factory<PrismaClient["sharedFile"]>(prisma.sharedFile),
-    find_shared_files_list_with_pagination: pagination_factory<PrismaClient["sharedFile"]>(prisma.sharedFile),
+    update_shared_files: update_factory<PrismaClient["shared_file"]>(prisma.shared_file),
+    delete_shared_files: delete_factory<PrismaClient["shared_file"]>(prisma.shared_file),
+    find_shared_files: first_factory<PrismaClient["shared_file"]>(prisma.shared_file),
+    find_shared_files_list: many_factory<PrismaClient["shared_file"]>(prisma.shared_file),
+    find_shared_files_list_with_pagination: pagination_factory<PrismaClient["shared_file"]>(prisma.shared_file),
 
-    add_tv: add_factory<PrismaClient["tV"]>(prisma.tV),
-    update_tv: update_factory<PrismaClient["tV"]>(prisma.tV),
-    delete_tv: delete_factory<PrismaClient["tV"]>(prisma.tV),
-    find_tv: first_factory<PrismaClient["tV"]>(prisma.tV),
-    find_tvs: many_factory<PrismaClient["tV"]>(prisma.tV),
-    find_tv_with_pagination: pagination_factory<PrismaClient["tV"]>(prisma.tV),
+    add_maybe_tv: add_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
+    update_maybe_tv: update_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
+    delete_maybe_tv: delete_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
+    find_maybe_tv: first_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
+    find_maybe_tvs: many_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
+    find_maybe_tv_with_pagination: pagination_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
+
+    add_tv: add_factory<PrismaClient["tv"]>(prisma.tv),
+    update_tv: update_factory<PrismaClient["tv"]>(prisma.tv),
+    delete_tv: delete_factory<PrismaClient["tv"]>(prisma.tv),
+    find_tv: first_factory<PrismaClient["tv"]>(prisma.tv),
+    find_tvs: many_factory<PrismaClient["tv"]>(prisma.tv),
+    find_tv_with_pagination: pagination_factory<PrismaClient["tv"]>(prisma.tv),
 
     add_user: add_factory<PrismaClient["user"]>(prisma.user),
     update_user: update_factory<PrismaClient["user"]>(prisma.user),
@@ -303,41 +278,51 @@ export const store_factory = (prisma: PrismaClient) => {
     find_users: many_factory<PrismaClient["user"]>(prisma.user),
     find_user_with_pagination: pagination_factory<PrismaClient["user"]>(prisma.user),
 
-    add_folder: add_factory<PrismaClient["folder"]>(prisma.folder),
-    update_folder: update_factory<PrismaClient["folder"]>(prisma.folder),
-    delete_folder: delete_factory<PrismaClient["folder"]>(prisma.folder),
-    find_folder: first_factory<PrismaClient["folder"]>(prisma.folder),
-    find_folders: many_factory<PrismaClient["folder"]>(prisma.folder),
-    find_folder_with_pagination: pagination_factory<PrismaClient["folder"]>(prisma.folder),
+    add_file: add_factory<PrismaClient["file"]>(prisma.file),
+    update_file: update_factory<PrismaClient["file"]>(prisma.file),
+    delete_file: delete_factory<PrismaClient["file"]>(prisma.file),
+    find_file: first_factory<PrismaClient["file"]>(prisma.file),
+    find_files: many_factory<PrismaClient["file"]>(prisma.file),
+    find_file_with_pagination: pagination_factory<PrismaClient["file"]>(prisma.file),
 
-    add_tmp_folder: add_factory<PrismaClient["tmpFolder"]>(prisma.tmpFolder),
-    update_tmp_folder: update_factory<PrismaClient["tmpFolder"]>(prisma.tmpFolder),
-    delete_tmp_folder: delete_factory<PrismaClient["tmpFolder"]>(prisma.tmpFolder),
-    find_tmp_folder: first_factory<PrismaClient["tmpFolder"]>(prisma.tmpFolder),
-    find_tmp_folders: many_factory<PrismaClient["tmpFolder"]>(prisma.tmpFolder),
-    find_tmp_folder_with_pagination: pagination_factory<PrismaClient["tmpFolder"]>(prisma.tmpFolder),
+    add_tmp_file: add_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
+    update_tmp_file: update_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
+    delete_tmp_file: delete_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
+    find_tmp_file: first_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
+    find_tmp_files: many_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
+    find_tmp_file_with_pagination: pagination_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
 
-    add_shared_files_in_progress: add_factory<PrismaClient["sharedFileInProgress"]>(prisma.sharedFileInProgress),
-    update_shared_files_in_progress: update_factory<PrismaClient["sharedFileInProgress"]>(prisma.sharedFileInProgress),
-    delete_shared_files_in_progress: delete_factory<PrismaClient["sharedFileInProgress"]>(prisma.sharedFileInProgress),
-    find_shared_files_in_progress: first_factory<PrismaClient["sharedFileInProgress"]>(prisma.sharedFileInProgress),
-    find_shared_files_list_in_progress: many_factory<PrismaClient["sharedFileInProgress"]>(prisma.sharedFileInProgress),
-    find_shared_files_in_progress_with_pagination: pagination_factory<PrismaClient["sharedFileInProgress"]>(
-      prisma.sharedFileInProgress
+    add_shared_files_in_progress: add_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    update_shared_files_in_progress: update_factory<PrismaClient["shared_file_in_progress"]>(
+      prisma.shared_file_in_progress
+    ),
+    delete_shared_files_in_progress: delete_factory<PrismaClient["shared_file_in_progress"]>(
+      prisma.shared_file_in_progress
+    ),
+    find_shared_files_in_progress: first_factory<PrismaClient["shared_file_in_progress"]>(
+      prisma.shared_file_in_progress
+    ),
+    find_shared_files_list_in_progress: many_factory<PrismaClient["shared_file_in_progress"]>(
+      prisma.shared_file_in_progress
+    ),
+    find_shared_files_in_progress_with_pagination: pagination_factory<PrismaClient["shared_file_in_progress"]>(
+      prisma.shared_file_in_progress
     ),
 
-    add_searched_season: add_factory<PrismaClient["searchedSeason"]>(prisma.searchedSeason),
-    update_searched_season: update_factory<PrismaClient["searchedSeason"]>(prisma.searchedSeason),
-    find_searched_season: first_factory<PrismaClient["searchedSeason"]>(prisma.searchedSeason),
-    find_searched_season_list: many_factory<PrismaClient["searchedSeason"]>(prisma.searchedSeason),
-    find_searched_season_with_pagination: pagination_factory<PrismaClient["searchedSeason"]>(prisma.searchedSeason),
+    add_searched_season: add_factory<PrismaClient["searched_season"]>(prisma.searched_season),
+    update_searched_season: update_factory<PrismaClient["searched_season"]>(prisma.searched_season),
+    find_searched_season: first_factory<PrismaClient["searched_season"]>(prisma.searched_season),
+    find_searched_season_list: many_factory<PrismaClient["searched_season"]>(prisma.searched_season),
+    find_searched_season_with_pagination: pagination_factory<PrismaClient["searched_season"]>(prisma.searched_season),
 
-    add_tv_need_complete: add_factory<PrismaClient["tVNeedComplete"]>(prisma.tVNeedComplete),
-    update_tv_need_complete: update_factory<PrismaClient["tVNeedComplete"]>(prisma.tVNeedComplete),
-    delete_tv_need_complete: delete_factory<PrismaClient["tVNeedComplete"]>(prisma.tVNeedComplete),
-    find_tv_need_complete: first_factory<PrismaClient["tVNeedComplete"]>(prisma.tVNeedComplete),
-    find_tv_need_complete_list: many_factory<PrismaClient["tVNeedComplete"]>(prisma.tVNeedComplete),
-    find_tv_need_complete_with_pagination: pagination_factory<PrismaClient["tVNeedComplete"]>(prisma.tVNeedComplete),
+    add_tv_need_complete: add_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    update_tv_need_complete: update_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    delete_tv_need_complete: delete_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    find_tv_need_complete: first_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    find_tv_need_complete_list: many_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    find_tv_need_complete_with_pagination: pagination_factory<PrismaClient["tv_need_complete"]>(
+      prisma.tv_need_complete
+    ),
   };
 };
 
@@ -353,7 +338,7 @@ export function folder_client(body: { drive_id: string }, store: ReturnType<type
   const { drive_id } = body;
   return {
     async fetch_file(id: string) {
-      const r = await store.find_folder({ file_id: id, drive_id });
+      const r = await store.find_file({ file_id: id, drive_id });
       if (r.error) {
         return r;
       }
@@ -368,7 +353,7 @@ export function folder_client(body: { drive_id: string }, store: ReturnType<type
     async fetch_files(id: string, options: { marker?: string } = {}) {
       const { marker } = options;
       const page_size = 20;
-      const r = await resultify(store.prisma.folder.findMany.bind(store.prisma.folder))({
+      const r = await resultify(store.prisma.file.findMany.bind(store.prisma.file))({
         where: {
           parent_file_id: id,
           drive_id: drive_id,

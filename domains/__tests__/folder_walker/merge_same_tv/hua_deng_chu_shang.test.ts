@@ -6,6 +6,7 @@ import { id } from "@/domains/__tests__/mock/da_li_si_ri_zhi";
 import { test_store as store } from "../../store";
 import { sleep } from "@/utils/flow";
 import { merge_same_tv_and_episodes } from "@/domains/walker/merge_same_tv_and_episode";
+import { ModelKeys } from "@/store/types";
 
 describe("merge same tv", () => {
   const { user_id, drive_id } = {
@@ -13,18 +14,10 @@ describe("merge same tv", () => {
     drive_id: "123",
   };
   beforeEach(async () => {
-    const tables = [
-      "aliyun_drive",
-      "episode",
-      "season",
-      "tv",
-      "folder",
-      "searched_tv",
-      "async_task",
-    ];
+    const tables = ["drive", "episode", "season", "tv", "file", "searched_tv", "async_task"] as ModelKeys[];
     for (let i = 0; i < tables.length; i += 1) {
       const table = tables[i];
-      await store.operation.clear_dataset(table);
+      await store.clear_dataset(table);
     }
   });
   test("华灯初上", async () => {
@@ -51,8 +44,7 @@ describe("merge same tv", () => {
       tmdb_id: 130330,
       name: "华灯初上",
       original_name: "華燈初上",
-      overview:
-        "在 20 世纪 80 年代的台北红灯区，热门日式酒店的小姐们努力应对着嫉妒、心碎、友谊、爱情与背叛。",
+      overview: "在 20 世纪 80 年代的台北红灯区，热门日式酒店的小姐们努力应对着嫉妒、心碎、友谊、爱情与背叛。",
       poster_path: "//static.funzm.com/video-static/poster/ClbmcD5X0SFqufMi",
     });
     const searched_tvs_res = await store.find_searched_tvs();
@@ -61,12 +53,10 @@ describe("merge same tv", () => {
     }
     expect(searched_tvs_res.error).toBe(null);
     expect(searched_tvs_res.data.length).toBe(1);
-    const adding_tv1_res = await store.add_tv({
+    const adding_tv1_res = await store.add_maybe_tv({
       name: "",
       original_name: "Light.The.Night",
-      searched_tv_id: adding_searched_tv_res.data
-        ? adding_searched_tv_res.data.id
-        : "",
+      searched_tv_id: adding_searched_tv_res.data ? adding_searched_tv_res.data.id : "",
       drive_id,
       user_id,
     });
@@ -95,12 +85,10 @@ describe("merge same tv", () => {
       episode_id: adding_episode_res.data.id,
     });
     await sleep(1000);
-    const adding_tv2_res = await store.add_tv({
+    const adding_tv2_res = await store.add_maybe_tv({
       name: "华灯初上",
       original_name: "",
-      searched_tv_id: adding_searched_tv_res.data
-        ? adding_searched_tv_res.data.id
-        : "",
+      searched_tv_id: adding_searched_tv_res.data ? adding_searched_tv_res.data.id : "",
       drive_id,
       user_id,
     });
@@ -119,24 +107,21 @@ describe("merge same tv", () => {
       user_id,
       drive_id,
     });
-    const tvs_res = await store.find_tvs({ user_id, drive_id });
+    const tvs_res = await store.find_maybe_tvs({ user_id, drive_id });
     if (tvs_res.error) {
       return;
     }
     expect(tvs_res.error).toBe(null);
     const tvs = tvs_res.data;
     expect(tvs.length).toBe(2);
-    const r = await merge_same_tv_and_episodes(
-      { user_id, drive_id },
-      store.operation
-    );
+    const r = await merge_same_tv_and_episodes({ user_id, drive_id }, store);
     if (r.error) {
       return;
     }
     expect(r.error).toBe(null);
     /** ---------------------- 开始断言 ------------------ */
     /** --------- 查看 tv --------- */
-    const merged_tvs_res = await store.find_tvs();
+    const merged_tvs_res = await store.find_maybe_tvs();
     expect(merged_tvs_res.error).toBe(null);
     if (merged_tvs_res.error) {
       return;

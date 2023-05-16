@@ -10,10 +10,7 @@ import { search_special_tv_in_tmdb_then_update } from "@/domains/walker/search_t
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
@@ -25,7 +22,7 @@ export default async function handler(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const tv_res = await store.find_tv({ id, user_id });
+  const tv_res = await store.find_maybe_tv({ id, user_id });
   if (tv_res.error) {
     return e(tv_res);
   }

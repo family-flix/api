@@ -9,10 +9,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
@@ -24,14 +21,14 @@ export default async function handler(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const r = await store.find_tv({ id, user_id });
+  const r = await store.find_maybe_tv({ id, user_id });
   if (r.error) {
     return e(r);
   }
   if (!r.data) {
     return e("没有找到该电视剧");
   }
-  const r2 = await store.update_tv(id, {
+  const r2 = await store.update_maybe_tv(id, {
     hidden: 1,
   });
   if (r2.error) {

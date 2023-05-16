@@ -9,10 +9,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
@@ -24,7 +21,7 @@ export default async function handler(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const tv_res = await store.find_tv({ id, user_id });
+  const tv_res = await store.find_maybe_tv({ id, user_id });
   if (tv_res.error) {
     return e(tv_res);
   }
@@ -32,7 +29,7 @@ export default async function handler(
     return e("No matched record of tv");
   }
   const searched_tv_res = await store.find_searched_tv({
-    id: tv_res.data.searched_tv_id,
+    id: tv_res.data.searched_tv_id || undefined,
   });
   if (searched_tv_res.error) {
     return e(searched_tv_res);

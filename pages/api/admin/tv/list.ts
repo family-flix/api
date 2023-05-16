@@ -10,10 +10,7 @@ import { log } from "@/logger/log";
 import { BaseApiResp, resultify } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const {
     name,
@@ -52,9 +49,7 @@ export default async function handler(
   //     poster_path: string;
   //   }[]
   // >(running_sql);
-  const count_resp = await resultify(
-    store.prisma.tV.count.bind(store.prisma.tV)
-  )({
+  const count_resp = await resultify(store.prisma.tV.count.bind(store.prisma.tV))({
     // 连接条件
     where: {
       user_id,
@@ -84,10 +79,8 @@ export default async function handler(
     console.log(count_resp.error);
     return e(count_resp);
   }
-  const resp = await resultify(store.prisma.tV.findMany.bind(store.prisma.tV))({
+  const resp = await resultify(store.prisma.tv.findMany.bind(store.prisma.tv))({
     select: {
-      // 将 fields 参数中的字段都包含进来
-      // 这里假设 fields 是一个包含字段名的字符串数组
       id: true,
       name: true,
       searched_tv: {
@@ -99,11 +92,17 @@ export default async function handler(
           first_air_date: true,
         },
       },
+      // same_tv: true,
+      // same_tv: {
+      //   select: {
+      //     id: true,
+      //     _count: true,
+      //   },
+      // },
+      _count: true,
     },
     // 连接条件
     where: {
-      user_id,
-      // hidden: 0,
       searched_tv_id: {
         not: null,
       },
@@ -123,7 +122,16 @@ export default async function handler(
             ]
           : undefined,
       },
+      user_id,
     },
+    // include: {
+    //   episodes: true,
+    //   same_tv: {
+    //     include: {
+    //       episodes: true,
+    //     },
+    //   },
+    // },
     // 排序
     orderBy: {
       searched_tv: { first_air_date: "desc" },
@@ -144,16 +152,17 @@ export default async function handler(
       return false;
     })(),
     list: resp.data.map((tv) => {
-      const { id, searched_tv } = tv;
-      const { name, original_name, overview, poster_path, first_air_date } =
-        searched_tv;
+      const { id, searched_tv, episodes, _count } = tv;
+      // const { name, original_name, overview, poster_path, first_air_date } = searched_tv;
       return {
         id,
         name,
-        original_name,
-        overview,
-        poster_path,
-        first_air_date,
+        // original_name,
+        // overview,
+        // poster_path,
+        // first_air_date,
+        _count,
+        episodes,
       };
     }),
   };

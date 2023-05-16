@@ -51,7 +51,7 @@ export async function patch_shared_files(
       console.log(`${in_progress.name} 没有关联网盘文件夹`);
       continue;
     }
-    const matched_folder_res = await store.find_folder({
+    const matched_folder_res = await store.find_file({
       file_id: target_file_id,
       user_id,
     });

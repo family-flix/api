@@ -7,7 +7,7 @@ import { test_store as store } from "../../store";
 import { sleep } from "@/utils/flow";
 import { merge_same_tv_and_episodes } from "@/domains/walker/merge_same_tv_and_episode";
 import { hidden_empty_tv } from "@/domains/walker/clean_empty_records";
-import { ModelKeys } from "@/store";
+import { ModelKeys } from "@/store/types";
 
 describe("clean empty record", () => {
   const { user_id, drive_id } = {
@@ -15,15 +15,7 @@ describe("clean empty record", () => {
     drive_id: "123",
   };
   beforeEach(async () => {
-    const tables: ModelKeys[] = [
-      "drive",
-      "episode",
-      "season",
-      "tV",
-      "folder",
-      "searchedTV",
-      "asyncTask",
-    ];
+    const tables: ModelKeys[] = ["drive", "episode", "season", "tv", "file", "searched_tv", "async_task"];
     for (let i = 0; i < tables.length; i += 1) {
       const table = tables[i];
       await store.clear_dataset(table);
@@ -53,8 +45,7 @@ describe("clean empty record", () => {
       tmdb_id: 130330,
       name: "华灯初上",
       original_name: "華燈初上",
-      overview:
-        "在 20 世纪 80 年代的台北红灯区，热门日式酒店的小姐们努力应对着嫉妒、心碎、友谊、爱情与背叛。",
+      overview: "在 20 世纪 80 年代的台北红灯区，热门日式酒店的小姐们努力应对着嫉妒、心碎、友谊、爱情与背叛。",
       poster_path: "//static.funzm.com/video-static/poster/ClbmcD5X0SFqufMi",
     });
     const searched_tvs_res = await store.find_searched_tvs();
@@ -63,12 +54,10 @@ describe("clean empty record", () => {
     }
     expect(searched_tvs_res.error).toBe(null);
     expect(searched_tvs_res.data.length).toBe(1);
-    const adding_tv1_res = await store.add_tv({
+    const adding_tv1_res = await store.add_maybe_tv({
       name: "",
       original_name: "Light.The.Night",
-      searched_tv_id: adding_searched_tv_res.data
-        ? adding_searched_tv_res.data.id
-        : "",
+      searched_tv_id: adding_searched_tv_res.data ? adding_searched_tv_res.data.id : "",
       drive_id,
       user_id,
     });
@@ -97,12 +86,10 @@ describe("clean empty record", () => {
       episode_id: adding_episode_res.data.id,
     });
     await sleep(1000);
-    const adding_tv2_res = await store.add_tv({
+    const adding_tv2_res = await store.add_maybe_tv({
       name: "华灯初上",
       original_name: "",
-      searched_tv_id: adding_searched_tv_res.data
-        ? adding_searched_tv_res.data.id
-        : "",
+      searched_tv_id: adding_searched_tv_res.data ? adding_searched_tv_res.data.id : "",
       drive_id,
       user_id,
     });
@@ -121,7 +108,7 @@ describe("clean empty record", () => {
       user_id,
       drive_id,
     });
-    const tvs_res = await store.find_tvs({ user_id, drive_id });
+    const tvs_res = await store.find_maybe_tvs({ user_id, drive_id });
     if (tvs_res.error) {
       return;
     }
@@ -140,7 +127,7 @@ describe("clean empty record", () => {
     }
     /** ---------------------- 开始断言 ------------------ */
     /** --------- 查看 tv --------- */
-    const hidden_tv_res = await store.find_tv({
+    const hidden_tv_res = await store.find_maybe_tv({
       id: adding_tv2_res.data.id,
     });
     expect(hidden_tv_res.error).toBe(null);

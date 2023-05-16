@@ -9,10 +9,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { page = "1", page_size = "20" } = req.query as Partial<{
@@ -25,7 +22,11 @@ export default async function handler(
   }
   const { id: user_id } = t_resp.data;
   const r1 = await store.find_async_task_with_pagination(
-    { user_id },
+    {
+      where: {
+        user_id,
+      },
+    },
     {
       page: Number(page),
       page_size: Number(page_size),

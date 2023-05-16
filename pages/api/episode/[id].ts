@@ -10,12 +10,7 @@ import { store } from "@/store";
 import { User } from "@/domains/user";
 import { Member } from "@/domains/user/member";
 
-const { find_tv, find_episode } = store;
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
   const { id, type = "LD" } = query as Partial<{
@@ -32,7 +27,7 @@ export default async function handler(
   }
   const { id: user_id } = t_resp.data;
   // console.log("[Endpoint]episode/[id]", user_id, t_resp.data);
-  const episodes_resp = await find_episode({
+  const episodes_resp = await store.find_episode({
     id,
   });
   if (episodes_resp.error) {
@@ -41,16 +36,8 @@ export default async function handler(
   if (!episodes_resp.data) {
     return e("No matched record");
   }
-  const {
-    episode,
-    season,
-    tv_id,
-    file_id,
-    parent_paths,
-    parent_file_id,
-    file_name,
-  } = episodes_resp.data;
-  const tv_resp = await find_tv({ id: tv_id });
+  const { episode, season, tv_id, file_id, parent_paths, parent_file_id, file_name } = episodes_resp.data;
+  const tv_resp = await store.find_maybe_tv({ id: tv_id });
   if (tv_resp.error) {
     return e(tv_resp);
   }

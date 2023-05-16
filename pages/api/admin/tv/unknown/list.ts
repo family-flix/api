@@ -9,10 +9,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
   const { page = "1", page_size = "20" } = query as Partial<{
@@ -33,10 +30,13 @@ export default async function handler(
   // 		searched_tv_id: null,
   // 	}
   //   });
-  const r2 = await store.find_tv_with_pagination(
+  const r2 = await store.find_maybe_tv_with_pagination(
     {
-      searched_tv_id: null,
-      user_id,
+      where: {
+        searched_tv_id: null,
+        tv_id: null,
+        user_id,
+      },
     },
     { page: Number(page), size: Number(page_size) }
   );

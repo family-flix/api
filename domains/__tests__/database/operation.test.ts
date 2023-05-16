@@ -8,7 +8,7 @@ describe.skip("删除文件夹及子孙文件夹", () => {
     drive_id: "123",
   };
   it("1", () => {
-    test_store.add_folder({
+    test_store.add_file({
       file_id: "01",
       parent_file_id: "root",
       type: 0,
