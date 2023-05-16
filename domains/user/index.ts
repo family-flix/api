@@ -45,6 +45,10 @@ export class User {
       return Result.Err(r.error);
     }
     const id = r.data.id as UserUniqueID;
+    const existing = await store.find_user({ id });
+    if (existing.error) {
+      return Result.Err(existing.error);
+    }
     const user = new User({ id, token });
     return Result.Ok(user);
   }

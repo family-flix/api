@@ -4,13 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { store } from "@/store";
 import { User } from "@/domains/user";
-
-const { find_aliyun_drive } = store;
+import { store } from "@/store";
+import { response_error_factory } from "@/utils/backend";
+import { BaseApiResp } from "@/types";
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,14 +18,14 @@ export default async function handler(
   const { authorization } = req.headers;
   const { id: drive_id } = req.query as Partial<{ id: string }>;
   if (!drive_id) {
-    return e("Missing drive id");
+    return e("缺少网盘 id 参数");
   }
-  const t_resp = await User.New(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t_res = await User.New(authorization);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const { id: user_id } = t_resp.data;
-  const drive_resp = await find_aliyun_drive({
+  const { id: user_id } = t_res.data;
+  const drive_resp = await store.find_aliyun_drive({
     id: drive_id,
     user_id,
   });
@@ -36,7 +34,7 @@ export default async function handler(
   }
   const client = new AliyunDriveClient({
     drive_id,
-    store: store,
+    store,
   });
   const r = await client.checked_in();
   if (r.error) {

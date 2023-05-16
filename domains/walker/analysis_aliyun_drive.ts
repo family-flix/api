@@ -1,32 +1,27 @@
 /**
- * @file 刮削指定阿里云盘
+ * @file 索引指定云盘
  */
 import { throttle } from "lodash/fp";
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { FolderWalker } from "@/domains/walker";
-
 import { Result } from "@/types";
 import { store_factory } from "@/store";
 import { hidden_empty_tv } from "@/domains/walker/clean_empty_records";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import { log } from "@/logger/log";
 
-import { search_tv_in_tmdb_then_update_tv } from "./search_tv_in_tmdb_then_update_tv";
+import { search_all_tv_in_tmdb_then_update_tv } from "./search_tv_in_tmdb_then_update_tv";
 import { merge_same_tv_and_episodes } from "./merge_same_tv_and_episode";
-import {
-  adding_folder_when_walk,
-  adding_episode_when_walk,
-  need_skip_the_file_when_walk,
-} from "./utils";
+import { adding_folder_when_walk, adding_episode_when_walk, need_skip_the_file_when_walk } from "./utils";
 
-/** 刮削网盘云盘 */
+/** 索引云盘 */
 export async function walk_drive(options: {
-  /** 用户 id */
+  /** 云盘所属用户 id */
   user_id: string;
-  /** 网盘 id */
+  /** 云盘 id */
   drive_id: string;
-  /** 不全量刮削网盘，仅处理这些文件夹/文件 */
+  /** 不全量索引云盘，仅处理这些文件夹/文件 */
   files?: {
     /** 文件名 */
     name: string;
@@ -44,28 +39,20 @@ export async function walk_drive(options: {
   /** 是否等待完成（默认都不等待，单测时可以等待） */
   wait_complete?: boolean;
 }) {
-  const {
-    user_id,
-    drive_id,
-    files = [],
-    client,
-    store,
-    need_upload_image = true,
-    wait_complete = false,
-  } = options;
-  const drive_resp = await store.find_aliyun_drive({
+  const { user_id, drive_id, files = [], client, store, need_upload_image = true, wait_complete = false } = options;
+  const drive_res = await store.find_aliyun_drive({
     id: drive_id,
   });
-  if (drive_resp.error) {
-    return drive_resp;
+  if (drive_res.error) {
+    return Result.Err(drive_res.error);
   }
-  if (!drive_resp.data) {
+  if (!drive_res.data) {
     return Result.Err("没有匹配的云盘记录");
   }
-  if (!drive_resp.data.root_folder_id) {
+  if (!drive_res.data.root_folder_id) {
     return Result.Err("请先设置索引目录");
   }
-  const check_need_stop = throttle(3000, async (id) => {
+  const check_need_stop = throttle(3000, async (id: string) => {
     const r = await store.find_async_task({ id });
     if (r.error) {
       return Result.Ok(false);
@@ -84,30 +71,28 @@ export async function walk_drive(options: {
       status: "Pause",
     });
   }
-  const { root_folder_id: folder_id } = drive_resp.data;
-  const existing_task_resp = await store.find_async_task({
+  const { root_folder_id: folder_id } = drive_res.data;
+  const existing_task_res = await store.find_async_task({
     unique_id: drive_id,
     user_id,
     status: "Running",
   });
-  if (existing_task_resp.error) {
-    return Result.Err(existing_task_resp.error);
+  if (existing_task_res.error) {
+    return Result.Err(existing_task_res.error);
   }
-  if (existing_task_resp.data) {
-    return Result.Err("任务正在进行中");
+  if (existing_task_res.data) {
+    return Result.Err("索引正在进行中");
   }
-  const add_async_task_resp = await store.add_async_task({
-    desc: `索引 ${drive_resp.data.user_name} 云盘${
-      files.length ? " - 仅" + files.map((f) => f.name).join("、") : ""
-    }`,
+  const add_async_task_res = await store.add_async_task({
+    desc: `索引 ${drive_res.data.user_name} 云盘${files.length ? " - 仅" + files.map((f) => f.name).join("、") : ""}`,
     unique_id: drive_id,
     user_id,
     status: "Running",
   });
-  if (add_async_task_resp.error) {
-    return Result.Err(add_async_task_resp.error);
+  if (add_async_task_res.error) {
+    return Result.Err(add_async_task_res.error);
   }
-  const async_task_id = add_async_task_resp.data.id;
+  const { id: async_task_id } = add_async_task_res.data;
   const walker = new FolderWalker();
   let need_stop = false;
   if (files.length) {
@@ -115,8 +100,7 @@ export async function walk_drive(options: {
     walker.filter = async (cur_file) => {
       let need_skip_file = true;
       for (let i = 0; i < cloned_files.length; i += 1) {
-        const { name: target_file_name, type: target_file_type } =
-          cloned_files[i];
+        const { name: target_file_name, type: target_file_type } = cloned_files[i];
         need_skip_file = need_skip_the_file_when_walk({
           target_file_name,
           target_file_type,
@@ -148,14 +132,14 @@ export async function walk_drive(options: {
     });
   };
   walker.on_error = (file) => {
-    console.log("[]walk on error", file.name);
+    // console.log("[]walk on error", file.name);
   };
   walker.on_warning = (file) => {
-    console.log("[]walk on warning", file.name);
+    // console.log("[]walk on warning", file.name);
   };
   let count = 0;
   walker.on_episode = async (tasks) => {
-    console.log("[]walk on episode", tasks.episode.file_name);
+    // console.log("[]walk on episode", tasks.episode.file_name);
     const r = await check_need_stop(async_task_id);
     if (r && r.data) {
       need_stop = true;
@@ -167,7 +151,7 @@ export async function walk_drive(options: {
     return;
   };
   walker.on_movie = async (tasks) => {
-    console.log("[]walk on movie", tasks);
+    // console.log("[]walk on movie", tasks);
     // const r = await check_need_stop(async_task_id);
     // if (r && r.data) {
     //   need_stop = true;
@@ -184,20 +168,23 @@ export async function walk_drive(options: {
   async function run() {
     log("[](analysis_aliyun_drive)run");
     // @todo 如果 detect 由于内部调用 folder.next() 报错，这里没有处理会导致一直 pending
+    log("\n\n-------- 开始索引云盘 ---------\n\n");
     await walker.detect(folder);
+    log("\n\n-------- 索引云盘完成 ---------\n\n");
     if (count === 0) {
+      log("没有索引到任一视频文件，直接终止该索引");
       await store.update_async_task(async_task_id, {
         status: "Finished",
       });
       return;
     }
-    await hidden_empty_tv({ user_id, drive_id, async_task_id }, store);
     if (need_stop) {
       await stop_task_and_clear(async_task_id);
       return;
     }
-    log("[](analysis_aliyun_drive)before search_tv_in_tmdb_then_update_tv");
-    await search_tv_in_tmdb_then_update_tv(
+    // log("[](analysis_aliyun_drive)before search_tv_in_tmdb_then_update_tv");
+    log("\n\n-------- 开始搜索电视剧信息 ---------\n\n");
+    await search_all_tv_in_tmdb_then_update_tv(
       { user_id, drive_id, need_upload_image, store },
       {
         on_stop() {
@@ -205,20 +192,22 @@ export async function walk_drive(options: {
         },
       }
     );
+    log("\n\n-------- 搜索电视剧信息结束 ---------\n\n");
     if (need_stop) {
       await stop_task_and_clear(async_task_id);
       return;
     }
-    await merge_same_tv_and_episodes({ user_id, drive_id }, store, {
-      on_stop() {
-        return Result.Ok(need_stop);
-      },
-    });
+    // await merge_same_tv_and_episodes({ user_id, drive_id }, store, {
+    //   on_stop() {
+    //     return Result.Ok(need_stop);
+    //   },
+    // });
     if (need_stop) {
       await stop_task_and_clear(async_task_id);
       return;
     }
-    await hidden_empty_tv({ user_id, drive_id }, store);
+    // await hidden_empty_tv({ user_id, drive_id }, store);
+    log("\n\n-------- 索引任务完成 ---------\n\n");
     await store.update_async_task(async_task_id, {
       status: "Finished",
     });

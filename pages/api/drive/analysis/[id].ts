@@ -1,15 +1,15 @@
 /**
- * @file 索引指定文件夹
+ * @file 索引云盘（支持传入文件夹 id 表示仅索引该文件夹）
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
 import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
-import { response_error_factory } from "@/utils/backend";
-import { store } from "@/store";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { User } from "@/domains/user";
+import { store } from "@/store";
+import { response_error_factory } from "@/utils/backend";
+import { BaseApiResp } from "@/types";
 
 export default async function handler(
   req: NextApiRequest,

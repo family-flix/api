@@ -6,18 +6,12 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import {
-  extra_searched_tv_field,
-  upload_tmdb_images,
-} from "@/domains/walker/utils";
+import { extra_searched_tv_field, upload_tmdb_images } from "@/domains/walker/utils";
 import { PartialSearchedTVFromTMDB } from "@/domains/tmdb/services";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
@@ -40,7 +34,6 @@ export default async function handler(
   const { id: tmdb_id } = body as PartialSearchedTVFromTMDB & {
     id?: string;
   };
-  let _searched_tv_id = tmdb_id;
   const existing_res = await store.find_searched_tv({ tmdb_id });
   if (existing_res.error) {
     return e(existing_res);

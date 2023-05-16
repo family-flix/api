@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3100",
+    "db": "npx prisma studio",
     "build": "next build",
     "check": "tsc --noEmit",
     "start": "next start --port 3200",
@@ -58,5 +59,6 @@
     "tailwindcss": "^3.2.4",
     "vite-node": "^0.28.3",
     "vitest": "^0.28.2"
-  }
+  },
+  "prettier": "./.prettierrc.js"
 }

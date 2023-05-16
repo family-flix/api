@@ -3,17 +3,9 @@
  */
 import chalk from "chalk";
 
-import {
-  is_video_file,
-  parse_filename_for_video,
-  noop,
-  promise_noop,
-} from "@/utils";
+import { is_video_file, parse_filename_for_video, noop, promise_noop } from "@/utils";
 import { Result } from "@/types";
-import {
-  AliyunDriveFile,
-  AliyunDriveFolder,
-} from "@/domains/aliyundrive/folder";
+import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import { sleep } from "@/utils/flow";
 
 export type SearchedEpisode = {
@@ -53,10 +45,7 @@ export type SearchedEpisode = {
   /** 代码中走了哪个分支，方便定位问题 */
   _position?: string;
 };
-export type ParentFolder = Pick<
-  ReturnType<typeof parse_filename_for_video>,
-  "name" | "original_name" | "season"
-> & {
+export type ParentFolder = Pick<ReturnType<typeof parse_filename_for_video>, "name" | "original_name" | "season"> & {
   /** 文件夹或文件 id */
   file_id: string;
   /** 原始文件名称 */
@@ -108,27 +97,14 @@ export class FolderWalker {
   /** 找到一个电影时的回调 */
   on_movie: (movie: {}) => Promise<void> = promise_noop;
   /** 解析到影片文件但解析失败时的回调 */
-  on_error: (file: {
-    file_id: string;
-    name: string;
-    parent_paths: string;
-    _position: string;
-  }) => void = noop;
-  on_warning: (file: {
-    file_id: string;
-    name: string;
-    parent_paths: string;
-    _position: string;
-  }) => void = noop;
+  on_error: (file: { file_id: string; name: string; parent_paths: string; _position: string }) => void = noop;
+  on_warning: (file: { file_id: string; name: string; parent_paths: string; _position: string }) => void = noop;
 
   constructor() {}
   /**
    * 递归遍历给定的文件夹
    */
-  async walk(
-    data: AliyunDriveFolder | AliyunDriveFile,
-    parent: ParentFolder[] = []
-  ) {
+  async walk(data: AliyunDriveFolder | AliyunDriveFile, parent: ParentFolder[] = []) {
     const { file_id, type, name, size, parent_file_id } = data;
     const parent_paths = parent.map((p) => p.file_name).join("/");
     const parent_ids = parent.map((p) => p.file_id).join("/");
@@ -207,12 +183,7 @@ export class FolderWalker {
       return;
     }
     const parsed_info = parse_filename_for_video(name);
-    function generate_episode(profile: {
-      name: string;
-      original_name: string;
-      season?: string;
-      episode?: string;
-    }) {
+    function generate_episode(profile: { name: string; original_name: string; season?: string; episode?: string }) {
       const { name: n, original_name, season, episode } = profile;
       if (episode) {
         return {
@@ -502,11 +473,7 @@ export class FolderWalker {
        * @example
        * __root/empty/name1.e01.mp4 or __root/empty/s01/name.e01.mp4@@正常5
        */
-      this.log(
-        "[](walk)[normal5]",
-        chalk.greenBright(DEFAULT_SEASON_NUMBER),
-        chalk.blueBright(parsed_info.name)
-      );
+      this.log("[](walk)[normal5]", chalk.greenBright(DEFAULT_SEASON_NUMBER), chalk.blueBright(parsed_info.name));
       return;
     }
     // 如果没有 self.name
@@ -635,11 +602,7 @@ export class FolderWalker {
        * @example
        * __root/empty/name1.s01.e01.mp4 or __root/empty/s02/name1.s01.e01.mp4@@正常8
        */
-      this.log(
-        "[](walk)[normal8]",
-        chalk.greenBright(parsed_info.season),
-        chalk.blueBright(parsed_info.name)
-      );
+      this.log("[](walk)[normal8]", chalk.greenBright(parsed_info.season), chalk.blueBright(parsed_info.name));
       return;
     }
     // 如果 tv_and_season.name 和 self.name 一样
@@ -828,10 +791,7 @@ export class FolderWalker {
     await this.walk(data);
     return Result.Ok(this.episodes);
   }
-  get_season_number_profile(
-    parsed_info: ReturnType<typeof parse_filename_for_video>,
-    parent: ParentFolder[] = []
-  ) {
+  get_season_number_profile(parsed_info: ReturnType<typeof parse_filename_for_video>, parent: ParentFolder[] = []) {
     if (parsed_info.season) {
       return {
         number: parsed_info.season,
@@ -902,18 +862,11 @@ export class FolderWalker {
   add_episode(episode: ArchivedEpisode) {
     // this.episodes.push(episode);
   }
-  has_same_name(
-    tv: { name: string; original_name: string },
-    parsed_info: { name: string; original_name: string }
-  ) {
+  has_same_name(tv: { name: string; original_name: string }, parsed_info: { name: string; original_name: string }) {
     if (tv.name && parsed_info.name && tv.name === parsed_info.name) {
       return true;
     }
-    if (
-      tv.original_name &&
-      parsed_info.original_name &&
-      tv.original_name === parsed_info.original_name
-    ) {
+    if (tv.original_name && parsed_info.original_name && tv.original_name === parsed_info.original_name) {
       return true;
     }
     return false;

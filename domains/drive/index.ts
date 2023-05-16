@@ -5,7 +5,7 @@ import Joi from "joi";
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
-import { prisma, store } from "@/store";
+import { store } from "@/store";
 import { Result, resultify } from "@/types";
 import { random_string } from "@/utils";
 
@@ -55,7 +55,7 @@ export class Drive {
       access_token,
       refresh_token,
     } = r.data as AliyunDrivePayload;
-    const existing_drive = await prisma.drive.findUnique({
+    const existing_drive = await store.prisma.drive.findUnique({
       where: {
         drive_id,
       },
@@ -63,7 +63,7 @@ export class Drive {
     if (existing_drive) {
       return Result.Err("该云盘已存在，请检查信息后重试");
     }
-    const created_drive = await prisma.drive.create({
+    const created_drive = await store.prisma.drive.create({
       data: {
         id: random_string(15),
         app_id,
@@ -104,7 +104,7 @@ export class Drive {
     if (this.user_id === null) {
       return Result.Err("缺少用户 id 参数");
     }
-    const r = await prisma.drive.findUnique({
+    const r = await store.prisma.drive.findUnique({
       where: {
         id: this.id,
       },
@@ -131,7 +131,7 @@ export class Drive {
       return Result.Err(r);
     }
     const { total_size, used_size } = r.data;
-    const d = await prisma.drive.update({
+    const d = await store.prisma.drive.update({
       where: {
         id: this.id,
       },
@@ -165,7 +165,7 @@ export class Drive {
       return Result.Err(r);
     }
     const { total_size, used_size } = r.data;
-    await prisma.drive.update({
+    await store.prisma.drive.update({
       where: {
         drive_id: this.id,
       },
@@ -223,7 +223,7 @@ export class Drive {
       return Result.Err(r2.error);
     }
     const { root_folder_id, root_folder_name } = r2.data;
-    await prisma.drive.update({
+    await store.prisma.drive.update({
       where: {
         drive_id,
       },

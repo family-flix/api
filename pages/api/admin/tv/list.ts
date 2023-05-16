@@ -7,14 +7,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { store } from "@/store";
 import { log } from "@/logger/log";
-import { BaseApiResp, Result, resultify } from "@/types";
+import { BaseApiResp, resultify } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<BaseApiResp<unknown>>
 ) {
-  const { all, get } = store.operation;
   const e = response_error_factory(res);
   const {
     name,

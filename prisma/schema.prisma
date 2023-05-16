@@ -74,10 +74,10 @@ model AsyncTask {
         id             String   @id
         created        DateTime @default(now())
         updated        DateTime @default(now())
-        status         String?  @default("")
-        error_messages String?  @default("")
+        status         String?
+        error_messages String?
         unique_id      String
-        desc           String?  @default("")
+        desc           String?
         need_stop      Float?   @default(0)
 
         // 关联 user 表
@@ -123,15 +123,15 @@ model Episode {
 
         // 关联 tv 表
         tv_id String
-        tv    TV     @relation(fields: [tv_id], references: [id])
+        tv    TV     @relation(fields: [tv_id], references: [id], onDelete: Cascade)
 
         // 关联 drive 表
         drive_id String
-        drive    Drive  @relation(fields: [drive_id], references: [id])
+        drive    Drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         play_histories PlayHistory[]
 }
@@ -152,13 +152,13 @@ model Folder {
         created        DateTime @default(now())
         updated        DateTime @default(now())
         // 文件 id
-        file_id        String?  @default("")
+        file_id        String
         // 文件名称
-        name           String?  @default("")
+        name           String
         // 父文件夹 file_id
-        parent_file_id String?  @default("")
+        parent_file_id String
         // 0文件夹 1文件
-        type           Float?   @default(0)
+        type           Float    @default(0)
         // 文件大小
         size           Float?   @default(0)
 
@@ -183,9 +183,9 @@ model Member {
         created  DateTime @default(now())
         updated  DateTime @default(now())
         // 成员邮箱
-        email    String?  @default("")
+        email    String?
         // 成员名字
-        name     String?  @default("")
+        name     String?
         // 成员备注
         remark   String   @unique
         // 是否禁用
@@ -193,7 +193,7 @@ model Member {
 
         // 关联 user 表
         user_id String
-        user    User   @relation(fields: [user_id], references: [id])
+        user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         member_tokens   MemberToken[]
         play_histories  PlayHistory[]
@@ -209,11 +209,11 @@ model MemberToken {
         // 该 token 是否被使用
         used       Float?   @default(0)
         // 过期时间
-        expired_at String?  @default("")
+        expired_at String?
 
         // 关联 member 表
         member_id String
-        member    Member @relation(fields: [member_id], references: [id])
+        member    Member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 }
 
 model Movie {
@@ -221,15 +221,15 @@ model Movie {
         created       DateTime @default(now())
         updated       DateTime @default(now())
         // 电影名称
-        name          String?  @default("")
+        name          String?
         // 电影原始名称/外文名称
-        original_name String?  @default("")
+        original_name String?
 
         // 关联 user 表
         user_id  String
-        user     User   @relation(fields: [user_id], references: [id])
+        user     User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
         // 关联 searched_movie 表
-        // searched_movie_id String? @default("")
+        // searched_movie_id String?
         // 关联 drive 表
         drive_id String
         drive    Drive  @relation(fields: [drive_id], references: [id])
@@ -248,16 +248,16 @@ model PlayHistory {
 
         // 关联 member 表
         member_id  String
-        member     Member   @relation(fields: [member_id], references: [id])
+        member     Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
         // 关联 tv 表
-        tv_id      String?  @default("")
-        tv         TV?      @relation(fields: [tv_id], references: [id])
+        tv_id      String?
+        tv         TV?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
         // 关联 episode 表
-        episode_id String?  @default("")
-        episode    Episode? @relation(fields: [episode_id], references: [id])
+        episode_id String?
+        episode    Episode? @relation(fields: [episode_id], references: [id], onDelete: Cascade)
         // 关联 movie 表
-        movie_id   String?  @default("")
-        movie      Movie?   @relation(fields: [movie_id], references: [id])
+        movie_id   String?
+        movie      Movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
 }
 
 model RecommendedTV {
@@ -277,25 +277,25 @@ model SearchedSeason {
         created          DateTime         @default(now())
         updated          DateTime         @default(now())
         // 首播日期
-        air_date         String?          @default("")
+        air_date         String?
         // 该季总集数
         episode_count    Float?           @default(0)
         // 季名称
-        name             String?          @default("")
+        name             String?
         // 季描述
-        overview         String?          @default("")
+        overview         String?
         // 季海报
-        poster_path      String?          @default("")
+        poster_path      String?
         // 季数
-        season_number    Float?           @default(0)
+        season_number    Float?
         // tmdb 记录 id
-        tmdb_id          Float?           @default(0)
+        tmdb_id          Float?
         // tmdb 记录 tv id
-        tmdb_tv_id       Float?           @default(0)
+        tmdb_tv_id       Float?
         tv_need_complete TVNeedComplete[]
 
         // 关联 searched_tv 表
-        searched_tv_id String     @default("")
+        searched_tv_id String
         searched_tv    SearchedTV @relation(fields: [searched_tv_id], references: [id])
 }
 
@@ -306,19 +306,19 @@ model SearchedTV {
         // tmdb 记录 id
         tmdb_id           Float?   @default(0)
         // 电视剧名称
-        name              String?  @default("")
+        name              String?
         // 电视剧原始名称/外文名称
-        original_name     String?  @default("")
+        original_name     String?
         // 描述
-        overview          String?  @default("")
+        overview          String?
         // 海报地址
-        poster_path       String?  @default("")
+        poster_path       String?
         // 背景图片
-        backdrop_path     String?  @default("")
+        backdrop_path     String?
         // 首播日期
-        first_air_date    String?  @default("")
+        first_air_date    String?
         // 原始语言，可用来区分日剧、国产还是美剧等
-        original_language String?  @default("")
+        original_language String?
         // 评分
         popularity        Float?   @default(0)
         // 评分
@@ -329,17 +329,17 @@ model SearchedTV {
         tv_need_complete      TVNeedComplete[]
         searched_season       SearchedSeason[]
         searched_tv_with_name SearchedTVWithName[]
-        tv                    TV[]
+        tv                    TV?
 }
 
 model SearchedTVWithName {
         id            String   @id
         created       DateTime @default(now())
         updated       DateTime @default(now())
-        name          String?  @default("")
-        original_name String?  @default("")
+        name          String?
+        original_name String?
 
-        searched_tv_id String     @default("")
+        searched_tv_id String
         searched_tv    SearchedTV @relation(fields: [searched_tv_id], references: [id])
 }
 
@@ -366,7 +366,7 @@ model SharedFileInProgress {
         // 关联的分享文件夹名称
         name           String
         // 关联的目标文件夹 file_id
-        target_file_id String?  @default("")
+        target_file_id String?
         // 是否已完结
         complete       Float?   @default(0)
         // 分享文件夹所属 url
@@ -405,27 +405,29 @@ model TV {
         created       DateTime @default(now())
         updated       DateTime @default(now())
         // 根据文件夹/文件名称推测出的电视剧名称
-        name          String?  @default("")
+        name          String?
         // 根据文件夹/文件名称推测出的电视剧原始名称或外文译名
-        original_name String?  @default("")
+        original_name String?
         // 从哪个文件夹推断
-        file_id       String?  @default("")
+        file_id       String?
         // 从哪个文件夹推断
-        file_name     String?  @default("")
+        file_name     String?
         // 正确的电视剧名称
-        correct_name  String?  @default("")
+        correct_name  String?
         // 是否隐藏
         hidden        Float?   @default(0)
+        // 是否可以搜索（搜索后没结果会置为 0，更新该记录后又置为1，避免重复搜索）
+        can_search    Float?   @default(1)
 
         // 关联 searched_tv 表
-        searched_tv_id String?
+        searched_tv_id String?     @unique
         searched_tv    SearchedTV? @relation(fields: [searched_tv_id], references: [id])
         // 关联 drive 表
         drive_id       String
-        drive          Drive       @relation(fields: [drive_id], references: [id])
+        drive          Drive       @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         // 关联 user 表
         user_id        String
-        user           User        @relation(fields: [user_id], references: [id])
+        user           User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         episodes        Episode[]
         play_histories  PlayHistory[]
@@ -434,13 +436,13 @@ model TV {
 }
 
 model TVNeedComplete {
-        id            String @id
-        created       String @default("")
-        updated       String @default("")
+        id            String   @id
+        created       DateTime @default(now())
+        updated       DateTime @default(now())
         // 总集数
-        episode_count Float? @default(0)
+        episode_count Float?   @default(0)
         // 当前集数
-        cur_count     Float? @default(0)
+        cur_count     Float?   @default(0)
 
         // 关联 searchd_season 表
         searched_season_id String

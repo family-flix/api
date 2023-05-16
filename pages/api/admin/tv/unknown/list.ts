@@ -4,7 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, resultify } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
@@ -28,19 +28,24 @@ export default async function handler(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const resp = await store.find_tv_with_pagination(
+  //   const res = await resultify(store.prisma.tV.findMany.bind(store.prisma.tV))({
+  // 	where: {
+  // 		searched_tv_id: null,
+  // 	}
+  //   });
+  const r2 = await store.find_tv_with_pagination(
     {
-      searched_tv: undefined,
+      searched_tv_id: null,
       user_id,
     },
     { page: Number(page), size: Number(page_size) }
   );
-  if (resp.error) {
-    return e(resp);
+  if (r2.error) {
+    return e(r2);
   }
   res.status(200).json({
     code: 0,
     msg: "",
-    data: resp.data,
+    data: r2.data,
   });
 }
