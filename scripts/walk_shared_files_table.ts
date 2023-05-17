@@ -10,7 +10,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import dayjs from "dayjs";
 
 async function run() {
-  const drives_res = await store.find_aliyun_drives({});
+  const drives_res = await store.find_drive_list({});
   if (drives_res.error) {
     return;
   }

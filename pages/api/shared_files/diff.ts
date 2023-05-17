@@ -38,7 +38,7 @@ export default async function handler(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const drives_resp = await store.find_aliyun_drives({ user_id });
+  const drives_resp = await store.find_drive_list({ user_id });
   if (drives_resp.error) {
     return e(drives_resp);
   }

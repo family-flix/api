@@ -7,7 +7,7 @@ import { describe, test, expect, vi, afterEach } from "vitest";
 import { FolderWalker } from "@/domains/walker";
 import {
   fetch_files_factory,
-  adding_episode_when_walk,
+  create_parsed_episode_and_parsed_tv,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
@@ -58,7 +58,7 @@ describe("detect a tv dir", () => {
     detector.on_error = handle_err;
     detector.on_warning = handle_warning;
     detector.on_episode = async (tasks) => {
-      await adding_episode_when_walk(
+      await create_parsed_episode_and_parsed_tv(
         tasks,
         {
           user_id,
@@ -111,7 +111,7 @@ describe("detect a tv dir", () => {
     }
     expect(season_resp.data.length).toBe(0);
     expect(season_resp.data.map((s) => s.season)).toStrictEqual([]);
-    const tvs_resp = await store.find_maybe_tvs();
+    const tvs_resp = await store.find_parsed_tv_list();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;
@@ -195,7 +195,7 @@ describe("detect a tv dir", () => {
     detector.on_error = handle_err;
     detector.on_warning = handle_warning;
     detector.on_episode = async (tasks) => {
-      await adding_episode_when_walk(
+      await create_parsed_episode_and_parsed_tv(
         tasks,
         {
           user_id,
@@ -248,7 +248,7 @@ describe("detect a tv dir", () => {
     }
     expect(season_resp.data.length).toBe(0);
     expect(season_resp.data.map((s) => s.season)).toStrictEqual([]);
-    const tvs_resp = await store.find_maybe_tvs();
+    const tvs_resp = await store.find_parsed_tv_list();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;

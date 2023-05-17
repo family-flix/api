@@ -1,5 +1,5 @@
 /**
- * @file 设置网盘刮削根目录
+ * @file 设置云盘索引根目录
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -10,10 +10,7 @@ import { store } from "@/store";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{
@@ -33,7 +30,7 @@ export default async function handler(
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const drive_res = await store.find_aliyun_drive({ id, user_id });
+  const drive_res = await store.find_drive({ id, user_id });
   if (drive_res.error) {
     return e(drive_res);
   }
@@ -45,7 +42,7 @@ export default async function handler(
   if (file_res.error) {
     return e(file_res.error.message);
   }
-  const r2 = await store.update_aliyun_drive(id, {
+  const r2 = await store.update_drive(id, {
     root_folder_id,
     root_folder_name: file_res.data.name,
   });

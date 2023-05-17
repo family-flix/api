@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("No matched record");
   }
   const { episode, season, tv_id, file_id, parent_paths, parent_file_id, file_name } = episodes_resp.data;
-  const tv_resp = await store.find_maybe_tv({ id: tv_id });
+  const tv_resp = await store.find_parsed_tv({ id: tv_id });
   if (tv_resp.error) {
     return e(tv_resp);
   }

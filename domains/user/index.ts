@@ -1,9 +1,8 @@
-import Joi, { Err } from "joi";
+import Joi from "joi";
 
 import { Drive } from "@/domains/drive";
 import { List } from "@/domains/list";
 import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
-import { AliyunDriveRecord } from "@/store/types";
 import { Result, resultify } from "@/types";
 import { random_string } from "@/utils";
 import { store } from "@/store";
@@ -52,12 +51,8 @@ export class User {
     const user = new User({ id, token });
     return Result.Ok(user);
   }
-  static async NewWithPassword(
-    values: Partial<{ email: string; password: string }>
-  ) {
-    const r = await resultify(
-      credentialsSchema.validateAsync.bind(credentialsSchema)
-    )(values);
+  static async NewWithPassword(values: Partial<{ email: string; password: string }>) {
+    const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -86,9 +81,7 @@ export class User {
     return Result.Ok(user);
   }
   static async Add(values: Partial<{ email: string; password: string }>) {
-    const r = await resultify(
-      credentialsSchema.validateAsync.bind(credentialsSchema)
-    )(values);
+    const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -161,9 +154,7 @@ export class User {
   /** 补全信息 */
   async register(values: Partial<{ email: string; password: string }>) {}
   /** 密码登录 */
-  async login_with_password(
-    values: Partial<{ email: string; password: string }>
-  ) {}
+  async login_with_password(values: Partial<{ email: string; password: string }>) {}
 
   /** 添加云盘 */
   async add_drive(body: { payload: AliyunDrivePayload }) {

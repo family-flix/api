@@ -3,20 +3,21 @@ import {
   drive,
   episode,
   file,
-  maybe_tv,
+  parsed_episode,
+  parsed_tv,
   PrismaClient,
-  searched_tv,
   shared_file_in_progress,
   tv,
+  tv_profile,
 } from "@prisma/client";
 
 export type AliyunDriveRecord = drive;
 
 export type FilesRecord = file;
-export type MaybeTVRecord = maybe_tv;
-export type AsyncTaskRecord = async_task;
-export type EpisodeRecord = episode;
-export type SearchedTVRecord = searched_tv;
+export type ParsedTVRecord = parsed_tv;
+export type TaskRecord = async_task;
+export type ParsedEpisodeRecord = parsed_episode;
+export type TVProfileRecord = tv_profile;
 export type SharedFilesInProgressRecord = shared_file_in_progress;
 export type RecordCommonPart = {
   id: string;

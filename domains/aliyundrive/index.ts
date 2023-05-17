@@ -195,7 +195,7 @@ export class AliyunDriveClient {
   async init() {
     this.signature = SIGNATURE;
     // console.log("[]init - drive_id", this.db_drive_id);
-    const aliyun_drive_resp = await this.store.find_aliyun_drive({
+    const aliyun_drive_resp = await this.store.find_drive({
       id: this.db_drive_id,
     });
     if (aliyun_drive_resp.error) {

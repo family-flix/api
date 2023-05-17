@@ -28,7 +28,7 @@ describe("detect a tv dir", () => {
     }
   });
   test("风吹半夏", async () => {
-    const adding_res = await store.add_aliyun_drive({
+    const adding_res = await store.add_drive({
       id: drive_id,
       name: "",
       nick_name: "",
@@ -61,7 +61,7 @@ describe("detect a tv dir", () => {
     }
     /** ---------------------- 开始断言 ------------------ */
     /** --------- 查看索引到的影视剧信息 --------- */
-    const searched_tv_res = await store.find_searched_tvs({});
+    const searched_tv_res = await store.find_tv_profiles({});
     expect(searched_tv_res.error).toBe(null);
     if (searched_tv_res.error) {
       return;
@@ -80,7 +80,7 @@ describe("detect a tv dir", () => {
       },
     ]);
     /** --------- 查看 tv --------- */
-    const tvs_resp = await store.find_maybe_tvs();
+    const tvs_resp = await store.find_parsed_tv_list();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;
@@ -88,18 +88,18 @@ describe("detect a tv dir", () => {
     expect(tvs_resp.data.length).toBe(1);
     expect(
       tvs_resp.data.map((t) => {
-        const { name, original_name, searched_tv_id } = t;
+        const { name, original_name, tv_profile_id } = t;
         return {
           name,
           original_name,
-          searched_tv_id: !!searched_tv_id,
+          tv_profile_id: !!tv_profile_id,
         };
       })
     ).toStrictEqual([
       {
         name: "风吹半夏",
         original_name: "Wild.Bloom",
-        searched_tv_id: true,
+        tv_profile_id: true,
       },
     ]);
   });

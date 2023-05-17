@@ -10,7 +10,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-const { find_aliyun_drives, delete_async_task, find_async_task } = store;
+const { find_drive_list: find_aliyun_drives, delete_task: delete_async_task, find_task: find_async_task } = store;
 
 export default async function handler(
   req: NextApiRequest,

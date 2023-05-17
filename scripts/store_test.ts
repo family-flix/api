@@ -6,12 +6,12 @@ import { store } from "@/store";
   // const sql = `SELECT
   // tv.id,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.poster_path,searched_tv.first_air_date
   // FROM tv
-  // LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id
-  // WHERE searched_tv.name LIKE '%女武神%' OR searched_tv.original_name LIKE '%女武神%' AND tv.searched_tv_id != '' AND tv.hidden != 1;`;
+  // LEFT JOIN searched_tv ON tv.tv_profile_id = searched_tv.id
+  // WHERE searched_tv.name LIKE '%女武神%' OR searched_tv.original_name LIKE '%女武神%' AND tv.tv_profile_id != '' AND tv.hidden != 1;`;
   //   const fields =
   //     "tv.id,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.poster_path,searched_tv.first_air_date";
   //   let sql = `SELECT ${fields}
-  //   	FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id
+  //   	FROM tv LEFT JOIN searched_tv ON tv.tv_profile_id = searched_tv.id
   //   	WHERE searched_tv.name LIKE '%${name}%' AND tv.hidden != 1;`;
   //   const r = await store.operation.get(sql);
   const names = ["X 许你万家灯火 [2023][32集持续更新中]", "4K"];

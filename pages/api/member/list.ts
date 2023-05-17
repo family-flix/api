@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     //     poster_path: string;
     //   }[]
     // >(
-    //   `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id WHERE tv.id IN (SELECT recommended_tv.tv_id FROM recommended_tv WHERE member_id = '${id}');`
+    //   `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.tv_profile_id = searched_tv.id WHERE tv.id IN (SELECT recommended_tv.tv_id FROM recommended_tv WHERE member_id = '${id}');`
     // );
     // // @ts-ignore
     // member.recommended_tvs = [];

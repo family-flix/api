@@ -24,18 +24,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const tv_resp = await store.find_maybe_tv({ id, user_id });
+  const tv_resp = await store.find_parsed_tv({ id, user_id });
   if (tv_resp.error) {
     return e(tv_resp);
   }
   if (!tv_resp.data) {
     return e("No matched tv");
   }
-  const { searched_tv_id } = body as PartialSearchedTVFromTMDB & {
-    searched_tv_id?: string;
+  const { tv_profile_id } = body as PartialSearchedTVFromTMDB & {
+    tv_profile_id?: string;
   };
-  let _searched_tv_id = searched_tv_id;
-  if (!searched_tv_id) {
+  let _tv_profile_id = tv_profile_id;
+  if (!tv_profile_id) {
     const {
       tmdb_id,
       name,
@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       popularity,
       original_language,
     } = extra_searched_tv_field(body);
-    const r2 = await store.add_searched_tv({
+    const r2 = await store.add_tv_profile({
       tmdb_id,
       name,
       original_name,
@@ -65,10 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (r2.error) {
       return e(r2);
     }
-    _searched_tv_id = r2.data.id;
+    _tv_profile_id = r2.data.id;
   }
-  const r = await store.update_maybe_tv(id, {
-    searched_tv_id: _searched_tv_id,
+  const r = await store.update_parsed_tv(id, {
+    tv_profile_id: _tv_profile_id,
   });
   if (r.error) {
     return e(r);

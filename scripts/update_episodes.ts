@@ -1,13 +1,13 @@
 require("dotenv").config();
 import { walk_table_with_pagination } from "@/domains/walker/utils";
 import { store } from "@/store";
-import { EpisodeRecord, RecordCommonPart } from "@/store/types";
+import { ParsedEpisodeRecord, RecordCommonPart } from "@/store/types";
 
 async function main() {
   // const { find_episodes_with_pagination } = store_factory(store);
   walk_table_with_pagination(store.find_episodes_with_pagination, {
     body: {},
-    async on_handle(v: EpisodeRecord & RecordCommonPart) {
+    async on_handle(v: ParsedEpisodeRecord & RecordCommonPart) {
       const {
         id,
         // @ts-ignore

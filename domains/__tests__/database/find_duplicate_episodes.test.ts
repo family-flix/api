@@ -1,10 +1,7 @@
 require("dotenv").config();
 import { describe, test, expect, afterEach, beforeEach } from "vitest";
 
-import {
-  fetch_files_factory,
-  find_duplicate_episodes,
-} from "@/domains/walker/utils";
+import { fetch_files_factory, find_duplicate_episodes } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/da_li_si_ri_zhi";
 import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 
@@ -17,29 +14,20 @@ describe("detect a tv dir", () => {
     drive_id: "123",
   };
   beforeEach(async () => {
-    const tables = [
-      "aliyun_drive",
-      "episode",
-      "season",
-      "tv",
-      "folder",
-      "play_progress",
-      "searched_tv",
-      "async_task",
-    ];
+    const tables = ["aliyun_drive", "episode", "season", "tv", "folder", "play_progress", "searched_tv", "async_task"];
     for (let i = 0; i < tables.length; i += 1) {
       const table = tables[i];
       await store.operation.clear_dataset(table);
     }
   });
   test("the duplicate without play histories", async () => {
-    const drives_resp = await store.find_aliyun_drives();
+    const drives_resp = await store.find_drive_list();
     expect(drives_resp.error).toBe(null);
     if (drives_resp.error) {
       return;
     }
     expect(drives_resp.data.length).toBe(0);
-    const adding_res = await store.add_aliyun_drive({
+    const adding_res = await store.add_drive({
       id: drive_id,
       name: "",
       nick_name: "",
@@ -135,13 +123,13 @@ describe("detect a tv dir", () => {
   });
 
   test("the duplicate with the episode that has play histories", async () => {
-    const drives_resp = await store.find_aliyun_drives();
+    const drives_resp = await store.find_drive_list();
     expect(drives_resp.error).toBe(null);
     if (drives_resp.error) {
       return;
     }
     expect(drives_resp.data.length).toBe(0);
-    const adding_res = await store.add_aliyun_drive({
+    const adding_res = await store.add_drive({
       id: drive_id,
       name: "",
       nick_name: "",

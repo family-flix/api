@@ -16,13 +16,7 @@ import { decode_token } from "@/domains/user/jwt";
 /**
  * 解析 token
  */
-export async function parse_token({
-  token,
-  secret,
-}: {
-  token?: string;
-  secret: string;
-}) {
+export async function parse_token({ token, secret }: { token?: string; secret: string }) {
   if (!token) {
     return Result.Err("Missing auth token");
   }
@@ -53,28 +47,29 @@ export async function parse_token({
 //   return Result.Ok(token);
 // }
 
+const DEFAULT_CODE = 10000;
 export function response_error_factory(res: NextApiResponse) {
   return (result: Result<unknown> | string | Error) => {
     return res.status(200).json(
       (() => {
         if (typeof result === "string") {
           return {
-            code: 11000,
+            code: DEFAULT_CODE,
             msg: result,
             data: null,
           };
         }
         if (result instanceof Error) {
           return {
-            code: 11000,
+            code: DEFAULT_CODE,
             msg: result.message,
             data: null,
           };
         }
         return {
-          code: 11000,
+          code: result.code || DEFAULT_CODE,
           msg: result.error === null ? "Unknown error?" : result.error.message,
-          data: null,
+          data: result.data,
         };
       })()
     );
@@ -86,11 +81,7 @@ export function response_error_factory(res: NextApiResponse) {
  * @param token
  * @returns
  */
-export function user_id_or_member_id(token: {
-  id: string;
-  member_id: string;
-  is_member: number;
-}) {
+export function user_id_or_member_id(token: { id: string; member_id: string; is_member: number }) {
   const { id, member_id, is_member } = token;
   return {
     user_id: is_member ? undefined : id,
@@ -98,11 +89,7 @@ export function user_id_or_member_id(token: {
   };
 }
 
-export async function exchange_user_id(token: {
-  id: string;
-  member_id: string;
-  is_member: number;
-}) {
+export async function exchange_user_id(token: { id: string; member_id: string; is_member: number }) {
   const { id, member_id, is_member } = token;
   if (!is_member) {
     return Result.Ok({ id });

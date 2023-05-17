@@ -1,5 +1,5 @@
 /**
- * @file 删除播放记录
+ * @file 获取云盘列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -8,10 +8,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const query = req.query as { page: string; page_size: string };

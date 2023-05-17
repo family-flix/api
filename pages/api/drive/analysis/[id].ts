@@ -29,7 +29,7 @@ export default async function handler(
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const drive_res = await store.find_aliyun_drive({ id: drive_id });
+  const drive_res = await store.find_drive({ id: drive_id });
   if (drive_res.error) {
     return e(drive_res);
   }

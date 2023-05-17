@@ -21,15 +21,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const tv_res = await store.find_maybe_tv({ id, user_id });
+  const tv_res = await store.find_parsed_tv({ id, user_id });
   if (tv_res.error) {
     return e(tv_res);
   }
   if (!tv_res.data) {
     return e("No matched record of tv");
   }
-  const searched_tv_res = await store.find_searched_tv({
-    id: tv_res.data.searched_tv_id || undefined,
+  const searched_tv_res = await store.find_tv_profile({
+    id: tv_res.data.tv_profile_id || undefined,
   });
   if (searched_tv_res.error) {
     return e(searched_tv_res);

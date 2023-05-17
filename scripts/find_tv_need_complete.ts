@@ -1,24 +1,24 @@
 import chalk from "chalk";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
-import { RecordCommonPart, SearchedTVRecord } from "@/store/types";
+import { RecordCommonPart, TVProfileRecord } from "@/store/types";
 import { format_number } from "@/utils";
 import { store_factory } from "@/store";
 
 export function find_tv_need_complete(store: ReturnType<typeof store_factory>) {
-  walk_table_with_pagination(store.find_searched_tv_with_pagination, {
+  walk_table_with_pagination(store.find_tv_profiles_with_pagination, {
     body: {},
-    async on_handle(v: SearchedTVRecord & RecordCommonPart) {
+    async on_handle(v: TVProfileRecord & RecordCommonPart) {
       const { id, name, original_name } = v;
       console.log("开始处理", chalk.greenBright(name || original_name));
       const season_res = await store.find_searched_season_list({
-        searched_tv_id: id,
+        tv_profile_id: id,
       });
       if (season_res.error || !season_res.data || season_res.data.length === 0) {
         console.log(name || original_name, "没有任何季，请先获取该电视剧季", season_res.error?.message);
         return;
       }
-      const r = await store.find_maybe_tv({ searched_tv_id: id });
+      const r = await store.find_parsed_tv({ tv_profile_id: id });
       if (r.error || !r.data) {
         console.log("网盘内不存在该电视剧", r.error?.message);
         return;
@@ -34,7 +34,7 @@ export function find_tv_need_complete(store: ReturnType<typeof store_factory>) {
         })();
         console.log(chalk.yellowBright(season_name));
         // const r2 = await store.operation.all<EpisodeRecord[]>(
-        //   `SELECT * FROM episode e LEFT JOIN tv t ON e.tv_id = t.id WHERE t.searched_tv_id = '${id}' AND e.season = '${season}'`
+        //   `SELECT * FROM episode e LEFT JOIN tv t ON e.tv_id = t.id WHERE t.tv_profile_id = '${id}' AND e.season = '${season}'`
         // );
         const sql = `SELECT
 	(SELECT COUNT(*) FROM episode WHERE tv_id = '${tv_id}' AND season = '${season}') AS total_videos,
@@ -52,7 +52,7 @@ export function find_tv_need_complete(store: ReturnType<typeof store_factory>) {
         }
         const existing_res = await store.find_tv_need_complete({
           searched_season_id,
-          searched_tv_id: id,
+          tv_profile_id: id,
           user_id,
         });
         if (existing_res.error) {
@@ -71,7 +71,7 @@ export function find_tv_need_complete(store: ReturnType<typeof store_factory>) {
         if (!existing_res.data) {
           console.log("插入一条新记录");
           await store.add_tv_need_complete({
-            searched_tv_id: id,
+            tv_profile_id: id,
             searched_season_id,
             episode_count,
             cur_count,

@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { EpisodeRecord } from "@/store/types";
+import { ParsedEpisodeRecord } from "@/store/types";
 import { User } from "@/domains/user";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const r = await store.find_maybe_tv({ id, user_id });
+  const r = await store.find_parsed_tv({ id, user_id });
   if (r.error) {
     return e(r);
   }
@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
       matched.episodes.push(cur);
       return r;
-    }, [] as { paths: string; episodes: EpisodeRecord[] }[]);
+    }, [] as { paths: string; episodes: ParsedEpisodeRecord[] }[]);
   const result = {
     id,
     name: name || original_name,

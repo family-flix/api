@@ -9,7 +9,7 @@ import { walk_table_with_pagination } from "@/domains/walker/utils";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 
 async function run() {
-  const drives_res = await store.find_aliyun_drives();
+  const drives_res = await store.find_drive_list();
   if (drives_res.error) {
     return;
   }

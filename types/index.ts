@@ -1,11 +1,10 @@
 export type Resp<T> = {
   data: T extends null ? null : T;
+  code?: number | string;
   error: T extends null ? Error : null;
 };
 export type Result<T> = Resp<T> | Resp<null>;
-export type UnpackedResult<T> = NonNullable<
-  T extends Resp<infer U> ? (U extends null ? U : U) : T
->;
+export type UnpackedResult<T> = NonNullable<T extends Resp<infer U> ? (U extends null ? U : U) : T>;
 /** 构造一个结果对象 */
 export const Result = {
   /** 构造成功结果 */
@@ -17,9 +16,10 @@ export const Result = {
     return result;
   },
   /** 构造失败结果 */
-  Err: <T>(message: string | Error | Result<null>, code?: string) => {
+  Err: <T>(message: string | Error | Result<null>, code?: string, data: unknown = null) => {
     const result = {
-      data: null,
+      data,
+      code,
       error: (() => {
         if (typeof message === "string") {
           const e = new Error(message);
@@ -79,15 +79,8 @@ export type ListResponse<T> = {
   list: T[];
 };
 
-export type RequestedResource<T extends (...args: any[]) => any> =
-  UnpackedResult<Unpacked<ReturnType<T>>>;
+export type RequestedResource<T extends (...args: any[]) => any> = UnpackedResult<Unpacked<ReturnType<T>>>;
 
 export interface JSONArray extends Array<JSONValue> {}
-export type JSONValue =
-  | string
-  | number
-  | boolean
-  | JSONObject
-  | JSONArray
-  | null;
+export type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
 export type JSONObject = { [Key in string]?: JSONValue };

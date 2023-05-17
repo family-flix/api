@@ -39,18 +39,18 @@ export default async function handler(
   //   return e(user_id_resp);
   // }
   // const { id: user_id } = user_id_resp.data;
-  // const condition = `tv.searched_tv_id != '' AND st.first_air_date != '' AND tv.user_id = '${user_id}'`;
+  // const condition = `tv.tv_profile_id != '' AND st.first_air_date != '' AND tv.user_id = '${user_id}'`;
   // const count_resp = await (async () => {
   //   const simple_sql2 = `SELECT COUNT(*) count
   //   FROM tv_need_complete tv
-  //   LEFT JOIN searched_tv st ON tv.searched_tv_id = st.id
-  //   LEFT JOIN tv t ON t.searched_tv_id = st.id
+  //   LEFT JOIN searched_tv st ON tv.tv_profile_id = st.id
+  //   LEFT JOIN tv t ON t.tv_profile_id = st.id
   //   LEFT JOIN searched_season ss ON tv.searched_season_id = ss.id
   //   WHERE ${condition};`;
   //   const sql2 = `SELECT COUNT(*) count
   //   FROM tv_need_complete tv
-  //   LEFT JOIN searched_tv st ON tv.searched_tv_id = st.id
-  //   LEFT JOIN tv t ON t.searched_tv_id = st.id
+  //   LEFT JOIN searched_tv st ON tv.tv_profile_id = st.id
+  //   LEFT JOIN tv t ON t.tv_profile_id = st.id
   //   LEFT JOIN searched_season ss ON tv.searched_season_id = ss.id
   //   WHERE ${condition} AND st.name ${process_db_value(
   //     `%${name}%`
@@ -72,15 +72,15 @@ export default async function handler(
   // let simple_sql = `
   //   SELECT ${fields}
   //   FROM tv_need_complete tv
-  //   LEFT JOIN searched_tv st ON tv.searched_tv_id = st.id
-  //   LEFT JOIN tv t ON t.searched_tv_id = st.id
+  //   LEFT JOIN searched_tv st ON tv.tv_profile_id = st.id
+  //   LEFT JOIN tv t ON t.tv_profile_id = st.id
   //   LEFT JOIN searched_season ss ON tv.searched_season_id = ss.id
   //   WHERE ${condition}
   //   ORDER BY st.first_air_date DESC`;
   // let sql = `SELECT ${fields}
   // FROM tv_need_complete tv
-  // LEFT JOIN searched_tv st ON tv.searched_tv_id = st.id
-  //   LEFT JOIN tv t ON t.searched_tv_id = st.id
+  // LEFT JOIN searched_tv st ON tv.tv_profile_id = st.id
+  //   LEFT JOIN tv t ON t.tv_profile_id = st.id
   // LEFT JOIN searched_season ss ON tv.searched_season_id = ss.id
   // WHERE ${condition} AND st.name ${process_db_value(
   //   `%${name}%`

@@ -12,7 +12,7 @@ import { notice_error } from "./notice";
 export async function ping_drive_status(
   store: ReturnType<typeof store_factory>
 ) {
-  walk_table_with_pagination(store.find_aliyun_drives_with_pagination, {
+  walk_table_with_pagination(store.find_drive_list_with_pagination, {
     body: {},
     async on_handle(v: AliyunDriveRecord) {
       const drive = v;

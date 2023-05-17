@@ -30,7 +30,7 @@ export default async function handler(
   // FROM play_progress pp
   // INNER JOIN episode e ON pp.episode_id = e.id
   // LEFT JOIN tv t ON e.tv_id = t.id
-  // LEFT JOIN searched_tv st ON t.searched_tv_id = st.id
+  // LEFT JOIN searched_tv st ON t.tv_profile_id = st.id
   // WHERE pp.member_id = '${user_id}'`;
   // const sql = `SELECT
   // t.id,
@@ -50,8 +50,8 @@ export default async function handler(
   // FROM play_progress pp
   // INNER JOIN episode e ON pp.episode_id = e.id
   // LEFT JOIN tv t ON e.tv_id = t.id
-  // LEFT JOIN searched_tv st ON t.searched_tv_id = st.id
-  // LEFT JOIN searched_season ss ON t.searched_tv_id = ss.searched_tv_id AND ss.season_number = CAST(REPLACE(e.season, 'S', '') AS INT)
+  // LEFT JOIN searched_tv st ON t.tv_profile_id = st.id
+  // LEFT JOIN searched_season ss ON t.tv_profile_id = ss.tv_profile_id AND ss.season_number = CAST(REPLACE(e.season, 'S', '') AS INT)
   // WHERE pp.member_id = '${user_id}'
   // `;
   // const m = records_pagination_using_sql(sql, count_sql, store.operation);

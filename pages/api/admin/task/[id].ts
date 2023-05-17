@@ -10,7 +10,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-const { find_async_task, update_async_task } = store;
+const { find_task: find_async_task, update_task: update_async_task } = store;
 
 export default async function handler(
   req: NextApiRequest,

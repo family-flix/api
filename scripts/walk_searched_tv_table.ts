@@ -2,7 +2,7 @@
  * @file 遍历 searched_tv 表进行操作
  */
 require("dotenv").config();
-import { RecordCommonPart, SearchedTVRecord } from "@/store/types";
+import { RecordCommonPart, TVProfileRecord } from "@/store/types";
 import { store } from "@/store";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
@@ -12,8 +12,8 @@ import { TMDBClient } from "@/domains/tmdb";
 const client = new TMDBClient({ token: process.env.TMDB_TOKEN });
 
 async function run() {
-  await walk_table_with_pagination<SearchedTVRecord & RecordCommonPart>(
-    store.find_searched_tv_with_pagination,
+  await walk_table_with_pagination<TVProfileRecord & RecordCommonPart>(
+    store.find_tv_profiles_with_pagination,
     {
       async on_handle(searched_tv) {
         const {
@@ -41,7 +41,7 @@ async function run() {
           if (r.data?.url) {
             const { url } = r.data;
             console.log("1. upload poster_path", url);
-            await store.update_searched_tv(id, {
+            await store.update_tv_profile(id, {
               poster_path: url,
             });
           }
@@ -58,7 +58,7 @@ async function run() {
           if (r.data?.url) {
             const { url } = r.data;
             console.log("2. upload backdrop_path", url);
-            await store.update_searched_tv(id, {
+            await store.update_tv_profile(id, {
               backdrop_path: url,
             });
           }
@@ -70,12 +70,12 @@ async function run() {
         }
         const profile = tmdb_profile_res.data;
         if (first_air_date === "null" || first_air_date === "") {
-          await store.update_searched_tv(id, {
+          await store.update_tv_profile(id, {
             first_air_date: profile.first_air_date,
           });
         }
         if (popularity === 0) {
-          await store.update_searched_tv(id, {
+          await store.update_tv_profile(id, {
             popularity: profile.popularity,
           });
         }
@@ -110,7 +110,7 @@ async function run() {
             overview,
             poster_path,
             season_number,
-            searched_tv_id: id,
+            tv_profile_id: id,
           });
         }
       },

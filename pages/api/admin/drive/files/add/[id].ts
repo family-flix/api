@@ -10,10 +10,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { id: drive_id } = req.query as Partial<{
     id: string;

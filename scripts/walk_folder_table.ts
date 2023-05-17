@@ -13,7 +13,7 @@ async function run() {
     {
       async on_handle(folder) {
         const { id, drive_id } = folder;
-        const drive_res = await store.find_aliyun_drive({ id: drive_id });
+        const drive_res = await store.find_drive({ id: drive_id });
         if (drive_res.error) {
           return;
         }

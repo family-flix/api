@@ -25,10 +25,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const resp = await store.find_maybe_tv_with_pagination(
+  const resp = await store.find_parsed_tv_list_with_pagination(
     {
       where: {
-        searched_tv_id: null,
+        tv_profile_id: null,
         user_id,
       },
     },

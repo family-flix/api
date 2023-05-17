@@ -7,7 +7,7 @@ import { Result } from "@/types";
 export async function clear_expired_shared_files_in_progress(
   store: ReturnType<typeof store_factory>
 ) {
-  const drives_res = await store.find_aliyun_drives();
+  const drives_res = await store.find_drive_list();
   if (drives_res.error) {
     return;
   }

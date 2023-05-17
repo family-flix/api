@@ -21,7 +21,7 @@ async function delete_episode_and_file(
 export async function delete_duplicate_episode(
   store: ReturnType<typeof store_factory>
 ) {
-  const drives_res = await store.find_aliyun_drives();
+  const drives_res = await store.find_drive_list();
   if (drives_res.error) {
     console.log(drives_res.error.message);
     return;

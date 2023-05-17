@@ -4,17 +4,18 @@ import { TMDBClient } from "@/domains/tmdb";
 import { SearchedEpisode } from "@/domains/walker";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { DiffTypes } from "@/domains/folder_differ";
-import { filter_undefined_key, find_recommended_pathname, is_video_file, parse_filename_for_video } from "@/utils";
+import { find_recommended_pathname, is_video_file, parse_filename_for_video } from "@/utils";
 import { log } from "@/logger/log";
 import { pagination_factory, store_factory } from "@/store";
-import { MaybeTVRecord, EpisodeRecord, RecordCommonPart, SharedFilesInProgressRecord } from "@/store/types";
+import { ParsedTVRecord, ParsedEpisodeRecord, RecordCommonPart, SharedFilesInProgressRecord } from "@/store/types";
 import { qiniu_upload_online_file } from "@/utils/back_end";
 import { Result, resultify } from "@/types";
 
 import { patch_tv_in_progress } from "./patch_tv_in_progress";
+import { DriveFileType } from "./constants";
 
 export type EventHandlers = Partial<{
-  on_tv: (tv: MaybeTVRecord & RecordCommonPart) => void;
+  on_tv: (tv: ParsedTVRecord & RecordCommonPart) => void;
   on_stop: () => Result<boolean>;
   on_error: (error_msg: string[]) => void;
 }>;
@@ -25,23 +26,126 @@ export type ExtraUserAndDriveInfo = {
 };
 
 /**
+ * 处理 VideoDetector 吐出来的 task
+ */
+export async function create_parsed_episode_and_parsed_tv(
+  data: SearchedEpisode,
+  extra: ExtraUserAndDriveInfo,
+  store: ReturnType<typeof store_factory>
+) {
+  const { tv, season, episode } = data;
+  log("\n\n处理视频文件", data.episode.file_name, "推断所属电视剧为", tv.name || tv.original_name);
+  const existing_episode_res = await store.find_parsed_episode({
+    file_id: episode.file_id,
+  });
+  if (existing_episode_res.error) {
+    // log("[ERROR]find episode request failed", existing_episode_res.error.message);
+    log(`[${data.episode.file_name}]`, "判断视频文件是否存在失败");
+    return Result.Err(existing_episode_res.error);
+  }
+  const existing_episode = existing_episode_res.data;
+  if (!existing_episode) {
+    log(`[${data.episode.file_name}]`, "是新视频文件");
+    const parsed_adding_res = await add_parsed_tv(data, extra, store);
+    if (parsed_adding_res.error) {
+      log(`[${data.episode.file_name}]`, "新增电视剧信息失败");
+      // log("[ERROR]add_tv_and_season failed", parsed_adding_res.error.message);
+      return parsed_adding_res;
+    }
+    const add_episode_resp = await store.add_parsed_episode({
+      name: tv.name || tv.original_name,
+      season: season.season,
+      episode: episode.episode,
+      file_id: episode.file_id,
+      file_name: episode.file_name,
+      parent_file_id: episode.parent_file_id,
+      parent_paths: episode.parent_paths,
+      type: DriveFileType.File,
+      size: episode.size,
+      parsed_tv_id: parsed_adding_res.data.id,
+      user_id: extra.user_id,
+      drive_id: extra.drive_id,
+    });
+    if (add_episode_resp.error) {
+      log(`[${data.episode.file_name}]`, "视频文件保存失败", add_episode_resp.error.message);
+      return add_episode_resp;
+    }
+    log(`[${data.episode.file_name}]`, "视频文件保存成功");
+    return Result.Ok(null);
+  }
+  // episode existing, check does it need update
+  log(`[${data.episode.file_name}]`, "视频文件已存在，判断是否需要更新");
+  const existing_tv_res = await store.find_parsed_tv({
+    id: existing_episode.parsed_tv_id,
+  });
+  if (existing_tv_res.error) {
+    // log("[ERROR]find existing tv failed", existing_tv_res.error.message);
+    return Result.Err(existing_tv_res.error);
+  }
+  const existing_tv = existing_tv_res.data;
+  if (!existing_tv) {
+    log(`[${data.episode.file_name}]`, "视频文件没有关联的电视剧记录，属于异常数据");
+    return Result.Err("existing episode should have tv");
+  }
+  const episode_payload: {
+    id: string;
+    body: Record<string, string | number>;
+  } = {
+    id: existing_episode.id,
+    body: {},
+  };
+  if (is_tv_changed(existing_tv, tv)) {
+    // prettier-ignore
+    log(`[${data.episode.file_name}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
+    const parsed_adding_res = await add_parsed_tv_with_unique_name(data, extra, store);
+    if (parsed_adding_res.error) {
+      return Result.Err(parsed_adding_res.error);
+    }
+    episode_payload.body.parsed_tv_id = parsed_adding_res.data.id;
+  }
+  if (existing_episode.season !== season.season) {
+    episode_payload.body.season = season.season;
+  }
+  if (is_episode_changed(existing_episode, data)) {
+    episode_payload.body.file_name = episode.file_name;
+    episode_payload.body.parent_file_id = episode.parent_file_id;
+    episode_payload.body.parent_paths = episode.parent_paths;
+    episode_payload.body.episode = episode.episode;
+    episode_payload.body.size = episode.size;
+  }
+  if (Object.keys(episode_payload.body).length !== 0) {
+    log(`[${data.episode.file_name}]`, "该视频文件信息发生改变，变更后的内容为", episode_payload.body);
+    const update_episode_res = await store.update_parsed_episode(episode_payload.id, episode_payload.body);
+    if (update_episode_res.error) {
+      log(`[${data.episode.file_name}]`, "视频文件更新失败", update_episode_res.error.message);
+      return update_episode_res;
+    }
+    log(`[${data.episode.file_name}]`, "视频文件更新成功");
+    return Result.Ok(null);
+  }
+  log(`[${data.episode.file_name}]`, "视频文件没有变更");
+  return Result.Ok(null);
+}
+
+/**
  * 遍历云盘时保存遍历到的视频文件夹/文件
- * @param folder
+ * @param file
  * @param extra
  * @returns
  */
 export async function adding_file_when_walk(
-  folder: {
+  file: {
     file_id: string;
     name: string;
     parent_file_id: string;
+    parent_paths: string;
     type: "folder" | "file";
     size?: number;
   },
   extra: ExtraUserAndDriveInfo,
   store: ReturnType<typeof store_factory>
 ) {
-  const { file_id, name, parent_file_id, type, size = 0 } = folder;
+  const { file_id, name, parent_file_id, parent_paths, type, size = 0 } = file;
   const { drive_id, user_id } = extra;
   // log('(adding_folder_when_walk)', name, type, !is_video_file(name));
   if (type === "file" && !is_video_file(name)) {
@@ -58,14 +162,15 @@ export async function adding_file_when_walk(
     file_id,
     name,
     parent_file_id,
+    parent_paths,
     type: (() => {
       if (type === "file") {
-        return 1;
+        return DriveFileType.File;
       }
       if (type === "folder") {
-        return 2;
+        return DriveFileType.Folder;
       }
-      return 0;
+      return DriveFileType.Unknown;
     })(),
     size,
     drive_id,
@@ -133,14 +238,14 @@ export async function build_link_between_shared_files_with_folder(
 /**
  * 影片文件是否发生改变
  * @param existing_episode
- * @param task
+ * @param parsed
  * @returns
  */
-function is_episode_changed(existing_episode: EpisodeRecord, task: SearchedEpisode) {
+function is_episode_changed(existing_episode: ParsedEpisodeRecord, parsed: SearchedEpisode) {
   const { parent_file_id, episode: e, file_name, size, parent_paths, season } = existing_episode;
-  const { episode } = task;
+  const { episode } = parsed;
   return !(
-    season === task.season.season &&
+    season === parsed.season.season &&
     parent_file_id &&
     parent_file_id === episode.parent_file_id &&
     parent_paths === episode.parent_paths &&
@@ -156,7 +261,7 @@ function is_episode_changed(existing_episode: EpisodeRecord, task: SearchedEpiso
  * @param extra
  * @returns
  */
-async function get_maybe_tv_id_by_name(
+async function add_parsed_tv_with_unique_name(
   data: SearchedEpisode,
   extra: ExtraUserAndDriveInfo,
   store: ReturnType<typeof store_factory>
@@ -164,8 +269,8 @@ async function get_maybe_tv_id_by_name(
   const { tv, episode } = data;
   // log("[UTIL]get_tv_id_by_name start", tv.name || tv.original_name);
   const { user_id, drive_id } = extra;
-  log(`[${episode.file_name}]`, "根据名称查找该电视剧", tv.name || tv.original_name);
-  const existing_tv_res = await resultify(store.prisma.maybe_tv.findFirst.bind(store.prisma.maybe_tv))({
+  log(`[${episode.file_name}]`, "根据名称查找电视剧", tv.name || tv.original_name);
+  const existing_tv_res = await resultify(store.prisma.parsed_tv.findFirst.bind(store.prisma.parsed_tv))({
     where: {
       OR: [
         {
@@ -186,30 +291,32 @@ async function get_maybe_tv_id_by_name(
     },
   });
   if (existing_tv_res.error) {
-    // log("[ERROR]find tv request failed", existing_tv_res.error.message);
     return Result.Err(existing_tv_res.error);
   }
   if (existing_tv_res.data) {
-    log(`[${episode.file_name}]`, "电视剧", tv.name || tv.original_name, "已存在");
+    log(
+      `[${episode.file_name}]`,
+      "查找到电视剧已存在且名称为",
+      existing_tv_res.data.name || existing_tv_res.data.original_name
+    );
     return Result.Ok(existing_tv_res.data);
   }
-  const body = filter_undefined_key({
-    file_id: tv.file_id,
-    file_name: tv.file_name,
-    name: tv.name,
-    original_name: tv.original_name,
+  log(`[${episode.file_name}]`, "电视剧", tv.name || tv.original_name, "不存在，新增");
+  const parsed_tv_adding_res = await store.add_parsed_tv({
+    file_id: tv.file_id || null,
+    file_name: tv.file_name || null,
+    name: tv.name || null,
+    original_name: tv.original_name || null,
     user_id: extra.user_id,
     drive_id: extra.drive_id,
   });
-  log(`[${episode.file_name}]`, "电视剧", tv.name || tv.original_name, "不存在，新增", body.name || body.original_name);
-  const adding_tv_res = await store.add_maybe_tv(body);
-  if (adding_tv_res.error) {
+  if (parsed_tv_adding_res.error) {
     // log("[ERROR]adding tv request failed", adding_tv_res.error.message);
-    return Result.Err(adding_tv_res.error);
+    return Result.Err(parsed_tv_adding_res.error);
   }
   // log("[UTIL]get_tv_id_by_name end", tv.name || tv.original_name);
   log(`[${episode.file_name}]`, "为该视频文件新增电视剧", tv.name || tv.original_name, "成功");
-  return Result.Ok(adding_tv_res.data);
+  return Result.Ok(parsed_tv_adding_res.data);
 }
 
 /**
@@ -218,21 +325,18 @@ async function get_maybe_tv_id_by_name(
  * @param extra
  * @returns
  */
-async function add_maybe_tv_and_season(
+async function add_parsed_tv(
   data: SearchedEpisode,
   extra: ExtraUserAndDriveInfo,
   store: ReturnType<typeof store_factory>
 ) {
   const { tv, season, episode } = data;
   log(`[${episode.file_name}]`, "准备为该视频文件新增电视剧", tv.name || tv.original_name);
-  const tv_id_res = await get_maybe_tv_id_by_name(data, extra, store);
-  if (tv_id_res.error) {
-    return tv_id_res;
+  const parsed_adding_res = await add_parsed_tv_with_unique_name(data, extra, store);
+  if (parsed_adding_res.error) {
+    return parsed_adding_res;
   }
-  const tv_id = tv_id_res.data.id;
-  return Result.Ok({
-    tv_id,
-  });
+  return Result.Ok(parsed_adding_res.data);
 }
 
 /**
@@ -256,109 +360,6 @@ export async function change_episode_tv_id(
       return update_episode_resp;
     }
   }
-  return Result.Ok(null);
-}
-
-/**
- * 处理 VideoDetector 吐出来的 task
- */
-export async function adding_episode_when_walk(
-  data: SearchedEpisode,
-  extra: ExtraUserAndDriveInfo,
-  store: ReturnType<typeof store_factory>
-) {
-  const { tv, season, episode } = data;
-  log("\n\n处理视频文件", data.episode.file_name, "推断所属电视剧为", tv.name || tv.original_name);
-  const existing_episode_res = await store.find_episode({
-    file_id: episode.file_id,
-  });
-  if (existing_episode_res.error) {
-    log("[ERROR]find episode request failed", existing_episode_res.error.message);
-    // console.log(`[${data.episode.file_name}]`, "该视频文件已存在，跳过");
-    return Result.Err(existing_episode_res.error);
-  }
-  const existing_episode = existing_episode_res.data;
-  if (!existing_episode) {
-    log(`[${data.episode.file_name}]`, "是新视频文件");
-    const tv_and_season_resp = await add_maybe_tv_and_season(data, extra, store);
-    if (tv_and_season_resp.error) {
-      log("[ERROR]add_tv_and_season failed", tv_and_season_resp.error.message);
-      return tv_and_season_resp;
-    }
-    const { tv_id } = tv_and_season_resp.data;
-    // log("[]()before invoke add_episode");
-    const add_episode_resp = await store.add_episode(
-      filter_undefined_key({
-        file_id: episode.file_id,
-        file_name: episode.file_name,
-        parent_file_id: episode.parent_file_id,
-        size: episode.size,
-        parent_paths: episode.parent_paths,
-        season: season.season,
-        episode: episode.episode,
-        tv_id,
-        user_id: extra.user_id,
-        drive_id: extra.drive_id,
-      })
-    );
-    if (add_episode_resp.error) {
-      log(`[${data.episode.file_name}]`, "该视频文件新增失败", add_episode_resp.error.message);
-      return add_episode_resp;
-    }
-    log(`[${data.episode.file_name}]`, "该视频文件新增成功");
-    return Result.Ok(null);
-  }
-  // episode existing, check does it need update
-  // log("the episode has existing, so check does it need update");
-  log(`[${data.episode.file_name}]`, "该视频文件已存在，判断是否需要更新");
-  const existing_tv_res = await store.find_maybe_tv({
-    id: existing_episode.tv_id,
-  });
-  if (existing_tv_res.error) {
-    log("[ERROR]find existing tv failed", existing_tv_res.error.message);
-    return Result.Err(existing_tv_res.error);
-  }
-  const existing_tv = existing_tv_res.data;
-  if (!existing_tv) {
-    return Result.Err("existing episode should have tv");
-  }
-  const episode_updated: {
-    id: string;
-    body: Record<string, string | number>;
-  } = {
-    id: existing_episode.id,
-    body: {},
-  };
-  if (is_tv_changed(existing_tv, tv)) {
-    // prettier-ignore
-    log(`[${data.episode.file_name}]`, "该视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
-    const tv_res = await get_maybe_tv_id_by_name(data, extra, store);
-    if (tv_res.error) {
-      return Result.Err(tv_res.error);
-    }
-    episode_updated.body.tv_id = tv_res.data.id;
-  }
-  if (existing_episode.season !== season.season) {
-    episode_updated.body.season = season.season;
-  }
-  if (is_episode_changed(existing_episode, data)) {
-    episode_updated.body.file_name = episode.file_name;
-    episode_updated.body.parent_file_id = episode.parent_file_id;
-    episode_updated.body.parent_paths = episode.parent_paths;
-    episode_updated.body.episode = episode.episode;
-    episode_updated.body.size = episode.size;
-  }
-  if (Object.keys(episode_updated.body).length !== 0) {
-    log(`[${data.episode.file_name}]`, "该视频文件信息发生改变，变更后的内容为", episode_updated.body);
-    const update_episode_res = await store.update_episode(episode_updated.id, episode_updated.body);
-    if (update_episode_res.error) {
-      log(`[${data.episode.file_name}]`, "视频文件更新失败", update_episode_res.error.message);
-      return update_episode_res;
-    }
-    log(`[${data.episode.file_name}]`, "视频文件更新成功");
-    return Result.Ok(null);
-  }
-  log(`[${data.episode.file_name}]`, "视频文件没有变更");
   return Result.Ok(null);
 }
 
@@ -443,7 +444,7 @@ export async function find_folders_and_recommended_path_in_special_season(
 ) {
   const episodes_res = await store.find_episodes(
     {
-      tv_id,
+      maybe_tv_id: tv_id,
       season,
     },
     {
@@ -505,7 +506,7 @@ export async function get_tv_profile_with_first_season_by_id(
   if (!id) {
     return Result.Err("请传入 id 参数");
   }
-  const tv_res = await store.find_maybe_tv({
+  const tv_res = await store.find_parsed_tv({
     id,
     user_id,
   });
@@ -516,7 +517,7 @@ export async function get_tv_profile_with_first_season_by_id(
   if (!tv) {
     return Result.Err("No matched record of tv");
   }
-  if (tv.searched_tv_id === null) {
+  if (tv.profile_id === null) {
     return Result.Err("该电视剧没有匹配");
   }
   const seasons_res = await store.find_seasons(
@@ -554,8 +555,8 @@ export async function get_tv_profile_with_first_season_by_id(
     return Result.Err("该电视剧没有季信息");
   }
   // 根据指定 season 获取影片
-  const searched_tv_res = await store.find_searched_tv({
-    id: tv.searched_tv_id,
+  const searched_tv_res = await store.find_tv_profile({
+    id: tv.tv_profile_id,
   });
   if (searched_tv_res.error) {
     return Result.Err(searched_tv_res.error);
@@ -679,14 +680,25 @@ export function extra_searched_tv_field(tv: PartialSearchedTVFromTMDB) {
  * @param options
  * @returns
  */
-export async function find_first_matched_tv_of_tmdb(
+export async function find_first_matched_tv_from_tmdb(
   name: string,
-  options: Partial<{
+  options: {
     /** TMDB token */
-    token: string;
-  }>
+    token?: string;
+    store: ReturnType<typeof store_factory>;
+    need_upload_image?: boolean;
+  }
 ) {
-  const { token } = options;
+  const { token, store, need_upload_image = false } = options;
+  const snapshot_res = await store.find_tv_profile_snap({
+    name,
+  });
+  if (snapshot_res.data) {
+    const t = await store.find_tv_profile({ id: snapshot_res.data.tv_profile_id });
+    if (t.data) {
+      return Result.Ok(t.data);
+    }
+  }
   const tmdb_client = new TMDBClient({
     token,
   });
@@ -699,7 +711,33 @@ export async function find_first_matched_tv_of_tmdb(
     return Result.Ok(null);
   }
   const tv_profile = extra_searched_tv_field(list[0]);
-  return Result.Ok(tv_profile);
+  const { tmdb_id, poster_path, backdrop_path } = tv_profile;
+  const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
+    if (need_upload_image) {
+      return await upload_tmdb_images({
+        tmdb_id,
+        poster_path,
+        backdrop_path,
+      });
+    }
+    return {
+      poster_path,
+      backdrop_path,
+    };
+  })();
+  const t = await store.add_tv_profile({
+    ...tv_profile,
+    poster_path: uploaded_poster_path,
+    backdrop_path: uploaded_backdrop_path,
+  });
+  if (t.error) {
+    return Result.Err(t.error);
+  }
+  store.add_tv_profile_snap({
+    name,
+    tv_profile_id: t.data.id,
+  });
+  return Result.Ok(t.data);
 }
 
 /**
@@ -708,11 +746,10 @@ export async function find_first_matched_tv_of_tmdb(
  * @param option
  * @returns
  */
-export async function search_tv_in_tmdb(
+export async function get_tv_profile_with_tmdb(
   tv: {
     name: string | null;
     original_name: string | null;
-    correct_name?: string | null;
   },
   option: Partial<{
     store: ReturnType<typeof store_factory>;
@@ -730,97 +767,33 @@ export async function search_tv_in_tmdb(
     return Result.Err("缺少数据库实例");
   }
   // log("[](search_tv_in_tmdb)start search", tv.name || tv.original_name);
-  const { name, original_name, correct_name } = tv;
-  let tv_result = null;
-  if (correct_name) {
-    log(`[${name || original_name || correct_name}]`, "使用", correct_name, "搜索");
-    const r = await find_first_matched_tv_of_tmdb(correct_name, { token });
+  const { name, original_name } = tv;
+  let tv_profile = null;
+  if (name) {
+    log(`[${name || original_name}]`, "使用", name, "搜索");
+    const r = await find_first_matched_tv_from_tmdb(name, { token, need_upload_image, store });
     if (r.error) {
       return Result.Err(r.error);
     }
-    tv_result = r.data;
+    tv_profile = r.data;
   }
-  if (tv_result === null && name) {
-    log(`[${name || original_name || correct_name}]`, "使用", name, "搜索");
-    const r = await find_first_matched_tv_of_tmdb(name, { token });
-    if (r.error) {
-      return Result.Err(r.error);
-    }
-    tv_result = r.data;
-  }
-  if (tv_result === null && original_name) {
-    log(`[${name || original_name || correct_name}]`, "使用", original_name, "搜索");
+  if (tv_profile === null && original_name) {
+    log(`[${name || original_name}]`, "使用", original_name, "搜索");
     const processed_original_name = original_name.split(".").join(" ");
-    const r = await find_first_matched_tv_of_tmdb(processed_original_name, {
+    const r = await find_first_matched_tv_from_tmdb(processed_original_name, {
       token,
+      need_upload_image,
+      store,
     });
     if (r.error) {
       return Result.Err(r.error);
     }
-    tv_result = r.data;
+    tv_profile = r.data;
   }
-  if (tv_result === null) {
+  if (tv_profile === null) {
     return Result.Ok(null);
   }
-  const searched_tv = tv_result;
-  const existing_searched_tv_res = await resultify(store.prisma.searched_tv.findFirst.bind(store.prisma.searched_tv))({
-    where: {
-      tmdb_id: searched_tv.tmdb_id,
-    },
-  });
-  if (existing_searched_tv_res.error) {
-    return Result.Err(existing_searched_tv_res.error.message);
-  }
-  const existing_searched_tv = existing_searched_tv_res.data;
-  if (existing_searched_tv) {
-    log(`[${name || original_name || correct_name}]`, "数据库已经有该 TMDB 记录");
-    return Result.Ok(existing_searched_tv);
-  }
-  const {
-    tmdb_id,
-    name: n,
-    original_name: original_n,
-    original_language,
-    overview = "",
-    first_air_date,
-    poster_path,
-    backdrop_path,
-    vote_average,
-    popularity,
-    vote_count,
-  } = searched_tv;
-  const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
-    // log("[](search_tv_in_tmdb)prepare upload tmdb images", String(need_upload_image));
-    if (need_upload_image) {
-      return await upload_tmdb_images({
-        tmdb_id,
-        poster_path,
-        backdrop_path,
-      });
-    }
-    return {
-      poster_path,
-      backdrop_path,
-    };
-  })();
-  log(`[${name || original_name || correct_name}]`, "将搜索到的 TMDB 记录保存到数据库");
-  const r2 = await store.add_searched_tv({
-    tmdb_id,
-    name: n,
-    original_name: original_n,
-    overview: overview.trim(),
-    poster_path: uploaded_poster_path!,
-    backdrop_path: uploaded_backdrop_path!,
-    popularity,
-    first_air_date,
-    original_language,
-    vote_average,
-    vote_count,
-  });
-  if (r2.error) {
-    return Result.Err("[ERROR]add_searched_tv failed, " + r2.error.message);
-  }
-  return Result.Ok(r2.data);
+  return Result.Ok(tv_profile);
 }
 
 type FolderTree = {
@@ -834,7 +807,7 @@ type FolderTree = {
  * @param records
  * @returns
  */
-export function build_folder_tree(records: EpisodeRecord[]) {
+export function build_folder_tree(records: ParsedEpisodeRecord[]) {
   function log(...args: unknown[]) {}
 
   let tree: FolderTree[] = [];
@@ -1072,74 +1045,6 @@ export function extra_name_form_pending(
 }
 
 /**
- * 搜索 tmdb 找到 tv 匹配的结果
- * @param extra
- * @param op
- * @param event_handlers
- * @returns
- */
-export async function find_matched_tv_in_tmdb(
-  options: ExtraUserAndDriveInfo & {
-    store: ReturnType<typeof store_factory>;
-    need_upload_image?: boolean;
-  },
-  event_handlers: EventHandlers = {}
-) {
-  const { drive_id, user_id, need_upload_image, store } = options;
-  const { on_error } = event_handlers;
-  let no_more = false;
-  let page = 1;
-  do {
-    log("start find matched tmdb tv");
-    const tvs_resp = await store.find_maybe_tv_with_pagination(
-      {
-        where: {
-          searched_tv_id: null,
-          user_id,
-          drive_id,
-        },
-      },
-      { page, size: 20 }
-    );
-    if (tvs_resp.error) {
-      log(["[ERROR]find tvs that searched_tv_id is null failed", tvs_resp.error.message]);
-      return tvs_resp;
-    }
-    log("the tv count that no searched_tv_id is", tvs_resp.data.list.length);
-    no_more = tvs_resp.data.no_more;
-    for (let i = 0; i < tvs_resp.data.list.length; i += 1) {
-      const tv = tvs_resp.data.list[i];
-      const r1 = await search_tv_in_tmdb(
-        {
-          name: tv.name,
-          original_name: tv.original_name,
-        },
-        {
-          token: process.env.TMDB_TOKEN,
-          need_upload_image,
-        }
-      );
-      if (r1.error) {
-        log("[ERROR]search_tv_in_tmdb_then_save failed, because", r1.error.message);
-        continue;
-      }
-      if (r1.data === null) {
-        continue;
-      }
-      const r2 = await store.update_maybe_tv(tv.id, {
-        searched_tv_id: r1.data.id,
-        can_search: 0,
-      });
-      if (r2.error) {
-        return Result.Err(["[ERROR]update tv searched_tv_id failed", r2.error.message].join(" "));
-      }
-    }
-    page += 1;
-  } while (no_more === false);
-  return Result.Ok(null);
-}
-
-/**
  * 在遍历文件夹的过程中，根据给定的目标文件/文件夹，和当前遍历到的文件夹/文件进行对比，判断是否要跳过
  */
 export function need_skip_the_file_when_walk(options: {
@@ -1198,7 +1103,7 @@ export function need_skip_the_file_when_walk(options: {
 
 type DuplicateEpisodes = Record<
   string,
-  (Pick<EpisodeRecord, "id" | "file_id" | "file_name" | "parent_paths"> & {
+  (Pick<ParsedEpisodeRecord, "id" | "file_id" | "file_name" | "parent_paths"> & {
     has_play?: boolean;
     first?: boolean;
   })[]
@@ -1208,7 +1113,7 @@ export async function find_duplicate_episodes(
   store: ReturnType<typeof store_factory>
 ) {
   const { drive_id, user_id } = extra;
-  const drive_res = await store.find_aliyun_drive({ id: drive_id, user_id });
+  const drive_res = await store.find_drive({ id: drive_id, user_id });
   if (drive_res.error) {
     return Result.Err(drive_res.error);
   }
@@ -1216,7 +1121,7 @@ export async function find_duplicate_episodes(
     return Result.Err("No matched record of drive");
   }
   const parent_paths = (
-    await store.prisma.episode.groupBy({
+    await store.prisma.parsed_episode.groupBy({
       by: ["file_name", "parent_paths"],
       having: {
         file_name: {
@@ -1234,12 +1139,12 @@ export async function find_duplicate_episodes(
       },
     })
   ).map((r) => r.parent_paths);
-  const resp = await resultify(store.prisma.episode.findMany.bind(store.prisma.episode))({
+  const resp = await resultify(store.prisma.parsed_episode.findMany.bind(store.prisma.parsed_episode))({
     select: {
       id: true,
       file_name: true,
       parent_paths: true,
-      play_histories: true,
+      // play_histories: true,
       // PlayHistory: true,
       // PlayHistory: {
       //   select: {
@@ -1385,7 +1290,7 @@ export async function patch_serialized_shared_folder(
  * @param next_tv
  * @returns
  */
-export function is_tv_changed(tv: MaybeTVRecord, next_tv: { name: string; original_name: string }) {
+export function is_tv_changed(tv: ParsedTVRecord, next_tv: { name: string; original_name: string }) {
   // log("判断视频文件所属的电视剧信息是否一致", [tv.name, tv.original_name, next_tv.name, next_tv.original_name]);
   const name = next_tv.name || null;
   const original_name = next_tv.original_name || null;

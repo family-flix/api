@@ -13,7 +13,7 @@ async function main() {
   for (let i = 0; i < users_res.data.length; i += 1) {
     const user = users_res.data[i];
     const { id: user_id } = user;
-    const drives_resp = await store.find_aliyun_drives({ user_id });
+    const drives_resp = await store.find_drive_list({ user_id });
     if (drives_resp.error) {
       console.log("[ERROR]find drives failed", drives_resp.error.message);
       continue;

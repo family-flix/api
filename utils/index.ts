@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 import relative_time from "dayjs/plugin/relativeTime";
 import chalk from "chalk";
-import { MaybeTVRecord } from "@/store/types";
+import { ParsedTVRecord } from "@/store/types";
 import { JSONObject, JSONValue } from "@/types";
 
 dayjs.extend(relative_time);

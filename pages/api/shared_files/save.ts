@@ -64,7 +64,7 @@ export default async function handler(
   if (r2.data) {
     return e("网盘内已有同名文件夹");
   }
-  const drive_res = await store.find_aliyun_drive({ id: drive_id, user_id });
+  const drive_res = await store.find_drive({ id: drive_id, user_id });
   if (drive_res.error) {
     return e(drive_res);
   }

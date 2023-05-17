@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!member_resp.data) {
     return e("No matched member");
   }
-  const tv_resp = await store.find_maybe_tv({ id: tv_id, user_id });
+  const tv_resp = await store.find_parsed_tv({ id: tv_id, user_id });
   if (tv_resp.error) {
     return e(tv_resp);
   }

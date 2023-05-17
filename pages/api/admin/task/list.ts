@@ -1,13 +1,13 @@
 /**
- * @file 获取异步任务
+ * @file 获取索引任务列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
-import { store } from "@/store";
 import { User } from "@/domains/user";
+import { store } from "@/store";
+import { response_error_factory } from "@/utils/backend";
+import { BaseApiResp } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const r1 = await store.find_async_task_with_pagination(
+  const r = await store.find_task_list_with_pagination(
     {
       where: {
         user_id,
@@ -38,8 +38,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       ],
     }
   );
-  if (r1.error) {
-    return e(r1);
+  if (r.error) {
+    return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: r1.data });
+  res.status(200).json({ code: 0, msg: "", data: r.data });
 }

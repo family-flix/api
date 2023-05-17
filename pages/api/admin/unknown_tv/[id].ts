@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const tv_res = await store.find_maybe_tv({ id, user_id });
+  const tv_res = await store.find_parsed_tv({ id, user_id });
   if (tv_res.error) {
     return e(tv_res);
   }

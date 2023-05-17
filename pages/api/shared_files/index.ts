@@ -33,7 +33,7 @@ export default async function handler(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const drives_resp = await store.find_aliyun_drive({ user_id });
+  const drives_resp = await store.find_drive({ user_id });
   // const drives_resp = await prisma.drive.findFirst({
   //   where: {
   //     user_id,

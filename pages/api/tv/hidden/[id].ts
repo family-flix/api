@@ -21,14 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const r = await store.find_maybe_tv({ id, user_id });
+  const r = await store.find_parsed_tv({ id, user_id });
   if (r.error) {
     return e(r);
   }
   if (!r.data) {
     return e("没有找到该电视剧");
   }
-  const r2 = await store.update_maybe_tv(id, {
+  const r2 = await store.update_parsed_tv(id, {
     hidden: 1,
   });
   if (r2.error) {

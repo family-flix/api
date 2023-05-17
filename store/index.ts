@@ -167,79 +167,126 @@ export const store_factory = (prisma: PrismaClient) => {
         }
       },
     },
+    /** 云盘 */
+    add_drive: add_factory<PrismaClient["drive"]>(prisma.drive),
+    update_drive: update_factory<PrismaClient["drive"]>(prisma.drive),
+    find_drive: first_factory<PrismaClient["drive"]>(prisma.drive),
+    find_drive_list: many_factory<PrismaClient["drive"]>(prisma.drive),
+    find_drive_list_with_pagination: pagination_factory<PrismaClient["drive"]>(prisma.drive),
+    /** 云盘凭证 */
     add_aliyun_drive_token: add_factory<PrismaClient["drive_token"]>(prisma.drive_token),
     update_aliyun_drive_token: update_factory<PrismaClient["drive_token"]>(prisma.drive_token),
     find_aliyun_drive_token: first_factory<PrismaClient["drive_token"]>(prisma.drive_token),
-    find_aliyun_drives_token: many_factory<PrismaClient["drive_token"]>(prisma.drive_token),
-
-    add_aliyun_drive: add_factory<PrismaClient["drive"]>(prisma.drive),
-    update_aliyun_drive: update_factory<PrismaClient["drive"]>(prisma.drive),
-    find_aliyun_drive: first_factory<PrismaClient["drive"]>(prisma.drive),
-    find_aliyun_drives: many_factory<PrismaClient["drive"]>(prisma.drive),
-    find_aliyun_drives_with_pagination: pagination_factory<PrismaClient["drive"]>(prisma.drive),
-
-    add_async_task: add_factory<PrismaClient["async_task"]>(prisma.async_task),
-    update_async_task: update_factory<PrismaClient["async_task"]>(prisma.async_task),
-    find_async_task: first_factory<PrismaClient["async_task"]>(prisma.async_task),
-    find_async_tasks: many_factory<PrismaClient["async_task"]>(prisma.async_task),
-    delete_async_task: delete_factory<PrismaClient["async_task"]>(prisma.async_task),
-    find_async_task_with_pagination: pagination_factory<PrismaClient["async_task"]>(prisma.async_task),
-
-    add_check_in: add_factory<PrismaClient["drive_check_in"]>(prisma.drive_check_in),
-
-    add_episode: add_factory<PrismaClient["episode"]>(prisma.episode),
-    update_episode: update_factory<PrismaClient["episode"]>(prisma.episode),
-    delete_episode: delete_factory<PrismaClient["episode"]>(prisma.episode),
-    find_episode: first_factory<PrismaClient["episode"]>(prisma.episode),
-    find_episodes: many_factory<PrismaClient["episode"]>(prisma.episode),
-    find_episodes_with_pagination: pagination_factory<PrismaClient["episode"]>(prisma.episode),
-
+    find_aliyun_drive_token_list: many_factory<PrismaClient["drive_token"]>(prisma.drive_token),
+    /** 电视剧详情 */
+    add_tv_profile: add_factory<PrismaClient["tv_profile"]>(prisma.tv_profile),
+    update_tv_profile: update_factory<PrismaClient["tv_profile"]>(prisma.tv_profile),
+    find_tv_profile: first_factory<PrismaClient["tv_profile"]>(prisma.tv_profile),
+    find_tv_profiles: many_factory<PrismaClient["tv_profile"]>(prisma.tv_profile),
+    find_tv_profiles_with_pagination: pagination_factory<PrismaClient["tv_profile"]>(prisma.tv_profile),
+    /** 电视剧季详情 */
+    add_searched_season: add_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    update_searched_season: update_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    find_searched_season: first_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    find_searched_season_list: many_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    find_searched_season_with_pagination: pagination_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    /** 电视剧集详情 */
+    add_episode_profile: add_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    update_episode_profile: update_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    find_episode_profile: first_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    find_episode_profile_list: many_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    find_episode_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(
+      prisma.episode_profile
+    ),
+    /** 电影详情 */
+    add_movie_profile: add_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    update_movie_profile: update_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    find_movie_profile: first_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    find_movie_profile_list: many_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    find_movie_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(
+      prisma.episode_profile
+    ),
+    /** 电视剧 */
+    add_tv: add_factory<PrismaClient["tv"]>(prisma.tv),
+    update_tv: update_factory<PrismaClient["tv"]>(prisma.tv),
+    delete_tv: delete_factory<PrismaClient["tv"]>(prisma.tv),
+    find_tv: first_factory<PrismaClient["tv"]>(prisma.tv),
+    find_tvs: many_factory<PrismaClient["tv"]>(prisma.tv),
+    find_tv_with_pagination: pagination_factory<PrismaClient["tv"]>(prisma.tv),
+    /** 电视剧季 */
     add_season: add_factory<PrismaClient["season"]>(prisma.season),
     update_season: update_factory<PrismaClient["season"]>(prisma.season),
     delete_season: delete_factory<PrismaClient["season"]>(prisma.season),
     find_season: first_factory<PrismaClient["season"]>(prisma.season),
     find_seasons: many_factory<PrismaClient["season"]>(prisma.season),
     find_seasons_with_pagination: pagination_factory<PrismaClient["season"]>(prisma.season),
-
+    /** 电视剧集 */
+    add_episode: add_factory<PrismaClient["episode"]>(prisma.episode),
+    update_episode: update_factory<PrismaClient["episode"]>(prisma.episode),
+    delete_episode: delete_factory<PrismaClient["episode"]>(prisma.episode),
+    find_episode: first_factory<PrismaClient["episode"]>(prisma.episode),
+    find_episodes: many_factory<PrismaClient["episode"]>(prisma.episode),
+    find_episodes_with_pagination: pagination_factory<PrismaClient["episode"]>(prisma.episode),
+    /** 电影 */
+    add_movie: add_factory<PrismaClient["movie"]>(prisma.movie),
+    update_movie: update_factory<PrismaClient["movie"]>(prisma.movie),
+    find_movie: first_factory<PrismaClient["movie"]>(prisma.movie),
+    find_movies: many_factory<PrismaClient["movie"]>(prisma.movie),
+    /** 从云盘文件解析出的电视剧信息 */
+    add_parsed_tv: add_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
+    update_parsed_tv: update_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
+    delete_parsed_tv: delete_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
+    find_parsed_tv: first_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
+    find_parsed_tv_list: many_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
+    find_parsed_tv_list_with_pagination: pagination_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
+    /** 从云盘文件解析出的电视剧集信息 */
+    add_parsed_episode: add_factory<PrismaClient["parsed_episode"]>(prisma.parsed_episode),
+    update_parsed_episode: update_factory<PrismaClient["parsed_episode"]>(prisma.parsed_episode),
+    delete_parsed_episode: delete_factory<PrismaClient["parsed_episode"]>(prisma.parsed_episode),
+    find_parsed_episode: first_factory<PrismaClient["parsed_episode"]>(prisma.parsed_episode),
+    find_parsed_episode_list: many_factory<PrismaClient["parsed_episode"]>(prisma.parsed_episode),
+    find_parsed_episode_list_with_pagination: pagination_factory<PrismaClient["parsed_episode"]>(prisma.parsed_episode),
+    /** 播放记录 */
     add_history: add_factory<PrismaClient["play_history"]>(prisma.play_history),
     update_history: update_factory<PrismaClient["play_history"]>(prisma.play_history),
     delete_history: delete_factory<PrismaClient["play_history"]>(prisma.play_history),
     find_history: first_factory<PrismaClient["play_history"]>(prisma.play_history),
     find_histories: many_factory<PrismaClient["play_history"]>(prisma.play_history),
     find_history_with_pagination: pagination_factory<PrismaClient["play_history"]>(prisma.play_history),
-
+    /** 成员凭证 */
     add_member_link: add_factory<PrismaClient["member_token"]>(prisma.member_token),
     update_member_link: update_factory<PrismaClient["member_token"]>(prisma.member_token),
     delete_member_link: delete_factory<PrismaClient["member_token"]>(prisma.member_token),
     find_member_link: first_factory<PrismaClient["member_token"]>(prisma.member_token),
     find_member_links: many_factory<PrismaClient["member_token"]>(prisma.member_token),
     find_member_link_with_pagination: pagination_factory<PrismaClient["member_token"]>(prisma.member_token),
-
+    /** 成员 */
     add_member: add_factory<PrismaClient["member"]>(prisma.member),
     update_member: update_factory<PrismaClient["member"]>(prisma.member),
     delete_member: delete_factory<PrismaClient["member"]>(prisma.member),
     find_member: first_factory<PrismaClient["member"]>(prisma.member),
     find_members: many_factory<PrismaClient["member"]>(prisma.member),
     find_member_with_pagination: pagination_factory<PrismaClient["member"]>(prisma.member),
-
-    add_movie: add_factory<PrismaClient["movie"]>(prisma.movie),
-    update_movie: update_factory<PrismaClient["movie"]>(prisma.movie),
-    find_movie: first_factory<PrismaClient["movie"]>(prisma.movie),
-    find_movies: many_factory<PrismaClient["movie"]>(prisma.movie),
-
+    /** 成员推荐影片 */
     add_recommended_tv: add_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
     update_recommended_tv: update_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
     delete_recommended_tv: delete_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
     find_recommended_tv: first_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
     find_recommended_tvs: many_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
     find_recommended_tv_with_pagination: pagination_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv),
-
-    add_searched_tv: add_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
-    update_searched_tv: update_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
-    find_searched_tv: first_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
-    find_searched_tvs: many_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
-    find_searched_tv_with_pagination: pagination_factory<PrismaClient["searched_tv"]>(prisma.searched_tv),
-
+    /** 索引任务 */
+    add_task: add_factory<PrismaClient["async_task"]>(prisma.async_task),
+    update_task: update_factory<PrismaClient["async_task"]>(prisma.async_task),
+    find_task: first_factory<PrismaClient["async_task"]>(prisma.async_task),
+    find_task_list: many_factory<PrismaClient["async_task"]>(prisma.async_task),
+    delete_task: delete_factory<PrismaClient["async_task"]>(prisma.async_task),
+    find_task_list_with_pagination: pagination_factory<PrismaClient["async_task"]>(prisma.async_task),
+    /** 云盘签到 */
+    add_check_in: add_factory<PrismaClient["drive_check_in"]>(prisma.drive_check_in),
+    /** 电视剧详情快照 */
+    add_tv_profile_snap: add_factory<PrismaClient["tv_profile_quick"]>(prisma.tv_profile_quick),
+    find_tv_profile_snap: first_factory<PrismaClient["tv_profile_quick"]>(prisma.tv_profile_quick),
+    /** 分享资源 */
     add_shared_files: add_factory<PrismaClient["shared_file"]>(prisma.shared_file),
     add_shared_files_safely: async (body: Parameters<PrismaClient["shared_file"]["create"]>[0]["data"]) => {
       const { url } = body;
@@ -256,42 +303,21 @@ export const store_factory = (prisma: PrismaClient) => {
     find_shared_files: first_factory<PrismaClient["shared_file"]>(prisma.shared_file),
     find_shared_files_list: many_factory<PrismaClient["shared_file"]>(prisma.shared_file),
     find_shared_files_list_with_pagination: pagination_factory<PrismaClient["shared_file"]>(prisma.shared_file),
-
-    add_maybe_tv: add_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
-    update_maybe_tv: update_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
-    delete_maybe_tv: delete_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
-    find_maybe_tv: first_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
-    find_maybe_tvs: many_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
-    find_maybe_tv_with_pagination: pagination_factory<PrismaClient["maybe_tv"]>(prisma.maybe_tv),
-
-    add_tv: add_factory<PrismaClient["tv"]>(prisma.tv),
-    update_tv: update_factory<PrismaClient["tv"]>(prisma.tv),
-    delete_tv: delete_factory<PrismaClient["tv"]>(prisma.tv),
-    find_tv: first_factory<PrismaClient["tv"]>(prisma.tv),
-    find_tvs: many_factory<PrismaClient["tv"]>(prisma.tv),
-    find_tv_with_pagination: pagination_factory<PrismaClient["tv"]>(prisma.tv),
-
-    add_user: add_factory<PrismaClient["user"]>(prisma.user),
-    update_user: update_factory<PrismaClient["user"]>(prisma.user),
-    delete_user: delete_factory<PrismaClient["user"]>(prisma.user),
-    find_user: first_factory<PrismaClient["user"]>(prisma.user),
-    find_users: many_factory<PrismaClient["user"]>(prisma.user),
-    find_user_with_pagination: pagination_factory<PrismaClient["user"]>(prisma.user),
-
+    /** 云盘文件 */
     add_file: add_factory<PrismaClient["file"]>(prisma.file),
     update_file: update_factory<PrismaClient["file"]>(prisma.file),
     delete_file: delete_factory<PrismaClient["file"]>(prisma.file),
     find_file: first_factory<PrismaClient["file"]>(prisma.file),
     find_files: many_factory<PrismaClient["file"]>(prisma.file),
     find_file_with_pagination: pagination_factory<PrismaClient["file"]>(prisma.file),
-
+    /** 云盘临时文件 */
     add_tmp_file: add_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
     update_tmp_file: update_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
     delete_tmp_file: delete_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
     find_tmp_file: first_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
     find_tmp_files: many_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
     find_tmp_file_with_pagination: pagination_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
-
+    /** 更新中的分享资源 */
     add_shared_files_in_progress: add_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
     update_shared_files_in_progress: update_factory<PrismaClient["shared_file_in_progress"]>(
       prisma.shared_file_in_progress
@@ -308,21 +334,22 @@ export const store_factory = (prisma: PrismaClient) => {
     find_shared_files_in_progress_with_pagination: pagination_factory<PrismaClient["shared_file_in_progress"]>(
       prisma.shared_file_in_progress
     ),
+    /** 用户 */
+    add_user: add_factory<PrismaClient["user"]>(prisma.user),
+    update_user: update_factory<PrismaClient["user"]>(prisma.user),
+    delete_user: delete_factory<PrismaClient["user"]>(prisma.user),
+    find_user: first_factory<PrismaClient["user"]>(prisma.user),
+    find_users: many_factory<PrismaClient["user"]>(prisma.user),
+    find_user_with_pagination: pagination_factory<PrismaClient["user"]>(prisma.user),
 
-    add_searched_season: add_factory<PrismaClient["searched_season"]>(prisma.searched_season),
-    update_searched_season: update_factory<PrismaClient["searched_season"]>(prisma.searched_season),
-    find_searched_season: first_factory<PrismaClient["searched_season"]>(prisma.searched_season),
-    find_searched_season_list: many_factory<PrismaClient["searched_season"]>(prisma.searched_season),
-    find_searched_season_with_pagination: pagination_factory<PrismaClient["searched_season"]>(prisma.searched_season),
-
-    add_tv_need_complete: add_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
-    update_tv_need_complete: update_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
-    delete_tv_need_complete: delete_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
-    find_tv_need_complete: first_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
-    find_tv_need_complete_list: many_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
-    find_tv_need_complete_with_pagination: pagination_factory<PrismaClient["tv_need_complete"]>(
-      prisma.tv_need_complete
-    ),
+    // add_tv_need_complete: add_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    // update_tv_need_complete: update_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    // delete_tv_need_complete: delete_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    // find_tv_need_complete: first_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    // find_tv_need_complete_list: many_factory<PrismaClient["tv_need_complete"]>(prisma.tv_need_complete),
+    // find_tv_need_complete_with_pagination: pagination_factory<PrismaClient["tv_need_complete"]>(
+    //   prisma.tv_need_complete
+    // ),
   };
 };
 

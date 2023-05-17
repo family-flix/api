@@ -3,7 +3,7 @@ import { describe, test, expect, vi, afterEach } from "vitest";
 
 import {
   fetch_files_factory,
-  adding_episode_when_walk,
+  create_parsed_episode_and_parsed_tv,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { FolderWalker } from "@/domains/walker";
@@ -60,7 +60,7 @@ describe("detect a tv dir", () => {
     };
     walker.on_episode = async (task) => {
       handle_episode(task);
-      adding_episode_when_walk(task, { user_id, drive_id }, test_store);
+      create_parsed_episode_and_parsed_tv(task, { user_id, drive_id }, test_store);
     };
     const folder = new AliyunDriveFolder(id, {
       client: fetch_files_factory({
@@ -127,7 +127,7 @@ describe("detect a tv dir", () => {
     }
     expect(season_resp.data.map((s) => s.season)).toStrictEqual(["SP"]);
     /** --------- 查看 tv --------- */
-    const tvs_resp = await test_store.find_maybe_tvs();
+    const tvs_resp = await test_store.find_parsed_tv_list();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;

@@ -162,7 +162,7 @@ export async function check_tv_in_progress_is_completed(
     }>(`SELECT searched_tv.poster_path,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.first_air_date,tv.id 
 FROM tv 
 INNER JOIN searched_tv 
-ON tv.searched_tv_id = searched_tv.id 
+ON tv.tv_profile_id = searched_tv.id 
 WHERE searched_tv.name = '${name}' OR searched_tv.original_name = '${original_name}';`);
     if (r.error) {
       notice_error(r);

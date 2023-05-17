@@ -36,7 +36,7 @@ export default async function handler(
     .get(`SELECT searched_tv.poster_path,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.first_air_date,tv.id 
   FROM tv 
   INNER JOIN searched_tv 
-  ON tv.searched_tv_id = searched_tv.id 
+  ON tv.tv_profile_id = searched_tv.id 
   WHERE user_id = '${user_id}' AND searched_tv.name = '${name}' OR searched_tv.original_name = '${original_name}';`);
   if (r.error) {
     return e(r);

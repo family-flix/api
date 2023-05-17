@@ -14,7 +14,7 @@ import { log } from "@/logger/log";
 export async function walk_added_files(
   store: ReturnType<typeof store_factory>
 ) {
-  const drives_res = await store.find_aliyun_drives();
+  const drives_res = await store.find_drive_list();
   if (drives_res.error) {
     console.log("[ERROR]find drives failed,", drives_res.error.message);
     return;
@@ -84,7 +84,7 @@ export async function walk_added_files(
       notice_error(`${user_name} 网盘刮削失败，因为 ${r.error.message}`);
       continue;
     }
-    store.update_aliyun_drive(id, {
+    store.update_drive(id, {
       latest_analysis: dayjs().toISOString(),
     });
     notice_push_deer({

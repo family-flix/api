@@ -7,7 +7,7 @@ import { describe, test, expect, afterEach } from "vitest";
 import { FolderWalker } from "@/domains/walker";
 import {
   fetch_files_factory,
-  adding_episode_when_walk,
+  create_parsed_episode_and_parsed_tv,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
@@ -64,7 +64,7 @@ describe("detect a tv dir", () => {
       await adding_file_when_walk(folder, { user_id, drive_id }, store);
     };
     detector.on_episode = async (tasks) => {
-      await adding_episode_when_walk(
+      await create_parsed_episode_and_parsed_tv(
         tasks,
         {
           user_id,
@@ -117,7 +117,7 @@ describe("detect a tv dir", () => {
     }
     expect(r5.data.length).toBe(1);
     expect(r5.data.map((s) => s.season)).toStrictEqual(["S01"]);
-    const r4 = await store.find_maybe_tvs();
+    const r4 = await store.find_parsed_tv_list();
     expect(r4.error).toBe(null);
     if (r4.error) {
       return;

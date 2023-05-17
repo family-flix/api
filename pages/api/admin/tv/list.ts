@@ -6,7 +6,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { store } from "@/store";
-import { log } from "@/logger/log";
 import { BaseApiResp, resultify } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 
@@ -32,8 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const number_size = Number(page_size);
   // const fields =
   //   "tv.id,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.poster_path,searched_tv.first_air_date";
-  // let simple_sql = `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id WHERE ${condition} ORDER BY searched_tv.first_air_date DESC`;
-  // let sql = `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id WHERE ${condition} AND searched_tv.name ${`%${name}%`} OR searched_tv.original_name ${`%${name}%`} ORDER BY searched_tv.first_air_date DESC`;
+  // let simple_sql = `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.tv_profile_id = searched_tv.id WHERE ${condition} ORDER BY searched_tv.first_air_date DESC`;
+  // let sql = `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.tv_profile_id = searched_tv.id WHERE ${condition} AND searched_tv.name ${`%${name}%`} OR searched_tv.original_name ${`%${name}%`} ORDER BY searched_tv.first_air_date DESC`;
   // sql += ` LIMIT ${(number_page - 1) * number_size}, ${number_size}`;
   // simple_sql += ` LIMIT ${(number_page - 1) * number_size}, ${number_size}`;
   // sql += ";";
@@ -49,15 +48,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   //     poster_path: string;
   //   }[]
   // >(running_sql);
-  const count_resp = await resultify(store.prisma.tV.count.bind(store.prisma.tV))({
+  const count_resp = await resultify(store.prisma.tv.count.bind(store.prisma.tv))({
     // 连接条件
     where: {
-      user_id,
-      // hidden: 0,
-      searched_tv_id: {
+      profile_id: {
         not: null,
       },
-      searched_tv: {
+      profile: {
         OR: name
           ? [
               {
@@ -73,6 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             ]
           : undefined,
       },
+      user_id,
     },
   });
   if (count_resp.error) {
@@ -80,33 +78,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(count_resp);
   }
   const resp = await resultify(store.prisma.tv.findMany.bind(store.prisma.tv))({
-    select: {
-      id: true,
-      name: true,
-      searched_tv: {
-        select: {
-          name: true,
-          original_name: true,
-          overview: true,
-          poster_path: true,
-          first_air_date: true,
-        },
-      },
-      // same_tv: true,
-      // same_tv: {
-      //   select: {
-      //     id: true,
-      //     _count: true,
-      //   },
-      // },
-      _count: true,
-    },
-    // 连接条件
     where: {
-      searched_tv_id: {
+      profile_id: {
         not: null,
       },
-      searched_tv: {
+      profile: {
         OR: name
           ? [
               {
@@ -124,19 +100,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
       user_id,
     },
-    // include: {
-    //   episodes: true,
-    //   same_tv: {
-    //     include: {
-    //       episodes: true,
-    //     },
-    //   },
-    // },
-    // 排序
-    orderBy: {
-      searched_tv: { first_air_date: "desc" },
+    include: {
+      profile: true,
+      // parsed_tv: {
+      //   include: {
+      //     parse: true,
+      //   },
+      // },
     },
-    // 分页
+    orderBy: {
+      profile: { first_air_date: "desc" },
+    },
     skip: (number_page - 1) * number_size,
     take: number_size,
   });
@@ -152,17 +126,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return false;
     })(),
     list: resp.data.map((tv) => {
-      const { id, searched_tv, episodes, _count } = tv;
-      // const { name, original_name, overview, poster_path, first_air_date } = searched_tv;
+      const { id, profile } = tv;
+      const { name, original_name, overview, poster_path, first_air_date } = profile;
       return {
         id,
         name,
-        // original_name,
-        // overview,
-        // poster_path,
-        // first_air_date,
-        _count,
-        episodes,
+        original_name,
+        overview,
+        poster_path,
+        first_air_date,
+        // maybe_tvs: maybe_tvs.map((maybe) => {
+        //   const { id, name, original_name, episodes } = maybe;
+        //   return {
+        //     id,
+        //     name,
+        //     original_name,
+        //     count: episodes.length,
+        //   };
+        // }),
       };
     }),
   };

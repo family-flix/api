@@ -1,9 +1,4 @@
-import {
-  fetchSeasonProfile,
-  fetch_tv_profile_in_tmdb,
-  Language,
-  search_tv_in_tmdb,
-} from "./services";
+import { fetchSeasonProfile, fetch_tv_profile_in_tmdb, Language, search_tv_in_tmdb } from "./services";
 
 export class TMDBClient {
   options: {
@@ -20,17 +15,14 @@ export class TMDBClient {
   ) {
     const { token, language = "zh-CN" } = options;
     if (token === undefined) {
-      throw new Error("Please pass TMDB_TOKEN");
+      throw new Error("请传入 TMDB_TOKEN");
     }
     this.options = {
       token,
       language,
     };
   }
-  async search_tv(
-    keyword: string,
-    extra: Partial<{ language: "zh-CN" | "en-US" }> = {}
-  ) {
+  async search_tv(keyword: string, extra: Partial<{ language: "zh-CN" | "en-US" }> = {}) {
     const { token, language } = this.options;
     return search_tv_in_tmdb(keyword, {
       api_key: token,

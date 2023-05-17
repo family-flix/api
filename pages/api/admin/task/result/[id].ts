@@ -8,7 +8,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory, analysis_tv } from "@/utils/backend";
 import { store } from "@/store";
 
-const { find_async_task, find_searched_tv, find_tmp_tvs, find_tmp_episodes } =
+const { find_task: find_async_task, find_tv_profile: find_searched_tv, find_tmp_tvs, find_tmp_episodes } =
   store;
 
 export default async function handler(
@@ -39,7 +39,7 @@ export default async function handler(
     const results = [];
     for (let i = 0; i < tvs_resp.data.length; i += 1) {
       const tv = tvs_resp.data[i];
-      const { id: tv_id, name, original_name, searched_tv_id } = tv;
+      const { id: tv_id, name, original_name, tv_profile_id } = tv;
       const r: {
         id: string;
         name: string;
@@ -60,8 +60,8 @@ export default async function handler(
         overview: string;
         poster_path: string;
       }> = {};
-      if (searched_tv_id) {
-        const searched_tv = await find_searched_tv({ id: searched_tv_id });
+      if (tv_profile_id) {
+        const searched_tv = await find_searched_tv({ id: tv_profile_id });
         if (searched_tv.data) {
           const { name, original_name, overview, poster_path } =
             searched_tv.data;

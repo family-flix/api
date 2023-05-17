@@ -90,6 +90,7 @@ export class FolderWalker {
     type: "file" | "folder";
     size?: number;
     parent_file_id: string;
+    parent_paths: string;
   }) => Promise<void> = promise_noop;
   /** 找到一个剧集时的回调 */
   on_episode: (tasks: SearchedEpisode) => Promise<void> = promise_noop;
@@ -133,6 +134,7 @@ export class FolderWalker {
       file_id,
       name,
       parent_file_id,
+      parent_paths,
       type,
       size,
     });

@@ -15,7 +15,7 @@ import { FolderWalker } from "@/domains/walker";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import {
   fetch_files_factory,
-  adding_episode_when_walk,
+  create_parsed_episode_and_parsed_tv,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import {
@@ -56,7 +56,7 @@ describe("detect a tv dir", () => {
     };
     detector.on_episode = async (task) => {
       handle_episode(task);
-      adding_episode_when_walk(task, fake_extra, store);
+      create_parsed_episode_and_parsed_tv(task, fake_extra, store);
       return;
     };
     const folder = new AliyunDriveFolder(id, {
@@ -125,7 +125,7 @@ describe("detect a tv dir", () => {
     expect(season_resp.data.length).toBe(1);
     expect(season_resp.data.map((s) => s.season)).toStrictEqual(["S01"]);
     /** --------- 查看 tv --------- */
-    const tvs_resp = await store.find_maybe_tvs();
+    const tvs_resp = await store.find_parsed_tv_list();
     expect(tvs_resp.error).toBe(null);
     if (tvs_resp.error) {
       return;

@@ -17,7 +17,7 @@ export async function diff_folder_with_drive_folder(
   },
   store: ReturnType<typeof store_factory>
 ) {
-  const drives_res = await store.find_aliyun_drives();
+  const drives_res = await store.find_drive_list();
   if (drives_res.error) {
     return Result.Err(drives_res.error);
   }

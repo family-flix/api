@@ -11,7 +11,6 @@ async function main() {
   //   },
   //   data: {
   //     original_name: null,
-  //     correct_name: null,
   //   },
   // });
   // const res = await store.prisma.tV.findFirst({

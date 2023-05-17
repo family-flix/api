@@ -27,7 +27,7 @@ export default async function handler(
   const { id: member_id } = t_resp.data;
   const condition = ` tv.id IN (SELECT recommended_tv.tv_id FROM recommended_tv WHERE member_id = '${member_id}')`;
   const count_resp = await (async () => {
-    const simple_sql2 = `SELECT COUNT(*) count FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id WHERE ${condition};`;
+    const simple_sql2 = `SELECT COUNT(*) count FROM tv LEFT JOIN searched_tv ON tv.tv_profile_id = searched_tv.id WHERE ${condition};`;
     const r1 = await get<{ count: number }>(simple_sql2);
     if (r1.error) {
       return r1;
@@ -41,7 +41,7 @@ export default async function handler(
   const number_size = Number(page_size);
   const fields =
     "tv.id,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.poster_path,searched_tv.first_air_date";
-  let simple_sql = `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.searched_tv_id = searched_tv.id WHERE ${condition} ORDER BY searched_tv.first_air_date DESC`;
+  let simple_sql = `SELECT ${fields} FROM tv LEFT JOIN searched_tv ON tv.tv_profile_id = searched_tv.id WHERE ${condition} ORDER BY searched_tv.first_air_date DESC`;
   simple_sql += ` LIMIT ${(number_page - 1) * number_size}, ${number_size}`;
   simple_sql += ";";
   const resp = await all<

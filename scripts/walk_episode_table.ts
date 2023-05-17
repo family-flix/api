@@ -4,13 +4,13 @@
 require("dotenv").config();
 import dayjs from "dayjs";
 
-import { EpisodeRecord, RecordCommonPart } from "@/store/types";
+import { ParsedEpisodeRecord, RecordCommonPart } from "@/store/types";
 import { store } from "@/store";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
 
 async function run() {
-  await walk_table_with_pagination<EpisodeRecord & RecordCommonPart>(store.find_episodes_with_pagination, {
+  await walk_table_with_pagination<ParsedEpisodeRecord & RecordCommonPart>(store.find_episodes_with_pagination, {
     async on_handle(episode) {
       let happen_update = false;
       const {
@@ -31,7 +31,7 @@ async function run() {
           created: dayjs(created).toISOString(),
         });
       }
-      const tv_res = await store.find_maybe_tv({ id: tv_id });
+      const tv_res = await store.find_parsed_tv({ id: tv_id });
       if (tv_res.error) {
         console.log("fetch tv of episode error", tv_res.error.message);
         return;

@@ -1,10 +1,10 @@
 /**
- * @file 获取未知电视剧列表
+ * @file 获取未识别的文件夹列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp, resultify } from "@/types";
+import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
@@ -17,23 +17,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size: string;
   }>;
   const { authorization } = req.headers;
-  if (!authorization) {
-    return e("please login");
-  }
   const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  //   const res = await resultify(store.prisma.tV.findMany.bind(store.prisma.tV))({
-  // 	where: {
-  // 		searched_tv_id: null,
-  // 	}
-  //   });
-  const r2 = await store.find_maybe_tv_with_pagination(
+  const r2 = await store.find_parsed_tv_list_with_pagination(
     {
       where: {
-        searched_tv_id: null,
         tv_id: null,
         user_id,
       },
