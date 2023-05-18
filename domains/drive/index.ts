@@ -13,9 +13,9 @@ const drivePayloadSchema = Joi.object({
   app_id: Joi.string().required(),
   drive_id: Joi.string().required(),
   device_id: Joi.string().required(),
-  user_name: Joi.string().required(),
-  avatar: Joi.string(),
+  user_name: Joi.string().allow(null, ""),
   nick_name: Joi.string().allow(null, ""),
+  avatar: Joi.string(),
   aliyun_user_id: Joi.string().required(),
   access_token: Joi.string().required(),
   refresh_token: Joi.string().required(),
@@ -36,47 +36,33 @@ export class Drive {
     }
     return Result.Ok(drive);
   }
-  static async Add(payload: AliyunDrivePayload & { user_id: string }) {
-    const { user_id, ...restPayload } = payload;
-    const r = await resultify(
-      drivePayloadSchema.validateAsync.bind(drivePayloadSchema)
-    )(restPayload);
+  static async Add(body: { payload: AliyunDrivePayload; user_id: string }) {
+    const { user_id, payload } = body;
+    const r = await resultify(drivePayloadSchema.validateAsync.bind(drivePayloadSchema))(payload);
     if (r.error) {
       return Result.Err(r.error);
     }
-    const {
-      app_id,
-      drive_id,
-      device_id,
-      avatar,
-      nick_name,
-      aliyun_user_id,
-      user_name,
-      access_token,
-      refresh_token,
-    } = r.data as AliyunDrivePayload;
-    const existing_drive = await store.prisma.drive.findUnique({
+    const { app_id, drive_id, device_id, avatar, aliyun_user_id, user_name, nick_name, access_token, refresh_token } = r.data as AliyunDrivePayload;
+    const existing_drive = await resultify(store.prisma.drive.findUnique.bind(store.prisma.drive))({
       where: {
         drive_id,
       },
     });
-    if (existing_drive) {
-      return Result.Err("该云盘已存在，请检查信息后重试");
+    if (existing_drive.error) {
+      return Result.Err(existing_drive.error);
     }
-    const created_drive = await store.prisma.drive.create({
+    if (existing_drive.data) {
+      return Result.Err("该云盘已存在，请检查信息后重试", undefined, { id: existing_drive.data.id });
+    }
+    const created_drive = await resultify(store.prisma.drive.create.bind(store.prisma.drive))({
       data: {
         id: random_string(15),
+        name: user_name || nick_name,
+        avatar,
         app_id,
         drive_id,
         device_id,
-        avatar,
-        nick_name,
         aliyun_user_id,
-        user_name,
-        root_folder_id: "",
-        root_folder_name: "",
-        total_size: 0,
-        used_size: 0,
         user_id,
         drive_token: {
           create: {
@@ -88,7 +74,10 @@ export class Drive {
         },
       },
     });
-    return Result.Ok(created_drive);
+    if (created_drive.error) {
+      return Result.Err(created_drive.error);
+    }
+    return Result.Ok(created_drive.data);
   }
 
   constructor(options: Partial<{ id: string; user_id: string }>) {
@@ -141,7 +130,7 @@ export class Drive {
       },
       select: {
         avatar: true,
-        user_name: true,
+        name: true,
         used_size: true,
         total_size: true,
       },

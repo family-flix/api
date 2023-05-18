@@ -5,7 +5,7 @@ import { describe, test, expect, vi, afterEach } from "vitest";
 
 import { FolderWalker } from "@/domains/walker";
 import {
-  create_parsed_episode_and_parsed_tv,
+  add_parsed_infos_when_walk,
   adding_file_when_walk,
   fetch_files_factory,
 } from "@/domains/walker/utils";
@@ -64,7 +64,7 @@ describe("detect a tv dir", () => {
     detector.on_error = handle_err;
     detector.on_warning = handle_warning;
     detector.on_episode = async (tasks) => {
-      await create_parsed_episode_and_parsed_tv(
+      await add_parsed_infos_when_walk(
         tasks,
         {
           user_id,

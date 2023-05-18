@@ -6,22 +6,9 @@ import { PrismaClient } from "@prisma/client";
 
 import { Result, Unpacked } from "@/types";
 
-type ModelKeys = keyof Omit<
-  PrismaClient,
-  | "$on"
-  | "$connect"
-  | "$disconnect"
-  | "$use"
-  | "$executeRaw"
-  | "$executeRawUnsafe"
-  | "$queryRaw"
-  | "$queryRawUnsafe"
-  | "$transaction"
->;
+type ModelKeys = keyof Omit<PrismaClient, "$on" | "$connect" | "$disconnect" | "$use" | "$executeRaw" | "$executeRawUnsafe" | "$queryRaw" | "$queryRawUnsafe" | "$transaction">;
 
-export function paginationFactory<T>(
-  params: PaginationParams
-): [any, (list: T[], total: number) => any] {
+export function paginationFactory<T>(params: PaginationParams): [any, (list: T[], total: number) => any] {
   return [paginationParams<T>(params), result<T>(params)];
 }
 
@@ -29,6 +16,7 @@ type PaginationParams = {
   page: number;
   page_size: number;
   search: Record<string, unknown>;
+  select?: Record<string, unknown> | null;
   start?: unknown;
   skip?: number;
   sorts?: {
@@ -37,16 +25,10 @@ type PaginationParams = {
   }[];
 };
 export function paginationParams<T>(params: PaginationParams) {
-  const {
-    page = 1,
-    page_size = 10,
-    sorts = [],
-    start,
-    skip = 0,
-    search,
-  } = params;
+  const { page = 1, page_size = 10, sorts = [], select, start, skip = 0, search } = params;
   const result: {
     where: Record<string, unknown>;
+    select?: Record<string, unknown> | null;
     skip: number;
     take: number;
     orderBy?: Record<string, "desc" | "asc">[];
@@ -56,6 +38,9 @@ export function paginationParams<T>(params: PaginationParams) {
     skip: (page - 1) * page_size + Number(skip),
     take: Number(page_size),
   };
+  if (select) {
+    result.select = select;
+  }
   if (sorts.length !== 0) {
     result.orderBy = sorts.map((s) => {
       const { key, order } = s;

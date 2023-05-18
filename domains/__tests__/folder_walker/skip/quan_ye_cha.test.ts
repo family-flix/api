@@ -3,7 +3,7 @@ import { describe, test, expect, vi, afterEach } from "vitest";
 
 import {
   fetch_files_factory,
-  create_parsed_episode_and_parsed_tv,
+  add_parsed_infos_when_walk,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { FolderWalker } from "@/domains/walker";
@@ -60,7 +60,7 @@ describe("detect a tv dir", () => {
     };
     walker.on_episode = async (task) => {
       handle_episode(task);
-      create_parsed_episode_and_parsed_tv(task, { user_id, drive_id }, test_store);
+      add_parsed_infos_when_walk(task, { user_id, drive_id }, test_store);
     };
     const folder = new AliyunDriveFolder(id, {
       client: fetch_files_factory({

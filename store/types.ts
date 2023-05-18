@@ -4,6 +4,7 @@ import {
   episode,
   file,
   parsed_episode,
+  parsed_season,
   parsed_tv,
   PrismaClient,
   shared_file_in_progress,
@@ -16,6 +17,7 @@ export type AliyunDriveRecord = drive;
 export type FilesRecord = file;
 export type ParsedTVRecord = parsed_tv;
 export type TaskRecord = async_task;
+export type ParsedSeasonRecord = parsed_season;
 export type ParsedEpisodeRecord = parsed_episode;
 export type TVProfileRecord = tv_profile;
 export type SharedFilesInProgressRecord = shared_file_in_progress;

@@ -1,5 +1,5 @@
 /**
- * @file 获取指定网盘详情
+ * @file 设置指定云盘的 refresh_token
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -9,19 +9,16 @@ import { parse_token, response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
   const { refresh_token } = req.body as Partial<{ refresh_token: string }>;
   if (!id) {
-    return e("Missing drive id");
+    return e("缺少云盘 id 参数");
   }
   if (!refresh_token) {
-    return e("Missing refresh_token");
+    return e("缺少 refresh_token");
   }
   const t_resp = await User.New(authorization);
   if (t_resp.error) {
@@ -33,7 +30,7 @@ export default async function handler(
     return e(drive_res);
   }
   if (!drive_res.data) {
-    return e("No matched record of drive");
+    return e("没有找到匹配的云盘记录");
   }
   const r = await store.find_aliyun_drive_token({
     drive_id: drive_res.data.id,
@@ -42,7 +39,7 @@ export default async function handler(
     return e(r);
   }
   if (!r.data) {
-    return e("No matched record of drive");
+    return e("没有找到匹配的云盘记录");
   }
   const r2 = await store.update_aliyun_drive_token(r.data.id, {
     refresh_token,

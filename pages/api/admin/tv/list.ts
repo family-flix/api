@@ -51,9 +51,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const count_resp = await resultify(store.prisma.tv.count.bind(store.prisma.tv))({
     // 连接条件
     where: {
-      profile_id: {
-        not: null,
-      },
       profile: {
         OR: name
           ? [
@@ -74,14 +71,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (count_resp.error) {
-    console.log(count_resp.error);
     return e(count_resp);
   }
-  const resp = await resultify(store.prisma.tv.findMany.bind(store.prisma.tv))({
+  const resp = await store.prisma.tv.findMany({
     where: {
-      profile_id: {
-        not: null,
-      },
       profile: {
         OR: name
           ? [
@@ -102,11 +95,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       profile: true,
-      // parsed_tv: {
-      //   include: {
-      //     parse: true,
-      //   },
-      // },
+      episodes: {
+        include: {
+          profile: true,
+          parsed_episode: true,
+        },
+        orderBy: {
+          episode_number: "desc",
+        },
+      },
+      seasons: {
+        include: {
+          profile: true,
+          parsed_season: true,
+        },
+        orderBy: {
+          season_number: "desc",
+        },
+      },
     },
     orderBy: {
       profile: { first_air_date: "desc" },
@@ -114,9 +120,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     skip: (number_page - 1) * number_size,
     take: number_size,
   });
-  if (resp.error) {
-    return e(resp);
-  }
   const data = {
     total: count_resp.data,
     no_more: (() => {
@@ -125,8 +128,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
       return false;
     })(),
-    list: resp.data.map((tv) => {
-      const { id, profile } = tv;
+    list: resp.map((tv) => {
+      const { id, profile, seasons, episodes } = tv;
       const { name, original_name, overview, poster_path, first_air_date } = profile;
       return {
         id,
@@ -135,15 +138,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         overview,
         poster_path,
         first_air_date,
-        // maybe_tvs: maybe_tvs.map((maybe) => {
-        //   const { id, name, original_name, episodes } = maybe;
-        //   return {
-        //     id,
-        //     name,
-        //     original_name,
-        //     count: episodes.length,
-        //   };
-        // }),
+        seasons,
+        episodes,
       };
     }),
   };

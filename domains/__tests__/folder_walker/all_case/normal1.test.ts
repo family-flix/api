@@ -7,7 +7,7 @@ import { describe, test, expect, afterEach } from "vitest";
 import { FolderWalker } from "@/domains/walker";
 import {
   fetch_files_factory,
-  create_parsed_episode_and_parsed_tv,
+  add_parsed_infos_when_walk,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
@@ -64,7 +64,7 @@ describe("detect a tv dir", () => {
       await adding_file_when_walk(folder, { user_id, drive_id }, store);
     };
     detector.on_episode = async (tasks) => {
-      await create_parsed_episode_and_parsed_tv(
+      await add_parsed_infos_when_walk(
         tasks,
         {
           user_id,

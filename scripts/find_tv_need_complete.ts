@@ -11,7 +11,7 @@ export function find_tv_need_complete(store: ReturnType<typeof store_factory>) {
     async on_handle(v: TVProfileRecord & RecordCommonPart) {
       const { id, name, original_name } = v;
       console.log("开始处理", chalk.greenBright(name || original_name));
-      const season_res = await store.find_searched_season_list({
+      const season_res = await store.find_season_profile_list({
         tv_profile_id: id,
       });
       if (season_res.error || !season_res.data || season_res.data.length === 0) {

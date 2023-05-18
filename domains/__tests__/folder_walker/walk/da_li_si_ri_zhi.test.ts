@@ -20,7 +20,7 @@ import { FolderWalker } from "@/domains/walker";
 import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import {
   fetch_files_factory,
-  create_parsed_episode_and_parsed_tv,
+  add_parsed_infos_when_walk,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/da_li_si_ri_zhi";
@@ -59,7 +59,7 @@ describe("detect a tv dir", () => {
     };
     walker.on_episode = async (task) => {
       handle_episode(task);
-      await create_parsed_episode_and_parsed_tv(task, fake_extra, store);
+      await add_parsed_infos_when_walk(task, fake_extra, store);
       return;
     };
     const folder = new AliyunDriveFolder(id, {

@@ -9,10 +9,7 @@ import { response_error_factory } from "@/utils/backend";
 import { User } from "@/domains/user";
 import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const t = await User.New(authorization);
@@ -21,6 +18,9 @@ export default async function handler(
   }
   const user = t.data;
   const { payload } = req.body as { payload: AliyunDrivePayload };
+  if (!payload) {
+    return e("请传入云盘信息");
+  }
   const r = await user.add_drive({ payload });
   if (r.error) {
     return e(r);

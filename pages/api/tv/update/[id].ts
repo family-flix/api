@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { extra_searched_tv_field } from "@/domains/walker/utils";
-import { PartialSearchedTVFromTMDB } from "@/domains/tmdb/services";
+import { PartialTVProfile } from "@/domains/tmdb/services";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  const body = req.body as PartialSearchedTVFromTMDB;
+  const body = req.body as PartialTVProfile;
   if (!id) {
     return e("Missing id");
   }
@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!tv_resp.data) {
     return e("No matched tv");
   }
-  const { tv_profile_id } = body as PartialSearchedTVFromTMDB & {
+  const { tv_profile_id } = body as PartialTVProfile & {
     tv_profile_id?: string;
   };
   let _tv_profile_id = tv_profile_id;

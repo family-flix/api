@@ -28,6 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         tv_id: null,
         user_id,
       },
+      select: {
+        id: true,
+        name: true,
+        original_name: true,
+        file_name: true,
+      },
     },
     { page: Number(page), size: Number(page_size) }
   );

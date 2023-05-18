@@ -11,7 +11,7 @@ import { store_factory } from "@/store";
 import { log } from "@/logger/log";
 
 import { add_tv_from_parsed_tv_list } from "./search_tv_in_tmdb_then_update_tv";
-import { adding_file_when_walk, create_parsed_episode_and_parsed_tv, need_skip_the_file_when_walk } from "./utils";
+import { adding_file_when_walk, add_parsed_infos_when_walk, need_skip_the_file_when_walk } from "./utils";
 import { TaskStatus } from "./constants";
 
 /** 索引云盘 */
@@ -143,7 +143,7 @@ export async function walk_drive(options: {
       walker.stop = true;
       return;
     }
-    await create_parsed_episode_and_parsed_tv(parsed, { user_id, drive_id }, store);
+    await add_parsed_infos_when_walk(parsed, { user_id, drive_id }, store);
     count += 1;
     return;
   };

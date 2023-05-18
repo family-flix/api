@@ -91,7 +91,7 @@ async function run() {
             poster_path,
             season_number,
           } = tmdb_season;
-          const existing_res = await store.find_searched_season({
+          const existing_res = await store.find_season_profile({
             tmdb_id: season_id,
           });
           if (existing_res.error) {
@@ -101,7 +101,7 @@ async function run() {
             continue;
           }
           console.log("3. add searched_season", season_number);
-          await store.add_searched_season({
+          await store.add_season_profile({
             air_date,
             episode_count,
             tmdb_id: season_id,

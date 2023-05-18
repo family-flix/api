@@ -1,4 +1,7 @@
-import { fetchSeasonProfile, fetch_tv_profile_in_tmdb, Language, search_tv_in_tmdb } from "./services";
+/**
+ * @file TMDB 搜索客户端
+ */
+import { fetch_episode_profile, fetch_season_profile, fetch_tv_profile_in_tmdb, Language, search_tv_in_tmdb } from "./services";
 
 export class TMDBClient {
   options: {
@@ -29,6 +32,7 @@ export class TMDBClient {
       language: extra.language || language,
     });
   }
+  /** 获取电视剧详情 */
   async fetch_tv_profile(id: string | number) {
     const { token, language } = this.options;
     const result = await fetch_tv_profile_in_tmdb(id, {
@@ -37,12 +41,37 @@ export class TMDBClient {
     });
     return result;
   }
-  async fetch_season_profile(number: string | number, tv_id: string | number) {
+  /** 获取季详情 */
+  async fetch_season_profile(body: { tv_id: string | number; season_number: string | number }) {
+    const { tv_id, season_number } = body;
     const { token, language } = this.options;
-    const result = await fetchSeasonProfile(number, tv_id, {
-      api_key: token,
-      language,
-    });
+    const result = await fetch_season_profile(
+      {
+        tv_id,
+        season_number,
+      },
+      {
+        api_key: token,
+        language,
+      }
+    );
+    return result;
+  }
+  /** 获取剧集详情 */
+  async fetch_episode_profile(body: { tv_id: string | number; season_number: string | number; episode_number: string | number }) {
+    const { token, language } = this.options;
+    const { tv_id, season_number, episode_number } = body;
+    const result = await fetch_episode_profile(
+      {
+        tv_id,
+        season_number,
+        episode_number,
+      },
+      {
+        api_key: token,
+        language,
+      }
+    );
     return result;
   }
 }

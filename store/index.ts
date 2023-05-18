@@ -133,6 +133,7 @@ export function pagination_factory<T extends PrismaClient[ModelKeys]>(model: T) 
       page: Number(page),
       page_size: Number(size),
       search: params.where || {},
+      select: params.select,
       sorts,
     });
     const r = await core.fetch();
@@ -185,27 +186,23 @@ export const store_factory = (prisma: PrismaClient) => {
     find_tv_profiles: many_factory<PrismaClient["tv_profile"]>(prisma.tv_profile),
     find_tv_profiles_with_pagination: pagination_factory<PrismaClient["tv_profile"]>(prisma.tv_profile),
     /** 电视剧季详情 */
-    add_searched_season: add_factory<PrismaClient["season_profile"]>(prisma.season_profile),
-    update_searched_season: update_factory<PrismaClient["season_profile"]>(prisma.season_profile),
-    find_searched_season: first_factory<PrismaClient["season_profile"]>(prisma.season_profile),
-    find_searched_season_list: many_factory<PrismaClient["season_profile"]>(prisma.season_profile),
-    find_searched_season_with_pagination: pagination_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    add_season_profile: add_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    update_season_profile: update_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    find_season_profile: first_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    find_season_profile_list: many_factory<PrismaClient["season_profile"]>(prisma.season_profile),
+    find_season_profile_list_with_pagination: pagination_factory<PrismaClient["season_profile"]>(prisma.season_profile),
     /** 电视剧集详情 */
     add_episode_profile: add_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     update_episode_profile: update_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     find_episode_profile: first_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     find_episode_profile_list: many_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
-    find_episode_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(
-      prisma.episode_profile
-    ),
+    find_episode_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     /** 电影详情 */
     add_movie_profile: add_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     update_movie_profile: update_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     find_movie_profile: first_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     find_movie_profile_list: many_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
-    find_movie_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(
-      prisma.episode_profile
-    ),
+    find_movie_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     /** 电视剧 */
     add_tv: add_factory<PrismaClient["tv"]>(prisma.tv),
     update_tv: update_factory<PrismaClient["tv"]>(prisma.tv),
@@ -239,6 +236,13 @@ export const store_factory = (prisma: PrismaClient) => {
     find_parsed_tv: first_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
     find_parsed_tv_list: many_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
     find_parsed_tv_list_with_pagination: pagination_factory<PrismaClient["parsed_tv"]>(prisma.parsed_tv),
+    /** 从云盘文件解析出的电视剧季信息 */
+    add_parsed_season: add_factory<PrismaClient["parsed_season"]>(prisma.parsed_season),
+    update_parsed_season: update_factory<PrismaClient["parsed_season"]>(prisma.parsed_season),
+    delete_parsed_season: delete_factory<PrismaClient["parsed_season"]>(prisma.parsed_season),
+    find_parsed_season: first_factory<PrismaClient["parsed_season"]>(prisma.parsed_season),
+    find_parsed_season_list: many_factory<PrismaClient["parsed_season"]>(prisma.parsed_season),
+    find_parsed_season_list_with_pagination: pagination_factory<PrismaClient["parsed_season"]>(prisma.parsed_season),
     /** 从云盘文件解析出的电视剧集信息 */
     add_parsed_episode: add_factory<PrismaClient["parsed_episode"]>(prisma.parsed_episode),
     update_parsed_episode: update_factory<PrismaClient["parsed_episode"]>(prisma.parsed_episode),
@@ -319,21 +323,11 @@ export const store_factory = (prisma: PrismaClient) => {
     find_tmp_file_with_pagination: pagination_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
     /** 更新中的分享资源 */
     add_shared_files_in_progress: add_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
-    update_shared_files_in_progress: update_factory<PrismaClient["shared_file_in_progress"]>(
-      prisma.shared_file_in_progress
-    ),
-    delete_shared_files_in_progress: delete_factory<PrismaClient["shared_file_in_progress"]>(
-      prisma.shared_file_in_progress
-    ),
-    find_shared_files_in_progress: first_factory<PrismaClient["shared_file_in_progress"]>(
-      prisma.shared_file_in_progress
-    ),
-    find_shared_files_list_in_progress: many_factory<PrismaClient["shared_file_in_progress"]>(
-      prisma.shared_file_in_progress
-    ),
-    find_shared_files_in_progress_with_pagination: pagination_factory<PrismaClient["shared_file_in_progress"]>(
-      prisma.shared_file_in_progress
-    ),
+    update_shared_files_in_progress: update_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    delete_shared_files_in_progress: delete_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    find_shared_files_in_progress: first_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    find_shared_files_list_in_progress: many_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    find_shared_files_in_progress_with_pagination: pagination_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
     /** 用户 */
     add_user: add_factory<PrismaClient["user"]>(prisma.user),
     update_user: update_factory<PrismaClient["user"]>(prisma.user),

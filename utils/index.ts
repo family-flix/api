@@ -968,6 +968,19 @@ export function generate_new_video_filename(
   }
   return result.join(".");
 }
+export function episode_to_num(str: string) {
+  const regex = /(\d+)/g;
+  let s = str.replace(/[eE]/g, "");
+  const matches = s.match(regex);
+  if (!matches) {
+    return str;
+  }
+  for (let i = 0; i < matches.length; i++) {
+    const num = parseInt(matches[i], 10);
+    s = String(num);
+  }
+  return Number(s);
+}
 export function episode_to_chinese_num(str: string) {
   const regex = /(\d+)/g;
   let s = str.replace(/[eE]/g, "");
@@ -981,6 +994,19 @@ export function episode_to_chinese_num(str: string) {
     s = s.replace(matches[i], `第${chinese_num}集`);
   }
   return s;
+}
+export function season_to_num(str: string) {
+  const regex = /(\d+)/g;
+  let s = str.replace(/[sS]/g, "");
+  const matches = s.match(regex);
+  if (!matches) {
+    return str;
+  }
+  for (let i = 0; i < matches.length; i++) {
+    const num = parseInt(matches[i], 10);
+    s = String(num);
+  }
+  return Number(s);
 }
 export function season_to_chinese_num(str: string) {
   const regex = /(\d+)/g;

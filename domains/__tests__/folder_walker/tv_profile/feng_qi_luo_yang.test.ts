@@ -24,7 +24,7 @@ import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
 import {
   fetch_files_factory,
   get_tv_profile_with_first_season_by_id,
-  create_parsed_episode_and_parsed_tv,
+  add_parsed_infos_when_walk,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/feng_qi_luo_yang";
@@ -63,7 +63,7 @@ describe("detect a tv dir", () => {
     };
     detector.on_episode = async (task) => {
       handle_episode(task);
-      create_parsed_episode_and_parsed_tv(task, fake_extra, store);
+      add_parsed_infos_when_walk(task, fake_extra, store);
     };
     const folder = new AliyunDriveFolder(id, {
       client: fetch_files_factory({

@@ -48,6 +48,9 @@ export class User {
     if (existing.error) {
       return Result.Err(existing.error);
     }
+    if (!existing.data) {
+      return Result.Err("token 已失效");
+    }
     const user = new User({ id, token });
     return Result.Ok(user);
   }
@@ -159,7 +162,7 @@ export class User {
   /** 添加云盘 */
   async add_drive(body: { payload: AliyunDrivePayload }) {
     const { payload } = body;
-    return Drive.Add({ ...payload, user_id: this.id });
+    return Drive.Add({ payload, user_id: this.id });
   }
   /** 根据 id 获取一个 Drive 实例 */
   async get_drive(id?: string) {
