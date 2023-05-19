@@ -9,7 +9,7 @@ import {
 import { data, id } from "@/domains/__tests__/mock/xu_ni_chun_feng_ye_ma";
 import { data as updated_data } from "@/domains/__tests__/mock/xu_ni_chun_feng_ye_ma.update";
 import { DiffTypes, FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 
 describe("detect a tv dir", () => {
   test("许你春风野马", async () => {

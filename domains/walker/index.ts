@@ -3,7 +3,7 @@
  */
 import chalk from "chalk";
 
-import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
 import { Result } from "@/types";
 import { is_video_file, parse_filename_for_video, noop, promise_noop, sleep } from "@/utils";
 

@@ -4,7 +4,7 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 
 import { FolderWalker } from "@/domains/walker";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import {
   fetch_files_factory,
   add_parsed_infos_when_walk,

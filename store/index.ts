@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 import { List } from "@/domains/list";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import { Result, resultify, Unpacked } from "@/types";
 import { r_id } from "@/utils";
 

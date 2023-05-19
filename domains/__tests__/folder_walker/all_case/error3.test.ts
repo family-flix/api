@@ -10,7 +10,7 @@ import {
   add_parsed_infos_when_walk,
   adding_file_when_walk,
 } from "@/domains/walker/utils";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import { store_factory } from "@/store";
 
 import { op } from "../../store";

@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import { FolderWalker } from "@/domains/walker";
 import { folder_client } from "@/store";
 import { store } from "@/store";

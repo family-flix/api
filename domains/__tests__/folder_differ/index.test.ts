@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import { fetch_files_factory } from "@/domains/walker/utils";
 
 import { DiffTypes, FolderDiffer } from "../../folder_differ";

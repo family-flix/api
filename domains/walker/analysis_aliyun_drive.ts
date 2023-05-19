@@ -5,7 +5,7 @@ import { throttle } from "lodash/fp";
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { FolderWalker } from "@/domains/walker";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import { Result } from "@/types";
 import { store_factory } from "@/store";
 import { log } from "@/logger/log";

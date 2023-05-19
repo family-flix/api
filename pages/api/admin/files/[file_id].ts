@@ -9,7 +9,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
 import { folder_client } from "@/store";

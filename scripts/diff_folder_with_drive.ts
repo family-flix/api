@@ -3,7 +3,7 @@
  */
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import { DifferEffect, FolderDiffer } from "@/domains/folder_differ";
 import { folder_client, store_factory } from "@/store";
 import { Result } from "@/types";

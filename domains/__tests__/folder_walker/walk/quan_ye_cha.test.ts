@@ -31,7 +31,7 @@ import {
   adding_file_when_walk,
 } from "@/domains/walker/utils";
 import { FolderWalker } from "@/domains/walker";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import { data, id } from "@/domains/__tests__/mock/quan_ye_cha";
 
 import { test_store as store } from "../../store";

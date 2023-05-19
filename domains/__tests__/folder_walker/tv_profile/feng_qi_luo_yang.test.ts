@@ -20,7 +20,7 @@
 import { describe, test, expect, vi, afterEach } from "vitest";
 
 import { FolderWalker } from "@/domains/walker";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 import {
   fetch_files_factory,
   get_tv_profile_with_first_season_by_id,

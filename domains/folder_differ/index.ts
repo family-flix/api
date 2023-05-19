@@ -1,7 +1,7 @@
 /**
  * @file 对比两个文件夹的差异
  */
-import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
 import { log } from "@/logger/log";
 
 export enum DiffTypes {
@@ -22,7 +22,7 @@ export type DifferEffect = {
     parent_file_id?: string;
     name: string;
     type: "folder" | "file";
-    context: {
+    parents: {
       file_id: string;
       name: string;
     }[];
@@ -106,35 +106,37 @@ export class FolderDiffer {
       if (is_root_folder) {
         log(prefix, "完成对比，获取新增与删除的文件列表");
         const deleting_actions = Object.keys(this.maybe_deleting).map((unique_key) => {
-          const { file_id, parent_file_id, name, type, context } = this.maybe_deleting[unique_key];
+          const { file_id, parent_file_id, name, type, parents: context } = this.maybe_deleting[unique_key];
           // log("[DOMAIN](FolderDiffer)must be deleting", name);
           log(prefix, "删除的文件", name);
-          return {
+          const r = {
             type: DiffTypes.Deleting,
             payload: {
               file_id,
               parent_file_id,
               name,
               type,
-              context,
+              parents: context,
             },
-          };
+          } as DifferEffect;
+          return r;
         });
         this.effects.push(...deleting_actions);
         const adding_actions = Object.keys(this.maybe_adding).map((unique_key) => {
-          const { file_id, name, type, parent_file_id, context } = this.maybe_adding[unique_key];
+          const { file_id, name, type, parent_file_id, parents: context } = this.maybe_adding[unique_key];
           log(prefix, "新增的文件", name);
           // log("[DOMAIN](FolderDiffer)must be adding", name);
-          return {
+          const r = {
             type: DiffTypes.Adding,
             payload: {
               file_id,
               parent_file_id,
               name,
               type,
-              context,
+              parents: context,
             },
           };
+          return r as DifferEffect;
         });
         this.effects.push(...adding_actions);
       }
@@ -146,7 +148,7 @@ export class FolderDiffer {
       // log("cur length longer", cur_files.length, prev_files.length);
       let map: Record<string, AliyunDriveFolder | AliyunDriveFile> = cur_files
         .map((file) => {
-          const unique_key = file.context
+          const unique_key = file.parents
             .map((f) => f[this.unique_key])
             .concat(file[this.unique_key])
             .join("/");
@@ -163,7 +165,7 @@ export class FolderDiffer {
         }, {});
       for (let i = 0; i < cur_files.length; i += 1) {
         const cur_file = cur_files[i];
-        const unique_key = cur_file.context
+        const unique_key = cur_file.parents
           .map((f) => f[this.unique_key])
           .concat(cur_file[this.unique_key])
           .join("/");
@@ -187,7 +189,7 @@ export class FolderDiffer {
     if (prev_files.length !== 0 && cur_files.length === 0) {
       const map = prev_files
         .map((file) => {
-          const unique_key = file.context
+          const unique_key = file.parents
             .map((f) => f[this.unique_key])
             .concat(file[this.unique_key])
             .join("/");
@@ -204,7 +206,7 @@ export class FolderDiffer {
         }, {});
       for (let i = 0; i < prev_files.length; i += 1) {
         const prev_file = prev_files[i];
-        const unique_key = prev_file.context
+        const unique_key = prev_file.parents
           .map((f) => f[this.unique_key])
           .concat(prev_file[this.unique_key])
           .join("/");
@@ -242,13 +244,13 @@ export class FolderDiffer {
       // 在同一个位置上有值，对比这两个
       const cur_file = cur_files_with_prev_maybe_adding_files[i];
       // const cur_unique = cur_file[this.unique_key];
-      const cur_unique = cur_file.context
+      const cur_unique = cur_file.parents
         .map((f) => f[this.unique_key])
         .concat(cur_file[this.unique_key])
         .join("/");
       const prev_file = prev_files_with_prev_maybe_deleting_files[i];
       // const prev_unique = prev_file[this.unique_key];
-      const prev_unique = prev_file.context
+      const prev_unique = prev_file.parents
         .map((f) => f[this.unique_key])
         .concat(prev_file[this.unique_key])
         .join("/");
@@ -312,7 +314,7 @@ export class FolderDiffer {
     // 剩下的旧文件夹以 id 作为 key 变成对象
     const remaining_files = prev_files_with_prev_maybe_deleting_files.slice(i);
     const map: Record<string, AliyunDriveFolder | AliyunDriveFile> = remaining_files.reduce((prev, next) => {
-      const unique_key = next.context
+      const unique_key = next.parents
         .map((f) => f[this.unique_key])
         .concat(next[this.unique_key])
         .join("/");
@@ -327,7 +329,7 @@ export class FolderDiffer {
       const cur_file = cur_files_with_prev_maybe_adding_files[j];
       // const prev_file = prev_files_with_prev_maybe_deleting_files[j];
       // log("[]()walk remaining files", j, file);
-      const unique_key = cur_file.context
+      const unique_key = cur_file.parents
         .map((f) => f[this.unique_key])
         .concat(cur_file[this.unique_key])
         .join("/");
@@ -404,6 +406,7 @@ export class FolderDiffer {
     //   log("[DOMAIN](FolderDiffer)4.0 - maybe deleting", this.map[id].name);
     // });
     this.maybe_deleting = {
+      // @todo 这个到底要不要加？如果不加，子文件 diff 到的结果就丢了
       ...this.maybe_deleting,
       ...map,
     };

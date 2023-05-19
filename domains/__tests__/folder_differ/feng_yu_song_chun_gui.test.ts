@@ -8,7 +8,7 @@ import { fetch_files_factory } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/feng_yu_song_chun_gui";
 import { data as updated_data } from "@/domains/__tests__/mock/feng_yu_song_chun_gui.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 
 import { simple_folders } from "../utils";
 

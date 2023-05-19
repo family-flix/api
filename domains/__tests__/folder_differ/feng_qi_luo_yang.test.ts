@@ -5,7 +5,7 @@ import { fetch_files_factory } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/feng_qi_luo_yang";
 import { data as updated_data } from "@/domains/__tests__/mock/feng_qi_luo_yang.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 
 describe("detect a tv dir", () => {
   test("风起洛阳", async () => {
@@ -30,7 +30,7 @@ describe("detect a tv dir", () => {
     expect(differ.effects.length).toBe(3);
     differ.effects.map((e) => {
       console.log(e.payload.name);
-      console.log(e.payload.context);
+      console.log(e.payload.parents);
     });
   });
 });

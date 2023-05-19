@@ -8,15 +8,12 @@ import { BaseApiResp } from "@/types";
 import { parse_filename_for_video, VIDEO_ALL_KEYS } from "@/utils";
 import { response_error_factory } from "@/utils/backend";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
   const { name } = query as Partial<{ name: string }>;
   if (!name) {
-    return e("Please pass `name` string.");
+    return e("缺少 `name` 参数");
   }
   const keys = VIDEO_ALL_KEYS;
   const result = parse_filename_for_video(name, keys);

@@ -105,7 +105,7 @@ export async function patch_shared_files(
       `${in_progress.name} 新增了影片`,
       added_video_effects.map(
         (e) =>
-          `${e.payload.context.map((c) => c.name).join("/")}/${e.payload.name}`
+          `${e.payload.parents.map((c) => c.name).join("/")}/${e.payload.name}`
       )
     );
     notice_push_deer({

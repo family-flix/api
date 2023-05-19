@@ -9,7 +9,7 @@ import {
   adding_file_when_walk,
   fetch_files_factory,
 } from "@/domains/walker/utils";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 
 import { test_store as store, op } from "../../store";
 import { simple_folders } from "../../utils";

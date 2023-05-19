@@ -3,8 +3,7 @@
  */
 import { Result } from "@/types";
 import { sleep } from "@/utils/flow";
-
-import { PartialAliyunDriveFile } from "./types";
+import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
 
 export class AliyunDriveFolder {
   /** 文件夹 id */
@@ -19,7 +18,7 @@ export class AliyunDriveFolder {
   /** 该文件夹的子文件/子文件夹 */
   items: (AliyunDriveFile | AliyunDriveFolder)[] = [];
   /** 该文件夹所在上下文 */
-  context: {
+  parents: {
     file_id: string;
     name: string;
   }[] = [];
@@ -34,9 +33,7 @@ export class AliyunDriveFolder {
     fetch_files: (
       file_id: string,
       options: { marker?: string }
-    ) => Promise<
-      Result<{ items: PartialAliyunDriveFile[]; next_marker: string }>
-    >;
+    ) => Promise<Result<{ items: PartialAliyunDriveFile[]; next_marker: string }>>;
   } | null;
   /**
    * @param id 文件夹 id
@@ -47,14 +44,14 @@ export class AliyunDriveFolder {
     options: {
       name?: string;
       client: AliyunDriveFolder["client"];
-      context?: { file_id: string; name: string }[];
+      parents?: { file_id: string; name: string }[];
     } = { client: null }
   ) {
-    const { client, name, context = [] } = options;
+    const { client, name, parents = [] } = options;
     if (name) {
       this.name = name;
     }
-    this.context = context;
+    this.parents = parents;
     this.file_id = id;
     this.client = client;
   }
@@ -113,14 +110,14 @@ export class AliyunDriveFolder {
     this.next_marker = next_marker;
     const folder_or_files = items.map((f) => {
       const { type, file_id } = f;
-      const context = this.context.concat({
+      const parents = this.parents.concat({
         file_id: this.file_id,
         name: this.name,
       });
       if (type === "folder") {
         const folder = new AliyunDriveFolder(file_id, {
           client: this.client,
-          context,
+          parents,
         });
         folder.parent_file_id = this.file_id;
         folder.set_profile(f);
@@ -128,7 +125,7 @@ export class AliyunDriveFolder {
       }
       const file = new AliyunDriveFile(file_id, {
         client: this.client,
-        context,
+        parents,
       });
       file.parent_file_id = this.file_id;
       file.set_profile(f);
@@ -142,7 +139,7 @@ export class AliyunDriveFolder {
     this.delay = delay;
   }
   get parent_paths() {
-    return this.context.map((c) => c.name).join("/");
+    return this.parents.map((c) => c.name).join("/");
   }
 }
 
@@ -157,20 +154,20 @@ export class AliyunDriveFile {
   name: string = "";
   /** 文件大小（单位字节） */
   size: number = 0;
-  context: AliyunDriveFolder["context"];
+  parents: AliyunDriveFolder["parents"];
   /** 获取该文件信息的方法合集对象 */
   private client: AliyunDriveFolder["client"];
   constructor(
     id: string,
     options: {
       client: AliyunDriveFile["client"];
-      context: AliyunDriveFile["context"];
+      parents: AliyunDriveFile["parents"];
     }
   ) {
-    const { client, context } = options;
+    const { client, parents } = options;
     this.file_id = id;
     this.client = client;
-    this.context = context;
+    this.parents = parents;
   }
   set_profile(profile: PartialAliyunDriveFile) {
     const { name, size = 0 } = profile;
@@ -178,7 +175,7 @@ export class AliyunDriveFile {
     this.size = size;
   }
   get parent_paths() {
-    return this.context.map((c) => c.name).join("/");
+    return this.parents.map((c) => c.name).join("/");
   }
 }
 

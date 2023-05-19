@@ -8,7 +8,7 @@ import {
 import { data, id } from "@/domains/__tests__/mock/guan_lan_gao_shou";
 import { data as updated_data } from "@/domains/__tests__/mock/guan_lan_gao_shou.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/aliyundrive/folder";
+import { AliyunDriveFolder } from "@/domains/folder";
 
 describe("detect a tv dir", () => {
   test("灌篮高手", async () => {
@@ -49,7 +49,7 @@ describe("detect a tv dir", () => {
     // console.log(differ.effects);
     differ.effects.map((e) => {
       console.log(e.payload.name);
-      console.log(e.payload.context.map((f) => f.name).join("/"));
+      console.log(e.payload.parents.map((f) => f.name).join("/"));
     });
     expect(differ.effects.length).toBe(3);
   });

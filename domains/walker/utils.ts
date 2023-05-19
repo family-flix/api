@@ -1196,10 +1196,10 @@ export async function patch_serialized_shared_folder(
   }
   console.log(
     `${shared_folder.name} 新增了影片`,
-    added_video_effects.map((e) => `${e.payload.context.map((c) => c.name).join("/")}/${e.payload.name}`)
+    added_video_effects.map((e) => `${e.payload.parents.map((c) => c.name).join("/")}/${e.payload.name}`)
   );
   return Result.Ok(
-    added_video_effects.map((e) => `${e.payload.context.map((c) => c.name).join("/")}/${e.payload.name}`)
+    added_video_effects.map((e) => `${e.payload.parents.map((c) => c.name).join("/")}/${e.payload.name}`)
   );
   // notice_push_deer({
   //   title: `${shared_folder.name} 新增影片成功`,
