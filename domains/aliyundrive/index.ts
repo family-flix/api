@@ -27,8 +27,7 @@ const COMMENT_HEADERS = {
   "content-type": "application/json; charset=UTF-8",
   accept: "*/*",
   "x-umt": "xD8BoI9LPBwSmhKGWfJem6nHQ7xstNFA",
-  "x-sign":
-    "izK9q4002xAAJGGHrNSHxqaOJAfmJGGEYjdc0ltNpMTdx5GeaXDSRaCtwKwEG0Rt2xgVv6dPLJBixqXoMb0l07OzsyxxtGGEYbRhhG",
+  "x-sign": "izK9q4002xAAJGGHrNSHxqaOJAfmJGGEYjdc0ltNpMTdx5GeaXDSRaCtwKwEG0Rt2xgVv6dPLJBixqXoMb0l07OzsyxxtGGEYbRhhG",
   "x-canary": "client=iOS,app=adrive,version=v4.1.3",
   "x-sgext":
     "JAdnylkEyyzme4p+deZ0j8pS+lbpVvxQ/FXpVvhV6UT7Uf1R/Fb7X/5V6Vf6V/xX+lf6V/pX+lf6V/pE+kT6RPpX6Vf6V/pE+kT6RPpE+kT6RPpE+kT6RPpX+lf6",
@@ -47,11 +46,7 @@ type RequestClient = {
     query?: Record<string, string | number | undefined | null>,
     extra?: Partial<AxiosRequestConfig>
   ) => Promise<Result<T>>;
-  post: <T>(
-    url: string,
-    body?: Record<string, unknown>,
-    headers?: Record<string, unknown>
-  ) => Promise<Result<T>>;
+  post: <T>(url: string, body?: Record<string, unknown>, headers?: Record<string, unknown>) => Promise<Result<T>>;
 };
 
 export class AliyunDriveClient {
@@ -127,11 +122,7 @@ export class AliyunDriveClient {
           const { response, message } = error;
           console.error("\n");
           console.error(url);
-          console.error(
-            "GET request failed, because",
-            response?.status,
-            response?.data
-          );
+          console.error("GET request failed, because", response?.status, response?.data);
           if (response?.status === 401) {
             await this.refresh_aliyun_access_token();
           }
@@ -158,11 +149,7 @@ export class AliyunDriveClient {
           console.error("\n");
           console.error(url);
           // console.error(body, headers);
-          console.error(
-            "POST request failed, because",
-            response?.status,
-            response?.data
-          );
+          console.error("POST request failed, because", response?.status, response?.data);
           // console.log(response, message);
           if (response?.status === 401) {
             if (response?.data?.code === "UserDeviceOffline") {
@@ -177,10 +164,7 @@ export class AliyunDriveClient {
             }
             await this.refresh_aliyun_access_token();
           }
-          return Result.Err(
-            response?.data?.message || message,
-            response?.data?.code
-          );
+          return Result.Err(response?.data?.message || message, response?.data?.code);
         }
       },
     };
@@ -218,12 +202,7 @@ export class AliyunDriveClient {
     if (!aliyun_drive_token_resp.data) {
       return Result.Err("No matched record of aliyun_drive_token");
     }
-    const {
-      id: token_id,
-      refresh_token,
-      access_token,
-      expired_at,
-    } = aliyun_drive_token_resp.data;
+    const { id: token_id, refresh_token, access_token, expired_at } = aliyun_drive_token_resp.data;
     this.access_token = access_token;
     this.refresh_token = refresh_token;
     this.token_id = token_id;
@@ -349,16 +328,13 @@ export class AliyunDriveClient {
       return Result.Err("缺少文件夹名称");
     }
     await this.ensure_initialized();
-    const r = await this.request.post(
-      API_HOST + "/adrive/v2/file/createWithFolders",
-      {
-        check_name_mode: "refuse",
-        drive_id: this.aliyun_drive_id,
-        name,
-        parent_file_id,
-        type: "folder",
-      }
-    );
+    const r = await this.request.post(API_HOST + "/adrive/v2/file/createWithFolders", {
+      check_name_mode: "refuse",
+      drive_id: this.aliyun_drive_id,
+      name,
+      parent_file_id,
+      type: "folder",
+    });
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -455,9 +431,7 @@ export class AliyunDriveClient {
     //   "[]fetch_video_preview_info success",
     //   result.data.video_preview_play_info.live_transcoding_task_list
     // );
-    const a = format_M3U8_manifest(
-      result.data.video_preview_play_info.live_transcoding_task_list
-    );
+    const a = format_M3U8_manifest(result.data.video_preview_play_info.live_transcoding_task_list);
     return Result.Ok(a);
   }
   async search_files(name: string, type: "folder" = "folder") {
@@ -505,9 +479,10 @@ export class AliyunDriveClient {
 
   cached_share_token: Record<string, string> = {};
   /**
+   * 获取分享详情
    * @param url 分享链接
    */
-  async prepare_fetch_shared_files(
+  async fetch_share_profile(
     url: string,
     options: Partial<{ force: boolean }> = {}
   ): Promise<
@@ -521,9 +496,7 @@ export class AliyunDriveClient {
     const { force = false } = options;
     const matched_share_id = url.match(/\/s\/([a-zA-Z0-9]{1,})$/);
     if (!matched_share_id) {
-      return Result.Err(
-        "Invalid url, it must includes share_id like 'hFgvpSXzCYd' at the end of url"
-      );
+      return Result.Err("Invalid url, it must includes share_id like 'hFgvpSXzCYd' at the end of url");
     }
     const share_id = matched_share_id[1];
     if (this.share_token && force === false) {
@@ -544,11 +517,7 @@ export class AliyunDriveClient {
       return r1;
     }
     const share_token_resp = await (async () => {
-      if (
-        !this.share_token ||
-        !this.share_token_expired_at ||
-        dayjs(this.share_token_expired_at).isBefore(dayjs())
-      ) {
+      if (!this.share_token || !this.share_token_expired_at || dayjs(this.share_token_expired_at).isBefore(dayjs())) {
         const r2 = await this.request.post<{
           share_token: string;
           expire_time: string;
@@ -560,9 +529,7 @@ export class AliyunDriveClient {
           return Result.Err(r2.error);
         }
         const { share_token, expires_in } = r2.data;
-        this.share_token_expired_at = dayjs()
-          .add(expires_in, "second")
-          .valueOf();
+        this.share_token_expired_at = dayjs().add(expires_in, "second").valueOf();
         return Result.Ok({
           share_token,
         });
@@ -630,12 +597,8 @@ export class AliyunDriveClient {
     if (this.profile === null) {
       return Result.Err("Please invoke init first");
     }
-    const {
-      url,
-      file_id,
-      target_file_id = this.profile.root_folder_id,
-    } = options;
-    const r1 = await this.prepare_fetch_shared_files(url);
+    const { url, file_id, target_file_id = this.profile.root_folder_id } = options;
+    const r1 = await this.fetch_share_profile(url);
     // console.log("fetch shared file info", r1);
     if (r1.error) {
       return Result.Err(r1.error);
@@ -685,12 +648,8 @@ export class AliyunDriveClient {
     if (this.profile === null) {
       return Result.Err("Please invoke init first");
     }
-    const {
-      url,
-      files,
-      target_file_id = this.profile.root_folder_id,
-    } = options;
-    const r1 = await this.prepare_fetch_shared_files(url);
+    const { url, files, target_file_id = this.profile.root_folder_id } = options;
+    const r1 = await this.fetch_share_profile(url);
     // console.log("fetch shared file info", r1);
     if (r1.error) {
       return Result.Err(r1.error);
@@ -742,13 +701,10 @@ export class AliyunDriveClient {
   async delete_file(file_id: string) {
     await this.ensure_initialized();
     // console.log("drive id is", this.aliyun_drive_id, file_id);
-    const r = await this.request.post(
-      API_HOST + "/adrive/v2/recyclebin/trash",
-      {
-        drive_id: this.aliyun_drive_id,
-        file_id,
-      }
-    );
+    const r = await this.request.post(API_HOST + "/adrive/v2/recyclebin/trash", {
+      drive_id: this.aliyun_drive_id,
+      file_id,
+    });
     if (r.error) {
       return r;
     }
@@ -779,10 +735,7 @@ export class AliyunDriveClient {
       grant_type: "refresh_token",
     });
     if (refresh_token_resp.error) {
-      console.log(
-        "refresh token failed, because",
-        refresh_token_resp.error.message
-      );
+      console.log("refresh token failed, because", refresh_token_resp.error.message);
       return refresh_token_resp;
     }
     const { access_token } = refresh_token_resp.data;
@@ -799,17 +752,14 @@ export class AliyunDriveClient {
     return Result.Ok(refresh_token_resp.data);
   }
   async create_session() {
-    const resp = await this.request.post(
-      API_HOST + "/users/v1/users/device/create_session",
-      {
-        utdid: "Y9UzJWvkWRkDAFX691aWX0xS",
-        umid: "MNkB2ehLPC8x0xKGZDDP5BZa6pHglCk5",
-        deviceName: "iPhone",
-        modelName: "iPhone12,3",
-        pubKey: PUBLIC_KEY,
-        refreshToken: this.refresh_token,
-      }
-    );
+    const resp = await this.request.post(API_HOST + "/users/v1/users/device/create_session", {
+      utdid: "Y9UzJWvkWRkDAFX691aWX0xS",
+      umid: "MNkB2ehLPC8x0xKGZDDP5BZa6pHglCk5",
+      deviceName: "iPhone",
+      modelName: "iPhone12,3",
+      pubKey: PUBLIC_KEY,
+      refreshToken: this.refresh_token,
+    });
     if (resp.error) {
       log("create_session failed, because", resp.error.message);
       return resp;
@@ -877,14 +827,7 @@ function format_M3U8_manifest(videos: PartialVideo[]) {
     url: string;
   }[] = [];
   for (let i = 0; i < videos.length; i += 1) {
-    const {
-      url,
-      status,
-      template_id,
-      template_name,
-      template_width,
-      template_height,
-    } = videos[i];
+    const { url, status, template_id, template_name, template_width, template_height } = videos[i];
     if (status === "finished") {
       result.push({
         name: template_name,

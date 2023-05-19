@@ -32,15 +32,14 @@ export async function patch_tv_in_progress(
     wait_complete?: boolean;
   }
 ) {
-  const { url, file_id, file_name, target_folder_id, target_folder_name } =
-    body;
+  const { url, file_id, file_name, target_folder_id, target_folder_name } = body;
   const { user_id, drive_id, store, wait_complete = false } = extra;
+  const client = new AliyunDriveClient({ drive_id, store });
   const prev_folder = new AliyunDriveFolder(target_folder_id, {
     name: target_folder_name,
     client: folder_client({ drive_id }, store),
   });
-  const client = new AliyunDriveClient({ drive_id, store });
-  const r = await client.prepare_fetch_shared_files(url);
+  const r = await client.fetch_share_profile(url);
   if (r.error) {
     return Result.Err(r.error);
   }
@@ -52,10 +51,7 @@ export async function patch_tv_in_progress(
     // 所以继续用旧的「40集更新中」
     name: target_folder_name,
     client: {
-      fetch_files: async (
-        file_id: string,
-        options: Partial<{ marker: string; page_size: number }> = {}
-      ) => {
+      fetch_files: async (file_id: string, options: Partial<{ marker: string; page_size: number }> = {}) => {
         const r = await client.fetch_shared_files(file_id, {
           ...options,
           share_id,
@@ -135,22 +131,14 @@ SELECT * FROM cte WHERE level = ${names.length - 1};`;
         }>(sql);
         if (result.error) {
           log("find target folder failed", result.error.message);
-          errors.push(
-            new Error(
-              `${file_name} find target folder failed because ${result.error.message}`
-            )
-          );
+          errors.push(new Error(`${file_name} find target folder failed because ${result.error.message}`));
           continue;
         }
         if (!result.data) {
           log("there is no target folder");
           continue;
         }
-        const {
-          drive_id,
-          file_id: target_folder_id,
-          name: target_folder_name,
-        } = result.data;
+        const { drive_id, file_id: target_folder_id, name: target_folder_name } = result.data;
         adding_task[drive_id] = adding_task[drive_id] || [];
         adding_task[drive_id].push({
           file_id: shared_file_id,
@@ -162,7 +150,6 @@ SELECT * FROM cte WHERE level = ${names.length - 1};`;
         });
       }
     }
-    // console.log(adding_task);
     const drive_ids = Object.keys(adding_task);
     for (let i = 0; i < drive_ids.length; i += 1) {
       const drive_id = drive_ids[i];
@@ -170,13 +157,7 @@ SELECT * FROM cte WHERE level = ${names.length - 1};`;
       const files = adding_task[drive_id];
       for (let j = 0; j < files.length; j += 1) {
         const file = files[j];
-        const {
-          file_id: shared_file_id,
-          type,
-          target_folder_id,
-          parent_path,
-          target_folder_name,
-        } = file;
+        const { file_id: shared_file_id, type, target_folder_id, parent_path, target_folder_name } = file;
         log(
           "[API](shared_files/diff)prepare save file",
           shared_file_id,
@@ -197,14 +178,8 @@ SELECT * FROM cte WHERE level = ${names.length - 1};`;
         //   target_file_id: target_folder_id,
         // });
         if (r1.error) {
-          log(
-            `${file_name} save file '${shared_file_id}' to drive folder '${target_folder_id}' failed`
-          );
-          errors.push(
-            new Error(
-              `${file_name} save file to drive folder failed, because ${r1.error.message}`
-            )
-          );
+          log(`${file_name} save file '${shared_file_id}' to drive folder '${target_folder_id}' failed`);
+          errors.push(new Error(`${file_name} save file to drive folder failed, because ${r1.error.message}`));
           continue;
         }
         const r4 = await store.add_tmp_file({
@@ -215,11 +190,7 @@ SELECT * FROM cte WHERE level = ${names.length - 1};`;
           drive_id,
         });
         if (r4.error) {
-          errors.push(
-            new Error(
-              `${file_name} add tmp folder failed, because ${r4.error.message}`
-            )
-          );
+          errors.push(new Error(`${file_name} add tmp folder failed, because ${r4.error.message}`));
           continue;
         }
         log(
@@ -238,9 +209,9 @@ SELECT * FROM cte WHERE level = ${names.length - 1};`;
     }
     return Result.Ok(effects);
   }
-  if (wait_complete) {
-    return await consume_effects(differ.effects);
-  }
-  consume_effects(differ.effects);
+  // if (wait_complete) {
+  //   return await consume_effects(differ.effects);
+  // }
+  // consume_effects(differ.effects);
   return Result.Ok(differ.effects);
 }

@@ -1,5 +1,6 @@
 /**
- * @file 管理后台/电视剧详情
+ * @file 管理后台/关联一个分享资源
+ * 用于定时从该分享资源转存新增的视频文件
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -12,7 +13,17 @@ import { User } from "@/domains/user";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
+  const {
+    id,
+    page: page_str = "1",
+    page_size: page_size_str = "20",
+    name,
+  } = req.query as Partial<{
+    id: string;
+    page: string;
+    page_size: string;
+    name: string;
+  }>;
   if (!id) {
     return e("缺少电视剧 id");
   }
@@ -21,6 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
+  const page = Number(page_str);
+  const page_size = Number(page_size_str);
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
@@ -28,24 +41,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       profile: true,
-      episodes: {
-        include: {
-          profile: true,
-          parsed_episodes: true,
-        },
-        orderBy: {
-          episode_number: "desc",
-        },
-        skip: 0,
-        take: 20,
-      },
-      seasons: {
-        include: {
-          profile: true,
-          parsed_season: true,
-        },
-        orderBy: {
-          season_number: "desc",
+      parsed_tvs: {
+        where: {
+          file_id: {
+            not: null,
+          },
         },
       },
     },
@@ -53,9 +53,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (tv === null) {
     return e("没有匹配的电视剧记录");
   }
+  const { parsed_tvs } = tv;
+  const files_in_progress = await store.prisma.shared_file_in_progress.findMany({
+    where: {
+      OR: parsed_tvs.map((t) => {
+        return {
+          name: {
+            contains: t.file_name || undefined,
+          },
+        };
+      }),
+    },
+    skip: (page - 1) * page_size,
+    take: page_size,
+  });
   res.status(200).json({
     code: 0,
     msg: "",
-    data: tv,
+    data: {
+      options: files_in_progress,
+    },
   });
 }

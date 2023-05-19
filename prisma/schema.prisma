@@ -95,6 +95,14 @@ model tv_profile {
         vote_average      Float?  @default(0)
         // 评分
         vote_count        Float?  @default(0)
+        // 总集数
+        episode_count     Int?    @default(0)
+        // 总季数
+        season_count      Int?    @default(0)
+        // (Ended已完结)、(Returning Series回归剧)
+        status            String?
+        // 是否更新中
+        in_production     Int?    @default(0)
 
         // tv_need_complete incomplete_tv[]
         tv        tv?
@@ -115,8 +123,9 @@ model season_profile {
         overview      String?
         poster_path   String?
         season_number Int?
-        episode_count Int?    @default(0)
         air_date      String?
+        // 总集数
+        episode_count Int?    @default(0)
 
         // tv_profile_id String
         // tv_profile    tv_profile @relation(fields: [tv_profile_id], references: [id])
@@ -170,6 +179,7 @@ model parsed_tv {
 
         parsed_episodes parsed_episode[]
         parsed_seasons  parsed_season[]
+        bind            bind_for_parsed_tv?
 
         @@map("ParsedTV")
 }
@@ -180,7 +190,9 @@ model parsed_season {
         updated DateTime @default(now())
 
         season_number String
-        can_search    Int?   @default(1)
+        can_search    Int?    @default(1)
+        file_id       String?
+        file_name     String?
 
         season_id    String?
         season       season?   @relation(fields: [season_id], references: [id])
@@ -222,7 +234,7 @@ model parsed_episode {
         size           Float? @default(0)
 
         episode_id       String?
-        episode          episode?      @relation(fields: [episode_id], references: [id])
+        episode          episode?      @relation(fields: [episode_id], references: [id], onDelete: Cascade)
         parsed_tv_id     String
         parsed_tv        parsed_tv     @relation(fields: [parsed_tv_id], references: [id], onDelete: Cascade)
         parsed_season_id String
@@ -272,13 +284,12 @@ model tv {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
-        // 是否隐藏
-        hidden  Float?   @default(0)
 
-        // 关联 tv_profile 表
+        // 是否隐藏
+        hidden Float? @default(0)
+
         profile_id String     @unique
         profile    tv_profile @relation(fields: [profile_id], references: [id])
-        // 关联 user 表
         user_id    String
         user       user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -286,7 +297,7 @@ model tv {
         episodes        episode[]
         parsed_tvs      parsed_tv[]
         recommended_tvs recommended_tv[]
-        play_history    play_history[]
+        play_histories  play_history[]
 
         @@map("TV")
 }
@@ -308,7 +319,6 @@ model season {
 
         parsed_season parsed_season[]
         episodes      episode[]
-        play_history  play_history[]
 
         @@map("Season")
 }
@@ -319,8 +329,8 @@ model episode {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        // 第几集
         episode_number String
+        season_number  String
 
         profile_id String          @unique
         profile    episode_profile @relation(fields: [profile_id], references: [id])
@@ -331,8 +341,8 @@ model episode {
         user_id    String
         user       user            @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        parsed_episode parsed_episode[]
-        play_history   play_history[]
+        parsed_episodes parsed_episode[]
+        play_histories  play_history[]
 
         @@map("Episode")
 }
@@ -383,8 +393,8 @@ model play_history {
 
         tv_id      String?
         tv         tv?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
-        season_id  String?
-        season     season?  @relation(fields: [season_id], references: [id])
+        // season_id  String?
+        // season     season?  @relation(fields: [season_id], references: [id])
         episode_id String?
         episode    episode? @relation(fields: [episode_id], references: [id])
         movie_id   String?
@@ -439,9 +449,10 @@ model shared_file {
 }
 
 model shared_file_in_progress {
-        id             String   @id
-        created        DateTime @default(now())
-        updated        DateTime @default(now())
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
         // 关联的分享文件夹 file_id
         file_id        String
         // 关联的分享文件夹名称
@@ -449,17 +460,41 @@ model shared_file_in_progress {
         // 关联的目标文件夹 file_id
         target_file_id String?
         // 是否已完结
-        complete       Float?   @default(0)
+        complete       Float?  @default(0)
         // 分享文件夹所属 url
         url            String
         // 该分享文件夹是否失效
-        need_update    Float?   @default(0)
+        need_update    Float?  @default(0)
 
         // 关联 user 表
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("SharedFileInProgress")
+}
+
+model bind_for_parsed_tv {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        // 分享文件夹所属 url
+        url           String
+        // 关联的分享文件夹 file_id
+        file_id       String
+        // 关联的分享文件夹名称
+        name          String
+        // 是否连载中
+        in_production Int?   @default(1)
+        // 分享资源是否失效
+        invalid       Int?   @default(0)
+
+        parsed_tv_id String    @unique
+        parsed_tv    parsed_tv @relation(fields: [parsed_tv_id], references: [id], onDelete: Cascade)
+        user_id      String
+        user         user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("BindForParsedTV")
 }
 
 model drive_check_in {
@@ -584,13 +619,14 @@ model member {
 }
 
 model member_token {
-        id         String   @id
-        created    DateTime @default(now())
-        updated    DateTime @default(now())
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
         // 成员授权凭证
         token      String
         // 该 token 是否被使用
-        used       Float?   @default(0)
+        used       Float?  @default(0)
         // 过期时间
         expired_at String?
 
@@ -599,6 +635,20 @@ model member_token {
         member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
         @@map("MemberToken")
+}
+
+model notification {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        content   String?
+        is_read   Int     @default(0)
+        // 软删除
+        is_delete Int     @default(0)
+
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model account {
@@ -644,6 +694,26 @@ model profile {
         @@map("Profile")
 }
 
+// 用户配置
+model settings {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        upload_tmdb_image  Int?    @default(0)
+        qiniu_access_token String?
+        qiniu_secret_token String?
+        qiniu_scope        String?
+        push_deer_token    String?
+        tmdb_token         String?
+        websites           String?
+
+        user_id String @unique
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("Settings")
+}
+
 model user {
         id      String   @id
         created DateTime @default(now())
@@ -669,27 +739,8 @@ model user {
         shared_files            shared_file[]
         shared_file_in_progress shared_file_in_progress[]
         tmp_files               tmp_file[]
+        binds_for_parsed_tv     bind_for_parsed_tv[]
+        notifications           notification[]
 
         @@map("User")
-}
-
-// 用户配置
-model settings {
-        id      String   @id
-        created DateTime @default(now())
-        updated DateTime @default(now())
-
-        upload_tmdb_image Int? @default(0)
-
-        qiniu_access_token String?
-        qiniu_secret_token String?
-        qiniu_scope        String?
-        push_deer_token    String?
-        tmdb_token         String?
-        websites           String?
-
-        user_id String @unique
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-        @@map("Settings")
 }

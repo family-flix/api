@@ -21,13 +21,13 @@ async function run() {
   const client = new AliyunDriveClient({ drive_id: drive.id, store });
   await walk_table_with_pagination<
     SharedFilesInProgressRecord & RecordCommonPart
-  >(store.find_shared_files_in_progress_with_pagination, {
+  >(store.find_shared_files_save_with_pagination, {
     async on_handle(shared_files) {
       const { url } = shared_files;
       console.log("prepare_fetch_shared_files", url);
-      const r = await client.prepare_fetch_shared_files(url);
+      const r = await client.fetch_share_profile(url);
       if (r.error) {
-        await store.delete_shared_files_in_progress({ url });
+        await store.delete_shared_file_save({ url });
         return;
       }
       console.log(r.data);

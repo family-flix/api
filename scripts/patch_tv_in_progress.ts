@@ -17,7 +17,7 @@ export async function patch_shared_files(
     return;
   }
   console.log("start compare shared files");
-  const in_progress_res = await store.find_shared_files_list_in_progress({
+  const in_progress_res = await store.find_shared_file_save_list({
     complete: 0,
     need_update: 0,
     target_file_id: "not null",
@@ -120,7 +120,7 @@ export async function check_tv_in_progress_is_completed(
   store: ReturnType<typeof store_factory>
 ) {
   // console.log("start compare shared files");
-  const in_progress_res = await store.find_shared_files_list_in_progress({
+  const in_progress_res = await store.find_shared_file_save_list({
     complete: 0,
     target_file_id: "not null",
   });
@@ -193,7 +193,7 @@ WHERE searched_tv.name = '${name}' OR searched_tv.original_name = '${original_na
       continue;
     }
     console.log(`${in_progress.name} 已完结`);
-    store.update_shared_files_in_progress(in_progress.id, {
+    store.update_shared_file_save(in_progress.id, {
       complete: 1,
     });
   }

@@ -19,13 +19,13 @@ export async function clear_expired_shared_files_in_progress(
   const client = new AliyunDriveClient({ drive_id: drive.id, store });
   await walk_table_with_pagination<
     SharedFilesInProgressRecord & RecordCommonPart
-  >(store.find_shared_files_in_progress_with_pagination, {
+  >(store.find_shared_files_save_with_pagination, {
     body: {
       complete: 0,
     },
     async on_handle(shared_files) {
       const { id, name, url } = shared_files;
-      const r = await client.prepare_fetch_shared_files(url, { force: true });
+      const r = await client.fetch_share_profile(url, { force: true });
       if (r.error) {
         if (
           ["share_link is cancelled by the creator"].includes(r.error.message)
@@ -35,7 +35,7 @@ export async function clear_expired_shared_files_in_progress(
             "is expired, delete it, reason is",
             r.error.message
           );
-          await store.update_shared_files_in_progress(id, { need_update: 1 });
+          await store.update_shared_file_save(id, { need_update: 1 });
         }
       }
     },

@@ -1,42 +1,37 @@
 /**
- * @file 刷新指定云盘信息
+ * @file 获取云盘详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
+import { store } from "@/store";
 import { User } from "@/domains/user";
-import { bytes_to_size } from "@/utils";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id: drive_id } = req.query as Partial<{ id: string }>;
-  if (!drive_id) {
+  const { id } = req.query as Partial<{ id: string }>;
+  if (!id) {
     return e("缺少云盘 id");
   }
   const t = await User.New(authorization);
   if (t.error) {
     return e(t);
   }
-  const user = t.data;
-  const d = await user.get_drive(drive_id);
-  if (d.error) {
-    return e(d);
-  }
-  const drive = d.data;
-  const r = await drive.refresh_profile();
-  if (r.error) {
-    return e(r);
-  }
-  res.status(200).json({
-    code: 0,
-    msg: "",
-    data: {
-      ...r.data,
-      used_size: bytes_to_size(r.data.used_size || 0),
-      total_size: bytes_to_size(r.data.total_size || 0),
+  const { id: user_id } = t.data;
+  const drive = await store.prisma.drive.findFirst({
+    where: {
+      id,
+      user_id,
     },
   });
+  if (!drive) {
+    return e("没有匹配的云盘记录");
+  }
+  const client = new AliyunDriveClient({ drive_id: id, store });
+  await client.refresh_profile();
+  res.status(200).json({ code: 0, msg: "", data: client.profile });
 }

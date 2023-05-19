@@ -70,8 +70,7 @@ const request: RequestClient = {
 /**
  * tv 列表中的元素
  */
-export type PartialTVProfile = UnpackedResult<Unpacked<ReturnType<typeof search_tv_in_tmdb>>>["list"][number];
-export type PartialSearchedTV = Omit<PartialTVProfile, "id" | "search_tv_in_tmdb_then_save" | "original_country"> & {
+export type PartialSearchedTV = Omit<TVProfileItemInTMDB, "id" | "search_tv_in_tmdb_then_save" | "original_country"> & {
   id: string;
   created: string;
   updated: string;
@@ -143,22 +142,22 @@ export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCom
   };
   return Result.Ok(resp);
 }
+export type TVProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof search_tv_in_tmdb>>>["list"][number];
 
 /**
  * 获取电视剧详情
  * @link https://developers.themoviedb.org/3/tv/get-tv-details
- * @example https://proxy.funzm.com/api/tmdb/3/tv/222663?api_key=c2e5d34999e27f8e0ef18421aa5dec38&language=zh-CN
  * @param id 电视剧 tmdb id
  */
-export async function fetch_tv_profile_in_tmdb(
-  id: number | string | undefined,
+export async function fetch_tv_profile(
+  id: number | undefined,
   query: {
     api_key: string;
     language?: Language;
   }
 ) {
   if (id === undefined) {
-    return Result.Err("Please pass id");
+    return Result.Err("请传入电视剧 id");
   }
   const endpoint = `/tv/${id}`;
   const { api_key, language } = query;
@@ -248,7 +247,22 @@ export async function fetch_tv_profile_in_tmdb(
   if (result.error) {
     return Result.Err(result.error);
   }
-  const { name, original_name, overview, first_air_date, tagline, status, vote_average, poster_path, backdrop_path, popularity, seasons } = result.data;
+  const {
+    name,
+    original_name,
+    overview,
+    first_air_date,
+    tagline,
+    status,
+    vote_average,
+    poster_path,
+    backdrop_path,
+    popularity,
+    seasons,
+    number_of_episodes,
+    number_of_seasons,
+    in_production,
+  } = result.data;
   return Result.Ok({
     id,
     name,
@@ -259,6 +273,9 @@ export async function fetch_tv_profile_in_tmdb(
     status,
     vote_average,
     popularity,
+    number_of_episodes,
+    number_of_seasons,
+    in_production,
     ...fix_TMDB_image_path({
       poster_path,
       backdrop_path,
@@ -272,6 +289,7 @@ export async function fetch_tv_profile_in_tmdb(
     }),
   });
 }
+export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_tv_profile>>>;
 
 /**
  * 获取电视剧某一季详情
@@ -369,6 +387,7 @@ export async function fetch_season_profile(
     }),
   });
 }
+export type SeasonProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_season_profile>>>;
 
 /**
  * 获取电视剧某一集详情
@@ -423,3 +442,5 @@ export async function fetch_episode_profile(
     episode_number: result.data.episode_number,
   });
 }
+
+export type EpisodeProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_episode_profile>>>;

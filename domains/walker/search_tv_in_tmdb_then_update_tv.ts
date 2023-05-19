@@ -3,7 +3,7 @@ import { TMDBClient } from "@/domains/tmdb";
 import { store_factory } from "@/store";
 import { log } from "@/logger/log";
 import { Result, resultify } from "@/types";
-import { PartialTVProfile } from "@/domains/tmdb/services";
+import { TVProfileItemInTMDB, TVProfileFromTMDB } from "@/domains/tmdb/services";
 import { ParsedEpisodeRecord, ParsedSeasonRecord, ParsedTVRecord, TVProfileRecord } from "@/store/types";
 import { episode_to_num, season_to_chinese_num, season_to_num } from "@/utils";
 
@@ -421,6 +421,7 @@ export async function add_episode_from_parsed_episode(
   }
   log(`${name}/${season_number}/${episode_number}`, "新增剧集详情");
   const adding_episode_res = await store.add_episode({
+    season_number: parsed_season.season_number,
     episode_number: parsed_episode.episode_number,
     tv_id: parsed_tv.tv_id,
     season_id: parsed_season.season_id,
@@ -662,8 +663,26 @@ export async function find_first_matched_tv_from_tmdb(
   if (list.length === 0) {
     return Result.Ok(null);
   }
-  const tv_profile = extra_searched_tv_field(list[0]);
-  const { tmdb_id, poster_path, backdrop_path } = tv_profile;
+  const tv_item = extra_searched_tv_field(list[0]);
+  const profile_res = await tmdb_client.fetch_tv_profile(tv_item.tmdb_id);
+  if (profile_res.error) {
+    return Result.Err(profile_res.error);
+  }
+  const profile = profile_res.data;
+  const {
+    id: tmdb_id,
+    original_name,
+    first_air_date,
+    overview,
+    poster_path,
+    backdrop_path,
+    popularity,
+    vote_average,
+    number_of_episodes,
+    number_of_seasons,
+    status,
+    in_production,
+  } = profile;
   const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
     if (need_upload_image) {
       return await upload_tmdb_images({
@@ -678,9 +697,20 @@ export async function find_first_matched_tv_from_tmdb(
     };
   })();
   const t = await store.add_tv_profile({
-    ...tv_profile,
+    tmdb_id,
+    name: profile.name,
+    original_name,
+    overview,
     poster_path: uploaded_poster_path,
     backdrop_path: uploaded_backdrop_path,
+    first_air_date,
+    original_language: tv_item.original_language,
+    popularity,
+    vote_average,
+    episode_count: number_of_episodes,
+    season_count: number_of_seasons,
+    status,
+    in_production: Number(in_production),
   });
   if (t.error) {
     return Result.Err(t.error);
@@ -692,8 +722,22 @@ export async function find_first_matched_tv_from_tmdb(
   return Result.Ok(t.data);
 }
 
-export function extra_searched_tv_field(tv: PartialTVProfile) {
-  const { id: tmdb_id, name, original_name, backdrop_path, original_language, overview, popularity, poster_path, first_air_date, vote_average, vote_count } = tv;
+export function extra_searched_tv_field(tv: TVProfileItemInTMDB) {
+  const {
+    id: tmdb_id,
+    name,
+    original_name,
+    backdrop_path,
+    original_language,
+    overview,
+    popularity,
+    poster_path,
+    first_air_date,
+    vote_average,
+    vote_count,
+    // number_of_episodes,
+    // number_of_seasons,
+  } = tv;
   return {
     tmdb_id,
     name,

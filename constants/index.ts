@@ -63,4 +63,5 @@ export const code_get_drive_token = `${code_prefix}const oo=document,jj=JSON,ll=
 export enum FileType {
   File = 1,
   Folder = 2,
+  Unknown = 3,
 }

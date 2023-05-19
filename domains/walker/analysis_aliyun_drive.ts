@@ -91,7 +91,7 @@ export async function walk_drive(options: {
   }
   const add_async_task_res = await store.add_task({
     unique_id: drive_id,
-    desc: `索引 ${drive_res.data.user_name} 云盘${files.length ? " - 仅" + files.map((f) => f.name).join("、") : ""}`,
+    desc: `索引 ${drive_res.data.name} 云盘${files.length ? " - 仅" + files.map((f) => f.name).join("、") : ""}`,
     status: TaskStatus.Running,
     user_id,
   });

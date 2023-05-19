@@ -1,5 +1,5 @@
 import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
-import { PartialTVProfile } from "@/domains/tmdb/services";
+import { TVProfileItemInTMDB } from "@/domains/tmdb/services";
 import { TMDBClient } from "@/domains/tmdb";
 import { SearchedEpisode } from "@/domains/walker";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
@@ -16,9 +16,9 @@ import {
 } from "@/store/types";
 import { qiniu_upload_online_file } from "@/utils/back_end";
 import { Result, resultify } from "@/types";
+import { FileType } from "@/constants";
 
 import { patch_tv_in_progress } from "./patch_tv_in_progress";
-import { DriveFileType } from "./constants";
 
 export type EventHandlers = Partial<{
   on_tv: (tv: ParsedTVRecord & RecordCommonPart) => void;
@@ -42,20 +42,21 @@ export async function add_parsed_infos_when_walk(
 ) {
   const { tv, season, episode } = data;
   log("\n\n--------\n处理视频文件", data.episode.file_name);
+  const prefix = `[${episode.parent_paths}/${episode.file_name}]`;
   const existing_episode_res = await store.find_parsed_episode({
     file_id: episode.file_id,
   });
   if (existing_episode_res.error) {
     // log("[ERROR]find episode request failed", existing_episode_res.error.message);
-    log(`[${data.episode.file_name}]`, "判断视频文件是否存在失败");
+    log(`[${prefix}]`, "判断视频文件是否存在失败");
     return Result.Err(existing_episode_res.error);
   }
   const existing_episode = existing_episode_res.data;
   if (!existing_episode) {
-    log(`[${data.episode.file_name}]`, "是新视频文件");
+    log(`[${prefix}]`, "是新视频文件");
     const tv_adding_res = await add_parsed_tv(data, extra, store);
     if (tv_adding_res.error) {
-      log(`[${data.episode.file_name}]`, "新增电视剧信息失败", tv_adding_res.error.message);
+      log(`[${prefix}]`, "新增电视剧信息失败", tv_adding_res.error.message);
       return Result.Err(tv_adding_res.error);
     }
     const season_adding_res = await add_parsed_season(
@@ -67,7 +68,7 @@ export async function add_parsed_infos_when_walk(
       store
     );
     if (season_adding_res.error) {
-      log(`[${data.episode.file_name}]`, "新增季信息失败", season_adding_res.error.message);
+      log(`[${prefix}]`, "新增季信息失败", season_adding_res.error.message);
       return Result.Err(season_adding_res.error);
     }
     const add_episode_res = await store.add_parsed_episode({
@@ -78,7 +79,7 @@ export async function add_parsed_infos_when_walk(
       file_name: episode.file_name,
       parent_file_id: episode.parent_file_id,
       parent_paths: episode.parent_paths,
-      type: DriveFileType.File,
+      type: FileType.File,
       size: episode.size,
       parsed_tv_id: tv_adding_res.data.id,
       parsed_season_id: season_adding_res.data.id,
@@ -86,10 +87,10 @@ export async function add_parsed_infos_when_walk(
       drive_id: extra.drive_id,
     });
     if (add_episode_res.error) {
-      log(`[${data.episode.file_name}]`, "视频文件保存失败", add_episode_res.error.message);
+      log(`[${prefix}]`, "视频文件保存失败", add_episode_res.error.message);
       return add_episode_res;
     }
-    log(`[${data.episode.file_name}]`, "视频文件保存成功");
+    log(`[${prefix}]`, "视频文件保存成功");
     return Result.Ok(null);
   }
   const episode_payload: {
@@ -99,7 +100,7 @@ export async function add_parsed_infos_when_walk(
     id: existing_episode.id,
     body: {},
   };
-  log(`[${data.episode.file_name}]`, "视频文件已存在，判断是否需要更新");
+  log(`[${prefix}]`, "视频文件已存在，判断是否需要更新");
   const existing_tv_res = await store.find_parsed_tv({
     id: existing_episode.parsed_tv_id,
   });
@@ -109,12 +110,12 @@ export async function add_parsed_infos_when_walk(
   }
   const existing_tv = existing_tv_res.data;
   if (!existing_tv) {
-    log(`[${data.episode.file_name}]`, "视频文件没有关联的电视剧记录，属于异常数据");
+    log(`[${prefix}]`, "视频文件没有关联的电视剧记录，属于异常数据");
     return Result.Err("existing episode should have tv");
   }
   if (is_tv_changed(existing_tv, data)) {
     // prettier-ignore
-    log(`[${data.episode.file_name}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
+    log(`[${prefix}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
     const parsed_adding_res = await add_unique_parsed_tv(data, extra, store);
     if (parsed_adding_res.error) {
       return Result.Err(parsed_adding_res.error);
@@ -131,7 +132,7 @@ export async function add_parsed_infos_when_walk(
   }
   const existing_season = existing_season_res.data;
   if (!existing_season) {
-    log(`[${data.episode.file_name}]`, "视频文件没有关联的季，属于异常数据");
+    log(`[${prefix}]`, "视频文件没有关联的季，属于异常数据");
     return Result.Err("existing episode should have season");
   }
   if (is_season_changed(existing_season, data)) {
@@ -157,16 +158,16 @@ export async function add_parsed_infos_when_walk(
     episode_payload.body.size = episode.size;
   }
   if (Object.keys(episode_payload.body).length !== 0) {
-    log(`[${data.episode.file_name}]`, "该视频文件信息发生改变，变更后的内容为", episode_payload.body);
+    log(`[${prefix}]`, "该视频文件信息发生改变，变更后的内容为", episode_payload.body);
     const update_episode_res = await store.update_parsed_episode(episode_payload.id, episode_payload.body);
     if (update_episode_res.error) {
-      log(`[${data.episode.file_name}]`, "视频文件更新失败", update_episode_res.error.message);
+      log(`[${prefix}]`, "视频文件更新失败", update_episode_res.error.message);
       return update_episode_res;
     }
-    log(`[${data.episode.file_name}]`, "视频文件更新成功");
+    log(`[${prefix}]`, "视频文件更新成功");
     return Result.Ok(null);
   }
-  log(`[${data.episode.file_name}]`, "视频文件没有变更");
+  log(`[${prefix}]`, "视频文件没有变更");
   return Result.Ok(null);
 }
 
@@ -208,12 +209,12 @@ export async function adding_file_when_walk(
     parent_paths,
     type: (() => {
       if (type === "file") {
-        return DriveFileType.File;
+        return FileType.File;
       }
       if (type === "folder") {
-        return DriveFileType.Folder;
+        return FileType.Folder;
       }
-      return DriveFileType.Unknown;
+      return FileType.Unknown;
     })(),
     size,
     drive_id,
@@ -257,7 +258,7 @@ export async function build_link_between_shared_files_with_folder(
   if (!f) {
     return Result.Err("不存在同名文件，请先索引网盘");
   }
-  const matched_shared_files_in_progress_res = await store.find_shared_files_in_progress({
+  const matched_shared_files_in_progress_res = await store.find_shared_file_save({
     name,
     target_file_id: "null",
     user_id,
@@ -269,7 +270,7 @@ export async function build_link_between_shared_files_with_folder(
     return Result.Err("No matched record of shared_files_in_progress");
   }
   // 从连载中的文件夹中找同名文件夹，建立关联关系
-  const r = await store.update_shared_files_in_progress(matched_shared_files_in_progress_res.data.id, {
+  const r = await store.update_shared_file_save(matched_shared_files_in_progress_res.data.id, {
     target_file_id: f,
   });
   if (r.error) {
@@ -397,6 +398,8 @@ async function add_unique_parsed_season(
   const parsed_season_adding_res = await store.add_parsed_season({
     parsed_tv_id: extra.parsed_tv_id,
     season_number: season.season,
+    file_id: season.file_id || null,
+    file_name: season.file_name || null,
     user_id: extra.user_id,
     drive_id: extra.drive_id,
   });
@@ -468,7 +471,7 @@ export async function find_folders_in_special_season(
   const episodes_res = await store.find_episodes(
     {
       tv_id,
-      season: season,
+      season_number: season,
     },
     {
       sorts: [
@@ -535,7 +538,7 @@ export async function find_folders_and_recommended_path_in_special_season(
   const episodes_res = await store.find_episodes(
     {
       maybe_tv_id: tv_id,
-      season,
+      season_number: season,
     },
     {
       sorts: [
@@ -634,7 +637,7 @@ export async function get_tv_profile_with_first_season_by_id(
     if (seasons.length === 1) {
       return seasons[0];
     }
-    const first_season = seasons.find((s) => s.season === "S01");
+    const first_season = seasons.find((s) => s.season_number === "S01");
     if (first_season) {
       return first_season;
     }
@@ -660,7 +663,7 @@ export async function get_tv_profile_with_first_season_by_id(
   })();
   const folders_res = await find_folders_and_recommended_path_in_special_season(
     tv.id,
-    recommended_season.season,
+    recommended_season.season_number,
     store
   );
   if (folders_res.error) {
@@ -673,7 +676,7 @@ export async function get_tv_profile_with_first_season_by_id(
       original_name,
       overview,
       seasons: seasons.map((season) => {
-        return season.season;
+        return season.season_number;
       }),
       folders: [],
       first_episode: null,
@@ -722,7 +725,7 @@ export async function get_tv_profile_with_first_season_by_id(
     original_name,
     overview,
     seasons: seasons.map((season) => {
-      return season.season;
+      return season.season_number;
     }),
     folders: Object.keys(episodes).map((paths) => {
       return {

@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
   if (!id) {
-    return e("Missing tv_id");
+    return e("缺少文件夹 id");
   }
   const t_res = await User.New(authorization);
   if (t_res.error) {
@@ -26,10 +26,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(tv_res);
   }
   if (!tv_res.data) {
-    return e("No matched record of tv");
+    return e("没有匹配的文件夹记录");
   }
   const tv = tv_res.data;
-  const episodes_res = await store.find_episodes({ tv_id: id, user_id });
+  const episodes_res = await store.find_parsed_episode_list({ parsed_tv_id: tv.id });
   if (episodes_res.error) {
     return e(episodes_res);
   }

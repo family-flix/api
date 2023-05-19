@@ -6,6 +6,7 @@ import { Result, resultify, Unpacked } from "@/types";
 import { r_id } from "@/utils";
 
 import { ModelKeys } from "./types";
+import { FileType } from "@/constants";
 
 function add_factory<T extends PrismaClient[ModelKeys]>(model: T, options: Partial<{ safe: boolean }> = {}) {
   const { safe } = options;
@@ -196,13 +197,17 @@ export const store_factory = (prisma: PrismaClient) => {
     update_episode_profile: update_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     find_episode_profile: first_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     find_episode_profile_list: many_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
-    find_episode_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    find_episode_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(
+      prisma.episode_profile
+    ),
     /** 电影详情 */
     add_movie_profile: add_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     update_movie_profile: update_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     find_movie_profile: first_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
     find_movie_profile_list: many_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
-    find_movie_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(prisma.episode_profile),
+    find_movie_profile_list_with_pagination: pagination_factory<PrismaClient["episode_profile"]>(
+      prisma.episode_profile
+    ),
     /** 电视剧 */
     add_tv: add_factory<PrismaClient["tv"]>(prisma.tv),
     update_tv: update_factory<PrismaClient["tv"]>(prisma.tv),
@@ -292,7 +297,7 @@ export const store_factory = (prisma: PrismaClient) => {
     find_tv_profile_snap: first_factory<PrismaClient["tv_profile_quick"]>(prisma.tv_profile_quick),
     /** 分享资源 */
     add_shared_files: add_factory<PrismaClient["shared_file"]>(prisma.shared_file),
-    add_shared_files_safely: async (body: Parameters<PrismaClient["shared_file"]["create"]>[0]["data"]) => {
+    add_shared_files_safely: async (body: Omit<Parameters<PrismaClient["shared_file"]["create"]>[0]["data"], "id">) => {
       const { url } = body;
       const existing = await prisma.shared_file.findFirst({
         where: { url },
@@ -307,6 +312,15 @@ export const store_factory = (prisma: PrismaClient) => {
     find_shared_files: first_factory<PrismaClient["shared_file"]>(prisma.shared_file),
     find_shared_files_list: many_factory<PrismaClient["shared_file"]>(prisma.shared_file),
     find_shared_files_list_with_pagination: pagination_factory<PrismaClient["shared_file"]>(prisma.shared_file),
+    /** 分享资源同步任务 */
+    add_sync_task: add_factory<PrismaClient["bind_for_parsed_tv"]>(prisma.bind_for_parsed_tv),
+    update_sync_task: update_factory<PrismaClient["bind_for_parsed_tv"]>(prisma.bind_for_parsed_tv),
+    delete_sync_task: delete_factory<PrismaClient["bind_for_parsed_tv"]>(prisma.bind_for_parsed_tv),
+    find_sync_task: first_factory<PrismaClient["bind_for_parsed_tv"]>(prisma.bind_for_parsed_tv),
+    find_sync_task_list: many_factory<PrismaClient["bind_for_parsed_tv"]>(prisma.bind_for_parsed_tv),
+    find_sync_task_list_with_pagination: pagination_factory<PrismaClient["bind_for_parsed_tv"]>(
+      prisma.bind_for_parsed_tv
+    ),
     /** 云盘文件 */
     add_file: add_factory<PrismaClient["file"]>(prisma.file),
     update_file: update_factory<PrismaClient["file"]>(prisma.file),
@@ -321,13 +335,15 @@ export const store_factory = (prisma: PrismaClient) => {
     find_tmp_file: first_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
     find_tmp_files: many_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
     find_tmp_file_with_pagination: pagination_factory<PrismaClient["tmp_file"]>(prisma.tmp_file),
-    /** 更新中的分享资源 */
-    add_shared_files_in_progress: add_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
-    update_shared_files_in_progress: update_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
-    delete_shared_files_in_progress: delete_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
-    find_shared_files_in_progress: first_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
-    find_shared_files_list_in_progress: many_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
-    find_shared_files_in_progress_with_pagination: pagination_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    /** 转存记录 */
+    add_shared_file_save: add_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    update_shared_file_save: update_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    delete_shared_file_save: delete_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    find_shared_file_save: first_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    find_shared_file_save_list: many_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress),
+    find_shared_files_save_with_pagination: pagination_factory<PrismaClient["shared_file_in_progress"]>(
+      prisma.shared_file_in_progress
+    ),
     /** 用户 */
     add_user: add_factory<PrismaClient["user"]>(prisma.user),
     update_user: update_factory<PrismaClient["user"]>(prisma.user),
@@ -386,7 +402,6 @@ export function folder_client(body: { drive_id: string }, store: ReturnType<type
         take: page_size + 1,
       });
       if (r.error) {
-        // console.log("happen error", r.error.message);
         return r;
       }
       const rows = r.data.map((f) => {
@@ -395,7 +410,7 @@ export function folder_client(body: { drive_id: string }, store: ReturnType<type
           file_id,
           parent_file_id,
           name,
-          type: type === 1 ? "file" : "folder",
+          type: type === FileType.File ? "file" : "folder",
         };
       });
       const has_next_page = rows.length === page_size + 1 && rows[page_size];
