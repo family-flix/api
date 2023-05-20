@@ -18,7 +18,7 @@ import { qiniu_upload_online_file } from "@/utils/back_end";
 import { Result, resultify } from "@/types";
 import { FileType } from "@/constants";
 
-import { patch_tv_in_progress } from "./patch_tv_in_progress";
+import { patch_tv_in_progress } from "./run_tv_sync_task";
 
 export type EventHandlers = Partial<{
   on_tv: (tv: ParsedTVRecord & RecordCommonPart) => void;
@@ -177,7 +177,7 @@ export async function add_parsed_infos_when_walk(
  * @param extra
  * @returns
  */
-export async function adding_file_when_walk(
+export async function adding_file_safely(
   file: {
     file_id: string;
     name: string;
@@ -191,18 +191,17 @@ export async function adding_file_when_walk(
 ) {
   const { file_id, name, parent_file_id, parent_paths, type, size = 0 } = file;
   const { drive_id, user_id } = extra;
-  // log('(adding_folder_when_walk)', name, type, !is_video_file(name));
   if (type === "file" && !is_video_file(name)) {
-    return Result.Err("not video file");
+    return Result.Err("不是合法的视频文件");
   }
-  const existing_folder_resp = await store.find_file({ file_id });
-  if (existing_folder_resp.error) {
-    return Result.Err(existing_folder_resp.error);
+  const existing_folder_res = await store.find_file({ file_id });
+  if (existing_folder_res.error) {
+    return Result.Err(existing_folder_res.error);
   }
-  if (existing_folder_resp.data) {
-    return Result.Ok({ id: existing_folder_resp.data.id });
+  if (existing_folder_res.data) {
+    return Result.Ok({ id: existing_folder_res.data.id });
   }
-  const adding_resp = await store.add_file({
+  const adding_res = await store.add_file({
     file_id,
     name,
     parent_file_id,
@@ -220,11 +219,10 @@ export async function adding_file_when_walk(
     drive_id,
     user_id,
   });
-  build_link_between_shared_files_with_folder({ name, target_file_id: file_id }, { user_id, store });
-  if (adding_resp.error) {
-    return Result.Err(adding_resp.error);
+  if (adding_res.error) {
+    return Result.Err(adding_res.error);
   }
-  return Result.Ok({ id: adding_resp.data.id });
+  return Result.Ok({ id: adding_res.data.id });
 }
 
 /**
@@ -293,7 +291,8 @@ async function add_unique_parsed_tv(
   const { tv, episode } = data;
   // log("[UTIL]get_tv_id_by_name start", tv.name || tv.original_name);
   const { user_id, drive_id } = extra;
-  log(`[${episode.file_name}]`, "根据名称查找电视剧", tv.name || tv.original_name);
+  const prefix = `${episode.parent_paths}/${episode.file_name}`;
+  log(`[${prefix}]`, "根据名称查找电视剧", tv.name || tv.original_name);
   const existing_tv_res = await resultify(store.prisma.parsed_tv.findFirst.bind(store.prisma.parsed_tv))({
     where: {
       OR: [
@@ -318,14 +317,10 @@ async function add_unique_parsed_tv(
     return Result.Err(existing_tv_res.error);
   }
   if (existing_tv_res.data) {
-    log(
-      `[${episode.file_name}]`,
-      "查找到电视剧已存在且名称为",
-      existing_tv_res.data.name || existing_tv_res.data.original_name
-    );
+    log(`[${prefix}]`, "查找到电视剧已存在且名称为", existing_tv_res.data.name || existing_tv_res.data.original_name);
     return Result.Ok(existing_tv_res.data);
   }
-  log(`[${episode.file_name}]`, "电视剧", tv.name || tv.original_name, "不存在，新增");
+  log(`[${prefix}]`, "电视剧", tv.name || tv.original_name, "不存在，新增");
   const parsed_tv_adding_res = await store.add_parsed_tv({
     file_id: tv.file_id || null,
     file_name: tv.file_name || null,
@@ -339,7 +334,7 @@ async function add_unique_parsed_tv(
     return Result.Err(parsed_tv_adding_res.error);
   }
   // log("[UTIL]get_tv_id_by_name end", tv.name || tv.original_name);
-  log(`[${episode.file_name}]`, "为该视频文件新增电视剧", tv.name || tv.original_name, "成功");
+  log(`[${prefix}]`, "为该视频文件新增电视剧", tv.name || tv.original_name, "成功");
   return Result.Ok(parsed_tv_adding_res.data);
 }
 
@@ -355,7 +350,8 @@ async function add_parsed_tv(
   store: ReturnType<typeof store_factory>
 ) {
   const { tv, episode } = data;
-  log(`[${episode.file_name}]`, "准备为该视频文件新增电视剧", tv.name || tv.original_name);
+  const prefix = `${episode.parent_paths}/${episode.file_name}`;
+  log(`[${prefix}]`, "准备为该视频文件新增电视剧", tv.name || tv.original_name);
   const parsed_adding_res = await add_unique_parsed_tv(data, extra, store);
   if (parsed_adding_res.error) {
     return parsed_adding_res;

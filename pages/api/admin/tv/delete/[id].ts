@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       skip: (page - 1) * page_size,
       take: page_size,
     });
-    console.log("删除", list.length, "个剧集");
+    // console.log("删除", list.length, "个剧集");
     no_more = list.length === 0;
     page += 1;
     for (let i = 0; i < list.length; i += 1) {
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const parsed_episode = parsed_episodes[j];
         const { drive_id, file_id, file_name } = parsed_episode;
         const client = new AliyunDriveClient({ drive_id, store });
-        console.log("删除文件", file_name);
+        // console.log("删除文件", file_name);
         const r = await client.delete_file(file_id);
         if (r.error) {
           has_error = true;
@@ -97,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       skip: (page - 1) * page_size,
       take: page_size,
     });
-    console.log("删除", list.length, "个季");
+    // console.log("删除", list.length, "个季");
     no_more = list.length === 0;
     page += 1;
     for (let i = 0; i < list.length; i += 1) {
@@ -108,7 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const { drive_id, file_id, file_name } = parsed_season;
         if (file_id) {
           const client = new AliyunDriveClient({ drive_id, store });
-          console.log("删除文件", file_name);
+          // console.log("删除文件", file_name);
           const r = await client.delete_file(file_id);
           if (r.error) {
             has_error = true;
@@ -142,7 +142,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       skip: (page - 1) * page_size,
       take: page_size,
     });
-    console.log("删除", list.length, "个电视剧文件夹");
+    // console.log("删除", list.length, "个电视剧文件夹");
     no_more = list.length === 0;
     page += 1;
     for (let i = 0; i < list.length; i += 1) {
@@ -150,7 +150,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const { drive_id, file_id, file_name } = parsed_tv;
       if (file_id) {
         const client = new AliyunDriveClient({ drive_id, store });
-        console.log("删除文件", file_name);
+        // console.log("删除文件", file_name);
         const r = await client.delete_file(file_id);
         if (r.error) {
           has_error = true;

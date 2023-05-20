@@ -7,7 +7,7 @@ import { FolderWalker } from "@/domains/walker";
 import {
   fetch_files_factory,
   add_parsed_infos_when_walk,
-  adding_file_when_walk,
+  adding_file_safely,
 } from "@/domains/walker/utils";
 import { AliyunDriveFolder } from "@/domains/folder";
 import { store_factory } from "@/store";
@@ -59,7 +59,7 @@ describe("detect a tv dir", () => {
     };
     const detector = new FolderWalker();
     detector.on_file = async (folder) => {
-      await adding_file_when_walk(folder, { user_id, drive_id }, store);
+      await adding_file_safely(folder, { user_id, drive_id }, store);
     };
     const handle_err = vi.fn((v) => {
       return v;

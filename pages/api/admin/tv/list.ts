@@ -83,6 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       episodes: {
         include: {
           profile: true,
+          _count: true,
           parsed_episodes: {
             select: {
               file_id: true,
@@ -144,6 +145,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           };
         });
       const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
+      const episode_sources = episodes
+        .map((episode) => {
+          return episode._count.parsed_episodes;
+        })
+        .reduce((total, cur) => {
+          return total + cur;
+        }, 0);
       const tips: { text: string[] }[] = [];
       if (binds.length === 0 && incomplete) {
         tips.push({
@@ -174,6 +182,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         season_count,
         cur_episode_count: _count.episodes,
         cur_season_count: _count.seasons,
+        episode_sources,
         size_count,
         size_count_text: bytes_to_size(size_count),
         // episodes: episodes.map((episode) => {

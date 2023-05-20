@@ -8,7 +8,7 @@ import { AliyunDriveFolder } from "@/domains/folder";
 import {
   fetch_files_factory,
   add_parsed_infos_when_walk,
-  adding_file_when_walk,
+  adding_file_safely,
 } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/fa_yan_ren";
 
@@ -41,7 +41,7 @@ describe("detect a tv dir", () => {
     };
     walker.on_file = async (folder) => {
       handle_folder(folder);
-      await adding_file_when_walk(folder, fake_extra, store);
+      await adding_file_safely(folder, fake_extra, store);
       return;
     };
     walker.on_episode = async (task) => {

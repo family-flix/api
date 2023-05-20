@@ -11,7 +11,7 @@ import { store_factory } from "@/store";
 import { log } from "@/logger/log";
 
 import { add_tv_from_parsed_tv_list } from "./search_tv_in_tmdb_then_update_tv";
-import { adding_file_when_walk, add_parsed_infos_when_walk, need_skip_the_file_when_walk } from "./utils";
+import { adding_file_safely, add_parsed_infos_when_walk, need_skip_the_file_when_walk } from "./utils";
 import { TaskStatus } from "./constants";
 
 /** 索引云盘 */
@@ -127,13 +127,17 @@ export async function walk_drive(options: {
     // console.log("[]walk on warning", file.name);
   };
   walker.on_file = async (file) => {
-    const { name } = file;
-    await adding_file_when_walk(file, { user_id, drive_id }, store);
-    await store.delete_tmp_file({
+    const { name, parent_paths } = file;
+    await adding_file_safely(file, { user_id, drive_id }, store);
+    const r = await store.delete_tmp_file({
       name,
+      parent_paths,
       drive_id,
       user_id,
     });
+    if (r.error) {
+      log("删除临时文件", parent_paths, name, "失败", r.error.message);
+    }
   };
   let count = 0;
   walker.on_episode = async (parsed) => {

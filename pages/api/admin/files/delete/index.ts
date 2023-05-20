@@ -54,45 +54,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const tv_file_ids = tv_files.map((item) => item.file_id!);
 
   const where: NonNullable<Parameters<typeof store.prisma.file.findMany>[0]>["where"] = {
+    user_id,
     // 没有被 parsed_episode、parsed_season 和 parsed_tv 关联的 file
+    type: FileType.File,
     NOT: {
       file_id: {
         in: episode_file_ids.concat(season_file_ids).concat(tv_file_ids),
       },
     },
-    type: FileType.File,
-    user_id,
   };
-  const list = await store.prisma.file.findMany({
+  await store.prisma.file.deleteMany({
     where,
-    skip: (page - 1) * page_size,
-    take: page_size,
-    orderBy: {
-      size: "desc",
-    },
-  });
-  const count = await store.prisma.file.count({
-    where: { user_id },
   });
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      total: count,
-      list: list.map((file) => {
-        const { id, file_id, name, parent_paths, size } = file;
-        return {
-          id,
-          file_id,
-          name,
-          parent_paths,
-          size,
-          size_text: bytes_to_size(size || 0),
-        };
-      }),
-      page,
-      page_size,
-      no_more: list.length + (page - 1) * page_size <= count,
-    },
+    data: null,
   });
 }

@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { User } from "@/domains/user";
-import { patch_tv_in_progress } from "@/domains/walker/patch_tv_in_progress";
+import { patch_tv_in_progress } from "@/domains/walker/run_tv_sync_task";
 import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

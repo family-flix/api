@@ -82,37 +82,37 @@ export async function ali_upload_online_file(online_url: string) {
   form.append("file", file);
   form.append("ctoken", "eAT1nRkx-4kuLLll6IyWMSMfB-4MMWY6aplY");
   const headers = form.getHeaders();
-  const promise: Promise<
-    Result<{ url: string; size: number; width: number; height: number }>
-  > = new Promise((resolve) => {
-    const req = http.request(
-      {
-        method: "post",
-        host: "www.imgcook.com",
-        path: "/api/upload-img",
-        headers: headers,
-      },
-      (resp) => {
-        let str = "";
-        resp.on("data", (buffer) => {
-          str += buffer;
-        });
-        resp.on("end", () => {
-          const result = JSON.parse(str);
-          const { status, data } = result;
-          const { url, size, width, height } = data;
-          if (!status) {
-            return resolve(Result.Err("upload file failed"));
-          }
-          resolve(Result.Ok({ url, size, width, height }));
-        });
-        resp.on("error", () => {
-          resolve(Result.Err("upload file failed"));
-        });
-      }
-    );
-    form.pipe(req);
-  });
+  const promise: Promise<Result<{ url: string; size: number; width: number; height: number }>> = new Promise(
+    (resolve) => {
+      const req = http.request(
+        {
+          method: "post",
+          host: "www.imgcook.com",
+          path: "/api/upload-img",
+          headers: headers,
+        },
+        (resp) => {
+          let str = "";
+          resp.on("data", (buffer) => {
+            str += buffer;
+          });
+          resp.on("end", () => {
+            const result = JSON.parse(str);
+            const { status, data } = result;
+            const { url, size, width, height } = data;
+            if (!status) {
+              return resolve(Result.Err("upload file failed"));
+            }
+            resolve(Result.Ok({ url, size, width, height }));
+          });
+          resp.on("error", () => {
+            resolve(Result.Err("upload file failed"));
+          });
+        }
+      );
+      form.pipe(req);
+    }
+  );
   return promise;
 }
 
@@ -120,10 +120,7 @@ const put_policy = new qiniu.rs.PutPolicy({
   scope: process.env.QINIU_SCOPE,
 });
 const qiniu_token = put_policy.uploadToken(
-  new qiniu.auth.digest.Mac(
-    process.env.QINIU_ACCESS_TOKEN,
-    process.env.QINIU_SECRET_TOKEN
-  )
+  new qiniu.auth.digest.Mac(process.env.QINIU_ACCESS_TOKEN, process.env.QINIU_SECRET_TOKEN)
 );
 const config = new qiniu.conf.Config();
 // @ts-ignore
@@ -143,29 +140,23 @@ export async function qiniu_upload_online_file(
   /** 文件路径 */
   unique?: string | number
 ) {
-  const file_resp = await request_online_url_to_stream(online_url);
-  if (file_resp.error) {
-    return file_resp;
+  const file_res = await request_online_url_to_stream(online_url);
+  if (file_res.error) {
+    return Result.Err(file_res.error);
   }
   const random = random_string(16);
   const key = `video-static${unique || random}`;
-  const file = file_resp.data;
+  const file = file_res.data;
   const p: Promise<Result<{ url: string }>> = new Promise((resolve) => {
-    form_uploader.putStream(
-      qiniu_token,
-      key,
-      file,
-      put_extra,
-      (err, body, resp) => {
-        if (err) {
-          return resolve(Result.Err(err.message));
-        }
-        if (resp.statusCode == 200) {
-          return resolve(Result.Ok(add_url(body)));
-        }
-        return resolve(Result.Err(body));
+    form_uploader.putStream(qiniu_token, key, file, put_extra, (err, body, resp) => {
+      if (err) {
+        return resolve(Result.Err(err.message));
       }
-    );
+      if (resp.statusCode == 200) {
+        return resolve(Result.Ok(add_url(body)));
+      }
+      return resolve(Result.Err(body));
+    });
   });
   return p;
 }
@@ -232,9 +223,7 @@ const ignore = [".DS_Store"];
 
 async function get_files(dir: string) {
   let files = await fs.readdir(dir);
-  files = files
-    .filter((file) => !ignore.includes(file))
-    .map((file) => `${dir}/${file}`);
+  files = files.filter((file) => !ignore.includes(file)).map((file) => `${dir}/${file}`);
   let result: {}[] = [];
   for (let i = 0; i < files.length; i += 1) {
     const file = files[i];

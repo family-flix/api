@@ -27,10 +27,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = t_resp.data;
   const r = await store.add_member({
     remark,
-    name,
-    email,
-    user_id,
+    name: name || null,
+    email: email || null,
     disabled: 0,
+    user_id,
   });
   if (r.error) {
     return e(r);

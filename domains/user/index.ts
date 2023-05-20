@@ -4,7 +4,7 @@ import { Drive } from "@/domains/drive";
 import { List } from "@/domains/list";
 import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
 import { Result, resultify } from "@/types";
-import { random_string } from "@/utils";
+import { r_id } from "@/utils";
 import { store } from "@/store";
 
 import { Credentials } from "./services";
@@ -96,32 +96,35 @@ export class User {
       return Result.Err("该邮箱已注册");
     }
     const { password, salt } = await prepare(pw);
+    const nickname = email.split("@").shift();
     const created_user = await store.prisma.user.create({
       data: {
-        id: random_string(15),
+        id: r_id(),
+        settings: {
+          create: {
+            id: r_id(),
+          },
+        },
+        credential: {
+          create: {
+            id: r_id(),
+            email,
+            password,
+            salt,
+          },
+        },
+        profile: {
+          create: {
+            id: r_id(),
+            nickname,
+          },
+        },
       },
     });
     const { id: user_id } = created_user;
-    const nickname = email.split("@").shift();
-    await store.prisma.credential.create({
-      data: {
-        id: random_string(15),
-        user_id: created_user.id,
-        email,
-        password,
-        salt,
-      },
-    });
-    await store.prisma.profile.create({
-      data: {
-        id: random_string(15),
-        user_id: created_user.id,
-        nickname,
-      },
-    });
     const token = await encode_token({
       token: {
-        id: created_user.id,
+        id: user_id,
       },
       secret: User.SECRET,
     });

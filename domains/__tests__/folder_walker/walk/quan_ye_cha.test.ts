@@ -28,7 +28,7 @@ import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 import {
   fetch_files_factory,
   add_parsed_infos_when_walk,
-  adding_file_when_walk,
+  adding_file_safely,
 } from "@/domains/walker/utils";
 import { FolderWalker } from "@/domains/walker";
 import { AliyunDriveFolder } from "@/domains/folder";
@@ -62,7 +62,7 @@ describe("detect a tv dir", () => {
     };
     detector.on_file = async (folder) => {
       handle_folder(folder);
-      adding_file_when_walk(folder, { user_id, drive_id }, store);
+      adding_file_safely(folder, { user_id, drive_id }, store);
       return;
     };
     detector.on_episode = async (task) => {

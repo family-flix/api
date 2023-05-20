@@ -25,7 +25,7 @@ import {
   fetch_files_factory,
   get_tv_profile_with_first_season_by_id,
   add_parsed_infos_when_walk,
-  adding_file_when_walk,
+  adding_file_safely,
 } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/feng_qi_luo_yang";
 import { store_factory } from "@/store";
@@ -59,7 +59,7 @@ describe("detect a tv dir", () => {
     };
     detector.on_file = async (folder) => {
       handle_folder(folder);
-      adding_file_when_walk(folder, fake_extra, store);
+      adding_file_safely(folder, fake_extra, store);
     };
     detector.on_episode = async (task) => {
       handle_episode(task);

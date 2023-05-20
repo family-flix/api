@@ -427,7 +427,7 @@ model tv_profile_quick {
         name    String   @unique
 
         tv_profile_id String
-        tv_profile    tv_profile @relation(fields: [tv_profile_id], references: [id])
+        tv_profile    tv_profile @relation(fields: [tv_profile_id], references: [id], onDelete: Cascade)
 
         @@map("TVProfileQuick")
 }
@@ -448,6 +448,7 @@ model shared_file {
         @@map("SharedFile")
 }
 
+// 一次分享资源转存记录
 model shared_file_in_progress {
         id      String   @id
         created DateTime @default(now())
@@ -473,6 +474,7 @@ model shared_file_in_progress {
         @@map("SharedFileInProgress")
 }
 
+// 连接分享资源和云盘内的文件夹的关系，用于将分享资源新增的影片同步到云盘内文件夹(parsed_tv.file_id 字段表示云盘内文件夹)
 model bind_for_parsed_tv {
         id      String   @id
         created DateTime @default(now())
@@ -512,6 +514,8 @@ model drive_check_in {
 }
 
 // 在后台转存后分享文件夹后，在这里会新增一条记录，下次自动索引网盘时仅索引该表内记录
+// 以及 转存文件到索引云盘中间这段时间避免重复添加文件（这时候靠和 parent_paths/name 做唯一值避免重复）
+// 两个作用都有
 model tmp_file {
         id           String   @id
         created      DateTime @default(now())
@@ -605,7 +609,7 @@ model member {
         // 成员备注
         remark   String   @unique
         // 是否禁用
-        disabled Float?   @default(0)
+        disabled Int?     @default(0)
 
         // 关联 user 表
         user_id String
@@ -651,6 +655,7 @@ model notification {
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
+// 三方授权凭证
 model account {
         id                  String  @id
         type                String
@@ -671,6 +676,7 @@ model account {
         @@map("Account")
 }
 
+// 邮箱密码凭证
 model credential {
         id       String  @id
         password String

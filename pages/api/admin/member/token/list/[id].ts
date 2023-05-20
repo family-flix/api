@@ -1,5 +1,5 @@
 /**
- * @file 获取指定用户的成员
+ * @file 获取指定用户的成员的所有 token
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -12,7 +12,12 @@ import { User } from "@/domains/user";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { page: page_str = "1", page_size: page_size_str = "20" } = req.query as Partial<{
+  const {
+    id,
+    page: page_str = "1",
+    page_size: page_size_str = "20",
+  } = req.query as Partial<{
+    id: string;
     name: string;
     page: string;
     page_size: string;
@@ -25,27 +30,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page = Number(page_str);
   const page_size = Number(page_size_str);
 
-  const where: NonNullable<Parameters<typeof store.prisma.member.findMany>[0]>["where"] = {
-    user_id,
+  const where: NonNullable<Parameters<typeof store.prisma.member_token.findMany>[0]>["where"] = {
+    member_id: id,
   };
 
-  const list = await store.prisma.member.findMany({
+  const list = await store.prisma.member_token.findMany({
     where,
-    include: {
-      member_tokens: {
-        select: {
-          id: true,
-          token: true,
-        },
-      },
-    },
     skip: (page - 1) * page_size,
     take: page_size,
     orderBy: {
       created: "desc",
     },
   });
-  const count = await store.prisma.member.count({
+  const count = await store.prisma.member_token.count({
     where,
   });
   res.status(200).json({

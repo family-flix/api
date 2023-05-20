@@ -104,8 +104,17 @@ function delete_factory<T extends PrismaClient[ModelKeys]>(model: T) {
   return async (search: Parameters<T["update"]>[0]["data"] & { id?: string | null }) => {
     try {
       // @ts-ignore
-      const r = await model.delete({
+      const existing = await model.findFirst({
         where: search,
+      });
+      if (existing === null) {
+        return Result.Err("There is no matched record");
+      }
+      // @ts-ignore
+      const r = await model.delete({
+        where: {
+          id: existing.id,
+        },
       });
       return Result.Ok(r);
     } catch (err) {

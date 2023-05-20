@@ -70,18 +70,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { effects } = differ;
   log("应用 diff 的结果，共", effects.length, "个");
   // const { user_id, url, store } = options;
-  const file_name = "";
-  const adding_task: Record<
-    string,
-    {
-      file_id: string;
-      name: string;
-      type: string;
-      parent_paths: string;
-      target_folder_id: string;
-      target_folder_name: string;
-    }[]
-  > = {};
   for (let i = 0; i < effects.length; i += 1) {
     const effect = effects[i];
     const { type: effect_type, payload } = effect;
