@@ -26,6 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       profile: true,
+      play_history: true,
       episodes: {
         include: {
           profile: true,
@@ -35,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           episode_number: "asc",
         },
         skip: 0,
-        take: 20,
+        take: 1,
       },
       seasons: {
         include: {
@@ -51,7 +52,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (tv === null) {
     return e("没有匹配的电视剧记录");
   }
-  const { profile, seasons, episodes } = tv;
+  const { profile, play_history, seasons, episodes } = tv;
+  const playing_episode = await (async () => {
+    if (play_history === null) {
+      return null;
+    }
+    const { episode_id } = play_history;
+    if (episode_id === null) {
+      return null;
+    }
+  })();
+  const first_episode = (() => {
+    if (episodes.length === 0) {
+      return null;
+    }
+    const { id, season_number, episode_number, profile, parsed_episodes } = episodes[0];
+    const { name, overview } = profile;
+    return {
+      id,
+      name,
+      overview,
+      season_number,
+      episode_number,
+      sources: parsed_episodes.map((parsed_episode) => {
+        const { file_id, file_name } = parsed_episode;
+        return {
+          id: file_id,
+          file_id,
+          file_name,
+        };
+      }),
+    };
+  })();
+
   const { name, original_name, overview, poster_path, popularity } = profile;
   const data = {
     id,
@@ -59,17 +92,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     overview,
     poster_path,
     popularity,
-    episodes: episodes.map((episode) => {
-      const { id, season_number, episode_number, profile } = episode;
+    seasons: seasons.map((season) => {
+      const { id, season_number, profile } = season;
       const { name, overview } = profile;
       return {
         id,
-        name,
+        name: name || season_number,
         overview,
-        season_number,
-        episode_number,
       };
     }),
+    first_episode,
   };
   res.status(200).json({ code: 0, msg: "", data });
 }

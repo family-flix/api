@@ -296,8 +296,8 @@ model tv {
         seasons         season[]
         episodes        episode[]
         parsed_tvs      parsed_tv[]
+        play_history    play_history?
         recommended_tvs recommended_tv[]
-        play_histories  play_history[]
 
         @@map("TV")
 }
@@ -383,24 +383,26 @@ model async_task {
 }
 
 model play_history {
-        id           String   @id
-        created      DateTime @default(now())
-        updated      DateTime @default(now())
-        // 当前播放的影片总时长
-        duration     Float?   @default(0)
-        // 当前播放进度
-        current_time Float?   @default(0)
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
 
-        tv_id      String?
+        // 当前播放的影片总时长
+        duration     Float? @default(0)
+        // 当前播放进度
+        current_time Float? @default(0)
+
+        tv_id      String?  @unique
         tv         tv?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
         // season_id  String?
         // season     season?  @relation(fields: [season_id], references: [id])
         episode_id String?
         episode    episode? @relation(fields: [episode_id], references: [id])
-        movie_id   String?
+        movie_id   String?  @unique
         movie      movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
-        member_id  String
-        member     member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+        member_id String
+        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
         @@map("PlayHistory")
 }
@@ -448,24 +450,18 @@ model shared_file {
         @@map("SharedFile")
 }
 
-// 一次分享资源转存记录
+// 一次分享资源转存记录（文件夹
 model shared_file_in_progress {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        // 关联的分享文件夹 file_id
-        file_id        String
-        // 关联的分享文件夹名称
-        name           String
-        // 关联的目标文件夹 file_id
-        target_file_id String?
-        // 是否已完结
-        complete       Float?  @default(0)
         // 分享文件夹所属 url
-        url            String
-        // 该分享文件夹是否失效
-        need_update    Float?  @default(0)
+        url     String
+        // 关联的分享文件夹 file_id
+        file_id String
+        // 关联的分享文件夹名称
+        name    String
 
         // 关联 user 表
         user_id String

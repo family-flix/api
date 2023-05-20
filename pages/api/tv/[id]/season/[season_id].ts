@@ -1,75 +1,70 @@
 /**
- * @file 获取 tv 详情，包括季、集等信息
+ * @file 获取指定电视剧、指定季详情
  */
+// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { store } from "@/store";
 import { Member } from "@/domains/user/member";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
+  const { id, season_id } = req.query as Partial<{ id: string; season_id: string }>;
   if (!id) {
     return e("缺少电视剧 id");
+  }
+  if (!season_id) {
+    return e("缺少季 id");
   }
   const t_res = await Member.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const tv = await store.prisma.tv.findFirst({
+  const { id: member_id } = t_res.data;
+
+  const season = await store.prisma.season.findFirst({
     where: {
-      id,
+      id: season_id,
+      tv_id: id,
     },
     include: {
       profile: true,
       episodes: {
         include: {
           profile: true,
-          parsed_episodes: true,
         },
         orderBy: {
           episode_number: "asc",
         },
-        skip: 0,
-        take: 20,
-      },
-      seasons: {
-        include: {
-          profile: true,
-          parsed_season: true,
-        },
-        orderBy: {
-          season_number: "asc",
-        },
       },
     },
   });
-  if (tv === null) {
-    return e("没有匹配的电视剧记录");
+
+  if (season === null) {
+    return e("没有匹配的季记录");
   }
-  const { profile, seasons, episodes } = tv;
-  const { name, original_name, overview, poster_path, popularity } = profile;
+  const { season_number, profile, episodes } = season;
+  const { name, overview, poster_path } = profile;
   const data = {
     id,
-    name: name || original_name,
+    name,
     overview,
     poster_path,
-    popularity,
+    season_number: name || season_number,
     episodes: episodes.map((episode) => {
-      const { id, season_number, episode_number, profile } = episode;
+      const { id, profile, episode_number } = episode;
       const { name, overview } = profile;
       return {
         id,
-        name,
+        name: name || episode_number,
         overview,
-        season_number,
         episode_number,
       };
     }),
   };
+
   res.status(200).json({ code: 0, msg: "", data });
 }

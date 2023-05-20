@@ -9,12 +9,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { Member } from "@/domains/user/member";
 
-const { add_history, find_history, update_history } = store;
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
@@ -29,33 +24,35 @@ export default async function handler(
     duration: number;
   }>;
   if (!tv_id) {
-    return e("missing tv_id");
+    return e("缺少电视剧 id");
   }
   if (!episode_id) {
-    return e("missing episode_id");
+    return e("缺少影片 id");
   }
-  const t_resp = await Member.New(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t_res = await Member.New(authorization);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const { id: member_id } = t_resp.data;
-  const existing_play_resp = await find_history({
+  const { id: member_id } = t_res.data;
+  const existing_history_res = await store.find_history({
     tv_id,
+    // 这里不能传 episode_id，当前是 E01，更新成 E02 时，用 E02 去找就有问题
+    // episode_id,
     member_id,
   });
-  if (existing_play_resp.error) {
-    return e(existing_play_resp);
+  if (existing_history_res.error) {
+    return e(existing_history_res);
   }
-  if (!existing_play_resp.data) {
-    const adding_resp = await add_history({
+  if (!existing_history_res.data) {
+    const adding_res = await store.add_history({
       tv_id,
       episode_id,
       current_time,
       duration,
       member_id,
     });
-    if (adding_resp.error) {
-      return e(adding_resp);
+    if (adding_res.error) {
+      return e(adding_res);
     }
     return res.status(200).json({
       code: 0,
@@ -63,13 +60,13 @@ export default async function handler(
       data: null,
     });
   }
-  const update_resp = await update_history(existing_play_resp.data.id, {
+  const update_res = await store.update_history(existing_history_res.data.id, {
+    episode_id,
     current_time,
     duration,
-    episode_id,
   });
-  if (update_resp.error) {
-    return e(update_resp);
+  if (update_res.error) {
+    return e(update_res);
   }
   res.status(200).json({
     code: 0,
