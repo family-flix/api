@@ -61,14 +61,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(existing2_res);
   }
   if (existing2_res.data) {
-    return e("网盘内已有同名文件夹");
+    return e("云盘内已有同名文件夹");
   }
   const drive_res = await store.find_drive({ id: drive_id, user_id });
   if (drive_res.error) {
     return e(drive_res);
   }
-  if (!drive_res) {
+  const drive = drive_res.data;
+  if (!drive) {
     return e("没有匹配的云盘记录");
+  }
+  if (!drive.root_folder_name) {
+    return e("请先为云盘添加索引根目录");
   }
   const client = new AliyunDriveClient({ drive_id, store });
   const r1 = await client.save_shared_files({
@@ -81,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   await store.add_tmp_file({
     name: file_name,
     type: FileType.Folder,
-    parent_paths: "",
+    parent_paths: drive.root_folder_name,
     drive_id,
     user_id,
   });

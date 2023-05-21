@@ -80,6 +80,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     id: string;
     name: string;
     overview: string;
+    season_number: string;
+    episode_number: string;
     file_id: string;
     thumbnail: string;
     url: string;
@@ -100,6 +102,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     return play_info_res.data[0];
   })();
+  if (recommend.url.includes("x-oss-additional-headers=referer")) {
+    return e("视频文件无法播放，请修改 refresh_token");
+  }
   const { name, overview } = profile;
   (() => {
     const { url, type, width, height } = recommend;
@@ -107,6 +112,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       id,
       name: name || episode_number,
       overview: overview || "",
+      season_number,
+      episode_number,
       file_id,
       url,
       thumbnail,

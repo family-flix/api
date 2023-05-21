@@ -1,6 +1,4 @@
 import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
-import { TVProfileItemInTMDB } from "@/domains/tmdb/services";
-import { TMDBClient } from "@/domains/tmdb";
 import { SearchedEpisode } from "@/domains/walker";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { DiffTypes } from "@/domains/folder_differ";
@@ -41,8 +39,8 @@ export async function add_parsed_infos_when_walk(
   store: ReturnType<typeof store_factory>
 ) {
   const { tv, season, episode } = data;
-  log("\n\n--------\n处理视频文件", data.episode.file_name);
   const prefix = `[${episode.parent_paths}/${episode.file_name}]`;
+  log(`[${prefix}]`, "开始处理视频文件");
   const existing_episode_res = await store.find_parsed_episode({
     file_id: episode.file_id,
   });
@@ -1027,102 +1025,6 @@ type DuplicateEpisodes = Record<
     first?: boolean;
   })[]
 >;
-export async function find_duplicate_episodes(
-  extra: { user_id: string; drive_id: string },
-  store: ReturnType<typeof store_factory>
-) {
-  const { drive_id, user_id } = extra;
-  const drive_res = await store.find_drive({ id: drive_id, user_id });
-  if (drive_res.error) {
-    return Result.Err(drive_res.error);
-  }
-  if (!drive_res.data) {
-    return Result.Err("No matched record of drive");
-  }
-  const parent_paths = (
-    await store.prisma.parsed_episode.groupBy({
-      by: ["file_name", "parent_paths"],
-      having: {
-        file_name: {
-          _count: {
-            gt: 1,
-          },
-        },
-      },
-      where: {
-        drive_id,
-      },
-      _count: {
-        file_name: true,
-        parent_paths: true,
-      },
-    })
-  ).map((r) => r.parent_paths);
-  const resp = await resultify(store.prisma.parsed_episode.findMany.bind(store.prisma.parsed_episode))({
-    select: {
-      id: true,
-      file_name: true,
-      parent_paths: true,
-      // play_histories: true,
-      // PlayHistory: true,
-      // PlayHistory: {
-      //   select: {
-      //     id: true,
-      //   },
-      // },
-    },
-    where: {
-      AND: [
-        { drive_id },
-        {
-          parent_paths: {
-            in: parent_paths,
-          },
-        },
-      ],
-    },
-    orderBy: {
-      file_name: "asc",
-      parent_paths: "asc",
-    },
-  });
-  if (resp.error) {
-    return Result.Err(resp.error);
-  }
-  const episodes = resp.data;
-  if (episodes.length === 0) {
-    return Result.Ok({} as DuplicateEpisodes);
-  }
-  const r = episodes.reduce((total, cur) => {
-    const { id, file_id, file_name, parent_paths } = cur;
-    const k = `${file_name}/${parent_paths}`;
-    total[k] = total[k] || [];
-    if (total[k].length === 0) {
-      total[k].push({
-        id,
-        has_play: false,
-        // has_play: PlayHistory.id !!history_id,
-        // has_play: !!PlayHistory,
-        first: true,
-        file_name,
-        file_id,
-        parent_paths,
-      });
-      return total;
-    }
-    total[k].push({
-      id,
-      file_name,
-      has_play: false,
-      // has_play: !!history_id,
-      // has_play: !!PlayHistory,
-      file_id,
-      parent_paths,
-    });
-    return total;
-  }, {} as DuplicateEpisodes);
-  return Result.Ok(r);
-}
 
 export async function patch_serialized_shared_folder(
   shared_folder: SharedFilesInProgressRecord,

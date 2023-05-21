@@ -121,22 +121,34 @@ export async function walk_drive(options: {
     };
   }
   walker.on_error = (file) => {
+    log("索引云盘出现错误", file.name, file._position);
     // console.log("[]walk on error", file.name);
   };
   walker.on_warning = (file) => {
+    log("索引云盘出现警告", file.name, file._position);
     // console.log("[]walk on warning", file.name);
   };
   walker.on_file = async (file) => {
     const { name, parent_paths } = file;
     await adding_file_safely(file, { user_id, drive_id }, store);
-    const r = await store.delete_tmp_file({
+    const tmp_file_res = await store.find_tmp_file({
       name,
       parent_paths,
       drive_id,
       user_id,
     });
-    if (r.error) {
-      log("删除临时文件", parent_paths, name, "失败", r.error.message);
+    if (tmp_file_res.error) {
+      return;
+    }
+    const tmp_file = tmp_file_res.data;
+    if (!tmp_file) {
+      return;
+    }
+    const r2 = await store.delete_tmp_file({
+      id: tmp_file.id,
+    });
+    if (r2.error) {
+      log("删除临时文件", parent_paths, name, "失败", r2.error.message);
     }
   };
   let count = 0;
@@ -152,6 +164,7 @@ export async function walk_drive(options: {
     return;
   };
   walker.on_movie = async (parsed) => {
+    log("索引到电影", parsed);
     // const r = await check_need_stop(async_task_id);
     // if (r && r.data) {
     //   need_stop = true;

@@ -3,11 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 
-import {
-  extra_season_and_episode,
-  is_season,
-  parse_filename_for_video,
-} from "../index";
+import { extra_season_and_episode, is_season, parse_filename_for_video } from "../index";
 
 describe("提取视频信息", () => {
   test("Modern.Family", () => {
@@ -88,8 +84,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Futurama.S07E22.Leela.and.the.Genestalk.1080p.Blu-ray.DD5.1.x264-CtrlHD", () => {
-    const name =
-      "Futurama.S07E22.Leela.and.the.Genestalk.1080p.Blu-ray.DD5.1.x264-CtrlHD";
+    const name = "Futurama.S07E22.Leela.and.the.Genestalk.1080p.Blu-ray.DD5.1.x264-CtrlHD";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -122,8 +117,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Desperate Housewives S06E21 1080p WEB-DL DD+ 5.1 x264-TrollHD", () => {
-    const name =
-      "Desperate Housewives S06E21 1080p WEB-DL DD+ 5.1 x264-TrollHD";
+    const name = "Desperate Housewives S06E21 1080p WEB-DL DD+ 5.1 x264-TrollHD";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -135,8 +129,7 @@ describe("提取视频信息", () => {
   });
 
   test("Young.Sheldon.S01E22.1080p.Blu-Ray.AC3.x265.10bit-Yumi@FRDS.mkv", () => {
-    const name =
-      "Young.Sheldon.S01E22.1080p.Blu-Ray.AC3.x265.10bit-Yumi@FRDS.mkv";
+    const name = "Young.Sheldon.S01E22.1080p.Blu-Ray.AC3.x265.10bit-Yumi@FRDS.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -169,8 +162,7 @@ describe("提取视频信息", () => {
     });
   });
   test("The.Sopranos.S01E13.1999.1080P.Blu-ray.x265.AC3.cXcY@FRDS.mkv", () => {
-    const name =
-      "The.Sopranos.S01E13.1999.1080P.Blu-ray.x265.AC3.￡cXcY@FRDS.mkv";
+    const name = "The.Sopranos.S01E13.1999.1080P.Blu-ray.x265.AC3.￡cXcY@FRDS.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -181,8 +173,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Futurama.S07E01.The.Bots.and.the.Bees.1080p.BluRay.DD5.1.x264-CtrlHD.mkv", () => {
-    const name =
-      "Futurama.S07E01.The.Bots.and.the.Bees.1080p.BluRay.DD5.1.x264-CtrlHD.mkv";
+    const name = "Futurama.S07E01.The.Bots.and.the.Bees.1080p.BluRay.DD5.1.x264-CtrlHD.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -193,8 +184,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Futurama.S07E14.2-D.Blacktop.1080p.Blu-ray.DD5.1.x264-CtrlHD.mkv", () => {
-    const name =
-      "Futurama.S07E14.2-D.Blacktop.1080p.Blu-ray.DD5.1.x264-CtrlHD.mkv";
+    const name = "Futurama.S07E14.2-D.Blacktop.1080p.Blu-ray.DD5.1.x264-CtrlHD.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -205,8 +195,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Futurama.S07E15.Fry.and.Leela's.Big.Fling.1080p.Blu-ray.DD5.1.x264-CtrlHD.mkv", () => {
-    const name =
-      "Futurama.S07E15.Fry.and.Leela's.Big.Fling.1080p.Blu-ray.DD5.1.x264-CtrlHD.mkv";
+    const name = "Futurama.S07E15.Fry.and.Leela's.Big.Fling.1080p.Blu-ray.DD5.1.x264-CtrlHD.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -217,8 +206,7 @@ describe("提取视频信息", () => {
     });
   });
   test("The.Boys.S03E04.Glorious.Five.Year.Plan.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.mkv", () => {
-    const name =
-      "The.Boys.S03E04.Glorious.Five.Year.Plan.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.mkv";
+    const name = "The.Boys.S03E04.Glorious.Five.Year.Plan.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -339,8 +327,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Emily.in.Paris.S02E04.Jules.and.Em.1080p.NF.WEB-DL.DDP5.1.HDR.H.265-TEPES.mkv", () => {
-    const name =
-      "Emily.in.Paris.S02E04.Jules.and.Em.1080p.NF.WEB-DL.DDP5.1.HDR.H.265-TEPES.mkv";
+    const name = "Emily.in.Paris.S02E04.Jules.and.Em.1080p.NF.WEB-DL.DDP5.1.HDR.H.265-TEPES.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -351,8 +338,7 @@ describe("提取视频信息", () => {
     });
   });
   test("The Walking Dead - S01E06 - WEBDL-1080p h264 EAC3 5.1 - DSNP.mkv", () => {
-    const name =
-      "The Walking Dead - S01E06 - WEBDL-1080p h264 EAC3 5.1 - DSNP.mkv";
+    const name = "The Walking Dead - S01E06 - WEBDL-1080p h264 EAC3 5.1 - DSNP.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -374,8 +360,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Bones.S10E06.The.Lost.Love.in.the.Foreign.Land.1080p.AMZN.WEB-DL.DD+5.1.H.265-SiGMA.mkv", () => {
-    const name =
-      "Bones.S10E06.The.Lost.Love.in.the.Foreign.Land.1080p.AMZN.WEB-DL.DD+5.1.H.265-SiGMA.mkv";
+    const name = "Bones.S10E06.The.Lost.Love.in.the.Foreign.Land.1080p.AMZN.WEB-DL.DD+5.1.H.265-SiGMA.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -408,8 +393,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Criminal.Minds.S07E23-E24.Hit&Run.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv", () => {
-    const name =
-      "Criminal.Minds.S07E23-E24.Hit&Run.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv";
+    const name = "Criminal.Minds.S07E23-E24.Hit&Run.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -431,8 +415,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Criminal.Minds.S04E09.52.Pickup.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv", () => {
-    const name =
-      "Criminal.Minds.S04E09.52.Pickup.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv";
+    const name = "Criminal.Minds.S04E09.52.Pickup.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -443,8 +426,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Gravity.Falls.S01E19.Dreamscaperers.1080p.WEB-DL.DD5.1.H.264-BS666.mkv", () => {
-    const name =
-      "Gravity.Falls.S01E19.Dreamscaperers.1080p.WEB-DL.DD5.1.H.264-BS666.mkv";
+    const name = "Gravity.Falls.S01E19.Dreamscaperers.1080p.WEB-DL.DD5.1.H.264-BS666.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -455,8 +437,7 @@ describe("提取视频信息", () => {
     });
   });
   test("实习Y生格L.S17E03.HD1080P.YYeTs.中英双字.霸王龙压制组T-Rex.mp4", () => {
-    const name =
-      "实习Y生格L.S17E03.HD1080P.YYeTs.中英双字.霸王龙压制组T-Rex.mp4";
+    const name = "实习Y生格L.S17E03.HD1080P.YYeTs.中英双字.霸王龙压制组T-Rex.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "实习Y生格L",
@@ -497,11 +478,11 @@ describe("提取视频信息", () => {
     const name = "老友记S02.Friends.1995.1080p.Blu-ray.x265.AC3￡cXcY@FRDS";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "老友记S02",
-      original_name: "Friends",
-      season: "",
+      name: "老友记",
+      original_name: "",
+      season: "S02",
       episode: "",
-      episode_name: "",
+      episode_name: "Friends",
     });
   });
   test("Light.The.Night.S02E08.NF.WEB-DL.1080p.H264.DDP5.1.mp4", () => {

@@ -1,5 +1,5 @@
 /**
- * @file 索引云盘（支持传入文件夹 id 表示仅索引该文件夹）
+ * @file 增量索引云盘（仅索引通过「转存」操作转存到云盘的文件，速度更快）
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -9,12 +9,10 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { User } from "@/domains/user";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
+import { FileType } from "@/constants";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id: drive_id, target_folder } = req.query as Partial<{
@@ -24,11 +22,11 @@ export default async function handler(
   if (!drive_id) {
     return e("缺少云盘 id 参数");
   }
-  const t_resp = await User.New(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t_res = await User.New(authorization);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const { id: user_id } = t_resp.data;
+  const { id: user_id } = t_res.data;
   const drive_res = await store.find_drive({ id: drive_id });
   if (drive_res.error) {
     return e(drive_res);
@@ -37,6 +35,16 @@ export default async function handler(
     return e("没有找到匹配的云盘记录");
   }
   const { root_folder_id } = drive_res.data;
+  const tmp_folders = await store.prisma.file.findMany({
+    where: {
+      type: FileType.Folder,
+      drive_id,
+      user_id,
+    },
+  });
+  if (tmp_folders.length === 0) {
+    return Result.Err("没有找到可索引的转存文件");
+  }
   const client = new AliyunDriveClient({
     drive_id,
     store,
@@ -45,14 +53,13 @@ export default async function handler(
     drive_id,
     user_id,
     client,
-    files: target_folder
-      ? [
-          {
-            name: target_folder,
-            type: "folder",
-          },
-        ]
-      : [],
+    files: tmp_folders.map((folder) => {
+      const { name } = folder;
+      return {
+        name,
+        type: "folder",
+      };
+    }),
     store,
     need_upload_image: true,
   });

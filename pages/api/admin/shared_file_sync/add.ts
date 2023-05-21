@@ -57,9 +57,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return e(r2);
     }
   }
-  if (shared_file_in_progress?.target_file_id) {
-    return e(`${file_name} 已经和同名文件夹建立关联`);
-  }
+  // if (shared_file_in_progress?.target_file_id) {
+  //   return e(`${file_name} 已经和同名文件夹建立关联`);
+  // }
   if (target_file_id) {
     // 直接根据网盘文件夹 id 和 shared_files 建立关联，这种是手动选择了网盘内的文件夹
     const r = await build_link_between_shared_files_with_folder(
@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     store.delete_shared_file_save({
       file_id,
       user_id,
-      need_update: 1,
+      // need_update: 1,
     });
     res.status(200).json({ code: 0, msg: "", data: null });
     return;
@@ -102,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     file_id,
     name: file_name,
     user_id,
-    need_update: 1,
+    // need_update: 1,
   });
   res.status(200).json({ code: 0, msg: "", data: null });
 }

@@ -38,14 +38,15 @@ model drive {
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        drive_token     drive_token?
-        parsed_tvs      parsed_tv[]
-        parsed_seasons  parsed_season[]
-        parsed_episodes parsed_episode[]
-        drive_check_in  drive_check_in[]
-        files           file[]
-        tmp_files       tmp_file[]
-        parsed_movies   parsed_movie[]
+        drive_token             drive_token?
+        parsed_tvs              parsed_tv[]
+        parsed_seasons          parsed_season[]
+        parsed_episodes         parsed_episode[]
+        drive_check_in          drive_check_in[]
+        files                   file[]
+        tmp_files               tmp_file[]
+        parsed_movies           parsed_movie[]
+        shared_file_in_progress shared_file_in_progress[]
 
         @@map("Drive")
 }
@@ -457,15 +458,17 @@ model shared_file_in_progress {
         updated DateTime @default(now())
 
         // 分享文件夹所属 url
-        url     String
+        url          String
         // 关联的分享文件夹 file_id
-        file_id String
+        file_id      String
         // 关联的分享文件夹名称
-        name    String
+        name         String
+        parent_paths String
 
-        // 关联 user 表
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        drive_id String
+        drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        user_id  String
+        user     user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("SharedFileInProgress")
 }

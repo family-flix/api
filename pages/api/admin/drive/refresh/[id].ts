@@ -30,13 +30,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(r);
   }
+  const { used_size, total_size } = r.data;
   res.status(200).json({
     code: 0,
     msg: "",
     data: {
       ...r.data,
-      used_size: bytes_to_size(r.data.used_size || 0),
-      total_size: bytes_to_size(r.data.total_size || 0),
+      used_size,
+      total_size,
+      used_size_text: bytes_to_size(used_size || 0),
+      total_size_text: bytes_to_size(total_size || 0),
     },
   });
 }

@@ -1,5 +1,5 @@
 /**
- * @file 获取转存文件历史
+ * @file 获取分享资源查询记录
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";

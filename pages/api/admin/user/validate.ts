@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { Member } from "@/domains/user/member";
+import { User } from "@/domains/user";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!token) {
     return e("缺少 token");
   }
-  const t_res = await Member.New(token);
+  const t_res = await User.New(token);
   if (t_res.error) {
     return e(t_res);
   }

@@ -1,10 +1,8 @@
+import chalk from "chalk";
 import Nzh from "nzh";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 import relative_time from "dayjs/plugin/relativeTime";
-import chalk from "chalk";
-import { ParsedTVRecord } from "@/store/types";
-import { JSONObject, JSONValue } from "@/types";
 
 dayjs.extend(relative_time);
 dayjs.locale("zh-cn");
@@ -51,10 +49,13 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode", "episode_name"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("A.Dream.of.Splendor")) {
+    if (!filename.includes("老友记S02")) {
       return;
     }
-    // console.log(...args);
+    // if (!filename.includes("小谢尔顿S05E09")) {
+    //   return;
+    // }
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -367,6 +368,12 @@ export function parse_filename_for_video(
       desc: "总季数2",
       regexp: /第[0-9]{1,}[季部]/,
     },
+    // {
+    //   regexp: /[^.][sS][0-9]{1,}/,
+    //   before() {
+    //     cur_filename = normalize_season_number(cur_filename);
+    //   },
+    // },
     {
       key: k("season"),
       desc: "special season1",
@@ -448,6 +455,8 @@ export function parse_filename_for_video(
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
         cur_filename = cur_filename.replace(/^([0-9]{4}\.)([\u4e00-\u9fa5]{1,})/, "$2.$1");
+        // 把 老友记S02 这种情况转换成 老友记.S02
+        cur_filename = cur_filename.replace(/^([\u4e00-\u9fa5]{1,})([sS][0-9]{1,})/, "$1.$2");
         // 如果名字前面有很多冗余信息，前面就会出现 ..名称 这种情况，就需要手动处理掉
         cur_filename = cur_filename.replace(/^\.{2,}/, "");
         const include_japanese = is_japanese(cur_filename);
@@ -564,7 +573,7 @@ export function parse_filename_for_video(
       // 有些影片名字是「影片名.8.8.English.Name」，不知道这里的 8.8、7.6 等数字是什么意思，上映日期？放在这么后面是因为存在 DDP.5.1 这种情况
       regexp: /\.[0-9]\.[0-9]\./,
     },
-    // 季
+    // 上面没有解析出来，这里是最后的机会提取季
     {
       key: k("season"),
       regexp: /[sS][eE]{0,1}[0-9]{1,}/,
@@ -921,6 +930,13 @@ export function remove_str(filename: string, index: number = 0, length: number) 
   return filename.slice(0, index) + filename.slice(index + length);
 }
 
+export function normalize_season_number(filename: string) {
+  let name = filename;
+  // if (/[sS][0-9]{1,}[eE][0-9]{1,}/.test(name)) {
+
+  // }
+  return name.replace(/b([sS][0-9]{1,})([eE][0-9]{1,})\b/g, ".$1.$2");
+}
 /**
  * 各种奇怪的集数信息正常化
  * @param filename

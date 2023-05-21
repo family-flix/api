@@ -44,24 +44,18 @@ export class Member {
       return Result.Err(r.error);
     }
     const id = r.data.id as UserUniqueID;
-    const existing = await resultify(
-      store.prisma.member.findUnique.bind(store.prisma.member)
-    )({ where: { id } });
+    const existing = await resultify(store.prisma.member.findUnique.bind(store.prisma.member))({ where: { id } });
     if (existing.error) {
       return Result.Err(existing.error);
     }
     if (existing.data === null) {
-      return Result.Err("不存在该记录");
+      return Result.Err("无效身份凭证");
     }
     const user = new Member({ id, token });
     return Result.Ok(user);
   }
-  static async NewWithPassword(
-    values: Partial<{ email: string; password: string }>
-  ) {
-    const r = await resultify(
-      credentialsSchema.validateAsync.bind(credentialsSchema)
-    )(values);
+  static async NewWithPassword(values: Partial<{ email: string; password: string }>) {
+    const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -90,9 +84,7 @@ export class Member {
     return Result.Ok(user);
   }
   static async Add(values: Partial<{ email: string; password: string }>) {
-    const r = await resultify(
-      credentialsSchema.validateAsync.bind(credentialsSchema)
-    )(values);
+    const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -165,7 +157,5 @@ export class Member {
   /** 补全信息 */
   async register(values: Partial<{ email: string; password: string }>) {}
   /** 密码登录 */
-  async login_with_password(
-    values: Partial<{ email: string; password: string }>
-  ) {}
+  async login_with_password(values: Partial<{ email: string; password: string }>) {}
 }

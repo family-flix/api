@@ -3,11 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 
-import {
-  extra_season_and_episode,
-  is_season,
-  parse_filename_for_video,
-} from "../index";
+import { extra_season_and_episode, is_season, parse_filename_for_video } from "../index";
 
 describe("提取视频信息", () => {
   test("鸡毛飞上天 - S01E55 - 第 55 集.mp4", () => {
@@ -33,8 +29,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Magic.Mobile.Phone.2008.S01E42.WEB-DL.1080p.H265.AAC-HotWEB.mp4", () => {
-    const name =
-      "Magic.Mobile.Phone.2008.S01E42.WEB-DL.1080p.H265.AAC-HotWEB.mp4";
+    const name = "Magic.Mobile.Phone.2008.S01E42.WEB-DL.1080p.H265.AAC-HotWEB.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -78,8 +73,7 @@ describe("提取视频信息", () => {
     });
   });
   test("宝莲灯前传.Lotus.Lantern.Prequel.2009.V2.EP46.2160P(4K).WEB-DL.X265.AAC-Vampire.mp4", () => {
-    const name =
-      "宝莲灯前传.Lotus.Lantern.Prequel.2009.V2.EP46.2160P(4K).WEB-DL.X265.AAC-Vampire.mp4";
+    const name = "宝莲灯前传.Lotus.Lantern.Prequel.2009.V2.EP46.2160P(4K).WEB-DL.X265.AAC-Vampire.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "宝莲灯前传",
@@ -112,8 +106,7 @@ describe("提取视频信息", () => {
     });
   });
   test("龙门镖局.7.6.Longmen.Express.2013.EP01-40.4K.2160p.HEVC.AAC-DHTCLUB", () => {
-    const name =
-      "龙门镖局.7.6.Longmen.Express.2013.EP01-40.4K.2160p.HEVC.AAC-DHTCLUB";
+    const name = "龙门镖局.7.6.Longmen.Express.2013.EP01-40.4K.2160p.HEVC.AAC-DHTCLUB";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "龙门镖局",
@@ -280,8 +273,7 @@ describe("提取视频信息", () => {
     });
   });
   test("无心法师.第一季.Wuxin：The.Monster.Killer.S01E20.2015.1080p.WEB-DL.x264.AAC-HeiGuo.mp4", () => {
-    const name =
-      "无心法师.第一季.Wuxin：The.Monster.Killer.S01E20.2015.1080p.WEB-DL.x264.AAC-HeiGuo.mp4";
+    const name = "无心法师.第一季.Wuxin：The.Monster.Killer.S01E20.2015.1080p.WEB-DL.x264.AAC-HeiGuo.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "无心法师",
@@ -303,8 +295,7 @@ describe("提取视频信息", () => {
     });
   });
   test("宝莲灯前传.全46集.Lotus.Lantern.Prequel.2009.V2.Complete.2160P[4K]WEB-DL.X265.AAC-Vampire", () => {
-    const name =
-      "宝莲灯前传.全46集.Lotus.Lantern.Prequel.2009.V2.Complete.2160P[4K]WEB-DL.X265.AAC-Vampire";
+    const name = "宝莲灯前传.全46集.Lotus.Lantern.Prequel.2009.V2.Complete.2160P[4K]WEB-DL.X265.AAC-Vampire";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "宝莲灯前传",
@@ -371,8 +362,7 @@ describe("提取视频信息", () => {
     });
   });
   test("A.Little.Mood.For.Love.EP01-40.2021.4K.60FPS.WEB-DL.HEVC.AAC-HQC", () => {
-    const name =
-      "A.Little.Mood.For.Love.EP01-40.2021.4K.60FPS.WEB-DL.HEVC.AAC-HQC";
+    const name = "A.Little.Mood.For.Love.EP01-40.2021.4K.60FPS.WEB-DL.HEVC.AAC-HQC";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -497,8 +487,7 @@ describe("提取视频信息", () => {
     });
   });
   test("三十而已.全43集.Nothing.But.Thirty.2020.4K.H265.AAC.内嵌简中.87.7G", () => {
-    const name =
-      "三十而已.全43集.Nothing.But.Thirty.2020.4K.H265.AAC.内嵌简中.87.7G";
+    const name = "三十而已.全43集.Nothing.But.Thirty.2020.4K.H265.AAC.内嵌简中.87.7G";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "三十而已",
@@ -575,8 +564,7 @@ describe("提取视频信息", () => {
     });
   });
   test("【SuperMiao】A.Dream.of.Splendor.2022.EP40.V2.4K.WEB-DL.H265.AAC.mp4", () => {
-    const name =
-      "【SuperMiao】A.Dream.of.Splendor.2022.EP40.V2.4K.WEB-DL.H265.AAC.mp4";
+    const name = "【SuperMiao】A.Dream.of.Splendor.2022.EP40.V2.4K.WEB-DL.H265.AAC.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -598,8 +586,7 @@ describe("提取视频信息", () => {
     });
   });
   test("J-将夜.Ever.Night.S01.2018.EP01-60.WEB-DL.1080p.H265.AAC-BtsTV", () => {
-    const name =
-      "J-将夜.Ever.Night.S01.2018.EP01-60.WEB-DL.1080p.H265.AAC-BtsTV";
+    const name = "J-将夜.Ever.Night.S01.2018.EP01-60.WEB-DL.1080p.H265.AAC-BtsTV";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "将夜",
@@ -655,8 +642,7 @@ describe("提取视频信息", () => {
     });
   });
   test("[地狱公使]Hellbound.S01E06.Episode.6.1080p.NF.WEB-DL.x265.10bit.HDR.DDP5.1.Atmos.BOBO.mkv", () => {
-    const name =
-      "[地狱公使]Hellbound.S01E06.Episode.6.1080p.NF.WEB-DL.x265.10bit.HDR.DDP5.1.Atmos.BOBO.mkv";
+    const name = "[地狱公使]Hellbound.S01E06.Episode.6.1080p.NF.WEB-DL.x265.10bit.HDR.DDP5.1.Atmos.BOBO.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "地狱公使",
@@ -667,8 +653,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Hellbound.S01E06.Episode.6.1080p.NF.WEB-DL.DDP.5.1.Atmos.HDR10.H.265-BlackTV.mkv", () => {
-    const name =
-      "Hellbound.S01E06.Episode.6.1080p.NF.WEB-DL.DDP.5.1.Atmos.HDR10.H.265-BlackTV.mkv";
+    const name = "Hellbound.S01E06.Episode.6.1080p.NF.WEB-DL.DDP.5.1.Atmos.HDR10.H.265-BlackTV.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -679,8 +664,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Strange.Tales.of.Tang.Dynasty.2022.S01E36.2160p.iQIYI.WEB-DL.DDP5.1.H.265-Nanzhi.mkv", () => {
-    const name =
-      "Strange.Tales.of.Tang.Dynasty.2022.S01E36.2160p.iQIYI.WEB-DL.DDP5.1.H.265-Nanzhi.mkv";
+    const name = "Strange.Tales.of.Tang.Dynasty.2022.S01E36.2160p.iQIYI.WEB-DL.DDP5.1.H.265-Nanzhi.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -691,8 +675,7 @@ describe("提取视频信息", () => {
     });
   });
   test("Taiwan.Crime.Stories.S01E12.2023.DSNP.WEB-DL.1080p.H264.DDP-SuperMiao.mkv", () => {
-    const name =
-      "Taiwan.Crime.Stories.S01E12.2023.DSNP.WEB-DL.1080p.H264.DDP-SuperMiao.mkv";
+    const name = "Taiwan.Crime.Stories.S01E12.2023.DSNP.WEB-DL.1080p.H264.DDP-SuperMiao.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -914,8 +897,7 @@ describe("提取视频信息", () => {
     });
   });
   test("CYW.The Legend of Sword and Fairy 3.EP37.2009.2160p.WEB-DL.x265.AAC-SXG.mp4", () => {
-    const name =
-      "CYW.The Legend of Sword and Fairy 3.EP37.2009.2160p.WEB-DL.x265.AAC-SXG.mp4";
+    const name = "CYW.The Legend of Sword and Fairy 3.EP37.2009.2160p.WEB-DL.x265.AAC-SXG.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -955,6 +937,17 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "",
       episode: "E01",
+      episode_name: "",
+    });
+  });
+  test("小谢尔顿S05E09.mp4", () => {
+    const name = "小谢尔顿S05E09.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "小谢尔顿",
+      original_name: "",
+      season: "S05",
+      episode: "E09",
       episode_name: "",
     });
   });
