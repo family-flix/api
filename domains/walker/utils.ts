@@ -16,7 +16,7 @@ import { qiniu_upload_online_file } from "@/utils/back_end";
 import { Result, resultify } from "@/types";
 import { FileType } from "@/constants";
 
-import { patch_tv_in_progress } from "./run_tv_sync_task";
+import { run_sync_task } from "./run_tv_sync_task";
 
 export type EventHandlers = Partial<{
   on_tv: (tv: ParsedTVRecord & RecordCommonPart) => void;
@@ -1025,85 +1025,6 @@ type DuplicateEpisodes = Record<
     first?: boolean;
   })[]
 >;
-
-export async function patch_serialized_shared_folder(
-  shared_folder: SharedFilesInProgressRecord,
-  store: ReturnType<typeof store_factory>
-) {
-  const { name, original_name, episode_count } = parse_filename_for_video(shared_folder.name, [
-    "name",
-    "original_name",
-    "episode_count",
-  ]);
-  if (!episode_count) {
-    return Result.Err(`${shared_folder.name} 非连载电视剧`);
-  }
-  if (!name && !original_name) {
-    // 这种情况不太可能出现
-    return Result.Err(`${shared_folder.name} 非电视剧`);
-  }
-  const { url, file_id, target_file_id, user_id } = shared_folder;
-  if (!target_file_id) {
-    return Result.Err(`${shared_folder.name} 还没有关联网盘文件夹`);
-  }
-  const matched_folder_res = await store.find_file({
-    file_id: target_file_id,
-    user_id,
-  });
-  if (matched_folder_res.error) {
-    return Result.Err(`${shared_folder.name} 获取关联文件夹失败 ${matched_folder_res.error.message}`);
-  }
-  if (!matched_folder_res.data) {
-    return Result.Err(`${shared_folder.name} 关联文件夹不存在`);
-  }
-  const target_folder = matched_folder_res.data;
-  const { drive_id } = matched_folder_res.data;
-  const r4 = await patch_tv_in_progress(
-    {
-      url,
-      file_name: shared_folder.name,
-      file_id,
-      target_folder_id: target_file_id,
-      target_folder_name: target_folder.name,
-    },
-    {
-      user_id,
-      drive_id,
-      store,
-      wait_complete: true,
-    }
-  );
-  if (r4.error) {
-    return Result.Err(`${shared_folder.name} 转存新增影片失败，因为 ${r4.error}`);
-  }
-  const effects = r4.data;
-  const added_video_effects = effects.filter((t) => {
-    const { type, payload } = t;
-    if (type !== DiffTypes.Adding) {
-      return false;
-    }
-    const { name } = payload;
-    if (!is_video_file(name)) {
-      return false;
-    }
-    return true;
-  });
-  if (added_video_effects.length === 0) {
-    // console.log(`${shared_folder.name} 没有新增影片`);
-    return Result.Ok([]);
-  }
-  console.log(
-    `${shared_folder.name} 新增了影片`,
-    added_video_effects.map((e) => `${e.payload.parents.map((c) => c.name).join("/")}/${e.payload.name}`)
-  );
-  return Result.Ok(
-    added_video_effects.map((e) => `${e.payload.parents.map((c) => c.name).join("/")}/${e.payload.name}`)
-  );
-  // notice_push_deer({
-  //   title: `${shared_folder.name} 新增影片成功`,
-  //   markdown: added_video_effects.map((e) => e.payload.name).join("\n"),
-  // });
-}
 
 /**
  * 判断两个 tv 信息是否有改变（名称有改变）

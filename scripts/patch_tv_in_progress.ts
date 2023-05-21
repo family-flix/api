@@ -6,7 +6,7 @@ import { store_factory } from "@/store";
 
 import { notice_error, notice_push_deer } from "./notice";
 import { is_video_file, parse_filename_for_video } from "@/utils";
-import { patch_tv_in_progress } from "@/domains/walker/run_tv_sync_task";
+import { run_sync_task } from "@/domains/walker/run_tv_sync_task";
 import { DiffTypes } from "@/domains/folder_differ";
 
 export async function patch_shared_files(
@@ -66,7 +66,7 @@ export async function patch_shared_files(
       continue;
     }
     const { name: target_folder_name, drive_id } = matched_folder_res.data;
-    const r4 = await patch_tv_in_progress(
+    const r4 = await run_sync_task(
       {
         url,
         file_name: in_progress.name,

@@ -9,6 +9,7 @@ import { folder_client, store_factory } from "@/store";
 import { Result } from "@/types";
 import { is_video_file } from "@/utils";
 import { FileType } from "@/constants";
+import { FileSyncTaskRecord, ParsedTVRecord } from "@/store/types";
 
 /**
  * 执行 folder_diff 产出的 effects
@@ -112,15 +113,8 @@ export async function consume_effects_for_shared_file(
  * @param extra
  * @returns
  */
-export async function patch_tv_in_progress(
-  body: {
-    url: string;
-    file_id: string;
-    /** 分享文件名称 */
-    file_name: string;
-    target_folder_id: string;
-    target_folder_name: string;
-  },
+export async function run_sync_task(
+  task: FileSyncTaskRecord & { parsed_tv: ParsedTVRecord },
   extra: {
     user_id: string;
     /** 要存到哪个网盘（应该可以从 target_folder_id）获取到的 */
@@ -129,19 +123,27 @@ export async function patch_tv_in_progress(
     wait_complete?: boolean;
   }
 ) {
-  const { url, file_id, file_name, target_folder_id, target_folder_name } = body;
+  const { id, url, file_id, parsed_tv } = task;
+  const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
   const { user_id, drive_id, store, wait_complete = false } = extra;
-  const client = new AliyunDriveClient({ drive_id, store });
-  const r = await client.fetch_share_profile(url);
-  if (r.error) {
-    return Result.Err(r.error);
+
+  if (target_folder_id === null || target_folder_name === null) {
+    return Result.Err("没有关联的云盘文件夹");
   }
-  const { share_id } = r.data;
+  const client = new AliyunDriveClient({ drive_id, store });
+  const r1 = await client.fetch_share_profile(url, { force: true });
+  if (r1.error) {
+    if (["share_link is cancelled by the creator"].includes(r1.error.message)) {
+      await store.update_sync_task(id, { invalid: 1 });
+      return Result.Err("分享资源失效，请关联新分享资源");
+    }
+    return Result.Err(r1.error);
+  }
+  const { share_id } = r1.data;
   const prev_folder = new AliyunDriveFolder(target_folder_id, {
     name: target_folder_name,
     client: folder_client({ drive_id }, store),
   });
-  // console.log("cur file_id", file_id);
   const folder = new AliyunDriveFolder(file_id, {
     // 这里本应该用 file_name，但是很可能分享文件的名字改变了，但我还要认为它没变。
     // 比如原先名字是「40集更新中」，等更新完了，就变成「40集已完结」，而我已开始存的名字是「40集更新中」，在存文件的时候，根本找不到「40集已完结」这个名字

@@ -93,6 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     url,
     file_id,
     name: file_name,
+    drive_id,
     user_id,
   });
   if (r4.error) {
@@ -103,6 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       url,
       file_id,
       name: file_name,
+      drive_id,
       user_id,
     });
   }

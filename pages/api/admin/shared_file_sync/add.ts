@@ -1,5 +1,5 @@
 /**
- * @file 将分享文件夹和云盘内文件夹关联
+ * @file 建立同步任务（将分享文件夹和云盘内文件夹关联）
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";

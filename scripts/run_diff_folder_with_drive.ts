@@ -26,7 +26,6 @@ async function main() {
       const effect = effects[j];
       const { type, payload } = effect;
       const { file_id, name } = payload;
-      log("\n");
       log("[SCRIPT]process effect from diff", name, file_id, type);
       if (type === DiffTypes.Deleting) {
         await store.delete_file({

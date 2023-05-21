@@ -1,5 +1,5 @@
 /**
- * @file 执行一次同步
+ * @file 执行一次同步任务
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { User } from "@/domains/user";
-import { patch_tv_in_progress } from "@/domains/walker/run_tv_sync_task";
+import { run_sync_task } from "@/domains/walker/run_tv_sync_task";
 import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -39,21 +39,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (task === null) {
     return e("没有匹配的同步任务记录");
   }
-  const { name, file_id, url, parsed_tv } = task;
-  const r = await patch_tv_in_progress(
-    {
-      url,
-      file_id,
-      file_name: name,
-      target_folder_id: parsed_tv.file_id!,
-      target_folder_name: parsed_tv.file_name!,
-    },
-    {
-      store,
-      drive_id: parsed_tv.drive_id,
-      user_id,
-    }
-  );
+  const { parsed_tv } = task;
+  const r = await run_sync_task(task, {
+    store,
+    drive_id: parsed_tv.drive_id,
+    user_id,
+  });
   if (r.error) {
     return e(r);
   }

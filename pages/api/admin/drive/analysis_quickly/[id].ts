@@ -15,9 +15,8 @@ import { FileType } from "@/constants";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id: drive_id, target_folder } = req.query as Partial<{
+  const { id: drive_id } = req.query as Partial<{
     id: string;
-    target_folder: string;
   }>;
   if (!drive_id) {
     return e("缺少云盘 id 参数");
@@ -34,8 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive_res.data) {
     return e("没有找到匹配的云盘记录");
   }
-  const { root_folder_id } = drive_res.data;
-  const tmp_folders = await store.prisma.file.findMany({
+  const { root_folder_id, root_folder_name } = drive_res.data;
+  if (!root_folder_name) {
+    return e("请先设置索引根目录");
+  }
+  const tmp_folders = await store.prisma.tmp_file.findMany({
     where: {
       type: FileType.Folder,
       drive_id,
@@ -49,22 +51,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive_id,
     store,
   });
-  const resp = await walk_drive({
+  const r = await walk_drive({
     drive_id,
     user_id,
     client,
     files: tmp_folders.map((folder) => {
       const { name } = folder;
       return {
-        name,
+        name: `${root_folder_name}/${name}`,
         type: "folder",
       };
     }),
     store,
     need_upload_image: true,
   });
-  if (resp.error) {
-    return e(resp);
+  if (r.error) {
+    return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: resp.data });
+  res.status(200).json({ code: 0, msg: "", data: r.data });
 }

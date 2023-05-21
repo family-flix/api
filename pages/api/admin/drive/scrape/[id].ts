@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { add_tv_from_parsed_tv_list } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
+import { add_profile_for_parsed_tv_season_and_episode } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
 import { User } from "@/domains/user";
 
 export default async function handler(
@@ -27,7 +27,7 @@ export default async function handler(
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
-  const resp = await add_tv_from_parsed_tv_list({
+  const resp = await add_profile_for_parsed_tv_season_and_episode({
     drive_id,
     user_id,
     store,

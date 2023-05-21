@@ -129,7 +129,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         parsed_tvs,
         _count,
       } = tv;
-      const { name, original_name, overview, poster_path, first_air_date, episode_count, season_count } = profile;
+      const { name, original_name, overview, poster_path, first_air_date, episode_count, season_count, in_production } =
+        profile;
       const binds = parsed_tvs
         .filter((parsed_tv) => {
           const { bind } = parsed_tv;
@@ -152,12 +153,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         .reduce((total, cur) => {
           return total + cur;
         }, 0);
-      const tips: { text: string[] }[] = [];
+      // const tips: { text: string[] }[] = [];
+      const tips: string[] = [];
       if (binds.length === 0 && incomplete) {
-        tips.push({
-          text: ["该电视剧集数不全且缺少可同步的分享资源"],
-        });
+        // tips.push({
+        //   text: ["该电视剧集数不全且缺少可同步的分享资源"],
+        // });
+        tips.push(`该电视剧集数不全且缺少可同步的分享资源(${_count.episodes}/${episode_count})`);
       }
+      const need_bind = (() => {
+        if (in_production && incomplete && binds.length === 0) {
+          return true;
+        }
+        return false;
+      })();
       const size_count = episodes
         .map((episode) => {
           return episode.parsed_episodes
@@ -185,60 +194,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         episode_sources,
         size_count,
         size_count_text: bytes_to_size(size_count),
-        // episodes: episodes.map((episode) => {
-        //   const { profile, parsed_episodes } = episode;
-        //   return {
-        //     id: episode.id,
-        //     name: profile.name,
-        //     sources: parsed_episodes.map((source) => {
-        //       const { file_id, file_name, size } = source;
-        //       return {
-        //         id: file_id,
-        //         file_id,
-        //         file_name,
-        //         size,
-        //         size_text: bytes_to_size(size ?? 0),
-        //       };
-        //     }),
-        //   };
-        // }),
         incomplete,
+        need_bind,
+        sync_task: (() => {
+          if (need_bind) {
+            return null;
+          }
+          if (binds.length === 0) {
+            return null;
+          }
+          const task = binds[0];
+          return {
+            id: task.id,
+          };
+        })(),
         tips,
-        // _count,
-        // seasons: seasons.map((s) => {
-        //   const {
-        //     id,
-        //     profile: { name, overview, episode_count },
-        //   } = s;
-        //   return {
-        //     id,
-        //     name,
-        //     overview,
-        //     episode_count,
-        //   };
-        // }),
-        // episodes: episodes.map((e) => {
-        //   const {
-        //     id,
-        //     episode_number,
-        //     profile: { name, overview },
-        //     parsed_episodes,
-        //   } = e;
-        //   return {
-        //     id,
-        //     name,
-        //     overview,
-        //     episode_number,
-        //     sources: parsed_episodes.map((source) => {
-        //       const { id, file_id, file_name } = source;
-        //       return {
-        //         id,
-        //         file_id,
-        //         file_name,
-        //       };
-        //     }),
-        //   };
-        // }),
       };
     }),
   };

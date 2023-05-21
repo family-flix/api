@@ -1,5 +1,6 @@
 import {
   async_task,
+  bind_for_parsed_tv,
   drive,
   episode,
   file,
@@ -16,7 +17,7 @@ export type AliyunDriveRecord = drive;
 
 export type FilesRecord = file;
 export type ParsedTVRecord = parsed_tv;
-export type TaskRecord = async_task;
+export type AsyncTaskRecord = async_task;
 export type ParsedSeasonRecord = parsed_season;
 export type ParsedEpisodeRecord = parsed_episode;
 export type TVProfileRecord = tv_profile;
@@ -24,6 +25,7 @@ export type SharedFilesInProgressRecord = shared_file_in_progress;
 export type RecordCommonPart = {
   id: string;
 };
+export type FileSyncTaskRecord = bind_for_parsed_tv;
 
 export type ModelKeys = keyof Omit<
   PrismaClient,

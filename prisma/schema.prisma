@@ -168,6 +168,9 @@ model parsed_tv {
         file_name     String?
         // 是否可以搜索（搜索后没结果会置为 0，更新该记录后又置为1，避免重复搜索）
         can_search    Int?    @default(1)
+        correct_name  String?
+        // 用户手动设置的 tmbd_id，优先使用该值索引
+        tmdb_id       Int?
 
         tv_id    String?
         tv       tv?     @relation(fields: [tv_id], references: [id])
@@ -191,9 +194,9 @@ model parsed_season {
         updated DateTime @default(now())
 
         season_number String
-        can_search    Int?    @default(1)
         file_id       String?
         file_name     String?
+        can_search    Int?    @default(1)
 
         season_id    String?
         season       season?   @relation(fields: [season_id], references: [id])
@@ -233,6 +236,7 @@ model parsed_episode {
         type           Int
         // 文件大小
         size           Float? @default(0)
+        can_search     Int?   @default(0)
 
         episode_id       String?
         episode          episode?      @relation(fields: [episode_id], references: [id], onDelete: Cascade)
@@ -287,17 +291,17 @@ model tv {
         updated DateTime @default(now())
 
         // 是否隐藏
-        hidden Float? @default(0)
+        hidden Int? @default(0)
 
         profile_id String     @unique
         profile    tv_profile @relation(fields: [profile_id], references: [id])
         user_id    String
         user       user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+        play_history    play_history?
         seasons         season[]
         episodes        episode[]
         parsed_tvs      parsed_tv[]
-        play_history    play_history?
         recommended_tvs recommended_tv[]
 
         @@map("TV")
@@ -458,12 +462,11 @@ model shared_file_in_progress {
         updated DateTime @default(now())
 
         // 分享文件夹所属 url
-        url          String
-        // 关联的分享文件夹 file_id
-        file_id      String
-        // 关联的分享文件夹名称
-        name         String
-        parent_paths String
+        url     String
+        // 转存的分享文件夹 file_id
+        file_id String
+        // 转存的分享文件夹名称
+        name    String
 
         drive_id String
         drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
@@ -473,7 +476,7 @@ model shared_file_in_progress {
         @@map("SharedFileInProgress")
 }
 
-// 连接分享资源和云盘内的文件夹的关系，用于将分享资源新增的影片同步到云盘内文件夹(parsed_tv.file_id 字段表示云盘内文件夹)
+// 文件夹同步任务（连接分享资源和云盘内的文件夹的关系，用于将分享资源新增的影片同步到云盘内文件夹(parsed_tv.file_id 字段表示云盘内文件夹)
 model bind_for_parsed_tv {
         id      String   @id
         created DateTime @default(now())
@@ -523,7 +526,7 @@ model tmp_file {
         name         String
         // 0文件夹 1文件
         type         Float?   @default(0)
-        // 父文件夹路径
+        // 父文件夹路径，其实基本上都是 drive.root_folder_name（有什么用？）
         parent_paths String
 
         // 关联 drive 表

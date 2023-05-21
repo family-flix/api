@@ -4,13 +4,13 @@
 require("dotenv").config();
 import dayjs from "dayjs";
 
-import { TaskRecord, RecordCommonPart } from "@/store/types";
+import { AsyncTaskRecord, RecordCommonPart } from "@/store/types";
 import { store } from "@/store";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
 
 async function run() {
-  await walk_table_with_pagination<TaskRecord & RecordCommonPart>(
+  await walk_table_with_pagination<AsyncTaskRecord & RecordCommonPart>(
     store.find_task_list_with_pagination,
     {
       async on_handle(episode) {

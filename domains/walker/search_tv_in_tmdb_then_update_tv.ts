@@ -1,11 +1,11 @@
 import { EventHandlers, ExtraUserAndDriveInfo, upload_tmdb_images } from "@/domains/walker/utils";
 import { TMDBClient } from "@/domains/tmdb";
+import { TVProfileItemInTMDB } from "@/domains/tmdb/services";
 import { store_factory } from "@/store";
-import { log } from "@/logger/log";
-import { Result, resultify } from "@/types";
-import { TVProfileItemInTMDB, TVProfileFromTMDB } from "@/domains/tmdb/services";
 import { ParsedEpisodeRecord, ParsedSeasonRecord, ParsedTVRecord, TVProfileRecord } from "@/store/types";
-import { episode_to_num, season_to_chinese_num, season_to_num } from "@/utils";
+import { episode_to_num, season_to_num } from "@/utils";
+import { Result } from "@/types";
+import { log } from "@/logger/log";
 
 /**
  * 将指定用户、指定网盘下的所有未知影视剧在 TMDB 上搜索详情
@@ -13,7 +13,7 @@ import { episode_to_num, season_to_chinese_num, season_to_num } from "@/utils";
  * @param event_handlers
  * @returns
  */
-export async function add_tv_from_parsed_tv_list(
+export async function add_profile_for_parsed_tv_season_and_episode(
   options: ExtraUserAndDriveInfo & {
     need_upload_image?: boolean;
     store: ReturnType<typeof store_factory>;
@@ -22,11 +22,13 @@ export async function add_tv_from_parsed_tv_list(
 ) {
   const { user_id, drive_id, need_upload_image = true, store } = options;
   const { on_stop } = event_handlers;
+
   const page_size = 20;
   const skip = 0;
   let page = 1;
+  let no_more = false;
+
   await (async () => {
-    let tv_no_more = false;
     do {
       const parsed_tv_list = await store.prisma.parsed_tv.findMany({
         where: {
@@ -39,54 +41,72 @@ export async function add_tv_from_parsed_tv_list(
           parsed_episodes: true,
           parsed_seasons: true,
         },
-        skip: (page - 1) * page_size + Number(skip),
-        take: Number(page_size),
+        skip: (page - 1) * page_size,
+        take: page_size,
         orderBy: {
           name: "desc",
         },
       });
-      // const parsed_tv_res = await store.find_parsed_tv_list_with_pagination({}, { page, size: 20 });
-      // if (parsed_tv_res.error) {
-      //   log(["[ERROR]find tvs that tv_profile_id is null failed", parsed_tv_res.error.message]);
-      //   return Result.Err(parsed_tv_res.error);
-      // }
       log("找到", parsed_tv_list.length, "个需要搜索的电视剧");
-      log(parsed_tv_list.map((tv) => tv.name || tv.original_name).join("\n"));
-      tv_no_more = parsed_tv_list.length === 0;
+      no_more = parsed_tv_list.length === 0;
       for (let i = 0; i < parsed_tv_list.length; i += 1) {
         const parsed_tv = parsed_tv_list[i];
-        const { name, original_name } = parsed_tv;
-        const prefix = name || original_name;
-
+        const { name, original_name, correct_name } = parsed_tv;
+        const prefix = correct_name || name || original_name;
         if (on_stop) {
           const r = await on_stop();
           if (r.data) {
             return;
           }
         }
-        // log(`[${name || original_name}]`, "开始搜索电视剧");
         const r = await add_tv_from_parsed_tv(parsed_tv, {
           user_id,
-          // drive_id,
           store,
           need_upload_image,
           token: process.env.TMDB_TOKEN,
         });
         if (r.error) {
-          log(`[${prefix}]`, "添加电视剧信息失败", r.error.message);
+          log(`[${prefix}]`, "添加电视剧详情失败", r.error.message);
           continue;
         }
-        log(`[${prefix}]`, "添加电视剧信息成功");
+        log(`[${prefix}]`, "添加电视剧详情成功");
+        await (async () => {
+          log(`[${prefix}]`, "检查能否建立同步任务", r.data.profile.in_production, parsed_tv.file_name);
+          if (r.data.profile.in_production && parsed_tv.file_name) {
+            log(`[${prefix}]`, "处于更新中，建立一个资源同步任务");
+            const transfer_res = await store.find_shared_file_save({
+              name: parsed_tv.file_name,
+              drive_id,
+              user_id,
+            });
+            if (transfer_res.error) {
+              return;
+            }
+            if (!transfer_res.data) {
+              return;
+            }
+            const { url, file_id, name } = transfer_res.data;
+            store.add_sync_task({
+              url,
+              file_id,
+              name,
+              in_production: 1,
+              parsed_tv_id: parsed_tv.id,
+              user_id,
+            });
+          }
+        })();
       }
       page += 1;
-    } while (tv_no_more === false);
+    } while (no_more === false);
 
     page = 1;
-    let season_no_more = false;
+    no_more = false;
     do {
       const parsed_season_list = await store.prisma.parsed_season.findMany({
         where: {
           season_id: null,
+          can_search: 1,
           user_id,
           drive_id,
         },
@@ -102,12 +122,13 @@ export async function add_tv_from_parsed_tv_list(
         },
       });
       page += 1;
-      season_no_more = parsed_season_list.length === 0;
+      no_more = parsed_season_list.length === 0;
       log("找到", parsed_season_list.length, "个需要添加的季");
       for (let j = 0; j < parsed_season_list.length; j += 1) {
         const parsed_season = parsed_season_list[j];
         const { parsed_tv, season_number } = parsed_season;
-        const name = parsed_tv.name || parsed_tv.original_name;
+        const { name, original_name, correct_name } = parsed_tv;
+        const prefix = correct_name || name || original_name;
         const r = await add_season_from_parsed_season(
           {
             parsed_tv,
@@ -115,26 +136,26 @@ export async function add_tv_from_parsed_tv_list(
           },
           {
             user_id,
-            drive_id,
             store,
             need_upload_image,
             token: process.env.TMDB_TOKEN,
           }
         );
         if (r.error) {
-          log(`[${name}/${season_number}]`, "添加剧信息失败", r.error.message);
+          log(`[${prefix}/${season_number}]`, "添加季详情失败", r.error.message);
           continue;
         }
-        log(`[${name}/${season_number}]`, "添加剧信息成功");
+        log(`[${prefix}/${season_number}]`, "添加季详情成功");
       }
-    } while (season_no_more === false);
+    } while (no_more === false);
 
     page = 1;
-    let episode_no_more = false;
+    no_more = false;
     do {
       const parsed_episode_list = await store.prisma.parsed_episode.findMany({
         where: {
           episode_id: null,
+          can_search: 1,
           user_id,
           drive_id,
         },
@@ -151,15 +172,14 @@ export async function add_tv_from_parsed_tv_list(
         },
       });
       page += 1;
-      episode_no_more = parsed_episode_list.length === 0;
-      log("找到", parsed_episode_list.length, "个需要添加的集");
+      no_more = parsed_episode_list.length === 0;
+      log("找到", parsed_episode_list.length, "个需要添加的剧集");
       for (let j = 0; j < parsed_episode_list.length; j += 1) {
         const parsed_episode = parsed_episode_list[j];
-        const { parsed_tv, parsed_season } = parsed_episode;
-        const name = parsed_tv.name || parsed_tv.original_name;
-        const season_number = parsed_season.season_number;
-        const episode_number = parsed_episode.episode_number;
-        log(`[${name}/${season_number}/${episode_number}]`, "准备添加剧集信息");
+        const { parsed_tv, parsed_season, season_number, episode_number } = parsed_episode;
+        const { name, original_name, correct_name } = parsed_tv;
+        const prefix = correct_name || name || original_name;
+        log(`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息");
         const r = await add_episode_from_parsed_episode(
           {
             parsed_tv,
@@ -168,19 +188,18 @@ export async function add_tv_from_parsed_tv_list(
           },
           {
             user_id,
-            drive_id,
             store,
             need_upload_image,
             token: process.env.TMDB_TOKEN,
           }
         );
         if (r.error) {
-          log(`[${name}/${season_number}/${episode_number}]`, "添加剧集信息失败", r.error.message);
+          log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情失败", r.error.message);
           continue;
         }
-        log(`[${name}/${season_number}/${episode_number}]`, "添加剧集信息成功");
+        log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情成功");
       }
-    } while (episode_no_more === false);
+    } while (no_more === false);
   })();
   return Result.Ok(null);
 }
@@ -194,32 +213,25 @@ export async function add_tv_from_parsed_tv(
   parsed_tv: ParsedTVRecord,
   extra: {
     user_id: string;
-    // drive_id: string;
     store: ReturnType<typeof store_factory>;
     need_upload_image?: boolean;
     token?: string;
   }
 ) {
-  const { id, name, original_name } = parsed_tv;
+  const { id } = parsed_tv;
   const { store, token } = extra;
   if (!token) {
     return Result.Err("缺少 TMDB token");
   }
-  const profile_res = await get_tv_profile_with_tmdb(
-    {
-      name,
-      original_name,
-    },
-    extra
-  );
+  const profile_res = await get_tv_profile_with_tmdb(parsed_tv, extra);
   if (profile_res.error) {
-    return Result.Err(profile_res.error, "10001");
+    return Result.Err(profile_res.error);
   }
   if (profile_res.data === null) {
     store.update_parsed_tv(id, {
       can_search: 0,
     });
-    return Result.Err("没有匹配的记录");
+    return Result.Err("没有搜索到详情");
   }
   return add_tv_from_parsed_tv_sub(
     {
@@ -230,6 +242,9 @@ export async function add_tv_from_parsed_tv(
   );
 }
 
+/**
+ * 根据电视剧详情创建电视剧？
+ */
 export async function add_tv_from_parsed_tv_sub(
   body: {
     profile: TVProfileRecord;
@@ -243,8 +258,10 @@ export async function add_tv_from_parsed_tv_sub(
   }
 ) {
   const { profile, parsed_tv } = body;
+  const { name, original_name, correct_name } = parsed_tv;
   const { store, user_id } = extra;
-  const prefix = `${parsed_tv.name || parsed_tv.original_name}`;
+  const prefix = `${correct_name || name || original_name}`;
+
   const tv_res = await (async () => {
     const existing_res = await store.find_tv({
       profile_id: profile.id,
@@ -254,10 +271,10 @@ export async function add_tv_from_parsed_tv_sub(
       return Result.Err(existing_res.error);
     }
     if (existing_res.data) {
-      log(`[${prefix}]`, "电视剧", profile.name, "已存在，直接关联");
+      log(`[${prefix}]`, "已存在电视剧，直接关联");
       return Result.Ok(existing_res.data);
     }
-    log(`[${prefix}]`, "电视剧", profile.name, "不存在，新增并关联");
+    log(`[${prefix}]`, "新增电视剧并关联");
     const adding_res = await store.add_tv({
       profile_id: profile.id,
       user_id,
@@ -278,7 +295,10 @@ export async function add_tv_from_parsed_tv_sub(
   if (r2.error) {
     return Result.Err(r2.error, "10003");
   }
-  return Result.Ok(r2.data);
+  return Result.Ok({
+    ...tv,
+    profile,
+  });
 }
 
 /**
@@ -291,15 +311,15 @@ export async function add_season_from_parsed_season(
   },
   extra: {
     user_id: string;
-    drive_id: string;
     store: ReturnType<typeof store_factory>;
     need_upload_image?: boolean;
     token?: string;
   }
 ) {
   const { parsed_tv, parsed_season } = body;
-  const { id } = parsed_season;
-  const { user_id, drive_id, store, token } = extra;
+  const { name, original_name, correct_name } = parsed_tv;
+  const { id, season_number } = parsed_season;
+  const { user_id, store, token } = extra;
   if (!token) {
     return Result.Err("缺少 TMDB token");
   }
@@ -309,6 +329,7 @@ export async function add_season_from_parsed_season(
   if (parsed_tv.tv_id === null) {
     return Result.Err("缺少关联电视剧详情");
   }
+  const prefix = `${correct_name || name || original_name}/${season_number}`;
   const profile_res = await get_season_profile_with_tmdb(
     {
       tv: parsed_tv,
@@ -322,33 +343,36 @@ export async function add_season_from_parsed_season(
   if (profile_res.data === null) {
     return Result.Err("没有匹配的记录");
   }
-  const existing = await store.prisma.season.findFirst({
-    where: {
+  const season_res = await (async () => {
+    const existing_res = await store.find_season({
       profile_id: profile_res.data.id,
-    },
-  });
-  if (existing) {
-    const r2 = await store.update_parsed_season(id, {
-      season_id: existing.id,
-      // can_search: 0,
     });
-    if (r2.error) {
-      return Result.Err(r2.error, "10003");
+    if (existing_res.error) {
+      return Result.Err(existing_res.error);
     }
-    return Result.Ok(r2.data);
-  }
-  const adding_season_res = await store.add_season({
-    season_number: parsed_season.season_number,
-    tv_id: parsed_tv.tv_id,
-    profile_id: profile_res.data.id,
-    user_id,
-  });
-  if (adding_season_res.error) {
-    return Result.Err(adding_season_res.error, "10002", { id: profile_res.data.id });
+    const existing = existing_res.data;
+    if (existing) {
+      log(`[${prefix}]`, "已存在季详情，直接关联");
+      return Result.Ok(existing);
+    }
+    log(`[${prefix}]`, "新增季详情并关联");
+    const adding_res = await store.add_season({
+      season_number: parsed_season.season_number,
+      tv_id: parsed_tv.tv_id!,
+      profile_id: profile_res.data.id,
+      user_id,
+    });
+    if (adding_res.error) {
+      return Result.Err(adding_res.error);
+    }
+    return Result.Ok(adding_res.data);
+  })();
+  if (season_res.error) {
+    return Result.Err(season_res.error);
   }
   const r2 = await store.update_parsed_season(id, {
-    season_id: adding_season_res.data.id,
-    // can_search: 0,
+    season_id: season_res.data.id,
+    can_search: 0,
   });
   if (r2.error) {
     return Result.Err(r2.error, "10003");
@@ -367,16 +391,15 @@ export async function add_episode_from_parsed_episode(
   },
   extra: {
     user_id: string;
-    drive_id: string;
     store: ReturnType<typeof store_factory>;
     need_upload_image?: boolean;
     token?: string;
   }
 ) {
   const { parsed_tv, parsed_season, parsed_episode } = body;
-  const { name, original_name } = parsed_tv;
-  const { id, parsed_tv_id, parsed_season_id, episode_number, season_number } = parsed_episode;
-  const { user_id, drive_id, store, token } = extra;
+  const { name, original_name, correct_name } = parsed_tv;
+  const { episode_number, season_number } = parsed_episode;
+  const { user_id, store, token } = extra;
   if (!token) {
     return Result.Err("缺少 TMDB token");
   }
@@ -392,7 +415,7 @@ export async function add_episode_from_parsed_episode(
   if (parsed_season.season_id === null) {
     return Result.Err("缺少关联季详情");
   }
-  const prefix = `${name || original_name}/${season_number}/${episode_number}`;
+  const prefix = `${correct_name || name || original_name}/${season_number}/${episode_number}`;
   const profile_res = await get_episode_profile_with_tmdb(
     {
       tv: parsed_tv,
@@ -407,37 +430,37 @@ export async function add_episode_from_parsed_episode(
   if (profile_res.data === null) {
     return Result.Err("没有匹配的记录");
   }
-  const existing = await store.prisma.episode.findFirst({
-    where: {
+  const episode_res = await (async () => {
+    const existing_res = await store.find_episode({
       profile_id: profile_res.data.id,
-    },
-  });
-  if (existing) {
-    log(`[${prefix}]`, "已存在该剧集详情，直接关联");
-    const r2 = await store.update_parsed_episode(id, {
-      episode_id: existing.id,
-      // can_search: 0,
     });
-    if (r2.error) {
-      return Result.Err(r2.error, "10003");
+    if (existing_res.error) {
+      return Result.Err(existing_res.error);
     }
-    return Result.Ok(r2.data);
-  }
-  log(`[${prefix}]`, "新增剧集详情");
-  const adding_episode_res = await store.add_episode({
-    season_number: parsed_season.season_number,
-    episode_number: parsed_episode.episode_number,
-    tv_id: parsed_tv.tv_id,
-    season_id: parsed_season.season_id,
-    profile_id: profile_res.data.id,
-    user_id,
-  });
-  if (adding_episode_res.error) {
-    return Result.Err(adding_episode_res.error, "10002", { id: profile_res.data.id });
+    if (existing_res.data) {
+      log(`[${prefix}]`, "已存在该剧集详情，直接关联");
+      return Result.Ok(existing_res.data);
+    }
+    log(`[${prefix}]`, "新增剧集详情并关联");
+    const adding_res = await store.add_episode({
+      season_number: parsed_season.season_number,
+      episode_number: parsed_episode.episode_number,
+      tv_id: parsed_tv.tv_id!,
+      season_id: parsed_season.season_id!,
+      profile_id: profile_res.data.id,
+      user_id,
+    });
+    if (adding_res.error) {
+      return Result.Err(adding_res.error);
+    }
+    return Result.Ok(adding_res.data);
+  })();
+  if (episode_res.error) {
+    return Result.Err(episode_res.error);
   }
   const r2 = await store.update_parsed_episode(parsed_episode.id, {
-    episode_id: adding_episode_res.data.id,
-    // can_search: 0,
+    episode_id: episode_res.data.id,
+    can_search: 0,
   });
   if (r2.error) {
     return Result.Err(r2.error, "10003");
@@ -452,10 +475,7 @@ export async function add_episode_from_parsed_episode(
  * @returns
  */
 export async function get_tv_profile_with_tmdb(
-  tv: {
-    name: string | null;
-    original_name: string | null;
-  },
+  tv: ParsedTVRecord,
   option: Partial<{
     store: ReturnType<typeof store_factory>;
     /** TMDB token */
@@ -465,8 +485,8 @@ export async function get_tv_profile_with_tmdb(
   }> = {}
 ) {
   const { token, need_upload_image, store } = option;
-  const { name, original_name } = tv;
-  const prefix = name || original_name;
+  const { name, original_name, correct_name } = tv;
+  const prefix = correct_name || name || original_name;
   if (!token) {
     return Result.Err("缺少 TMDB token");
   }
@@ -475,7 +495,15 @@ export async function get_tv_profile_with_tmdb(
   }
   // log("[](search_tv_in_tmdb)start search", tv.name || tv.original_name);
   let tv_profile = null;
-  if (name) {
+  if (correct_name) {
+    log(`[${prefix}]`, "使用", correct_name, "搜索");
+    const r = await find_first_matched_tv_from_tmdb(correct_name, { token, need_upload_image, store });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    tv_profile = r.data;
+  }
+  if (tv_profile === null && name) {
     log(`[${prefix}]`, "使用", name, "搜索");
     const r = await find_first_matched_tv_from_tmdb(name, { token, need_upload_image, store });
     if (r.error) {
@@ -670,13 +698,49 @@ export async function find_first_matched_tv_from_tmdb(
     return Result.Ok(null);
   }
   const tv_item = extra_searched_tv_field(list[0]);
-  const profile_res = await tmdb_client.fetch_tv_profile(tv_item.tmdb_id);
+  const r = await get_tv_profile_with_tmdb_id(
+    {
+      tmdb_id: tv_item.tmdb_id,
+      original_language: tv_item.original_language,
+    },
+    {
+      client: tmdb_client,
+      store,
+      need_upload_image,
+    }
+  );
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  store.add_tv_profile_snap({
+    name,
+    tv_profile_id: r.data.id,
+  });
+  return Result.Ok(r.data);
+}
+
+/** 根据 tmdb_id 新增一条电视剧详情 */
+export async function get_tv_profile_with_tmdb_id(
+  info: {
+    tmdb_id: number;
+    original_language?: string;
+  },
+  options: {
+    client: TMDBClient;
+    store: ReturnType<typeof store_factory>;
+    need_upload_image?: boolean;
+  }
+) {
+  const { tmdb_id, original_language } = info;
+  const { client, store, need_upload_image } = options;
+
+  const profile_res = await client.fetch_tv_profile(tmdb_id);
   if (profile_res.error) {
     return Result.Err(profile_res.error);
   }
   const profile = profile_res.data;
   const {
-    id: tmdb_id,
+    name,
     original_name,
     first_air_date,
     overview,
@@ -709,18 +773,18 @@ export async function find_first_matched_tv_from_tmdb(
     return Result.Err(`查找电视剧详情失败 ${existing_res.error.message}`);
   }
   if (existing_res.data) {
-    console.log("电视剧详情已存在", name || original_name, existing_res.data.name);
+    // console.log("电视剧详情已存在", name || original_name, existing_res.data.name);
     return Result.Ok(existing_res.data);
   }
   const t = await store.add_tv_profile({
     tmdb_id,
-    name: profile.name,
+    name,
     original_name,
-    overview,
-    poster_path: uploaded_poster_path,
-    backdrop_path: uploaded_backdrop_path,
+    overview: overview ?? null,
+    poster_path: uploaded_poster_path ?? null,
+    backdrop_path: uploaded_backdrop_path ?? null,
     first_air_date,
-    original_language: tv_item.original_language,
+    original_language: original_language ?? null,
     popularity,
     vote_average,
     episode_count: number_of_episodes,
@@ -731,10 +795,6 @@ export async function find_first_matched_tv_from_tmdb(
   if (t.error) {
     return Result.Err(t.error);
   }
-  store.add_tv_profile_snap({
-    name,
-    tv_profile_id: t.data.id,
-  });
   return Result.Ok(t.data);
 }
 

@@ -10,7 +10,7 @@ import { Result } from "@/types";
 import { store_factory } from "@/store";
 import { log } from "@/logger/log";
 
-import { add_tv_from_parsed_tv_list } from "./search_tv_in_tmdb_then_update_tv";
+import { add_profile_for_parsed_tv_season_and_episode } from "./search_tv_in_tmdb_then_update_tv";
 import { adding_file_safely, add_parsed_infos_when_walk, need_skip_the_file_when_walk } from "./utils";
 import { TaskStatus } from "./constants";
 
@@ -103,11 +103,17 @@ export async function walk_drive(options: {
   const walker = new FolderWalker();
   let need_stop = false;
   if (files.length) {
+    log(`[${drive_id}]`, "仅索引这些文件", files.length);
     let cloned_files = [...files];
     walker.filter = async (cur_file) => {
       let need_skip_file = true;
       for (let i = 0; i < cloned_files.length; i += 1) {
         const { name: target_file_name, type: target_file_type } = cloned_files[i];
+        // log(`[${drive_id}]`, "检查是否要跳过", `${cur_file.parent_paths}/${cur_file.name}`, {
+        //   target_file_name,
+        //   target_file_type,
+        //   cur_file,
+        // });
         need_skip_file = need_skip_the_file_when_walk({
           target_file_name,
           target_file_type,
@@ -116,6 +122,9 @@ export async function walk_drive(options: {
         if (need_skip_file === false) {
           break;
         }
+      }
+      if (need_skip_file) {
+        log(`[${drive_id}]`, `跳过${cur_file.parent_paths}/${cur_file.name}`);
       }
       return need_skip_file;
     };
@@ -197,7 +206,7 @@ export async function walk_drive(options: {
       return Result.Ok(null);
     }
     log(`[${drive_id}]`, "开始搜索电视剧信息");
-    await add_tv_from_parsed_tv_list(
+    await add_profile_for_parsed_tv_season_and_episode(
       { user_id, drive_id, need_upload_image, store },
       {
         on_stop() {
@@ -211,11 +220,10 @@ export async function walk_drive(options: {
     });
     return Result.Ok(null);
   }
+  const pending = run();
   if (wait_complete) {
     // 这个是为了单测用的
-    await run();
-  } else {
-    run();
+    await pending;
   }
   return Result.Ok({ async_task_id: task_id });
 }
