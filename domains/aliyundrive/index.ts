@@ -94,9 +94,8 @@ export class AliyunDriveClient {
       throw new Error("Missing methods fetch store");
     }
     if (!drive_id) {
-      throw new Error("缺少 drive id 参数");
+      throw new Error("缺少云盘 id");
     }
-    // this.user_id = user_id;
     this.db_drive_id = drive_id;
     this.store = store;
     const client = axios.create({
@@ -168,68 +167,81 @@ export class AliyunDriveClient {
         }
       },
     };
-    // if (this.renew_session_timer) {
-    //   return;
-    // }
-    // this.renew_session_timer = setInterval(() => {
-    //   this.renew_session();
-    // }, 1000 * 60 * 3);
   }
   /** 初始化所有信息 */
   async init() {
     this.signature = SIGNATURE;
-    // console.log("[]init - drive_id", this.db_drive_id);
-    const aliyun_drive_resp = await this.store.find_drive({
+    const aliyun_drive_res = await this.store.find_drive({
       id: this.db_drive_id,
     });
-    if (aliyun_drive_resp.error) {
-      return aliyun_drive_resp.error;
+    if (aliyun_drive_res.error) {
+      return Result.Err(aliyun_drive_res.error);
     }
-    if (!aliyun_drive_resp.data) {
-      return Result.Err("No matched record of drive");
+    if (!aliyun_drive_res.data) {
+      return Result.Err("没有匹配的云盘记录");
     }
-    const { id, device_id, drive_id } = aliyun_drive_resp.data;
-    this.profile = aliyun_drive_resp.data;
+    const { id, device_id, drive_id } = aliyun_drive_res.data;
+    this.profile = aliyun_drive_res.data;
     this.drive_id = id;
     this.aliyun_drive_id = drive_id;
     this.device_id = device_id;
-    const aliyun_drive_token_resp = await this.store.find_aliyun_drive_token({
-      drive_id: id,
-    });
-    if (aliyun_drive_token_resp.error) {
-      return aliyun_drive_token_resp;
+
+    const token_res = await (async () => {
+      const aliyun_drive_token_res = await this.store.find_aliyun_drive_token({
+        drive_id: this.db_drive_id,
+      });
+      if (aliyun_drive_token_res.error) {
+        return Result.Err(aliyun_drive_token_res.error);
+      }
+      if (!aliyun_drive_token_res.data) {
+        return Result.Err("没有匹配的云盘凭证记录");
+      }
+      const { id: token_id, refresh_token, access_token, expired_at } = aliyun_drive_token_res.data;
+      if (refresh_token === null) {
+        return Result.Err("云盘凭证缺少 refresh_token");
+      }
+      this.token_id = token_id;
+      this.access_token = access_token;
+      // 这里赋值是为了下面 refresh_aliyun_access_token 中使用
+      this.refresh_token = refresh_token;
+      if (!expired_at || dayjs(expired_at * 1000).isBefore(dayjs())) {
+        console.log("access token is expired, refresh it");
+        const refresh_token_res = await this.refresh_aliyun_access_token();
+        if (refresh_token_res.error) {
+          return Result.Err(refresh_token_res.error);
+        }
+        const create_session_res = await this.create_session();
+        if (create_session_res.error) {
+          return Result.Err(create_session_res.error);
+        }
+        return Result.Ok(refresh_token_res.data);
+      }
+      return Result.Ok({
+        access_token,
+        refresh_token,
+      });
+    })();
+    if (token_res.error) {
+      return Result.Err(token_res.error);
     }
-    if (!aliyun_drive_token_resp.data) {
-      return Result.Err("No matched record of aliyun_drive_token");
-    }
-    const { id: token_id, refresh_token, access_token, expired_at } = aliyun_drive_token_resp.data;
+    const { access_token, refresh_token } = token_res.data;
     this.access_token = access_token;
     this.refresh_token = refresh_token;
-    this.token_id = token_id;
-
-    let token = {
-      access_token: aliyun_drive_token_resp.data.access_token,
-      refresh_token: aliyun_drive_token_resp.data.refresh_token,
+    const token = {
+      access_token,
+      refresh_token,
     };
-    if (!expired_at || dayjs(expired_at * 1000).isBefore(dayjs())) {
-      console.log("access token is expired, refresh it");
-      const refresh_token_resp = await this.refresh_aliyun_access_token();
-      if (refresh_token_resp.error) {
-        return refresh_token_resp;
-      }
-      token.access_token = refresh_token_resp.data.access_token;
-      token.refresh_token = refresh_token_resp.data.refresh_token;
-      const create_session_resp = await this.create_session();
-      if (create_session_resp.error) {
-        return create_session_resp;
-      }
-    }
     return Result.Ok(token);
   }
   async ensure_initialized() {
-    if (!this.signature) {
-      await this.init();
+    if (this.signature) {
+      return Result.Ok(null);
     }
+    const r = await this.init();
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    return Result.Ok(null);
   }
   async refresh_profile() {
     await this.ensure_initialized();
@@ -700,7 +712,6 @@ export class AliyunDriveClient {
   /** 文件移入回收站 */
   async delete_file(file_id: string) {
     await this.ensure_initialized();
-    // console.log("drive id is", this.aliyun_drive_id, file_id);
     const r = await this.request.post(API_HOST + "/adrive/v2/recyclebin/trash", {
       drive_id: this.aliyun_drive_id,
       file_id,
@@ -708,18 +719,6 @@ export class AliyunDriveClient {
     if (r.error) {
       return r;
     }
-    // const r1 = await this.store.delete_folder({
-    //   file_id,
-    // });
-    // if (r1.error) {
-    //   return r1;
-    // }
-    // const r2 = await this.store.delete_episode({
-    //   file_id,
-    // });
-    // if (r2.error) {
-    //   return r2;
-    // }
     return Result.Ok(null);
   }
   /**
@@ -727,29 +726,30 @@ export class AliyunDriveClient {
    * @param token 用来获取新 token 的 refresh_token
    */
   async refresh_aliyun_access_token() {
-    const refresh_token_resp = await this.request.post<{
+    // console.log("refresh_aliyun_access_token", this.refresh_token);
+    const refresh_token_res = await this.request.post<{
       access_token: string;
       refresh_token: string;
     }>(API_HOST + "/v2/account/token", {
       refresh_token: this.refresh_token,
       grant_type: "refresh_token",
     });
-    if (refresh_token_resp.error) {
-      console.log("refresh token failed, because", refresh_token_resp.error.message);
-      return refresh_token_resp;
+    if (refresh_token_res.error) {
+      console.log("refresh token failed, because", refresh_token_res.error.message);
+      return Result.Err(refresh_token_res.error);
     }
-    const { access_token } = refresh_token_resp.data;
+    const { access_token } = refresh_token_res.data;
     // console.log("refresh token success", access_token);
     this.access_token = access_token;
-    const patch_aliyun_drive_token_resp = await this.patch_aliyun_drive_token({
-      refresh_token: refresh_token_resp.data.refresh_token,
-      access_token: refresh_token_resp.data.access_token,
+    const patch_aliyun_drive_token_res = await this.patch_aliyun_drive_token({
+      refresh_token: refresh_token_res.data.refresh_token,
+      access_token: refresh_token_res.data.access_token,
       expired_at: dayjs().add(5, "minute").unix(),
     });
-    if (patch_aliyun_drive_token_resp.error) {
-      return patch_aliyun_drive_token_resp;
+    if (patch_aliyun_drive_token_res.error) {
+      return Result.Err(patch_aliyun_drive_token_res.error);
     }
-    return Result.Ok(refresh_token_resp.data);
+    return Result.Ok(refresh_token_res.data);
   }
   async create_session() {
     const resp = await this.request.post(API_HOST + "/users/v1/users/device/create_session", {
@@ -780,7 +780,7 @@ export class AliyunDriveClient {
   }
   async patch_aliyun_drive_token(data: AliyunDriveToken) {
     if (!this.token_id) {
-      return Result.Err("please invoke init before patch aliyun drive token");
+      return Result.Err("请先调用 client.init 方法获取云盘信息");
     }
     const { refresh_token, access_token, expired_at } = data;
     return this.store.update_aliyun_drive_token(this.token_id, {
@@ -791,7 +791,10 @@ export class AliyunDriveClient {
   }
   /** 签到 */
   async checked_in() {
-    await this.ensure_initialized();
+    const r = await this.ensure_initialized();
+    if (r.error) {
+      return Result.Err(r.error);
+    }
     const { error, data } = await this.request.post<{
       success: boolean;
       message: string;
