@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const { parsed_tv } = task;
   const r = await run_sync_task(task, {
+    wait_complete: true,
     store,
     drive_id: parsed_tv.drive_id,
     user_id,

@@ -236,7 +236,7 @@ model parsed_episode {
         type           Int
         // 文件大小
         size           Float? @default(0)
-        can_search     Int?   @default(0)
+        can_search     Int?   @default(1)
 
         episode_id       String?
         episode          episode?      @relation(fields: [episode_id], references: [id], onDelete: Cascade)

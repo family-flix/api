@@ -29,6 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       _count: true,
       profile: true,
+      episodes: {
+        include: {
+          parsed_episodes: true,
+        },
+      },
       seasons: {
         include: {
           profile: true,
@@ -56,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   const data = (() => {
-    const { id, profile, seasons, _count } = tv;
+    const { id, profile, seasons, episodes, _count } = tv;
     const {
       name,
       original_name,
@@ -69,6 +74,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       season_count,
     } = profile;
     const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
+    const sources = episodes
+      .map((episode) => {
+        const { parsed_episodes } = episode;
+        return parsed_episodes;
+      })
+      .reduce((total, cur) => {
+        return total.concat(cur);
+      }, []);
+
     return {
       id,
       name: name || original_name,
@@ -96,6 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           }),
         };
       }),
+      sources,
     };
   })();
 

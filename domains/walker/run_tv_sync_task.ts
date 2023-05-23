@@ -104,6 +104,7 @@ export async function consume_effects_for_shared_file(
   if (errors.length !== 0) {
     return Result.Err(errors.map((e) => e.message).join("\n"));
   }
+  log("完成同步");
   return Result.Ok(null);
 }
 
