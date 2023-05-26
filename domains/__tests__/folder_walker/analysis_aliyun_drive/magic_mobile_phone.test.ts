@@ -52,7 +52,7 @@ describe("detect a tv dir", () => {
         tree: data,
       }),
       store,
-      need_upload_image: false,
+      upload_image: false,
       wait_complete: true,
     });
     expect(r.error).toBe(null);

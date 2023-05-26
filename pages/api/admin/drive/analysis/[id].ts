@@ -4,57 +4,82 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { User } from "@/domains/user";
-import { store } from "@/store";
+import { Drive } from "@/domains/drive";
+import { DriveAnalysis } from "@/domains/analysis";
+import { Job } from "@/domains/job";
 import { response_error_factory } from "@/utils/backend";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id: drive_id, target_folder } = req.query as Partial<{
+  const { id: drive_id } = req.query as Partial<{
     id: string;
     target_folder: string;
   }>;
   if (!drive_id) {
-    return e("缺少云盘 id 参数");
+    return e(Result.Err("缺少云盘 id"));
   }
-  const t_resp = await User.New(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t_res = await User.New(authorization);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const { id: user_id } = t_resp.data;
-  const drive_res = await store.find_drive({ id: drive_id });
+  const user = t_res.data;
+  const { id: user_id } = user;
+  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
   if (drive_res.error) {
     return e(drive_res);
   }
-  if (!drive_res.data) {
-    return e("没有找到匹配的云盘记录");
+  const drive = drive_res.data;
+  if (!drive.has_root_folder()) {
+    return e(Result.Err("请先设置索引目录", "30001"));
   }
-  const { root_folder_id } = drive_res.data;
-  const client = new AliyunDriveClient({
-    drive_id,
-    store,
-  });
-  const resp = await walk_drive({
-    drive_id,
-    user_id,
-    client,
-    files: target_folder
-      ? [
-          {
-            name: target_folder,
-            type: "folder",
-          },
-        ]
-      : [],
-    store,
-    need_upload_image: true,
-  });
-  if (resp.error) {
-    return e(resp);
+  const job_res = await Job.New({ desc: `索引云盘 '${drive.name}'`, unique_id: drive.id, user_id, store });
+  if (job_res.error) {
+    // article.write(
+    //   new ArticleLineNode({
+    //     type: "error",
+    //     children: [
+    //       new ArticleLineNode({
+    //         type: "a",
+    //         children: [`[${drive_id}]`, "有进行中的索引任务，点击前往查看"],
+    //         value: {
+    //           task_id: existing_task_res.data.id,
+    //         },
+    //       }),
+    //     ],
+    //   })
+    // );
+    return e(job_res);
   }
-  res.status(200).json({ code: 0, msg: "", data: resp.data });
+  const job = job_res.data;
+  const r2 = await DriveAnalysis.New({
+    drive,
+    store,
+    user,
+    TMDB_TOKEN: process.env.TMDB_TOKEN,
+    on_print(v) {
+      job.output.write(v);
+    },
+    on_finish() {
+      job.finish();
+    },
+    on_error() {
+      job.finish();
+    },
+  });
+  if (r2.error) {
+    return e(r2);
+  }
+  const analysis = r2.data;
+  analysis.run();
+  res.status(200).json({
+    code: 0,
+    msg: "",
+    data: {
+      job_id: job.id,
+    },
+  });
 }

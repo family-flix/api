@@ -6,10 +6,10 @@ import { DiffTypes, DifferEffect, FolderDiffer } from "@/domains/folder_differ";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { log } from "@/logger/log";
 import { folder_client, store_factory } from "@/store";
-import { Result } from "@/types";
 import { is_video_file } from "@/utils";
 import { FileType } from "@/constants";
 import { FileSyncTaskRecord, ParsedTVRecord } from "@/store/types";
+import { Result } from "@/types";
 
 /**
  * 执行 folder_diff 产出的 effects

@@ -51,6 +51,7 @@ export class User {
     if (!existing.data) {
       return Result.Err("token 已失效");
     }
+    // 要不要生成一个新的 token？
     const user = new User({ id, token });
     return Result.Ok(user);
   }
@@ -74,12 +75,11 @@ export class User {
       return Result.Err("密码错误");
     }
     const { id: user_id } = credential.user;
-    const token = await encode_token({
-      token: {
-        id: user_id,
-      },
-      secret: User.SECRET,
-    });
+    const res = await User.Token({ id: user_id });
+    if (res.error) {
+      return Result.Err(res.error);
+    }
+    const token = res.data;
     const user = new User({ id: user_id, token });
     return Result.Ok(user);
   }
@@ -122,18 +122,17 @@ export class User {
       },
     });
     const { id: user_id } = created_user;
-    const token = await encode_token({
-      token: {
-        id: user_id,
-      },
-      secret: User.SECRET,
-    });
+    const res = await User.Token({ id: user_id });
+    if (res.error) {
+      return Result.Err(res.error);
+    }
+    const token = res.data;
     return Result.Ok({
       id: user_id,
       token,
     });
   }
-  /** 生成一个 token */
+  /** 根据给定的 id 生成一个 token */
   static async Token({ id }: { id: string }) {
     try {
       const token = await encode_token({
@@ -165,14 +164,14 @@ export class User {
   /** 添加云盘 */
   async add_drive(body: { payload: AliyunDrivePayload }) {
     const { payload } = body;
-    return Drive.Add({ payload, user_id: this.id });
+    return Drive.New({ payload, user_id: this.id, store });
   }
   /** 根据 id 获取一个 Drive 实例 */
   async get_drive(id?: string) {
     if (!id) {
       return Result.Err("缺少 drive id 参数");
     }
-    return Drive.New({ id, user_id: this.id });
+    return Drive.Get({ id, user_id: this.id, store });
   }
   /** 按分页返回该用户所有网盘 */
   async list_drives_with_pagination(

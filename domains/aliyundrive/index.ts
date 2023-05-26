@@ -8,7 +8,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { Result } from "@/types";
 import { query_stringify } from "@/utils";
 import { log } from "@/logger/log";
-import { AliyunDriveRecord } from "@/store/types";
+import { DriveRecord } from "@/store/types";
 import { store_factory } from "@/store";
 
 import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo } from "./types";
@@ -64,7 +64,7 @@ export class AliyunDriveClient {
   /** 是否为登录状态 */
   is_login = false;
   /** 阿里云身份凭证 */
-  token: null | AliyunDriveRecord = null;
+  token: null | DriveRecord = null;
   // user_id: string;
   expired_at: null | Dayjs = null;
   /** 请求客户端 */
@@ -77,7 +77,7 @@ export class AliyunDriveClient {
   share_token: string | null = null;
   share_token_expired_at: number | null = null;
   /** 数据库表 aliyun_drive 记录 */
-  profile: AliyunDriveRecord | null = null;
+  profile: DriveRecord | null = null;
   /**
    * 数据库操作
    * 由于 drive 依赖 access_token、refresh_token，必须有一个外部持久存储
@@ -767,7 +767,7 @@ export class AliyunDriveClient {
     return resp;
   }
   async renew_session() {
-    const { error, data } = await this.request.post<AliyunDriveRecord>(
+    const { error, data } = await this.request.post<DriveRecord>(
       API_HOST + "/users/v1/users/device/renew_session",
       {}
     );

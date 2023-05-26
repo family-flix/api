@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       };
     }),
     store,
-    need_upload_image: true,
+    upload_image: true,
   });
   if (r.error) {
     return e(r);

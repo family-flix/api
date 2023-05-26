@@ -1,5 +1,5 @@
 /**
- * @file 删除播放记录
+ * @file 执行所有资源同步任务
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -8,7 +8,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { User } from "@/domains/user";
 import { store } from "@/store";
-import { run_sync_task } from "@/domains/walker/run_tv_sync_task";
+import { ResourceSyncTask } from "@/domains/resource_sync_task";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -44,18 +44,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const task = tasks[i];
         const { url, file_id, name, parsed_tv_id, parsed_tv } = task;
         const { drive_id } = parsed_tv;
-        await run_sync_task(
-          {
-            ...task,
-            parsed_tv,
-          },
-          {
-            wait_complete: true,
-            store,
-            drive_id,
-            user_id,
-          }
-        );
+        const t = new ResourceSyncTask({
+          task,
+          user_id,
+          drive_id,
+          store,
+        });
+        // await run_sync_task(
+        //   {
+        //     ...task,
+        //     parsed_tv,
+        //   },
+        //   {
+        //     wait_complete: true,
+        //     store,
+        //     drive_id,
+        //     user_id,
+        //   }
+        // );
       }
     } while (no_more === false);
   })();

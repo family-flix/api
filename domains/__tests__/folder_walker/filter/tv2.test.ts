@@ -66,7 +66,7 @@ describe("detect a tv dir", () => {
       }),
       store,
       files,
-      need_upload_image: false,
+      upload_image: false,
       wait_complete: true,
     });
     expect(r.error).toBe(null);

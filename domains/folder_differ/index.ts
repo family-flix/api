@@ -1,7 +1,11 @@
 /**
  * @file 对比两个文件夹的差异
  */
+import { Handler } from "mitt";
+
 import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
+import { Article, ArticleLineNode, ArticleListItemNode, ArticleListNode, ArticleTextNode } from "@/domains/article";
+import { BaseDomain } from "@/domains/base";
 import { log } from "@/logger/log";
 
 export enum DiffTypes {
@@ -39,14 +43,31 @@ type MaybeActionPayload = Record<
     prev_folder: AliyunDriveFolder;
   }
 >;
+enum Events {
+  Print,
+}
+type TheTypesOfEvents = {
+  [Events.Print]: ArticleLineNode;
+};
+type FolderDifferProps = {
+  /** 要对比的新文件夹实例 */
+  folder: AliyunDriveFolder;
+  /** 要对比的旧文件夹实例 */
+  prev_folder: AliyunDriveFolder;
+  /** 判断两个文件是否相同的键 */
+  unique_key: "file_id" | "name";
+  /** 判断是否忽略 */
+  filter?: (file: AliyunDriveFile | AliyunDriveFolder) => boolean;
+  on_print?: (node: ArticleLineNode) => void;
+};
 
-export class FolderDiffer {
+export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
   folder: AliyunDriveFolder;
   // parent_folders: AliyunDriveFolder[] = [];
   prev_folder: AliyunDriveFolder;
   // prev_parent_folders: AliyunDriveFolder[] = [];
   unique_key: "file_id" | "name";
-  filter?: (file: AliyunDriveFile | AliyunDriveFolder) => boolean;
+  filter?: FolderDifferProps["filter"];
   /** 是否在对比子文件夹。该变量的目的在于保留不确定是新增还是移动的文件，放在最后回到根目录时再判断 */
   is_child = false;
   /** 收集到的变更 */
@@ -57,38 +78,37 @@ export class FolderDiffer {
   maybe_adding: MaybeActionPayload = {};
   /** 可能是删除的 */
   maybe_deleting: MaybeActionPayload = {};
+  // article: Article;
 
-  constructor(options: {
-    /** 要比较的最新文件夹 id */
-    folder: AliyunDriveFolder;
-    prev_folder: AliyunDriveFolder;
-    /** 判断两个文件是否相同的键 */
-    unique_key: "file_id" | "name";
-    /** 判断是否忽略 */
-    filter?: FolderDiffer["filter"];
-  }) {
-    const { folder, prev_folder, unique_key, filter } = options;
+  constructor(options: FolderDifferProps) {
+    super();
+
+    const { folder, prev_folder, unique_key, filter, on_print } = options;
     this.folder = folder;
     this.prev_folder = prev_folder;
     this.unique_key = unique_key;
+    // this.article = new Article();
     if (filter) {
       this.filter = filter;
+    }
+    if (on_print) {
+      this.on_print(on_print);
     }
   }
   async run(parent_prefix: string = "", is_next_page = false) {
     const prefix = `${parent_prefix}[${this.prev_folder.name}|${this.folder.name}]`;
-    log(prefix, is_next_page ? "继续" : "开始", "对比", this.prev_folder.name, "和", this.folder.name);
+    // log(prefix, is_next_page ? "继续" : "开始", "对比", this.prev_folder.name, "和", this.folder.name);
     // const a = parent_prefix ? parent_prefix : "";
     // log("[DOMAIN](FolderDiffer)run", this.prev_folder.name, this.folder.name, this.is_child);
     const r1 = await this.folder.next();
     if (r1.error) {
-      log(prefix, "获取新文件列表失败", r1.error.message);
+      // log(prefix, "获取新文件列表失败", r1.error.message);
       // log("folder next failed", r1.error.message);
       return;
     }
     const r2 = await this.prev_folder.next();
     if (r2.error) {
-      log(prefix, "获取旧文件列表失败", r2.error.message);
+      // log(prefix, "获取旧文件列表失败", r2.error.message);
       // log("prev folder next failed", r2.error.message);
       return;
     }
@@ -104,24 +124,68 @@ export class FolderDiffer {
       }
       return true;
     });
-    log(
-      prefix,
-      "需要对比的文件列表",
-      prev_files.map((f) => f.name),
-      cur_files.map((f) => f.name)
-      // Object.keys(this.maybe_deleting),
-      // Object.keys(this.maybe_adding)
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: [
+          new ArticleTextNode({
+            text: "开始对比文件列表",
+          }),
+        ],
+      })
     );
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: [
+          new ArticleListNode({
+            children: prev_files.map((f) => {
+              return new ArticleListItemNode({
+                children: [
+                  new ArticleTextNode({
+                    text: f.name,
+                  }),
+                ],
+              });
+            }),
+          }),
+        ],
+      })
+    );
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: [
+          new ArticleListNode({
+            children: cur_files.map((f) => {
+              return new ArticleListItemNode({
+                children: [
+                  new ArticleTextNode({
+                    text: f.name,
+                  }),
+                ],
+              });
+            }),
+          }),
+        ],
+      })
+    );
+    // log(
+    //   prefix,
+    //   "需要对比的文件列表",
+    //   prev_files.map((f) => f.name),
+    //   cur_files.map((f) => f.name)
+    // );
     // log("[DOMAIN](FolderDiffer)effect length", this.effects.length);
     if (r1.data.length === 0 && r2.data.length === 0) {
       const is_root_folder = !this.is_child;
       // 这里 r1.data.length === 0 && r2.data.length === 0 才表示真的没有数据了，cur_files.length 可能是过滤后没有数据了
       if (is_root_folder) {
-        log(prefix, "完成对比，获取新增与删除的文件列表");
+        // log(prefix, "完成对比，获取新增与删除的文件列表");
         const deleting_actions = Object.keys(this.maybe_deleting).map((unique_key) => {
           const { file_id, parent_file_id, name, type, parents } = this.maybe_deleting[unique_key].file;
           // log("[DOMAIN](FolderDiffer)must be deleting", name);
-          log(prefix, "删除的文件", name);
+          // log(prefix, "删除的文件", name);
           const r = {
             type: DiffTypes.Deleting,
             payload: {
@@ -142,7 +206,7 @@ export class FolderDiffer {
         const adding_actions = Object.keys(this.maybe_adding).map((unique_key) => {
           const { file_id, name, type, parent_file_id, parents } = this.maybe_adding[unique_key].file;
           const prev_folder = this.maybe_adding[unique_key].prev_folder;
-          log(prefix, "新增的文件", name, "应该添加到", prev_folder.name, "文件夹中");
+          // log(prefix, "新增的文件", name, "应该添加到", prev_folder.name, "文件夹中");
           // log("[DOMAIN](FolderDiffer)must be adding", name);
           const r = {
             type: DiffTypes.Adding,
@@ -160,10 +224,89 @@ export class FolderDiffer {
           };
           return r as DifferEffect;
         });
+        if (deleting_actions.length + adding_actions.length === 0) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [
+                new ArticleTextNode({
+                  text: "完成对比，没有新增或删除文件",
+                }),
+              ],
+            })
+          );
+          return;
+        }
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: "完成对比，新增和删除的文件如下",
+              }),
+            ],
+          })
+        );
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: "删除了如下文件",
+              }),
+            ],
+          })
+        );
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleListNode({
+                children: deleting_actions.map((f) => {
+                  return new ArticleListItemNode({
+                    children: [
+                      new ArticleTextNode({
+                        text: `${f.payload.parents.map((p) => p.name).join("/")}/${f.payload.name}`,
+                      }),
+                    ],
+                  });
+                }),
+              }),
+            ],
+          })
+        );
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: "新增了如下文件",
+              }),
+            ],
+          })
+        );
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleListNode({
+                children: adding_actions.map((f) => {
+                  return new ArticleListItemNode({
+                    children: [
+                      new ArticleTextNode({
+                        text: `${f.payload.parents.map((p) => p.name).join("/")}/${f.payload.name}`,
+                      }),
+                    ],
+                  });
+                }),
+              }),
+            ],
+          })
+        );
         this.effects.push(...adding_actions);
       }
       // log("[DOMAIN](FolderDiffer)ended");
-      log(prefix, "结束对比");
+      // log(prefix, "结束对比");
       return;
     }
     if (prev_files.length === 0 && cur_files.length !== 0) {
@@ -174,7 +317,7 @@ export class FolderDiffer {
             .map((f) => f[this.unique_key])
             .concat(file[this.unique_key])
             .join("/");
-          log(prefix, "认为可能是新增的文件", file.name, this.prev_folder.name);
+          // log(prefix, "认为可能是新增的文件", file.name, this.prev_folder.name);
           return {
             [unique_key]: {
               file,
@@ -198,7 +341,7 @@ export class FolderDiffer {
         // 在这里做一次判断，既避免了多删除，也避免了多添加
         // log("[DOMAIN](FolderDiffer)", v, this.maybe_deleting);
         if (this.maybe_deleting[unique_key]) {
-          log(prefix, "文件存在可能删除的列表中，将其移除", this.maybe_deleting[unique_key].file.name);
+          // log(prefix, "文件存在可能删除的列表中，将其移除", this.maybe_deleting[unique_key].file.name);
           // log("[DOMAIN](FolderDiffer)existing maybe deleting, so delete it", this.maybe_deleting[unique_key].name);
           delete this.maybe_deleting[unique_key];
           delete map[unique_key];
@@ -218,7 +361,7 @@ export class FolderDiffer {
             .map((f) => f[this.unique_key])
             .concat(file[this.unique_key])
             .join("/");
-          log(prefix, "认为可能是删除的文件", file.name);
+          // log(prefix, "认为可能是删除的文件", file.name);
           return {
             [unique_key]: {
               file,
@@ -240,7 +383,7 @@ export class FolderDiffer {
           .join("/");
         if (this.maybe_adding[unique_key]) {
           // log("[DOMAIN](FolderDiffer)existing maybe adding, so delete it", this.maybe_adding[unique_key].name);
-          log(prefix, "文件同时还在可能新增的列表中，将其移除", this.maybe_adding[unique_key].file.name);
+          // log(prefix, "文件同时还在可能新增的列表中，将其移除", this.maybe_adding[unique_key].file.name);
           delete this.maybe_adding[unique_key];
           delete map[unique_key];
         }
@@ -283,7 +426,7 @@ export class FolderDiffer {
         .concat(prev_file[this.unique_key])
         .join("/");
       // log("[DOMAIN](FolderDiffer)1.0 - compare", cur_file.name, prev_file.name);
-      log(prefix, "对比两个文件是否相同", cur_file.name, prev_file.name);
+      // log(prefix, "对比两个文件是否相同", cur_file.name, prev_file.name);
       if (cur_unique === prev_unique) {
         // file_id 相同，看看名字是否还相同，不相同就是「仅修改名称」
         // if (name !== cur_name) {
@@ -300,7 +443,7 @@ export class FolderDiffer {
         //     },
         //   });
         // }
-        log(prefix, "两个文件相同");
+        // log(prefix, "两个文件相同");
         // log("[DOMAIN](FolderDiffer)1.1 - is same, check is folder then compare sub files", cur_unique, prev_unique);
         if (cur_file.type === "folder" && prev_file.type === "folder") {
           const sub_diff = new FolderDiffer({
@@ -308,24 +451,27 @@ export class FolderDiffer {
             folder: cur_file as AliyunDriveFolder,
             unique_key: this.unique_key,
             filter: this.filter,
+            on_print: (node) => {
+              this.emit(Events.Print, node);
+            },
           });
           // sub_diff.parent_folders = this.parent_folders.concat(cur_file);
           // sub_diff.prev_parent_folders = this.prev_parent_folders.concat(prev_file);
           sub_diff.is_child = true;
-          log(prefix, "继续对比子文件1");
+          // log(prefix, "继续对比子文件1");
           await sub_diff.run(prefix);
-          log(
-            prefix,
-            "完成子文件",
-            prev_file.name,
-            "和",
-            cur_file.name,
-            "对比",
-            Object.keys(sub_diff.maybe_deleting).length,
-            "个可能删除",
-            Object.keys(sub_diff.maybe_adding).length,
-            "个可能新增"
-          );
+          // log(
+          //   prefix,
+          //   "完成子文件",
+          //   prev_file.name,
+          //   "和",
+          //   cur_file.name,
+          //   "对比",
+          //   Object.keys(sub_diff.maybe_deleting).length,
+          //   "个可能删除",
+          //   Object.keys(sub_diff.maybe_adding).length,
+          //   "个可能新增"
+          // );
           this.maybe_deleting = {
             ...this.maybe_deleting,
             ...sub_diff.maybe_deleting,
@@ -388,7 +534,7 @@ export class FolderDiffer {
         //     },
         //   });
         // }
-        log(prefix, "两个文件没有变化");
+        // log(prefix, "两个文件没有变化");
         // log(`[DOMAIN](FolderDiffer)2.3 - ${cur_file.name} and ${map[unique_key].name} is same, so no change`);
         if (cur_file.type === "folder" && map[unique_key].file.type === "folder") {
           const prev_file = map[unique_key].file as AliyunDriveFolder;
@@ -397,23 +543,26 @@ export class FolderDiffer {
             folder: cur_file as AliyunDriveFolder,
             unique_key: this.unique_key,
             filter: this.filter,
+            on_print: (node) => {
+              this.emit(Events.Print, node);
+            },
           });
           sub_diff.is_child = true;
           // sub_diff.parent_folders = this.parent_folders.concat(cur_file);
           // sub_diff.prev_parent_folders = this.prev_parent_folders.concat(prev_file);
-          log(prefix, "继续对比子文件2");
+          // log(prefix, "继续对比子文件2");
           await sub_diff.run(prefix);
-          log(
-            prefix,
-            "完成子文件",
-            map[unique_key].file.name,
-            cur_file.name,
-            "对比",
-            Object.keys(sub_diff.maybe_deleting).length,
-            "个可能删除",
-            Object.keys(sub_diff.maybe_adding).length,
-            "个可能新增"
-          );
+          // log(
+          //   prefix,
+          //   "完成子文件",
+          //   map[unique_key].file.name,
+          //   cur_file.name,
+          //   "对比",
+          //   Object.keys(sub_diff.maybe_deleting).length,
+          //   "个可能删除",
+          //   Object.keys(sub_diff.maybe_adding).length,
+          //   "个可能新增"
+          // );
           this.maybe_deleting = {
             ...this.maybe_deleting,
             ...sub_diff.maybe_deleting,
@@ -426,20 +575,19 @@ export class FolderDiffer {
         }
         if (this.maybe_adding[unique_key]) {
           // log("[DOMAIN](FolderDiffer)existing maybe adding, so delete it", this.maybe_adding[unique_key].name);
-          log(prefix, "文件之前判断可能是新增，现在确定不是，移除它", cur_file.name);
+          // log(prefix, "文件之前判断可能是新增，现在确定不是，移除它", cur_file.name);
           delete this.maybe_adding[unique_key];
         }
         delete map[unique_key];
         continue;
       }
       // log("[DOMAIN](FolderDiffer)3.0 - no same id, maybe adding", cur_file.name);
-      log(
-        prefix,
-        "可能是新增的文件",
-        cur_file.name,
-        this.prev_folder.name
-        // this.prev_parent_folders.map((folder) => folder.name).join("/")
-      );
+      // log(
+      //   prefix,
+      //   "可能是新增的文件",
+      //   cur_file.name,
+      //   this.prev_folder.name
+      // );
       // 这里会重复添加，但是用 v 做 key 所以实际上没有重复添加成功
       this.maybe_adding[unique_key] = {
         file: cur_file as AliyunDriveFolder,
@@ -447,12 +595,12 @@ export class FolderDiffer {
       } as MaybeActionPayload[string];
     }
     // "[DOMAIN](FolderDiffer)4.0 - maybe adding",
-    const maybe_adding_files = Object.keys(this.maybe_adding).map((k) => {
-      return this.maybe_adding[k].file.name;
-    });
-    if (maybe_adding_files.length !== 0) {
-      log(prefix, "完成对比后，可能是新增的文件列表", maybe_adding_files);
-    }
+    // const maybe_adding_files = Object.keys(this.maybe_adding).map((k) => {
+    //   return this.maybe_adding[k].file.name;
+    // });
+    // if (maybe_adding_files.length !== 0) {
+    //   log(prefix, "完成对比后，可能是新增的文件列表", maybe_adding_files);
+    // }
     // Object.keys(this.map).map((id) => {
     //   log("[DOMAIN](FolderDiffer)4.0 - maybe deleting", this.map[id].name);
     // });
@@ -462,14 +610,18 @@ export class FolderDiffer {
       ...map,
     };
     // "[DOMAIN](FolderDiffer)4.0 - maybe deleting",
-    const maybe_deleting_files = Object.keys(this.maybe_deleting).map((k) => {
-      return this.maybe_deleting[k].file.name;
-    });
+    // const maybe_deleting_files = Object.keys(this.maybe_deleting).map((k) => {
+    //   return this.maybe_deleting[k].file.name;
+    // });
     // log(prefix, "保存可能删除的文件", maybe_deleting_files);
-    if (maybe_deleting_files.length !== 0) {
-      log(prefix, "完成对比后，可能是被删除的文件列表", maybe_deleting_files);
-    }
-    log(prefix, "获取更多子文件");
+    // if (maybe_deleting_files.length !== 0) {
+    //   log(prefix, "完成对比后，可能是被删除的文件列表", maybe_deleting_files);
+    // }
+    // log(prefix, "获取更多子文件");
     await this.run(parent_prefix, true);
+  }
+
+  on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
+    this.on(Events.Print, handler);
   }
 }

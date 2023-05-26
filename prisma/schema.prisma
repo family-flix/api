@@ -381,10 +381,26 @@ model async_task {
         status    Int?    @default(0)
         need_stop Int?    @default(0)
 
+        output_id String @unique
+        output    output @relation(fields: [output_id], references: [id], onDelete: Cascade)
+        user_id   String
+        user      user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("AsyncTask")
+}
+
+model output {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        // article node 转成的 json
+        content String
+
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        @@map("AsyncTask")
+        async_task async_task?
 }
 
 model play_history {
@@ -749,6 +765,7 @@ model user {
         tmp_files               tmp_file[]
         binds_for_parsed_tv     bind_for_parsed_tv[]
         notifications           notification[]
+        outputs                 output[]
 
         @@map("User")
 }

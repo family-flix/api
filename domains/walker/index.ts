@@ -1,9 +1,11 @@
 /**
  * @file 文件夹遍历器
  */
-import chalk from "chalk";
+import { Handler } from "mitt";
 
 import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
+import { BaseDomain } from "@/domains/base";
+import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { Result } from "@/types";
 import { is_video_file, parse_filename_for_video, noop, promise_noop, sleep } from "@/utils";
 
@@ -60,10 +62,43 @@ type ArchivedEpisode = {
   episode?: string;
 };
 const DEFAULT_SEASON_NUMBER = "S01";
+
+enum Events {
+  /** 找到一个文件 */
+  File,
+  /** 找到一个剧集 */
+  Episode,
+  /** 找到一个电影 */
+  Movie,
+  /** 遍历发生错误 */
+  Error,
+  /** 遍历发生警告 */
+  Warning,
+  Print,
+}
+type TheTypesOfEvents = {
+  [Events.File]: {
+    file_id: string;
+    name: string;
+    type: "file" | "folder";
+    size?: number;
+    parent_file_id: string;
+    parent_paths: string;
+  };
+  [Events.Episode]: SearchedEpisode;
+  [Events.Movie]: {};
+  [Events.Error]: { file_id: string; name: string; parent_paths: string; _position: string };
+  [Events.Warning]: { file_id: string; name: string; parent_paths: string; _position: string };
+  [Events.Print]: ArticleLineNode | ArticleSectionNode;
+};
+type FolderWalkerProps = {
+  on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
+};
+
 /**
  * 推断一个目录内部的所有文件是否为一个剧集
  */
-export class FolderWalker {
+export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   /**
    * 索引到所有影片
    * @deprecated
@@ -100,7 +135,15 @@ export class FolderWalker {
   on_error: (file: { file_id: string; name: string; parent_paths: string; _position: string }) => void = noop;
   on_warning: (file: { file_id: string; name: string; parent_paths: string; _position: string }) => void = noop;
 
-  constructor() {}
+  constructor(options: FolderWalkerProps) {
+    super();
+
+    const { on_print } = options;
+    if (on_print) {
+      this.on_print(on_print);
+    }
+  }
+
   /**
    * 递归遍历给定的文件夹
    */
@@ -108,13 +151,36 @@ export class FolderWalker {
     const { file_id, type, name, size, parent_file_id } = data;
     const parent_paths = parent.map((p) => p.file_name).join("/");
     const parent_ids = parent.map((p) => p.file_id).join("/");
-    const filepath = parent_paths + "/" + name;
-    this.log("\n");
-    this.log(
-      "[](walk)" + chalk.yellowBright("begin"),
-      chalk.gray(parent_paths) + chalk.magenta("/") + chalk.magenta(name),
-      file_id
+    const filepath = (() => {
+      if (!parent_paths) {
+        return name;
+      }
+      return parent_paths + "/" + name;
+    })();
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: [
+          new ArticleTextNode({
+            color: "gray",
+            text: parent_paths,
+          }),
+          new ArticleTextNode({
+            color: "magenta",
+            text: "/",
+          }),
+          new ArticleTextNode({
+            color: "magenta",
+            text: name,
+          }),
+        ],
+      })
     );
+    // this.log(
+    //   "[](walk)" + chalk.yellowBright("begin"),
+    //   chalk.gray(parent_paths) + chalk.magenta("/") + chalk.magenta(name),
+    //   file_id
+    // );
     if (this.stop) {
       return;
     }
@@ -264,7 +330,7 @@ export class FolderWalker {
          * 如果一个文件既没有集数，也没有名字，视为无效文件
          * __root/name1/s01/empty.mp4@@错误影片1
          */
-        this.log(chalk.redBright("[ERROR]"), "error1", name, reason);
+        // this.log(chalk.redBright("[ERROR]"), "error1", name, reason);
         return;
       }
       await this.on_movie({
@@ -316,11 +382,29 @@ export class FolderWalker {
              * @example
              * __root/name1/s01/e01.mp4__@@正常1
              */
-            this.log(
-              "[](walk)[normal1]",
-              chalk.greenBright(tv_and_season_folder.season.season),
-              chalk.blueBright(tv_and_season_folder.tv.name)
-            );
+            // this.emit(
+            //   Events.Print,
+            //   new ArticleLineNode({
+            //     children: [
+            //       new ArticleTextNode({
+            //         text: "[](walk)[normal1]",
+            //       }),
+            //       new ArticleTextNode({
+            //         color: "greenBright",
+            //         text: tv_and_season_folder.season.season,
+            //       }),
+            //       new ArticleTextNode({
+            //         color: "blueBright",
+            //         text: tv_and_season_folder.tv.name,
+            //       }),
+            //     ],
+            //   })
+            // );
+            // this.log(
+            //   "[](walk)[normal1]",
+            //   chalk.greenBright(tv_and_season_folder.season.season),
+            //   chalk.blueBright(tv_and_season_folder.tv.name)
+            // );
             return;
           }
           const tasks = create_tasks({
@@ -344,11 +428,29 @@ export class FolderWalker {
            * @example
            * __root/name1/e01.mp4__@@正常2
            */
-          this.log(
-            "[](walk)[normal2]",
-            chalk.greenBright(DEFAULT_SEASON_NUMBER),
-            chalk.blueBright(tv_and_season_folder.tv.name)
-          );
+          // this.emit(
+          //   Events.Print,
+          //   new ArticleLineNode({
+          //     children: [
+          //       new ArticleTextNode({
+          //         text: "[](walk)[normal2]",
+          //       }),
+          //       new ArticleTextNode({
+          //         color: "blueBright",
+          //         text: tv_and_season_folder.tv.name,
+          //       }),
+          //       new ArticleTextNode({
+          //         color: "greenBright",
+          //         text: DEFAULT_SEASON_NUMBER,
+          //       }),
+          //     ],
+          //   })
+          // );
+          // this.log(
+          //   "[](walk)[normal2]",
+          //   chalk.greenBright(DEFAULT_SEASON_NUMBER),
+          //   chalk.blueBright(tv_and_season_folder.tv.name)
+          // );
           return;
         }
         const reason = "影片文件及父文件夹未找到合法名称";
@@ -362,7 +464,27 @@ export class FolderWalker {
          * @example
          * __root/empty/e01.mp4__ or __root/empty/s01/e01.mp4__@@异常3
          */
-        this.log(chalk.redBright("[ERROR]"), "error3", name, reason);
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                color: "redBright",
+                text: "[ERROR]",
+              }),
+              new ArticleTextNode({
+                text: "error3",
+              }),
+              new ArticleTextNode({
+                text: name,
+              }),
+              new ArticleTextNode({
+                text: reason,
+              }),
+            ],
+          })
+        );
+        // this.log(chalk.redBright("[ERROR]"), "error3", name, reason);
         return;
       }
       // episode 有名字
@@ -389,11 +511,29 @@ export class FolderWalker {
              * @example
              * return __root/name1/s01/name1.e01.mp4@@正常3
              */
-            this.log(
-              "[](walk)[normal3]",
-              chalk.greenBright(tv_and_season_folder.season.season),
-              chalk.blueBright(tv_and_season_folder.tv.name)
-            );
+            // this.emit(
+            //   Events.Print,
+            //   new ArticleLineNode({
+            //     children: [
+            //       new ArticleTextNode({
+            //         text: "[](walk)[normal3]",
+            //       }),
+            //       new ArticleTextNode({
+            //         color: "greenBright",
+            //         text: tv_and_season_folder.season.season,
+            //       }),
+            //       new ArticleTextNode({
+            //         color: "blueBright",
+            //         text: tv_and_season_folder.tv.name,
+            //       }),
+            //     ],
+            //   })
+            // );
+            // this.log(
+            //   "[](walk)[normal3]",
+            //   chalk.greenBright(tv_and_season_folder.season.season),
+            //   chalk.blueBright(tv_and_season_folder.tv.name)
+            // );
             return;
           }
           const tasks = create_tasks({
@@ -417,11 +557,29 @@ export class FolderWalker {
            * @example
            * __root/name1/name1.e01.mp4@@正常4
            */
-          this.log(
-            "[](walk)[normal4]",
-            chalk.greenBright(DEFAULT_SEASON_NUMBER),
-            chalk.blueBright(tv_and_season_folder.tv.name)
-          );
+          // this.emit(
+          //   Events.Print,
+          //   new ArticleLineNode({
+          //     children: [
+          //       new ArticleTextNode({
+          //         text: "[](walk)[normal4]",
+          //       }),
+          //       new ArticleTextNode({
+          //         color: "greenBright",
+          //         text: DEFAULT_SEASON_NUMBER,
+          //       }),
+          //       new ArticleTextNode({
+          //         color: "blueBright",
+          //         text: tv_and_season_folder.tv.name,
+          //       }),
+          //     ],
+          //   })
+          // );
+          // this.log(
+          //   "[](walk)[normal4]",
+          //   chalk.greenBright(DEFAULT_SEASON_NUMBER),
+          //   chalk.blueBright(tv_and_season_folder.tv.name)
+          // );
           return;
         }
         const tasks = create_tasks({
@@ -445,14 +603,29 @@ export class FolderWalker {
          * @example
          * __root/name1/name2.e01.mp4@@需要提示1
          */
-        const reason = `影片解析出的名字 '${parsed_info.name}' 和所在文件夹的名字 '${tv_and_season_folder.tv.name}' 不一致`;
+        const reason = `影片解析出的名字 '${parsed_info.name || parsed_info.original_name}' 和所在文件夹的名字 '${
+          tv_and_season_folder.tv.name || tv_and_season_folder.tv.original_name
+        }' 不一致`;
         await this.on_warning({
           file_id,
           name,
           parent_paths,
           _position: "tip1",
         });
-        this.log("[](walk)[tip1]", reason);
+        // this.emit(
+        //   Events.Print,
+        //   new ArticleLineNode({
+        //     children: [
+        //       new ArticleTextNode({
+        //         text: "[](walk)[tip1]",
+        //       }),
+        //       new ArticleTextNode({
+        //         text: reason,
+        //       }),
+        //     ],
+        //   })
+        // );
+        // this.log("[](walk)[tip1]", reason);
         return;
       }
       const tasks = create_tasks({
@@ -474,7 +647,25 @@ export class FolderWalker {
        * @example
        * __root/empty/name1.e01.mp4 or __root/empty/s01/name.e01.mp4@@正常5
        */
-      this.log("[](walk)[normal5]", chalk.greenBright(DEFAULT_SEASON_NUMBER), chalk.blueBright(parsed_info.name));
+      // this.emit(
+      //   Events.Print,
+      //   new ArticleLineNode({
+      //     children: [
+      //       new ArticleTextNode({
+      //         text: "[](walk)[normal5]",
+      //       }),
+      //       new ArticleTextNode({
+      //         color: "greenBright",
+      //         text: DEFAULT_SEASON_NUMBER,
+      //       }),
+      //       new ArticleTextNode({
+      //         color: "blueBright",
+      //         text: parsed_info.name,
+      //       }),
+      //     ],
+      //   })
+      // );
+      // this.log("[](walk)[normal5]", chalk.greenBright(DEFAULT_SEASON_NUMBER), chalk.blueBright(parsed_info.name));
       return;
     }
     // 如果没有 self.name
@@ -493,7 +684,27 @@ export class FolderWalker {
          * @example
          * __root/empty/s01.e01.mp4 or __root/empty/s01/s01.e01.mp4@@异常5
          */
-        this.log(chalk.redBright("[ERROR]"), "error5", name, reason);
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                color: "redBright",
+                text: "[ERROR]",
+              }),
+              new ArticleTextNode({
+                text: "error5",
+              }),
+              new ArticleTextNode({
+                text: name,
+              }),
+              new ArticleTextNode({
+                text: reason,
+              }),
+            ],
+          })
+        );
+        // this.log(chalk.redBright("[ERROR]"), "error5", name, reason);
         return;
       }
       // 如果有 tv_and_season.season
@@ -519,11 +730,29 @@ export class FolderWalker {
            * @example
            * __root/name1/s01/s01.e01.mp4@@正常6
            */
-          this.log(
-            "[](walk)[normal6]",
-            chalk.greenBright(tv_and_season_folder.season.season),
-            chalk.blueBright(tv_and_season_folder.tv.name)
-          );
+          // this.emit(
+          //   Events.Print,
+          //   new ArticleLineNode({
+          //     children: [
+          //       new ArticleTextNode({
+          //         text: "[](walk)[normal6]",
+          //       }),
+          //       new ArticleTextNode({
+          //         color: "greenBright",
+          //         text: tv_and_season_folder.season.season,
+          //       }),
+          //       new ArticleTextNode({
+          //         color: "blueBright",
+          //         text: tv_and_season_folder.tv.name,
+          //       }),
+          //     ],
+          //   })
+          // );
+          // this.log(
+          //   "[](walk)[normal6]",
+          //   chalk.greenBright(tv_and_season_folder.season.season),
+          //   chalk.blueBright(tv_and_season_folder.tv.name)
+          // );
           return;
         }
         const tasks = create_tasks({
@@ -552,7 +781,20 @@ export class FolderWalker {
           parent_paths,
           _position: "tip2",
         });
-        this.log("[](walk)[tip2]", reason);
+        // this.emit(
+        //   Events.Print,
+        //   new ArticleLineNode({
+        //     children: [
+        //       new ArticleTextNode({
+        //         text: "[](walk)[tip2]",
+        //       }),
+        //       new ArticleTextNode({
+        //         text: reason,
+        //       }),
+        //     ],
+        //   })
+        // );
+        // this.log("[](walk)[tip2]", reason);
         return;
       }
       const tasks = create_tasks({
@@ -574,11 +816,29 @@ export class FolderWalker {
        * @example
        * __root/name1/s01.e01.mp4@@正常7
        */
-      this.log(
-        "[](walk)[normal7]",
-        chalk.greenBright(parsed_info.season),
-        chalk.blueBright(tv_and_season_folder.tv.name)
-      );
+      // this.emit(
+      //   Events.Print,
+      //   new ArticleLineNode({
+      //     children: [
+      //       new ArticleTextNode({
+      //         text: "[](walk)[normal7]",
+      //       }),
+      //       new ArticleTextNode({
+      //         color: "greenBright",
+      //         text: parsed_info.season,
+      //       }),
+      //       new ArticleTextNode({
+      //         color: "blueBright",
+      //         text: tv_and_season_folder.tv.name,
+      //       }),
+      //     ],
+      //   })
+      // );
+      // this.log(
+      //   "[](walk)[normal7]",
+      //   chalk.greenBright(parsed_info.season),
+      //   chalk.blueBright(tv_and_season_folder.tv.name)
+      // );
       return;
     }
     const tv_and_season_folder = this.find_season_and_tv_folder(parent);
@@ -603,7 +863,25 @@ export class FolderWalker {
        * @example
        * __root/empty/name1.s01.e01.mp4 or __root/empty/s02/name1.s01.e01.mp4@@正常8
        */
-      this.log("[](walk)[normal8]", chalk.greenBright(parsed_info.season), chalk.blueBright(parsed_info.name));
+      // this.emit(
+      //   Events.Print,
+      //   new ArticleLineNode({
+      //     children: [
+      //       new ArticleTextNode({
+      //         text: "[](walk)[normal8]",
+      //       }),
+      //       new ArticleTextNode({
+      //         color: "greenBright",
+      //         text: parsed_info.season,
+      //       }),
+      //       new ArticleTextNode({
+      //         color: "blueBright",
+      //         text: parsed_info.name,
+      //       }),
+      //     ],
+      //   })
+      // );
+      // this.log("[](walk)[normal8]", chalk.greenBright(parsed_info.season), chalk.blueBright(parsed_info.name));
       return;
     }
     // 如果 tv_and_season.name 和 self.name 一样
@@ -631,11 +909,29 @@ export class FolderWalker {
            * @example
            * __root/name1/s01/name1.s01.e01.mp4@@正常9
            */
-          this.log(
-            "[](walk)[normal9]",
-            chalk.greenBright(tv_and_season_folder.season.season),
-            chalk.blueBright(tv_and_season_folder.tv.name)
-          );
+          // this.emit(
+          //   Events.Print,
+          //   new ArticleLineNode({
+          //     children: [
+          //       new ArticleTextNode({
+          //         text: "[](walk)[normal9]",
+          //       }),
+          //       new ArticleTextNode({
+          //         color: "greenBright",
+          //         text: tv_and_season_folder.season.season,
+          //       }),
+          //       new ArticleTextNode({
+          //         color: "blueBright",
+          //         text: tv_and_season_folder.tv.name,
+          //       }),
+          //     ],
+          //   })
+          // );
+          // this.log(
+          //   "[](walk)[normal9]",
+          //   chalk.greenBright(tv_and_season_folder.season.season),
+          //   chalk.blueBright(tv_and_season_folder.tv.name)
+          // );
           return;
         }
         const tasks = create_tasks({
@@ -664,7 +960,20 @@ export class FolderWalker {
           parent_paths,
           _position: "tip3",
         });
-        this.log("[](walk)[tip3]", reason);
+        // this.emit(
+        //   Events.Print,
+        //   new ArticleLineNode({
+        //     children: [
+        //       new ArticleTextNode({
+        //         text: "[](walk)[tip3]",
+        //       }),
+        //       new ArticleTextNode({
+        //         text: reason,
+        //       }),
+        //     ],
+        //   })
+        // );
+        // this.log("[](walk)[tip3]", reason);
         return;
       }
       const tasks = create_tasks({
@@ -686,11 +995,29 @@ export class FolderWalker {
        * @example
        * __root/name1/name1.s01.e01.mp4@@正常10
        */
-      this.log(
-        "[](walk)[normal10]",
-        chalk.greenBright(parsed_info.season),
-        chalk.blueBright(tv_and_season_folder.tv.name)
-      );
+      // this.emit(
+      //   Events.Print,
+      //   new ArticleLineNode({
+      //     children: [
+      //       new ArticleTextNode({
+      //         text: "[](walk)[normal10]",
+      //       }),
+      //       new ArticleTextNode({
+      //         color: "greenBright",
+      //         text: parsed_info.season,
+      //       }),
+      //       new ArticleTextNode({
+      //         color: "blueBright",
+      //         text: tv_and_season_folder.tv.name,
+      //       }),
+      //     ],
+      //   })
+      // );
+      // this.log(
+      //   "[](walk)[normal10]",
+      //   chalk.greenBright(parsed_info.season),
+      //   chalk.blueBright(tv_and_season_folder.tv.name)
+      // );
       return;
     }
     // (这里开始都是名字不匹配)如果有 tv_and_season.season
@@ -723,7 +1050,20 @@ export class FolderWalker {
           parent_paths,
           _position: "tip4",
         });
-        this.log("[](walk)[tip4]", reason);
+        // this.emit(
+        //   Events.Print,
+        //   new ArticleLineNode({
+        //     children: [
+        //       new ArticleTextNode({
+        //         text: "[](walk)[tip4]",
+        //       }),
+        //       new ArticleTextNode({
+        //         text: reason,
+        //       }),
+        //     ],
+        //   })
+        // );
+        // this.log("[](walk)[tip4]", reason);
         return;
       }
       const tasks = create_tasks({
@@ -752,7 +1092,20 @@ export class FolderWalker {
         parent_paths,
         _position: "tip5",
       });
-      this.log("[](walk)[tip5]", reason);
+      // this.emit(
+      //   Events.Print,
+      //   new ArticleLineNode({
+      //     children: [
+      //       new ArticleTextNode({
+      //         text: "[](walk)[tip5]",
+      //       }),
+      //       new ArticleTextNode({
+      //         text: reason,
+      //       }),
+      //     ],
+      //   })
+      // );
+      // this.log("[](walk)[tip5]", reason);
       return;
     }
     const tasks = create_tasks({
@@ -781,7 +1134,20 @@ export class FolderWalker {
       parent_paths,
       _position: "tip6",
     });
-    this.log("[](walk)[tip6]", reason);
+    // this.emit(
+    //   Events.Print,
+    //   new ArticleLineNode({
+    //     children: [
+    //       new ArticleTextNode({
+    //         text: "[](walk)[tip6]",
+    //       }),
+    //       new ArticleTextNode({
+    //         text: reason,
+    //       }),
+    //     ],
+    //   })
+    // );
+    // this.log("[](walk)[tip6]", reason);
     return;
   }
   /**
@@ -878,11 +1244,25 @@ export class FolderWalker {
   clear_delay() {
     this.delay = undefined;
   }
-  log(...args: unknown[]) {
-    // const show_log = false;
-    //   if (!show_log) {
-    //     return;
-    //   }
-    // console.log(...args);
+  // log(...args: unknown[]) {
+  // }
+
+  on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
+    return this.on(Events.Print, handler);
   }
+  // on_file(handler: Handler<TheTypesOfEvents[Events.File]>) {
+  //   return this.on(Events.File, handler);
+  // }
+  // on_episode(handler: Handler<TheTypesOfEvents[Events.Episode]>) {
+  //   return this.on(Events.Episode, handler);
+  // }
+  // on_movie(handler: Handler<TheTypesOfEvents[Events.Movie]>) {
+  //   return this.on(Events.Movie, handler);
+  // }
+  // on_error(handler: Handler<TheTypesOfEvents[Events.Error]>) {
+  //   return this.on(Events.Error, handler);
+  // }
+  // on_warning(handler: Handler<TheTypesOfEvents[Events.Warning]>) {
+  //   return this.on(Events.Warning, handler);
+  // }
 }

@@ -13,8 +13,7 @@ import {
   tv_profile,
 } from "@prisma/client";
 
-export type AliyunDriveRecord = drive;
-
+export type DriveRecord = drive;
 export type FilesRecord = file;
 export type ParsedTVRecord = parsed_tv;
 export type AsyncTaskRecord = async_task;

@@ -6,7 +6,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { build_link_between_shared_files_with_folder } from "@/domains/walker/utils";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 import { AliyunDriveClient } from "@/domains/aliyundrive";

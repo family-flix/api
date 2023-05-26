@@ -9,9 +9,7 @@ import { log } from "@/logger/log";
 
 /**
  * 将指定用户、指定网盘下的所有未知影视剧在 TMDB 上搜索详情
- * @param options
- * @param event_handlers
- * @returns
+ * 如果存在，就创建对应的电视剧记录
  */
 export async function add_profile_for_parsed_tv_season_and_episode(
   options: ExtraUserAndDriveInfo & {
@@ -780,11 +778,11 @@ export async function get_tv_profile_with_tmdb_id(
     tmdb_id,
     name,
     original_name,
-    overview: overview ?? null,
-    poster_path: uploaded_poster_path ?? null,
-    backdrop_path: uploaded_backdrop_path ?? null,
+    overview: overview || null,
+    poster_path: uploaded_poster_path || null,
+    backdrop_path: uploaded_backdrop_path || null,
     first_air_date,
-    original_language: original_language ?? null,
+    original_language: original_language || null,
     popularity,
     vote_average,
     episode_count: number_of_episodes,

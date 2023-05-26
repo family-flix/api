@@ -73,7 +73,7 @@ export async function walk_added_files(store: ReturnType<typeof store_factory>) 
       files,
       client,
       store,
-      need_upload_image: true,
+      upload_image: true,
       wait_complete: true,
     });
     if (r.error) {

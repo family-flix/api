@@ -4,7 +4,7 @@
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { walk_table_with_pagination } from "@/domains/walker/utils";
 import { store_factory } from "@/store";
-import { AliyunDriveRecord } from "@/store/types";
+import { DriveRecord } from "@/store/types";
 import { Result } from "@/types";
 
 import { notice_error } from "./notice";
@@ -14,7 +14,7 @@ export async function ping_drive_status(
 ) {
   walk_table_with_pagination(store.find_drive_list_with_pagination, {
     body: {},
-    async on_handle(v: AliyunDriveRecord) {
+    async on_handle(v: DriveRecord) {
       const drive = v;
       if (!drive.id) {
         return;

@@ -58,19 +58,19 @@ export class AliyunDriveFolder {
   /** 获取并设置文件夹详情（名称等信息） */
   async profile() {
     if (this.client === null) {
-      return Result.Err("Missing AliyunDriveClient instance");
+      return Result.Err("缺少阿里云盘实例");
     }
     if (!this.client.fetch_file) {
-      return Result.Err("AliyunDriveClient missing file_file method");
+      return Result.Err("云盘实例缺少 fetch_file 方法");
     }
     const r = await this.client.fetch_file(this.file_id);
     if (r.error) {
-      return r;
+      return Result.Err(r.error);
     }
     const { name, parent_file_id } = r.data;
     this.name = name;
     this.parent_file_id = parent_file_id;
-    return r;
+    return Result.Ok(r.data);
   }
   /** 设置文件夹详情（名称等信息） */
   set_profile(profile: Partial<PartialAliyunDriveFile>) {
