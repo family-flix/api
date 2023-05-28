@@ -4,7 +4,7 @@
 import { Handler } from "mitt";
 
 import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
-import { Article, ArticleLineNode, ArticleListItemNode, ArticleListNode, ArticleTextNode } from "@/domains/article";
+import { ArticleLineNode, ArticleListItemNode, ArticleListNode, ArticleTextNode } from "@/domains/article";
 import { BaseDomain } from "@/domains/base";
 import { log } from "@/logger/log";
 

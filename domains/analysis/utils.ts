@@ -8,6 +8,7 @@ import { is_video_file } from "@/utils";
  * 在遍历文件夹的过程中，根据给定的目标文件/文件夹，和当前遍历到的文件夹/文件进行对比，判断是否要跳过
  */
 export function need_skip_the_file_when_walk(options: {
+  // 完整路径包含文件名
   target_file_name: string;
   target_file_type: string;
   cur_file: { type: string; name: string; parent_paths: string };

@@ -1,5 +1,5 @@
 /**
- * @file 管理后台/电视剧详情
+ * @file 管理后台/执行指定电视剧同步任务
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -11,6 +11,7 @@ import { User } from "@/domains/user";
 import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { Job } from "@/domains/job";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -19,11 +20,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id || id === "undefined") {
     return e("缺少电视剧 id");
   }
+  const token = process.env.TMDB_TOKEN;
+  if (!token) {
+    return e("缺少 TMDB_TOKEN");
+  }
   const t_res = await User.New(authorization);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id } = user;
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
@@ -51,10 +57,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     })
     .filter(Boolean);
   if (binds.length === 0) {
-    return e("电视剧还没有同步任务");
+    return e("电视剧还没有更新任务");
   }
   const job_res = await Job.New({
-    desc: `开始同步电视剧 '${name || original_name}' 新增剧集`,
+    desc: `更新电视剧 '${name || original_name}'`,
     unique_id: id,
     user_id,
     store,
@@ -62,39 +68,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (job_res.error) {
     return e(job_res);
   }
-
   const job = job_res.data;
-
-  (async () => {
-    for (let i = 0; i < parsed_tvs.length; i += 1) {
+  for (let i = 0; i < parsed_tvs.length; i += 1) {
+    await (async () => {
       const parsed_tv = parsed_tvs[i];
       const { bind, drive_id } = parsed_tv;
       if (!bind) {
+        job.finish();
         return;
       }
+      const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+      if (drive_res.error) {
+        job.finish();
+        return;
+      }
+      const drive = drive_res.data;
       const t = new ResourceSyncTask({
         task: {
           ...bind,
           parsed_tv,
         },
-        job,
-        user_id,
-        drive_id,
+        user,
+        drive,
         store,
+        TMDB_TOKEN: token,
+        on_print(v) {
+          job.output.write(v);
+        },
+        on_finish() {
+          job.output.write(
+            new ArticleLineNode({
+              children: [
+                new ArticleTextNode({
+                  text: `电视剧 '${name || original_name}' 更新完成`,
+                }),
+              ],
+            })
+          );
+          job.finish();
+        },
       });
       await t.run();
-      job.output.write(
-        new ArticleLineNode({
-          children: [
-            new ArticleTextNode({
-              text: `电视剧 '${name || original_name}' 新增资源同步完成`,
-            }),
-          ],
-        })
-      );
-      await job.finish();
-    }
-  })();
+    })();
+  }
 
   res.status(200).json({
     code: 0,

@@ -90,10 +90,11 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
 
   /** 开始搜索 */
-  run() {
-    this.process_parsed_tv_list();
-    this.process_parsed_season_list();
-    this.process_parsed_episode_list();
+  async run() {
+    await this.process_parsed_tv_list();
+    await this.process_parsed_season_list();
+    await this.process_parsed_episode_list();
+    return Result.Ok(null);
   }
   /** 处理所有没有匹配好电视剧详情的电视剧 */
   async process_parsed_tv_list() {
@@ -132,7 +133,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         },
       });
       //       log("找到", parsed_tv_list.length, "个需要搜索的电视剧");
-      no_more = parsed_tv_list.length + (page - 1) * PAGE_SIZE <= count;
+      no_more = parsed_tv_list.length + (page - 1) * PAGE_SIZE >= count;
+      page += 1;
       for (let i = 0; i < parsed_tv_list.length; i += 1) {
         const parsed_tv = parsed_tv_list[i];
         const prefix = get_prefix_from_parsed_tv(parsed_tv);
@@ -144,6 +146,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         // }
         const r = await this.search_tv_profile_then_link_parsed_tv(parsed_tv);
         if (r.error) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [`[${prefix}]`, "添加电视剧详情失败", r.error.message].map((text) => {
+                return new ArticleTextNode({ text });
+              }),
+            })
+          );
           //   log(`[${prefix}]`, "添加电视剧详情失败", r.error.message);
           continue;
         }
@@ -187,7 +197,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           }
         })();
       }
-      page += 1;
     } while (no_more === false);
   }
   async search_tv_profile_then_link_parsed_tv(parsed_tv: ParsedTVRecord) {
@@ -200,7 +209,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       this.store.update_parsed_tv(id, {
         can_search: 0,
       });
-      return Result.Err("没有搜索到详情");
+      return Result.Err("没有搜索到电视剧详情");
     }
     return this.link_tv_to_parsed_tv({
       profile: profile_res.data,
@@ -443,24 +452,40 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           },
         },
       });
+      no_more = parsed_season_list.length + (page - 1) * PAGE_SIZE >= count;
       page += 1;
-      no_more = parsed_season_list.length + (page - 1) * PAGE_SIZE <= count;
       for (let j = 0; j < parsed_season_list.length; j += 1) {
         const parsed_season = parsed_season_list[j];
         const { parsed_tv, season_number } = parsed_season;
         const prefix = get_prefix_from_parsed_tv(parsed_tv);
-        // const prefix = correct_name || name || original_name;
         const r = await this.search_season_profile_then_link_parsed_season({
           parsed_tv,
           parsed_season,
         });
         if (r.error) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [`[${prefix}/${season_number}]`, "添加季详情失败", r.error.message].map((text) => {
+                return new ArticleTextNode({ text });
+              }),
+            })
+          );
           //   log(`[${prefix}/${season_number}]`, "添加季详情失败", r.error.message);
           continue;
         }
         // log(`[${prefix}/${season_number}]`, "添加季详情成功");
       }
     } while (no_more === false);
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["完成季搜索"].map((text) => {
+          return new ArticleTextNode({ text: String(text) });
+        }),
+      })
+    );
+    return Result.Ok(null);
   }
   async search_season_profile_then_link_parsed_season(body: {
     parsed_tv: ParsedTVRecord;
@@ -479,7 +504,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(profile_res.error, "10001");
     }
     if (profile_res.data === null) {
-      return Result.Err("没有匹配的记录");
+      this.store.update_parsed_season(id, {
+        can_search: 0,
+      });
+      return Result.Err("没有搜索到季详情");
     }
     const season_res = await (async () => {
       const existing_res = await this.store.find_season({
@@ -610,14 +638,22 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           },
         },
       });
+      no_more = parsed_episode_list.length + (page - 1) * PAGE_SIZE >= count;
       page += 1;
-      no_more = parsed_episode_list.length + (page - 1) * PAGE_SIZE <= count;
       //       log("找到", parsed_episode_list.length, "个需要添加的剧集");
-      for (let j = 0; j < parsed_episode_list.length; j += 1) {
-        const parsed_episode = parsed_episode_list[j];
+      for (let i = 0; i < parsed_episode_list.length; i += 1) {
+        const parsed_episode = parsed_episode_list[i];
         const { parsed_tv, parsed_season, season_number, episode_number } = parsed_episode;
         const { name, original_name, correct_name } = parsed_tv;
         const prefix = correct_name || name || original_name;
+        // this.emit(
+        //   Events.Print,
+        //   new ArticleLineNode({
+        //     children: [`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息"].map((text) => {
+        //       return new ArticleTextNode({ text });
+        //     }),
+        //   })
+        // );
         // log(`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息");
         const r = await this.add_episode_from_parsed_episode({
           parsed_tv,
@@ -625,12 +661,29 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           parsed_episode,
         });
         if (r.error) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [`[${prefix}/${season_number}/${episode_number}]`, "添加剧集详情失败", r.error.message].map(
+                (text) => {
+                  return new ArticleTextNode({ text });
+                }
+              ),
+            })
+          );
           //   log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情失败", r.error.message);
-          continue;
         }
         // log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情成功");
       }
     } while (no_more === false);
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["所有剧集搜索完成"].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
   }
 
   async add_episode_from_parsed_episode(body: {
@@ -640,7 +693,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }) {
     const { parsed_tv, parsed_season, parsed_episode } = body;
     //     const { name, original_name, correct_name } = parsed_tv;
-    const { episode_number, season_number } = parsed_episode;
+    const { id, episode_number, season_number } = parsed_episode;
     const { user_id } = this.options;
 
     const prefix = get_prefix_from_parsed_tv(parsed_tv) + `/${season_number}/${episode_number}`;
@@ -666,7 +719,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(profile_res.error, "10001");
     }
     if (profile_res.data === null) {
-      return Result.Err("没有匹配的记录");
+      this.store.update_parsed_episode(id, {
+        can_search: 0,
+      });
+      return Result.Err("没有搜索到剧集详情");
     }
     const episode_res = await (async () => {
       const existing_res = await this.store.find_episode({
@@ -711,6 +767,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (r2.error) {
       return Result.Err(r2.error, "10003");
     }
+    // this.emit(
+    //   Events.Print,
+    //   new ArticleLineNode({
+    //     children: [`[${prefix}]`, "关联剧集详情成功"].map((text) => {
+    //       return new ArticleTextNode({ text });
+    //     }),
+    //   })
+    // );
     return Result.Ok(r2.data);
   }
 

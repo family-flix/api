@@ -161,7 +161,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }),
     page,
     page_size,
-    no_more: list.length + (page - 1) * page_size <= count,
+    no_more: list.length + (page - 1) * page_size >= count,
   };
   res.status(200).json({
     code: 0,

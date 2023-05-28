@@ -81,7 +81,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         output: {
           create: {
             id: r_id(),
-            content: "{}",
+            content: "[]",
             user_id,
           },
         },
@@ -120,7 +120,38 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     this.id = id;
     this.output = output;
     this.profile = profile;
+
+    this.output.on_write(this.update_content);
   }
+  update_content = throttle(2000, async () => {
+    const content = this.output.to_json();
+    this.output.clear();
+    if (content.length === 0) {
+      return;
+    }
+    const output = await store.prisma.output.findUnique({
+      where: {
+        id: this.profile.output_id,
+      },
+    });
+    if (output === null) {
+      return;
+    }
+    const { content: prev_content_str } = output;
+    // console.log("prev_content_str", prev_content_str, content, this.profile.output_id);
+    try {
+      const r = await store.prisma.output.update({
+        where: {
+          id: this.profile.output_id,
+        },
+        data: {
+          content: JSON.stringify(JSON.parse(prev_content_str).concat(content)),
+        },
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  });
   /** check need pause the task */
   check_need_pause = throttle(3000, async () => {
     const r = await store.find_task({ id: this.id });
@@ -194,15 +225,24 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error);
     }
-    const content = this.output.to_json();
-    await store.prisma.output.update({
+    const output = await store.prisma.output.findUnique({
       where: {
         id: this.profile.output_id,
       },
-      data: {
-        content: JSON.stringify(content),
-      },
     });
+    if (output === null) {
+      return;
+    }
+    // const content = this.output.to_json();
+    // const { content: prev_content_str } = output;
+    // await store.prisma.output.update({
+    //   where: {
+    //     id: this.profile.output_id,
+    //   },
+    //   data: {
+    //     content: JSON.stringify(JSON.parse(prev_content_str).concat(content)),
+    //   },
+    // });
     return Result.Ok(null);
   }
   is_to_long() {

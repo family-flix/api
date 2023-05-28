@@ -6,30 +6,85 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
+import { Member } from "@/domains/user/member";
 import { store } from "@/store";
-import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id: episode_id } = req.query as Partial<{ id: string }>;
-  if (!episode_id) {
-    return e("Missing episode id");
+  const {
+    tv_id,
+    season_id,
+    page: page_str = "1",
+    page_size: page_size_str = "20",
+  } = req.query as Partial<{
+    tv_id: string;
+    season_id: string;
+    page: string;
+    page_size: string;
+  }>;
+  if (!tv_id) {
+    return e("缺少电视剧 id");
   }
-  const t_resp = await User.New(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  if (!season_id) {
+    return e("缺少季 id");
   }
-  const { all } = store.operation;
-  const resp = await all(`SELECT id,episode,file_id,file_name,tv_id
-	FROM episode
-	WHERE tv_id = (SELECT tv_id FROM episode WHERE id = '${episode_id}')
-	AND season_id = (SELECT season_id FROM episode WHERE id = '${episode_id}') ORDER BY episode ASC`);
-  if (resp.error) {
-    return e(resp);
+  const t_res = await Member.New(authorization);
+  if (t_res.error) {
+    return e(t_res);
   }
-  res.status(200).json({ code: 0, msg: "", data: resp.data });
+  const member = t_res.data;
+  // const { id: user_id } = member;
+  const page = Number(page_str);
+  const page_size = Number(page_size_str);
+
+  const where: NonNullable<Parameters<typeof store.prisma.episode.findMany>[number]>["where"] = {
+    tv_id,
+    season_id,
+    // user_id,
+  };
+  const list = await store.prisma.episode.findMany({
+    where,
+    include: {
+      profile: true,
+      parsed_episodes: true,
+    },
+    skip: (page - 1) * page_size,
+    take: page_size,
+    orderBy: {
+      episode_number: "asc",
+    },
+  });
+  const count = await store.prisma.episode.count({ where });
+
+  res.status(200).json({
+    code: 0,
+    msg: "",
+    data: {
+      page,
+      page_size,
+      total: count,
+      no_more: list.length + (page - 1) * page_size >= count,
+      list: list.map((episode) => {
+        const { id, season_number, episode_number, profile, parsed_episodes, season_id } = episode;
+        const { name, overview } = profile;
+        return {
+          id,
+          name,
+          overview,
+          season_number,
+          episode_number,
+          season_id,
+          sources: parsed_episodes.map((parsed_episode) => {
+            const { file_id, file_name } = parsed_episode;
+            return {
+              id: file_id,
+              file_id,
+              file_name,
+            };
+          }),
+        };
+      }),
+    },
+  });
 }

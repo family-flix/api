@@ -8,13 +8,13 @@ import { BaseDomain } from "@/domains/base";
 import dayjs from "dayjs";
 
 enum Events {
-  PushText,
+  Write,
 }
 type TheTypesOfEvents = {
-  [Events.PushText]: ArticleLineNode | ArticleSectionNode;
+  [Events.Write]: ArticleLineNode | ArticleSectionNode;
 };
 type ArticleProps = {
-  on_push?: (v: ArticleLineNode | ArticleSectionNode) => void;
+  on_write?: (v: ArticleLineNode | ArticleSectionNode) => void;
 };
 export class Article extends BaseDomain<TheTypesOfEvents> {
   static async New() {}
@@ -23,24 +23,27 @@ export class Article extends BaseDomain<TheTypesOfEvents> {
   constructor(options: Partial<{}> & ArticleProps) {
     super();
 
-    const { on_push } = options;
-    if (on_push) {
-      this.on_push(on_push);
+    const { on_write } = options;
+    if (on_write) {
+      this.on_write(on_write);
     }
   }
 
   write(text: ArticleLineNode | ArticleSectionNode) {
     this.lines.push(text);
-    this.emit(Events.PushText, text);
+    this.emit(Events.Write, text);
     return text;
+  }
+  clear() {
+    this.lines = [];
   }
   to_json() {
     const obj = this.lines.map((line) => line.to_json());
     return obj;
   }
 
-  on_push(handler: Handler<TheTypesOfEvents[Events.PushText]>) {
-    this.on(Events.PushText, handler);
+  on_write(handler: Handler<TheTypesOfEvents[Events.Write]>) {
+    this.on(Events.Write, handler);
   }
 }
 

@@ -11,6 +11,7 @@ import { Job } from "@/domains/job";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { store } from "@/store";
+import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -64,6 +65,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.output.write(v);
     },
     on_finish() {
+      job.output.write(
+        new ArticleLineNode({
+          children: [
+            new ArticleTextNode({
+              text: "索引完成",
+            }),
+          ],
+        })
+      );
       job.finish();
     },
     on_error() {

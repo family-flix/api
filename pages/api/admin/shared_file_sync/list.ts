@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: count,
       page,
       page_size,
-      no_more: list.length + (page - 1) * page_size <= count,
+      no_more: list.length + (page - 1) * page_size >= count,
       list: list.map((task) => {
         const { id, file_id, name, url, parsed_tv } = task;
         return {

@@ -27,6 +27,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page = Number(page_str);
   const page_size = Number(page_size_str);
   const where: NonNullable<Parameters<typeof store.prisma.play_history.findMany>[0]>["where"] = {
+    tv_id: {
+      not: null,
+    },
+    episode_id: {
+      not: null,
+    },
     member_id,
   };
   const list = await store.prisma.play_history.findMany({
@@ -41,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               created: "desc",
             },
           },
+          _count: true,
         },
       },
       episode: {
@@ -63,26 +70,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     msg: "",
     data: {
       list: list.map((history) => {
-        const { tv, episode, current_time, duration, updated } = history;
+        const { id, tv, episode, current_time, duration, updated } = history;
         if (tv && episode) {
-          const { name, original_name } = tv.profile;
+          const { name, original_name, poster_path, first_air_date, episode_count } = tv.profile;
           const profile = episode.profile;
           const latest_episode = tv.episodes[0];
           const has_update = latest_episode && dayjs(latest_episode.created).isAfter(updated);
           return {
+            id,
             tv_id: tv.id,
-            tv_name: name || original_name,
+            episode_id: episode.id,
+            name: name || original_name,
+            poster_path,
             episode_name: profile.name,
+            episode_number: episode.episode_number,
+            season_number: episode.season_number,
             current_time,
             duration,
+            cur_episode_count: tv._count.episodes,
+            episode_count,
             has_update,
+            first_air_date,
+            updated,
           };
         }
       }),
       total: count,
       page,
       page_size,
-      no_more: list.length + (page - 1) * page_size <= count,
+      no_more: list.length + (page - 1) * page_size >= count,
     },
   });
 }

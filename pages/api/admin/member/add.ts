@@ -35,5 +35,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: r.data });
+  const token_res = await User.Token({ id: r.data.id });
+  if (token_res.error) {
+    return e(token_res);
+  }
+  const token = token_res.data;
+  const r2 = await store.add_member_link({
+    member_id: r.data.id,
+    token,
+    used: 0,
+  });
+  if (r2.error) {
+    return e(r2);
+  }
+  const member = {
+    id: r.data.id,
+    remark: r.data.remark,
+    tokens: [
+      {
+        id: r2.data.id,
+        token: r2.data.token,
+        used: r2.data.used,
+      },
+    ],
+  };
+  res.status(200).json({ code: 0, msg: "", data: member });
 }

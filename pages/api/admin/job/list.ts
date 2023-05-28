@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page,
       page_size,
       total: count,
-      no_more: list.length + (page - 1) * page_size <= count,
+      no_more: list.length + (page - 1) * page_size >= count,
     },
   });
 }

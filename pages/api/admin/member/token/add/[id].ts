@@ -12,32 +12,31 @@ import { User } from "@/domains/user";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{
+  const { id: member_id } = req.query as Partial<{
     id: string;
   }>;
-  const t_resp = await User.New(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t_res = await User.New(authorization);
+  if (t_res.error) {
+    return e(t_res);
   }
-  if (!id) {
+  if (!member_id) {
     return e("缺少成员 id");
   }
-  const { id: user_id } = t_resp.data;
-  const member_res = await store.find_member({ id, user_id });
+  const { id: user_id } = t_res.data;
+  const member_res = await store.find_member({ id: member_id, user_id });
   if (member_res.error) {
     return e(member_res);
   }
   if (!member_res.data) {
     return e("没有匹配的成员记录");
   }
-  const token_res = await User.Token({ id });
+  const token_res = await User.Token({ id: member_id });
   if (token_res.error) {
     return e(token_res);
   }
   const token = token_res.data;
-  // const link = `/?token=${token}`;
   const r = await store.add_member_link({
-    member_id: id,
+    member_id: member_id,
     token,
     used: 0,
   });
@@ -49,7 +48,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     msg: "",
     data: {
       id: r.data.id,
-      // link,
       token,
     },
   });

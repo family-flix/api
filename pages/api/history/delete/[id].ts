@@ -6,10 +6,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { store } from "@/store";
 import { Member } from "@/domains/user/member";
-
-const { delete_history } = store;
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -23,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: member_id } = t_res.data;
-  const r = await delete_history({
+  const r = await store.delete_history({
     id,
     member_id,
   });

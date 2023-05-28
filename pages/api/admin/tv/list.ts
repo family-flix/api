@@ -46,32 +46,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           ]
         : undefined,
     },
-    // parsed_tvs: {
-    //   every: {
-    //     bind: null,
-    //   },
-    // },
     user_id,
   };
-  const count_resp = await resultify(store.prisma.tv.count.bind(store.prisma.tv))({
+  const count = await store.prisma.tv.count({
     where,
   });
-  if (count_resp.error) {
-    return e(count_resp);
-  }
-  const resp = await store.prisma.tv.findMany({
+  const list = await store.prisma.tv.findMany({
     where,
-    // select: {
-    //   episodes: {
-    //     select: {
-    //       parsed_episodes: {
-    //         select: {
-    //           size: true,
-    //         }
-    //       }
-    //     }
-    //   },
-    // },
     include: {
       _count: true,
       profile: true,
@@ -113,14 +94,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     take: page_size,
   });
   const data = {
-    total: count_resp.data,
-    no_more: (() => {
-      if (page * page_size >= count_resp.data) {
-        return true;
-      }
-      return false;
-    })(),
-    list: resp.map((tv) => {
+    total: count,
+    no_more: list.length + (page - 1) * page_size >= count,
+    list: list.map((tv) => {
       const {
         id,
         profile,
@@ -129,8 +105,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         parsed_tvs,
         _count,
       } = tv;
-      const { name, original_name, overview, poster_path, first_air_date, episode_count, season_count, in_production } =
-        profile;
+      const {
+        name,
+        original_name,
+        overview,
+        poster_path,
+        first_air_date,
+        popularity,
+        episode_count,
+        season_count,
+        in_production,
+      } = profile;
       const binds = parsed_tvs
         .filter((parsed_tv) => {
           const { bind } = parsed_tv;
@@ -155,18 +140,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }, 0);
       // const tips: { text: string[] }[] = [];
       const tips: string[] = [];
-      if (binds.length === 0 && incomplete) {
-        // tips.push({
-        //   text: ["该电视剧集数不全且缺少可同步的分享资源"],
-        // });
-        tips.push(`该电视剧集数不全且缺少可同步的分享资源(${_count.episodes}/${episode_count})`);
-      }
+      // if (binds.length === 0 && incomplete) {
+      //   tips.push(`该电视剧集数不全且缺少可同步的分享资源(${_count.episodes}/${episode_count})`);
+      // }
       const need_bind = (() => {
         if (in_production && incomplete && binds.length === 0) {
           return true;
         }
         return false;
       })();
+      if (need_bind) {
+        tips.push("未完结但缺少同步任务");
+      }
+      if (!in_production && incomplete) {
+        tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
+      }
       const size_count = episodes
         .map((episode) => {
           return episode.parsed_episodes
@@ -187,6 +175,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         overview,
         poster_path,
         first_air_date,
+        popularity,
         episode_count,
         season_count,
         cur_episode_count: _count.episodes,
