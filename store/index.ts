@@ -7,6 +7,7 @@ import { r_id } from "@/utils";
 
 import { ModelKeys } from "./types";
 import { FileType } from "@/constants";
+import dayjs from "dayjs";
 
 function add_factory<T extends PrismaClient[ModelKeys]>(model: T, options: Partial<{ safe: boolean }> = {}) {
   const { safe } = options;
@@ -40,7 +41,10 @@ function update_factory<T extends PrismaClient[ModelKeys]>(model: T) {
         where: {
           id,
         },
-        data,
+        data: {
+          updated: dayjs().toISOString(),
+          ...data,
+        },
       });
       return Result.Ok(r);
     } catch (err) {

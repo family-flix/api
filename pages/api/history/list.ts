@@ -9,6 +9,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { Member } from "@/domains/user/member";
 import dayjs from "dayjs";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -65,36 +66,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const count = await store.prisma.play_history.count({
     where,
   });
+  // const drive = new AliyunDriveClient({ drive_id })
+  // const rich_list = [];
   res.status(200).json({
     code: 0,
     msg: "",
     data: {
-      list: list.map((history) => {
-        const { id, tv, episode, current_time, duration, updated } = history;
-        if (tv && episode) {
-          const { name, original_name, poster_path, first_air_date, episode_count } = tv.profile;
-          const profile = episode.profile;
-          const latest_episode = tv.episodes[0];
-          const has_update = latest_episode && dayjs(latest_episode.created).isAfter(updated);
-          return {
-            id,
-            tv_id: tv.id,
-            episode_id: episode.id,
-            name: name || original_name,
-            poster_path,
-            episode_name: profile.name,
-            episode_number: episode.episode_number,
-            season_number: episode.season_number,
-            current_time,
-            duration,
-            cur_episode_count: tv._count.episodes,
-            episode_count,
-            has_update,
-            first_air_date,
-            updated,
-          };
-        }
-      }),
+      list: await Promise.all(
+        list.map(async (history) => {
+          const { id, tv, episode, current_time, duration, updated, thumbnail, file_id } = history;
+          if (tv && episode) {
+            const { name, original_name, poster_path, first_air_date, episode_count } = tv.profile;
+            const profile = episode.profile;
+            const latest_episode = tv.episodes[0];
+            const has_update = latest_episode && dayjs(latest_episode.created).isAfter(updated);
+            // await
+            return {
+              id,
+              tv_id: tv.id,
+              episode_id: episode.id,
+              name: name || original_name,
+              poster_path,
+              episode_name: profile.name,
+              episode_number: episode.episode_number,
+              season_number: episode.season_number,
+              current_time,
+              duration,
+              file_id,
+              thumbnail,
+              cur_episode_count: tv._count.episodes,
+              episode_count,
+              has_update,
+              first_air_date,
+              updated,
+            };
+          }
+        })
+      ),
       total: count,
       page,
       page_size,

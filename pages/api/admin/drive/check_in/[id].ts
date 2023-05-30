@@ -37,5 +37,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: null });
+  res.status(200).json({ code: 0, msg: "", data: r.data });
 }

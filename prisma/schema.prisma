@@ -409,9 +409,13 @@ model play_history {
         updated DateTime @default(now())
 
         // 当前播放的影片总时长
-        duration     Float? @default(0)
+        duration     Float?  @default(0)
         // 当前播放进度
-        current_time Float? @default(0)
+        current_time Float?  @default(0)
+        // 当前播放进度对应的缩略图
+        thumbnail    String?
+        // 当前播放影片对应的源文件id
+        file_id      String?
 
         tv_id      String?  @unique
         tv         tv?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)

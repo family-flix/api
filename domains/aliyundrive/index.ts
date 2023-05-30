@@ -767,10 +767,7 @@ export class AliyunDriveClient {
     return resp;
   }
   async renew_session() {
-    const { error, data } = await this.request.post<DriveRecord>(
-      API_HOST + "/users/v1/users/device/renew_session",
-      {}
-    );
+    const { error, data } = await this.request.post<DriveRecord>(API_HOST + "/users/v1/users/device/renew_session", {});
     if (error) {
       // console.log("[]renew_session failed", error.message);
       return Result.Err(error);
@@ -818,6 +815,133 @@ export class AliyunDriveClient {
       return Result.Err(message);
     }
     return Result.Ok(data);
+  }
+  /** 获取签到奖励列表 */
+  async fetch_rewards() {
+    const r = await this.ensure_initialized();
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { error, data } = await this.request.post<{
+      success: boolean;
+      code: null;
+      message: string | null;
+      totalCount: null;
+      nextToken: null;
+      maxResults: null;
+      result: {
+        subject: string;
+        title: string;
+        description: string;
+        isReward: boolean;
+        blessing: string;
+        signInCount: number;
+        signInCover: string;
+        signInRemindCover: string;
+        rewardCover: string;
+        pcAndWebRewardCover: string;
+        signInLogs: {
+          day: number;
+          status: "normal" | "miss";
+          icon: string;
+          pcAndWebIcon: string;
+          notice: null;
+          /** 奖品类型 postpone(延期卡) */
+          type: "luckyBottle" | "svipVideo" | "svip8t" | "logo" | "postpone";
+          rewardAmount: number;
+          themes: string;
+          calendarChinese: string;
+          calendarDay: string;
+          calendarMonth: string;
+          poster: null;
+          reward: {
+            goodsId: null;
+            name: null;
+            description: null;
+            background: string;
+            color: null;
+            action: null;
+            detailAction: null;
+            notice: null;
+            bottleId: null;
+            bottleName: null;
+          };
+          /** 是否领取 true已领取 false未领取 */
+          isReward: boolean;
+        }[];
+      };
+      arguments: null;
+    }>(
+      MEMBER_API_HOST + "/v1/activity/sign_in_list",
+      {
+        isReward: false,
+      },
+      {
+        Host: "member.aliyundrive.com",
+      }
+    );
+    if (error) {
+      return Result.Err(error);
+    }
+    const { success, message } = data;
+    if (!success) {
+      return Result.Err(message as string);
+    }
+    const {
+      result: { signInLogs },
+    } = data;
+    return Result.Ok(
+      signInLogs
+        .filter((log) => {
+          const { status, isReward } = log;
+          return isReward === false && status === "normal";
+        })
+        .map((log) => {
+          const { day, type, rewardAmount, isReward } = log;
+          return {
+            day,
+            type,
+            rewardAmount,
+            isReward,
+          };
+        })
+    );
+  }
+  /** 领取奖励 */
+  async receive_reward(day: number) {
+    const r = await this.ensure_initialized();
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { error, data } = await this.request.post<{
+      success: boolean;
+      code: null;
+      message: string | null;
+      totalCount: null;
+      nextToken: null;
+      maxResults: null;
+      result: {};
+      arguments: null;
+    }>(
+      MEMBER_API_HOST + "/v1/activity/sign_in_reward",
+      {
+        signInDay: day,
+      },
+      {
+        Host: "member.aliyundrive.com",
+      }
+    );
+    if (error) {
+      return Result.Err(error);
+    }
+    const { success, message } = data;
+    if (!success) {
+      return Result.Err(message as string);
+    }
+    const {
+      result: {},
+    } = data;
+    return Result.Ok(null);
   }
 }
 
