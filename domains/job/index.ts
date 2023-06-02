@@ -14,7 +14,7 @@ enum Events {}
 type TheTypesOfEvents = {};
 type JobProps = {
   id: string;
-  profile: Pick<AsyncTaskRecord, "unique_id" | "status" | "created" | "desc" | "user_id" | "output_id">;
+  profile: Pick<AsyncTaskRecord, "unique_id" | "status" | "created" | "desc" | "user_id" | "output_id" | "error">;
   output: Article;
 };
 
@@ -30,6 +30,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         status: true,
         output: true,
         output_id: true,
+        error: true,
       },
       where: {
         id,
@@ -39,7 +40,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (!r1) {
       return Result.Err("没有匹配的任务记录");
     }
-    const { desc, unique_id, created, status, output_id } = r1;
+    const { desc, unique_id, created, status, output_id, error } = r1;
     const job = new Job({
       id,
       profile: {
@@ -49,6 +50,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         created,
         user_id,
         output_id,
+        error,
       },
       output: new Article({}),
     });
@@ -103,6 +105,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         created,
         output_id,
         user_id,
+        error: null,
       },
       output,
     });
@@ -112,6 +115,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   id: string;
   output: Article;
   profile: JobProps["profile"];
+  // start: number;
 
   constructor(options: JobProps) {
     super();
@@ -120,6 +124,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     this.id = id;
     this.output = output;
     this.profile = profile;
+    // this.start = dayjs().unix();
 
     this.output.on_write(this.update_content);
   }
@@ -181,7 +186,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (!r1) {
       return Result.Err("没有匹配的任务记录");
     }
-    const { desc, unique_id, created, status, output } = r1;
+    const { desc, unique_id, created, status, output, error } = r1;
     const { content } = output;
     return Result.Ok({
       status,
@@ -189,6 +194,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       unique_id,
       created,
       content,
+      error,
     });
   }
   /** pause the task */
@@ -231,7 +237,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       },
     });
     if (output === null) {
-      return;
+      return Result.Ok(null);
     }
     // const content = this.output.to_json();
     // const { content: prev_content_str } = output;
@@ -243,6 +249,16 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     //     content: JSON.stringify(JSON.parse(prev_content_str).concat(content)),
     //   },
     // });
+    return Result.Ok(null);
+  }
+  async throw(error: Error) {
+    const r = await store.update_task(this.id, {
+      status: TaskStatus.Finished,
+      error: error.message,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
     return Result.Ok(null);
   }
   is_to_long() {

@@ -136,9 +136,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         tv_id: tv.id,
         user_id,
       },
-      include: {
-        bind: true,
-      },
+      // include: {
+      //   binds: true,
+      // },
       skip: (page - 1) * page_size,
       take: page_size,
     });

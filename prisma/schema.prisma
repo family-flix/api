@@ -183,7 +183,7 @@ model parsed_tv {
 
         parsed_episodes parsed_episode[]
         parsed_seasons  parsed_season[]
-        bind            bind_for_parsed_tv?
+        binds           bind_for_parsed_tv[]
 
         @@map("ParsedTV")
 }
@@ -380,6 +380,7 @@ model async_task {
         desc      String?
         status    Int?    @default(0)
         need_stop Int?    @default(0)
+        error     String?
 
         output_id String @unique
         output    output @relation(fields: [output_id], references: [id], onDelete: Cascade)
@@ -513,7 +514,7 @@ model bind_for_parsed_tv {
         // 分享资源是否失效
         invalid       Int?   @default(0)
 
-        parsed_tv_id String    @unique
+        parsed_tv_id String
         parsed_tv    parsed_tv @relation(fields: [parsed_tv_id], references: [id], onDelete: Cascade)
         user_id      String
         user         user      @relation(fields: [user_id], references: [id], onDelete: Cascade)

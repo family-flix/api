@@ -14,13 +14,19 @@ import { r_id } from "@/utils";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { url, tv_id, file_id, file_name, target_file_id } = req.body as Partial<{
+  const {
+    url,
+    tv_id,
+    // file_id,
+    // file_name,
+    target_file_id,
+  } = req.body as Partial<{
     url: string;
     tv_id: string;
     /** 分享文件夹 id */
-    file_id: string;
+    // file_id: string;
     /** 分享文件夹名称(同时也会用这个名字去网盘中找同名的) */
-    file_name: string;
+    // file_name: string;
     /** 云盘文件夹 file_id。如果指定了该参数，就不会使用 file_name 去网盘中找同名，直接使用该参数 */
     target_file_id: string;
   }>;
@@ -66,9 +72,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   if (sync_task && sync_task.parsed_tv.tv) {
     const { name, original_name } = sync_task.parsed_tv.tv.profile;
-    return e(Result.Err(`该 url 已经与 ${name || original_name} 建立了同步任务`));
+    return e(Result.Err(`该分享资源已经与 ${name || original_name} 建立了同步任务`));
   }
-  console.log("tv", tv_id, user_id);
+  // console.log("tv", tv_id, user_id);
   const tv = await store.prisma.tv.findFirst({
     where: {
       id: tv_id,
@@ -99,21 +105,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(files_res);
   }
   const files = files_res.data.items;
-  const matched_folder = (() => {
+  const matched_folder_res = await (async () => {
+    // 外部传入了云盘文件夹 id,指定要存到这个文件夹随
+    if (files.length === 1 && target_file_id) {
+      const parsed_tv_res = await store.find_parsed_tv({
+        file_id: target_file_id,
+      });
+      if (parsed_tv_res.error) {
+        return Result.Err(parsed_tv_res.error);
+      }
+      const parsed_tv = parsed_tv_res.data;
+      if (!parsed_tv) {
+        return Result.Err("不存在匹配的云盘文件夹");
+      }
+      const { id } = parsed_tv;
+      return Result.Ok({
+        target_folder: {
+          id,
+        },
+        shared_folder: files[0],
+      });
+    }
     for (let i = 0; i < parsed_tvs.length; i += 1) {
       const parsed_tv = parsed_tvs[i];
       const matched = files.find((file) => {
         return file.type === "folder" && file.name === parsed_tv.file_name;
       });
       if (matched) {
-        return { target_folder: parsed_tv, shared_folder: matched };
+        return Result.Ok({ target_folder: parsed_tv, shared_folder: matched });
       }
     }
-    return null;
+    return Result.Err(
+      "该分享没有和电视剧匹配的文件夹，请手动选择",
+      "20001",
+      parsed_tvs
+        .filter((folder) => {
+          return !!folder.file_id;
+        })
+        .map((folder) => {
+          const { id, file_id, file_name } = folder;
+          return {
+            id,
+            file_id,
+            file_name,
+          };
+        })
+    );
   })();
-  if (matched_folder === null) {
-    return e(Result.Err("该分享没有和电视剧匹配的文件夹，请手动选择", "20001"));
+  if (matched_folder_res.error) {
+    return e(matched_folder_res);
   }
+  // if (matched_folder === null) {
+  //   return e(Result.Err("该分享没有和电视剧匹配的文件夹，请手动选择", "20001"));
+  // }
+  const matched_folder = matched_folder_res.data;
   await store.prisma.bind_for_parsed_tv.create({
     data: {
       id: r_id(),

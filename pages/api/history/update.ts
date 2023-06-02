@@ -2,6 +2,8 @@
  * @file 新增或更新影片播放记录
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import path from "path";
+
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp, Result } from "@/types";
@@ -9,6 +11,9 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { Member } from "@/domains/user/member";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { ImageUploader } from "@/domains/uploader";
+import { r_id } from "@/utils";
+import { TV } from "@/domains/tv";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -17,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     tv_id,
     episode_id,
     file_id,
-    current_time: original_cur_time = 0,
+    current_time = 0,
     duration = 0,
   } = req.body as Partial<{
     tv_id: string;
@@ -38,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: member_id } = t_res.data;
-  const cur_time = format_number_with_3decimals(original_cur_time);
+  // const cur_time = format_number_with_3decimals(original_cur_time);
   // const client = new AliyunDriveClient({ drive_id, store });
   // const thumbnail =
   // const existing_history_res = await store.find_history({});
@@ -60,6 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // if (existing_history_res.error) {
   //   return e(existing_history_res);
   // }
+  const tv = new TV();
   if (!existing_history) {
     const file_res = await store.find_file({
       file_id,
@@ -72,28 +78,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return e("没有匹配的视频源");
     }
     const { drive_id } = file;
-    const thumbnail = await (async () => {
-      if (!file_id) {
-        return Result.Ok(null);
-      }
-      const client = new AliyunDriveClient({ drive_id, store });
-      const thumbnail_res = await client.generate_thumbnail({ file_id, cur_time: cur_time.replace(".", "") });
-      if (thumbnail_res.error) {
-        return Result.Ok(null);
-      }
-      return Result.Ok(thumbnail_res.data.responseUrl);
-    })();
+    const thumbnail = await tv.snapshot_media({
+      file_id,
+      drive_id,
+      cur_time: current_time,
+      store,
+    });
     if (thumbnail.error) {
       return e(thumbnail);
     }
     const adding_res = await store.add_history({
       tv_id,
       episode_id,
-      current_time: parseFloat(cur_time),
+      current_time,
       duration,
       member_id,
       file_id: file_id ?? null,
-      thumbnail: thumbnail.data ?? null,
+      thumbnail: thumbnail.data.img_path ?? null,
     });
     if (adding_res.error) {
       return e(adding_res);
@@ -115,26 +116,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("没有匹配的视频源");
   }
   const { drive_id } = file;
-  const thumbnail = await (async () => {
-    if (!file_id) {
-      return Result.Ok(null);
-    }
-    const client = new AliyunDriveClient({ drive_id, store });
-    const thumbnail_res = await client.generate_thumbnail({ file_id, cur_time: cur_time.replace(".", "") });
-    if (thumbnail_res.error) {
-      return Result.Ok(null);
-    }
-    return Result.Ok(thumbnail_res.data.responseUrl);
-  })();
+  const thumbnail = await tv.snapshot_media({
+    file_id,
+    drive_id,
+    cur_time: current_time,
+    store,
+  });
+  if (thumbnail.error) {
+    return e(thumbnail);
+  }
   if (thumbnail.error) {
     return e(thumbnail);
   }
   const update_res = await store.update_history(existing_history.id, {
     episode_id,
-    current_time: parseFloat(cur_time),
+    current_time,
     duration,
     file_id: file_id ?? null,
-    thumbnail: thumbnail.data ?? null,
+    thumbnail: thumbnail.data.img_path ?? null,
   });
   if (update_res.error) {
     return e(update_res);

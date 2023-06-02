@@ -33,7 +33,7 @@ enum Events {
 type TheTypesOfEvents = {
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
   [Events.Finish]: void;
-  [Events.Error]: void;
+  [Events.Error]: Error;
 };
 type ResourceSyncTaskProps = {
   task: FileSyncTaskRecord & { parsed_tv: ParsedTVRecord };
@@ -43,13 +43,17 @@ type ResourceSyncTaskProps = {
   TMDB_TOKEN: string;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
   on_finish?: () => void;
+  on_error?: (error: Error) => void;
 };
 
 export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   static async Get(
-    options: { id: string } & Pick<ResourceSyncTaskProps, "user" | "store" | "TMDB_TOKEN" | "on_print" | "on_finish">
+    options: { id: string } & Pick<
+      ResourceSyncTaskProps,
+      "user" | "store" | "TMDB_TOKEN" | "on_print" | "on_finish" | "on_error"
+    >
   ) {
-    const { id, user, store, TMDB_TOKEN, on_finish, on_print } = options;
+    const { id, user, store, TMDB_TOKEN, on_finish, on_print, on_error } = options;
     const sync_task = await store.prisma.bind_for_parsed_tv.findFirst({
       where: {
         id,
@@ -99,6 +103,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       TMDB_TOKEN,
       on_print,
       on_finish,
+      on_error,
     });
     return Result.Ok(t);
   }
@@ -114,7 +119,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   constructor(options: Partial<{}> & ResourceSyncTaskProps) {
     super();
 
-    const { user, drive, store, task, TMDB_TOKEN, on_print, on_finish } = options;
+    const { user, drive, store, task, TMDB_TOKEN, on_print, on_finish, on_error } = options;
     this.task = task;
     this.store = store;
     this.user = user;
@@ -126,6 +131,9 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     }
     if (on_finish) {
       this.on_finish(on_finish);
+    }
+    if (on_error) {
+      this.on_error(on_error);
     }
   }
   async run() {
@@ -141,28 +149,46 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       })
     );
     const { task, client, store } = this;
-    const { id, url, file_id, parsed_tv } = task;
+    const { id, url, file_id, parsed_tv, invalid } = task;
     const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
 
     const drive_id = this.drive.id;
 
-    if (target_folder_id === null || target_folder_name === null) {
+    if (invalid) {
+      const tip = "该更新已失效，请重新绑定更新";
       this.emit(
         Events.Print,
         new ArticleLineNode({
           children: [
             new ArticleTextNode({
-              text: "该任务没有关联的云盘文件夹",
+              text: tip,
             }),
           ],
         })
       );
-      return Result.Err("没有关联的云盘文件夹");
+      this.emit(Events.Error, new Error(tip));
+      return Result.Err(tip);
+    }
+    if (target_folder_id === null || target_folder_name === null) {
+      const tip = "该任务没有关联的云盘文件夹";
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: [
+            new ArticleTextNode({
+              text: tip,
+            }),
+          ],
+        })
+      );
+      this.emit(Events.Error, new Error(tip));
+      return Result.Err(tip);
     }
     const r1 = await client.fetch_share_profile(url, { force: true });
     if (r1.error) {
       if (["share_link is cancelled by the creator"].includes(r1.error.message)) {
         await store.update_sync_task(id, { invalid: 1 });
+        const tip = "分享资源失效，请关联新分享资源";
         this.emit(
           Events.Print,
           new ArticleSectionNode({
@@ -170,7 +196,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
               new ArticleLineNode({
                 children: [
                   new ArticleTextNode({
-                    text: "分享资源失效，请关联新分享资源",
+                    text: tip,
                   }),
                 ],
               }),
@@ -187,14 +213,16 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
             ],
           })
         );
-        return Result.Err("分享资源失效，请关联新分享资源");
+        this.emit(Events.Error, new Error(tip));
+        return Result.Err(tip);
       }
+      const tip = "获取分享资源信息失败";
       this.emit(
         Events.Print,
         new ArticleLineNode({
           children: [
             new ArticleTextNode({
-              text: "获取分享资源信息失败",
+              text: tip,
             }),
             new ArticleTextNode({
               text: r1.error.message,
@@ -202,6 +230,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           ],
         })
       );
+      this.emit(Events.Error, new Error(tip));
       return Result.Err(r1.error);
     }
     const { share_id } = r1.data;
@@ -469,5 +498,8 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   }
   on_finish(handler: Handler<TheTypesOfEvents[Events.Finish]>) {
     return this.on(Events.Finish, handler);
+  }
+  on_error(handler: Handler<TheTypesOfEvents[Events.Error]>) {
+    return this.on(Events.Error, handler);
   }
 }

@@ -920,7 +920,18 @@ export class AliyunDriveClient {
       totalCount: null;
       nextToken: null;
       maxResults: null;
-      result: {};
+      result: {
+        goodsId: number;
+        name: string;
+        description: string;
+        background: string;
+        color: string;
+        action: string;
+        detailAction: string;
+        notice: string;
+        bottleId: null;
+        bottleName: null;
+      };
       arguments: null;
     }>(
       MEMBER_API_HOST + "/v1/activity/sign_in_reward",
@@ -938,10 +949,8 @@ export class AliyunDriveClient {
     if (!success) {
       return Result.Err(message as string);
     }
-    const {
-      result: {},
-    } = data;
-    return Result.Ok(null);
+    const { result } = data;
+    return Result.Ok(result);
   }
 }
 
@@ -967,3 +976,11 @@ function format_M3U8_manifest(videos: PartialVideo[]) {
   }
   return result;
 }
+
+// const typeTexts = {
+//   luckyBottle: "漂流瓶",
+//   svipVideo: "影音VIP",
+//   svip8t: "8T VIP",
+//   logo: "LOGO",
+//   postpone: "延期卡",
+// };

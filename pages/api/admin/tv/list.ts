@@ -9,6 +9,7 @@ import { store } from "@/store";
 import { BaseApiResp, resultify } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { bytes_to_size } from "@/utils";
+import { bind_for_parsed_tv } from "@prisma/client";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -58,7 +59,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       profile: true,
       parsed_tvs: {
         include: {
-          bind: true,
+          binds: {
+            orderBy: {
+              created: "desc",
+            },
+          },
         },
       },
       episodes: {
@@ -118,16 +123,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       } = profile;
       const binds = parsed_tvs
         .filter((parsed_tv) => {
-          const { bind } = parsed_tv;
-          return !!bind;
+          const { binds } = parsed_tv;
+          return !!binds;
         })
-        .map((parsed_tv) => {
-          const { id, url, file_id, name } = parsed_tv.bind!;
+        .reduce((total, cur) => {
+          return total.concat(cur.binds);
+        }, [] as bind_for_parsed_tv[])
+        .map((bind) => {
+          const { id, url, file_id, name, invalid } = bind;
           return {
             id,
             url,
             file_id,
             file_name: name,
+            invalid,
           };
         });
       const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
@@ -143,13 +152,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       // if (binds.length === 0 && incomplete) {
       //   tips.push(`该电视剧集数不全且缺少可同步的分享资源(${_count.episodes}/${episode_count})`);
       // }
+      const valid_bind = (() => {
+        if (binds.length === 0) {
+          return null;
+        }
+        const valid_task = binds.find((b) => !b.invalid);
+        if (!valid_task) {
+          return null;
+        }
+        return {
+          id: valid_task.id,
+        };
+      })();
+      if (binds.length !== 0 && valid_bind === null) {
+        tips.push("更新已失效");
+      }
       const need_bind = (() => {
-        if (in_production && incomplete && binds.length === 0) {
+        if (!incomplete) {
+          return false;
+        }
+        if (in_production && binds.length === 0) {
+          return true;
+        }
+        if (valid_bind === null) {
           return true;
         }
         return false;
       })();
-      if (need_bind) {
+      if (in_production && incomplete && binds.length === 0) {
         tips.push("未完结但缺少同步任务");
       }
       if (!in_production && incomplete) {
@@ -185,18 +215,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         size_count_text: bytes_to_size(size_count),
         incomplete,
         need_bind,
-        sync_task: (() => {
-          if (need_bind) {
-            return null;
-          }
-          if (binds.length === 0) {
-            return null;
-          }
-          const task = binds[0];
-          return {
-            id: task.id,
-          };
-        })(),
+        sync_task: incomplete && valid_bind ? valid_bind : null,
         tips,
       };
     }),

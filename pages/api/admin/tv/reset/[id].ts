@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     })
     .reduce((total, cur) => {
       return total.concat(cur);
-    }, [])
+    })
     .filter(Boolean);
   if (binds.length === 0) {
     return e("电视剧还没有更新任务");
@@ -80,13 +80,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         job.finish();
         return;
       }
-      const valid_bind = binds.find((b) => !b.invalid);
-      if (!valid_bind) {
+      const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+      if (drive_res.error) {
         job.finish();
         return;
       }
-      const drive_res = await Drive.Get({ id: drive_id, user_id, store });
-      if (drive_res.error) {
+      const valid_bind = binds.find((b) => !b.invalid);
+      if (!valid_bind) {
         job.finish();
         return;
       }

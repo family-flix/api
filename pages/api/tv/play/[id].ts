@@ -77,12 +77,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const r = {
           ...episode,
           current_time: 0,
+          thumbnail: null,
         };
         return r;
       }
       return null;
     }
-    const { episode_id, current_time } = play_history;
+    const { episode_id, current_time, thumbnail } = play_history;
     if (episode_id === null) {
       return null;
     }
@@ -101,6 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const r = {
       ...episode,
       current_time,
+      thumbnail,
     };
     return r;
   })();
@@ -207,7 +209,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (playing_episode === null) {
         return null;
       }
-      const { id, season_number, episode_number, profile, parsed_episodes, current_time, season_id } = playing_episode;
+      const { id, season_number, episode_number, profile, parsed_episodes, current_time, season_id, thumbnail } =
+        playing_episode;
       const { name, overview } = profile;
       return {
         id,
@@ -217,6 +220,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         episode_number,
         current_time,
         season_id,
+        thumbnail,
         sources: parsed_episodes.map((parsed_episode) => {
           const { file_id, file_name } = parsed_episode;
           return {
