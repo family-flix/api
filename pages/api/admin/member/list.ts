@@ -27,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   const where: NonNullable<Parameters<typeof store.prisma.member.findMany>[0]>["where"] = {
     user_id,
+    delete: 0,
   };
 
   const list = await store.prisma.member.findMany({

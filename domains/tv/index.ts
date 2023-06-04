@@ -1,14 +1,49 @@
 import path from "path";
 
-import { store_factory } from "@/store";
-import { Result } from "@/types";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { ImageUploader } from "@/domains/uploader";
 import { r_id } from "@/utils";
-import { qiniu_upload_online_file } from "@/utils/back_end";
+import { store_factory } from "@/store";
+import { Result } from "@/types";
+
 import { format_number_with_3decimals } from "./utils";
 
 export class TV {
+  static New(options: { assets?: string }) {
+    const { assets } = options;
+    if (!assets) {
+      return Result.Err("请传入资源根目录路径");
+    }
+    return Result.Ok(new TV({ assets }));
+  }
+
+  /** 资源存放根目录 */
+  assets: string;
+  upload: ImageUploader;
+
+  constructor(options: { assets: string }) {
+    const { assets } = options;
+
+    this.assets = assets;
+    this.upload = new ImageUploader();
+  }
+
+  /** 上传海报 */
+  async upload_poster(original_path: string) {
+    const filename = `${r_id()}.jpg`;
+    const key = `/poster/${filename}`;
+    const filepath = path.join(this.assets, key);
+    const r = await this.upload.download(original_path, filepath);
+    if (r.error) {
+      return Result.Ok({
+        img_path: key,
+      });
+    }
+    return Result.Ok({
+      img_path: key,
+    });
+  }
+
   async snapshot_media(body: {
     file_id?: string;
     cur_time: number;
@@ -23,26 +58,23 @@ export class TV {
     const client = new AliyunDriveClient({ drive_id, store });
     const thumbnail_res = await client.generate_thumbnail({ file_id, cur_time: cur_time.replace(".", "") });
     if (thumbnail_res.error) {
-      // console.log(thumbnail_res.error.message);
       return Result.Ok(null);
     }
-    const upload = new ImageUploader();
-    const filename = r_id() + ".jpg";
-    const filepath = path.resolve(process.env.PUBLIC_PATH || "/", filename);
-    const r = await upload.download(thumbnail_res.data.responseUrl, filepath);
+    const filename = `${r_id()}.jpg`;
+    const key = `/thumbnails/${filename}`;
+    const filepath = path.join(this.assets, key);
+    const r = await this.upload.download(thumbnail_res.data.responseUrl, filepath);
     if (r.error) {
-      // console.log(r.error.message);
       return Result.Ok(null);
     }
-    //     const u = await qiniu_upload_online_file(thumbnail_res.data.responseUrl, `/thumbnails/${filename}`);
-    //     if (u.error) {
-    //       console.log(u.error.message);
-    //       return Result.Err(u.error);
-    //     }
     return Result.Ok({
       original_path: thumbnail_res.data.responseUrl,
-      //       url: u.data.url,
-      img_path: `/public/${filename}`,
+      img_path: key,
     });
+  }
+  /** 删除指定截图 */
+  delete_snapshot(key: string) {
+    const filepath = path.join(this.assets, key);
+    return this.upload.delete(filepath);
   }
 }

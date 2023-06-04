@@ -65,7 +65,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // if (existing_history_res.error) {
   //   return e(existing_history_res);
   // }
-  const tv = new TV();
+  const tv_res = await TV.New({
+    assets: process.env.PUBLIC_PATH,
+  });
+  if (tv_res.error) {
+    return e(tv_res);
+  }
+  const tv = tv_res.data;
   if (!existing_history) {
     const file_res = await store.find_file({
       file_id,
@@ -78,14 +84,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return e("没有匹配的视频源");
     }
     const { drive_id } = file;
-    const thumbnail = await tv.snapshot_media({
+    const thumbnail_res = await tv.snapshot_media({
       file_id,
       drive_id,
       cur_time: current_time,
       store,
     });
-    if (thumbnail.error) {
-      return e(thumbnail);
+    if (thumbnail_res.error) {
+      return e(thumbnail_res);
     }
     const adding_res = await store.add_history({
       tv_id,
@@ -94,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       duration,
       member_id,
       file_id: file_id ?? null,
-      thumbnail: thumbnail.data.img_path ?? null,
+      thumbnail: thumbnail_res.data.img_path ?? null,
     });
     if (adding_res.error) {
       return e(adding_res);
@@ -116,27 +122,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("没有匹配的视频源");
   }
   const { drive_id } = file;
-  const thumbnail = await tv.snapshot_media({
+  const thumbnail_res = await tv.snapshot_media({
     file_id,
     drive_id,
     cur_time: current_time,
     store,
   });
-  if (thumbnail.error) {
-    return e(thumbnail);
+  if (thumbnail_res.error) {
+    return e(thumbnail_res);
   }
-  if (thumbnail.error) {
-    return e(thumbnail);
+  if (thumbnail_res.error) {
+    return e(thumbnail_res);
   }
   const update_res = await store.update_history(existing_history.id, {
     episode_id,
     current_time,
-    duration,
     file_id: file_id ?? null,
-    thumbnail: thumbnail.data.img_path ?? null,
+    thumbnail: thumbnail_res.data.img_path ?? null,
   });
   if (update_res.error) {
     return e(update_res);
+  }
+  const { thumbnail: prev_thumbnail } = existing_history;
+  if (prev_thumbnail) {
+    tv.delete_snapshot(prev_thumbnail);
   }
   res.status(200).json({
     code: 0,

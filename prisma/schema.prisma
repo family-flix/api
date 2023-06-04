@@ -633,6 +633,8 @@ model member {
         remark   String   @unique
         // 是否禁用
         disabled Int?     @default(0)
+        // 软删除
+        delete   Int?     @default(0)
 
         // 关联 user 表
         user_id String

@@ -6,6 +6,17 @@ import { TV } from "@/domains/tv";
 import { ImageUploader } from "@/domains/uploader";
 import path from "path";
 
+function formatVideoTime(currentTime: number) {
+  const totalSeconds = Math.floor(currentTime);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const formattedTime = [hours, minutes, seconds].map((timeUnit) => String(timeUnit).padStart(2, "0")).join(":");
+
+  return formattedTime;
+}
+
 async function main() {
   // const upload = new ImageUploader();
   // const r = await upload.download(
@@ -17,11 +28,15 @@ async function main() {
   //   return;
   // }
   // console.log(r.data);
-  // const tv = new TV();
+  // const tv_res = await TV.New({ assets: process.env.PUBLIC_PATH });
+  // if (tv_res.error) {
+  //   return;
+  // }
+  // const tv = tv_res.data;
+  // const curTime = 718.909723;
   // const r = await tv.snapshot_media({
-  //   file_id: "646b8b7d5c8e8c7e19404780921a8898eac3883e",
-  //   // cur_time: 120,
-  //   cur_time: 1167.949,
+  //   file_id: "646b8b7deb2a23432cc74528a4eb97ef158a94d4",
+  //   cur_time: curTime,
   //   drive_id: "HOuEKtDerEOikQG",
   //   store,
   // });
@@ -29,9 +44,11 @@ async function main() {
   //   console.log(r.error.message);
   //   return;
   // }
+  // const { img_path } = r.data;
+  // console.log(img_path, formatVideoTime(curTime));
   // console.log(r.data);
   const drive = new AliyunDriveClient({ drive_id: "HOuEKtDerEOikQG", store });
-  const r = await drive.generate_thumbnail({ file_id: "646b8b7d5c8e8c7e19404780921a8898eac3883e", cur_time: "1167949" });
+  const r = await drive.generate_thumbnail({ file_id: "646b8b7db3824acadb704145ad76010b63f0c525", cur_time: "715030" });
   if (r.error) {
     console.log(r.error.message);
     return;

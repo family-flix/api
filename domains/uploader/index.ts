@@ -1,8 +1,9 @@
-import { ReadStream, createWriteStream, writeFileSync } from "fs";
+import { ReadStream, createWriteStream, writeFileSync, unlink } from "fs";
 
 import axios from "axios";
 
 import { Result } from "@/types";
+import { ensure } from "@/utils/back_end";
 
 export class ImageUploader {
   /** 网络地址转成 Stream 流 */
@@ -39,7 +40,6 @@ export class ImageUploader {
       method: "GET",
       responseType: "stream",
     });
-    console.log("url", url, dest);
     return new Promise((resolve) => {
       response.data
         .pipe(createWriteStream(dest))
@@ -48,24 +48,17 @@ export class ImageUploader {
         })
         .once("close", () => resolve(Result.Ok(dest)));
     });
-    //     try {
-    //       const response = await axios.get(url, { responseType: "arraybuffer" });
-    //       writeFileSync(dest, Buffer.from(response.data));
-    //       return Result.Ok(dest);
-    //     } catch (error) {
-    //       //       console.error("Failed to download image:", error);
-    //       const e = error as Error;
-    //       return Result.Err(e.message);
-    //     }
-    //     const stream_res = await this.request_online_url_to_stream(url);
-    //     if (stream_res.error) {
-    //       return Result.Err(stream_res.error);
-    //     }
-    //     const stream = stream_res.data;
-    //     const r = await this.generate_file_from_stream(dest, stream);
-    //     if (r.error) {
-    //       return Result.Err(r.error);
-    //     }
-    //     return Result.Ok(r.data);
+  }
+  /** 删除本地图片 */
+  async delete(key: string) {
+    return new Promise((resolve) => {
+      unlink(key, (err) => {
+        if (err) {
+          resolve(Result.Err(err.message));
+          return;
+        }
+        return Result.Ok(null);
+      });
+    });
   }
 }

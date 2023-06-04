@@ -102,9 +102,12 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     }
   }
 
-  async run(files: { name: string; type: string }[] = []) {
+  async run(files?: { name: string; type: string }[]) {
     const { drive, user, store } = this;
-    const { client } = drive;
+    const {
+      client,
+      profile: { root_folder_name },
+    } = drive;
     this.emit(
       Events.Print,
       new ArticleLineNode({
@@ -143,7 +146,21 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       },
     });
     //     let need_stop = false;
-    if (files.length) {
+    if (files !== undefined && Array.isArray(files)) {
+      if (files.length === 0) {
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: "没有要索引的文件，完成索引",
+              }),
+            ],
+          })
+        );
+        this.emit(Events.Finished);
+        return Result.Ok(null);
+      }
       // ${files.length ? " - 仅" + files.map((f) => f.name).join("、") : ""
       this.emit(
         Events.Print,
@@ -219,25 +236,29 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     };
     walker.on_file = async (file) => {
       const { name, parent_paths } = file;
+      // console.log('[]walker.on_file', name);
       await adding_file_safely(file, { user_id: user.id, drive_id: drive.id }, store);
+      const clean_parent_paths = parent_paths.replace(new RegExp(`^${root_folder_name}/`), "");
       const tmp_file_res = await store.find_tmp_file({
         name,
-        parent_paths,
-        drive_id: drive.id,
-        user_id: user.id,
+        parent_paths: clean_parent_paths,
+        // drive_id: drive.id,
+        // user_id: user.id,
       });
       if (tmp_file_res.error) {
+        // console.log("[]walker.on_file - find tmp_file failed", tmp_file_res.error.message);
         return;
       }
       const tmp_file = tmp_file_res.data;
       if (!tmp_file) {
+        console.log("[]walker.on_file - find tmp_file failed not found", name, clean_parent_paths);
         return;
       }
       const r2 = await store.delete_tmp_file({
         id: tmp_file.id,
       });
       if (r2.error) {
-        // log("删除临时文件", parent_paths, name, "失败", r2.error.message);
+        // console.log("[]walker.on_file - delete tmp_file failed", r2.error.message);
       }
     };
     //     let count = 0;

@@ -79,14 +79,14 @@ export type PartialSearchedTV = Omit<TVProfileItemInTMDB, "id" | "search_tv_in_t
  * 根据关键字搜索电视剧
  * @param keyword
  */
-export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCommentPart & {}) {
+export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCommentPart & { page?: number }) {
   const endpoint = `/search/tv`;
-  const { api_key, language } = options;
+  const { page, api_key, language } = options;
   const query = {
     api_key,
     language,
     query: keyword,
-    page: "1",
+    page,
     include_adult: "false",
   };
   const result = await request.get<{

@@ -26,11 +26,13 @@ export class TMDBClient {
     };
   }
   /** 根据关键字搜索电视剧 */
-  async search_tv(keyword: string, extra: Partial<{ language: "zh-CN" | "en-US" }> = {}) {
-    const { token, language } = this.options;
+  async search_tv(keyword: string, extra: Partial<{ page: number; language: "zh-CN" | "en-US" }> = {}) {
+    const { token } = this.options;
+    const { page, language } = extra;
     return search_tv_in_tmdb(keyword, {
+      page,
       api_key: token,
-      language: extra.language || language,
+      language: language || this.options.language,
     });
   }
   /** 获取电视剧详情 */

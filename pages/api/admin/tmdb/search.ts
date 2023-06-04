@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r_token.error) {
     return e(r_token);
   }
-  const r = await tmdb.search_tv(keyword as string);
+  const r = await tmdb.search_tv(keyword as string, { page: Number(page) });
   if (r.error) {
     return e(r);
   }

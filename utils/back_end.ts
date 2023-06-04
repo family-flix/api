@@ -13,6 +13,10 @@ import { Result } from "@/types";
 import { accessSync, mkdirSync, ReadStream } from "fs";
 import { random_string } from ".";
 
+/**
+ * 确保某个路径必然存在
+ * @param filepath
+ */
 export async function ensure(filepath: string, next: string[] = []) {
   const { ext, dir } = path.parse(filepath);
   const isFile = ext !== undefined && ext !== "";
