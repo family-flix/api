@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
-import { User } from "@/domains/user";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -21,19 +21,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }>;
   const { authorization } = req.headers;
   if (!drive_id) {
-    return e("缺少云盘 id 参数");
+    return e("缺少云盘 id");
   }
   if (!name) {
     return e("缺少文件夹名称");
   }
-  const t = await User.New(authorization);
-  if (t.error) {
-    return e(t);
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const client = new AliyunDriveClient({
-    drive_id,
-    store,
-  });
+  const { id: user_id } = t_res.data;
+  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
+  const client = drive.client;
   const r = await client.add_folder({
     parent_file_id,
     name,
@@ -41,5 +44,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: r.data });
+  res.status(200).json({ code: 0, msg: "新增文件夹成功", data: r.data });
 }

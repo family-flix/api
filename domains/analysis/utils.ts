@@ -1,4 +1,5 @@
 import { ExtraUserAndDriveInfo } from "@/domains/walker/utils";
+import { DatabaseStore } from "@/domains/store";
 import { FileType } from "@/constants";
 import { store_factory } from "@/store";
 import { Result } from "@/types";
@@ -78,7 +79,7 @@ export async function adding_file_safely(
     size?: number;
   },
   extra: ExtraUserAndDriveInfo,
-  store: ReturnType<typeof store_factory>
+  store: DatabaseStore
 ) {
   const { file_id, name, parent_file_id, parent_paths, type, size = 0 } = file;
   const { drive_id, user_id } = extra;

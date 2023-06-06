@@ -6,12 +6,13 @@ import { Handler } from "mitt";
 import { BaseDomain } from "@/domains/base";
 import { TMDBClient } from "@/domains/tmdb";
 import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
-import { store_factory } from "@/store";
-import { ParsedEpisodeRecord, ParsedSeasonRecord, ParsedTVRecord, TVProfileRecord } from "@/store/types";
+import { DatabaseStore } from "@/domains/store";
+import { ImageUploader } from "@/domains/uploader";
+import { ParsedEpisodeRecord, ParsedSeasonRecord, ParsedTVRecord, TVProfileRecord } from "@/domains/store/types";
 import { Result } from "@/types";
 import { episode_to_num, season_to_num } from "@/utils";
 
-import { extra_searched_tv_field, upload_tmdb_images } from "./utils";
+import { extra_searched_tv_field } from "./utils";
 
 enum Events {
   AddTV,
@@ -30,13 +31,14 @@ type TheTypesOfEvents = {
 
 type MediaSearcherProps = {
   /** 数据库操作 */
-  store: ReturnType<typeof store_factory>;
+  store: DatabaseStore;
   /** 搜索到的电视剧、季和剧集中如果存在图片，是否要将图片上传到 cdn */
   upload_image?: boolean;
   /** 仅处理该网盘下的所有未匹配电视剧 */
   drive_id?: string;
   /** 仅处理该用户的所有未匹配电视剧 */
   user_id?: string;
+  assets: string;
   /** TMDB token */
   token: string;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
@@ -45,25 +47,30 @@ type MediaSearcherProps = {
 const PAGE_SIZE = 20;
 export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   static New(body: Partial<MediaSearcherProps>) {
-    const { user_id, drive_id, token, store, on_print } = body;
+    const { user_id, drive_id, token, assets, store, on_print } = body;
     if (!store) {
       return Result.Err("缺少 store 实例");
     }
     if (!token) {
       return Result.Err("缺少 TMDB token");
     }
+    if (!assets) {
+      return Result.Err("缺少静态资源根路径");
+    }
     const searcher = new MediaSearcher({
       user_id,
       drive_id,
       token,
+      assets,
       store,
       on_print,
     });
     return Result.Ok(searcher);
   }
 
-  store: ReturnType<typeof store_factory>;
+  store: DatabaseStore;
   client: TMDBClient;
+  upload: ImageUploader;
   options: Partial<{
     drive_id?: string;
     user_id?: string;
@@ -76,9 +83,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   constructor(options: MediaSearcherProps) {
     super();
 
-    const { upload_image = false, user_id, drive_id, token, store, on_print } = options;
+    const { upload_image = true, user_id, drive_id, assets, token, store, on_print } = options;
     this.store = store;
     this.client = new TMDBClient({ token });
+    this.upload = new ImageUploader({ root: assets });
     this.options = {
       user_id,
       drive_id,
@@ -248,7 +256,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         user_id,
       });
       if (adding_res.error) {
-        return Result.Err(adding_res.error, "10002", { id: profile.id });
+        return Result.Err(adding_res.error, undefined, { id: profile.id });
       }
       this.emit(
         Events.Print,
@@ -373,7 +381,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     } = profile;
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
       if (upload_image) {
-        return upload_tmdb_images({
+        return this.upload_tmdb_images({
           tmdb_id,
           poster_path,
           backdrop_path,
@@ -828,6 +836,35 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(adding_res.data);
   }
+
+  /**
+   * 上传 tmdb 图片到七牛云
+   * @param tmdb
+   * @returns
+   */
+  async upload_tmdb_images(tmdb: { tmdb_id: number; poster_path?: string; backdrop_path?: string }) {
+    const { tmdb_id, poster_path, backdrop_path } = tmdb;
+    // log("[]upload_tmdb_images", tmdb_id, poster_path, backdrop_path);
+    const result = {
+      poster_path,
+      backdrop_path,
+    };
+    const name = `${tmdb_id}.jpg`;
+    if (poster_path && poster_path.includes("tmdb.org")) {
+      const r = await this.upload.download(poster_path, `/poster/${name}`);
+      if (r.data) {
+        result.poster_path = r.data;
+      }
+    }
+    if (backdrop_path && backdrop_path.includes("themoviedb.org")) {
+      const r = await this.upload.download(backdrop_path, `/backdrop/${name}`);
+      if (r.data) {
+        result.backdrop_path = r.data;
+      }
+    }
+    return result;
+  }
+
   stop() {
     this._stop = true;
   }

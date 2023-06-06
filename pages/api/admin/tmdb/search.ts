@@ -2,19 +2,21 @@
  * @file TMDB 搜索电视剧
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import { TMDBClient } from "@/domains/tmdb";
+import type { NextApiRequest, NextApiResponse } from "next";
+
 import { User } from "@/domains/user";
+import { TMDBClient } from "@/domains/tmdb";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import type { NextApiRequest, NextApiResponse } from "next";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
     keyword,
-    page = 1,
-    page_size = 20,
+    page: page_str = "1",
+    page_size: page_size_str = "20",
     token,
   } = req.query as Partial<{
     keyword: string;
@@ -25,14 +27,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!keyword) {
     return e("缺少搜索关键字");
   }
-  const tmdb = new TMDBClient({
-    token: token || process.env.TMDB_TOKEN,
-  });
-  const r_token = await User.New(authorization);
-  if (r_token.error) {
-    return e(r_token);
+
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const r = await tmdb.search_tv(keyword as string, { page: Number(page) });
+  const { id: user_id, settings } = t_res.data;
+  const tmdb = new TMDBClient({
+    token: token || settings.tmdb_token,
+  });
+  const page = Number(page_str);
+  const page_size = Number(page_size_str);
+  const r = await tmdb.search_tv(keyword, { page });
   if (r.error) {
     return e(r);
   }
@@ -40,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     code: 0,
     msg: "",
     data: {
-      no_more: Number(page) * Number(page_size) >= r.data.total,
+      no_more: page * page_size >= r.data.total,
       ...r.data,
     },
   });

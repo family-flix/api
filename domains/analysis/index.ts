@@ -20,9 +20,9 @@ import {
 } from "@/domains/article";
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
+import { DatabaseStore } from "@/domains/store";
 import { FolderWalker } from "@/domains/walker";
 import { Result } from "@/types";
-import { store_factory } from "@/store";
 
 import { need_skip_the_file_when_walk, adding_file_safely } from "./utils";
 
@@ -39,7 +39,8 @@ type TheTypesOfEvents = {
 type DriveAnalysisProps = {
   drive: Drive;
   user: User;
-  store: ReturnType<typeof store_factory>;
+  store: DatabaseStore;
+  assets: string;
   TMDB_TOKEN: string;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
   /** 索引失败 */
@@ -50,7 +51,7 @@ type DriveAnalysisProps = {
 
 export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
   static async New(body: Partial<DriveAnalysisProps>) {
-    const { drive, store, user, TMDB_TOKEN, on_print, on_finish, on_error } = body;
+    const { drive, store, user, TMDB_TOKEN, assets, on_print, on_finish, on_error } = body;
     if (!TMDB_TOKEN) {
       return Result.Err("缺少 TMDB_TOKEN");
     }
@@ -60,6 +61,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     if (!store) {
       return Result.Err("缺少数据库实例");
     }
+    if (!assets) {
+      return Result.Err("缺少静态资源根路径");
+    }
     if (!user) {
       return Result.Err("缺少用户信息");
     }
@@ -68,6 +72,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       store,
       user,
       TMDB_TOKEN,
+      assets,
       on_print,
       on_finish,
       on_error,
@@ -82,15 +87,17 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
   need_stop = false;
   episode_count = 0;
   TMDB_TOKEN: string;
+  assets: string;
 
   constructor(options: Partial<{}> & DriveAnalysisProps) {
     super();
 
-    const { drive, store, user, TMDB_TOKEN, on_print, on_finish, on_error } = options;
+    const { drive, store, user, TMDB_TOKEN, assets, on_print, on_finish, on_error } = options;
     this.store = store;
     this.drive = drive;
     this.user = user;
     this.TMDB_TOKEN = TMDB_TOKEN;
+    this.assets = assets;
     if (on_print) {
       this.on_print(on_print);
     }
@@ -251,7 +258,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       }
       const tmp_file = tmp_file_res.data;
       if (!tmp_file) {
-        console.log("[]walker.on_file - find tmp_file failed not found", name, clean_parent_paths);
+        // console.log("[]walker.on_file - find tmp_file failed not found", name, clean_parent_paths);
         return;
       }
       const r2 = await store.delete_tmp_file({
@@ -349,6 +356,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       drive_id: drive.id,
       token: this.TMDB_TOKEN,
       store,
+      assets: this.assets,
       on_print: (v) => {
         this.emit(Events.Print, v);
       },

@@ -8,6 +8,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { Member } from "@/domains/user/member";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -25,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const { id: member_id, user } = t_res.data;
   // console.log("[Endpoint]episode/[id]", user_id, t_resp.data);
   const episode = await store.prisma.episode.findFirst({
     where: {
@@ -60,10 +61,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("该影片没有可播放的视频源");
   }
   const { file_id, drive_id } = source;
-  const client = new AliyunDriveClient({
-    drive_id,
-    store,
-  });
+  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
+  const client = drive.client;
   const play_info_res = await client.fetch_video_preview_info(file_id);
   if (play_info_res.error) {
     return e(play_info_res);

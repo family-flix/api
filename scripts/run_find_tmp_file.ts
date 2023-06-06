@@ -2,8 +2,6 @@ require("dotenv").config();
 
 import { store } from "@/store";
 
-import { find_tv_need_complete } from "./find_tv_need_complete";
-
 async function main() {
   const body = {
     name: "小谢尔顿S01E04.mp4",

@@ -20,15 +20,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!remark) {
     return e("缺少成员备注");
   }
-  const t_resp = await User.New(authorization);
+  const t_resp = await User.New(authorization, store);
   if (t_resp.error) {
     return e(t_resp);
   }
   const { id: user_id } = t_resp.data;
+  const existing_res = await store.find_member({ remark, user_id });
+  if (existing_res.error) {
+    return e(existing_res);
+  }
+  const existing_member = existing_res.data;
+  if (existing_member) {
+    return e("已存在相同备注的成员了");
+  }
   const r = await store.add_member({
     remark,
-    name: name || null,
-    email: email || null,
+    name: name ?? null,
+    email: email ?? null,
     disabled: 0,
     user_id,
   });
@@ -59,5 +67,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     ],
   };
-  res.status(200).json({ code: 0, msg: "", data: member });
+  res.status(200).json({ code: 0, msg: "添加成员成功", data: member });
 }

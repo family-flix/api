@@ -2,18 +2,13 @@
  * @file 新增或更新影片播放记录
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import path from "path";
-
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp, Result } from "@/types";
+import { TV } from "@/domains/tv";
+import { Member } from "@/domains/user/member";
+import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { Member } from "@/domains/user/member";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { ImageUploader } from "@/domains/uploader";
-import { r_id } from "@/utils";
-import { TV } from "@/domains/tv";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -42,10 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: member_id } = t_res.data;
-  // const cur_time = format_number_with_3decimals(original_cur_time);
-  // const client = new AliyunDriveClient({ drive_id, store });
-  // const thumbnail =
+  const { id: member_id, user } = t_res.data;
   // const existing_history_res = await store.find_history({});
   const existing_history = await store.prisma.play_history.findFirst({
     where: {
@@ -66,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   //   return e(existing_history_res);
   // }
   const tv_res = await TV.New({
-    assets: process.env.PUBLIC_PATH,
+    assets: user.settings.assets,
   });
   if (tv_res.error) {
     return e(tv_res);
@@ -84,9 +76,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return e("没有匹配的视频源");
     }
     const { drive_id } = file;
+    const drive_res = await store.find_drive({ id: drive_id });
+    if (drive_res.error) {
+      return e(drive_res);
+    }
+    const drive = drive_res.data;
+    if (!drive) {
+      return e("没有匹配的云盘记录");
+    }
     const thumbnail_res = await tv.snapshot_media({
       file_id,
-      drive_id,
+      drive_id: drive.drive_id,
       cur_time: current_time,
       store,
     });
@@ -107,7 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     return res.status(200).json({
       code: 0,
-      msg: "",
+      msg: "新增记录成功",
       data: null,
     });
   }
@@ -122,9 +122,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("没有匹配的视频源");
   }
   const { drive_id } = file;
+  const drive_res = await store.find_drive({ id: drive_id });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
+  if (!drive) {
+    return e("没有匹配的云盘记录");
+  }
   const thumbnail_res = await tv.snapshot_media({
     file_id,
-    drive_id,
+    drive_id: drive.drive_id,
     cur_time: current_time,
     store,
   });
@@ -149,7 +157,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   res.status(200).json({
     code: 0,
-    msg: "",
+    msg: "更新记录成功",
     data: null,
   });
 }

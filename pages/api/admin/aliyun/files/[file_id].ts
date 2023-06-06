@@ -21,10 +21,7 @@ type SimpleAliyunDriveFile = {
   items?: SimpleAliyunDriveFile[];
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
   const {
@@ -49,17 +46,24 @@ export default async function handler(
     parent_file_id: "tv",
     items: [],
   };
+  const drive_res = await store.find_drive({ id: drive_id });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
+  if (!drive) {
+    return e("没有匹配的云盘记录");
+  }
+  const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+  if (client_res.error) {
+    return e(client_res);
+  }
+  const client = client_res.data;
   const folder = new AliyunDriveFolder(file_id, {
     name: "tv",
-    client: new AliyunDriveClient({
-      drive_id,
-      store,
-    }),
+    client,
   });
-  async function walk_folder(
-    f: AliyunDriveFolder,
-    parent: SimpleAliyunDriveFile
-  ) {
+  async function walk_folder(f: AliyunDriveFolder, parent: SimpleAliyunDriveFile) {
     do {
       const r = await f.next();
       if (r.error) {

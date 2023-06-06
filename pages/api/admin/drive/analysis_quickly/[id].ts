@@ -4,13 +4,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+// import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 import { User } from "@/domains/user";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -21,19 +21,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive_id) {
     return e("缺少云盘 id 参数");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const drive_res = await store.find_drive({ id: drive_id });
+  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
   if (drive_res.error) {
     return e(drive_res);
   }
-  if (!drive_res.data) {
-    return e("没有找到匹配的云盘记录");
-  }
-  const { root_folder_id, root_folder_name } = drive_res.data;
+  const drive = drive_res.data;
+  const { root_folder_id, root_folder_name } = drive.profile;
   if (!root_folder_name) {
     return e("请先设置索引根目录");
   }
@@ -47,26 +45,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (tmp_folders.length === 0) {
     return Result.Err("没有找到可索引的转存文件");
   }
-  const client = new AliyunDriveClient({
-    drive_id,
-    store,
-  });
-  const r = await walk_drive({
-    drive_id,
-    user_id,
-    client,
-    files: tmp_folders.map((folder) => {
-      const { name } = folder;
-      return {
-        name: `${root_folder_name}/${name}`,
-        type: "folder",
-      };
-    }),
-    store,
-    upload_image: true,
-  });
-  if (r.error) {
-    return e(r);
-  }
-  res.status(200).json({ code: 0, msg: "", data: r.data });
+  const client = drive.client;
+  // const drive_analysis = await
+  // const r = await walk_drive({
+  //   drive_id,
+  //   user_id,
+  //   client,
+  //   files: tmp_folders.map((folder) => {
+  //     const { name } = folder;
+  //     return {
+  //       name: `${root_folder_name}/${name}`,
+  //       type: "folder",
+  //     };
+  //   }),
+  //   store,
+  //   upload_image: true,
+  // });
+  // if (r.error) {
+  //   return e(r);
+  // }
+  res.status(200).json({ code: 0, msg: "", data: null });
 }

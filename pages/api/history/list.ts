@@ -66,8 +66,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const count = await store.prisma.play_history.count({
     where,
   });
-  // const drive = new AliyunDriveClient({ drive_id })
-  // const rich_list = [];
   res.status(200).json({
     code: 0,
     msg: "",

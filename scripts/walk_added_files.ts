@@ -4,7 +4,7 @@
 import dayjs from "dayjs";
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
+// import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 import { store_factory } from "@/store";
 
 import { notice_error, notice_push_deer } from "./notice";
@@ -54,7 +54,11 @@ export async function walk_added_files(store: ReturnType<typeof store_factory>) 
     if (!root_folder_id || !root_folder_name) {
       continue;
     }
-    const client = new AliyunDriveClient({ drive_id: id, store });
+    const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+    if (client_res.error) {
+      continue;
+    }
+    const client = client_res.data;
     const files = tmp_folders_res.data.map((folder) => {
       const { name, parent_paths, type } = folder;
       return {
@@ -67,25 +71,25 @@ export async function walk_added_files(store: ReturnType<typeof store_factory>) 
         type: type === FileType.File ? "file" : "folder",
       };
     });
-    const r = await walk_drive({
-      user_id,
-      drive_id: id,
-      files,
-      client,
-      store,
-      upload_image: true,
-      wait_complete: true,
-    });
-    if (r.error) {
-      notice_error(`${name} 云盘索引失败，因为 ${r.error.message}`);
-      continue;
-    }
-    store.update_drive(id, {
-      latest_analysis: dayjs().toISOString(),
-    });
-    notice_push_deer({
-      title: "云盘索引成功",
-      markdown: `${name} 云盘索引成功`,
-    });
+    // const r = await walk_drive({
+    //   user_id,
+    //   drive_id: id,
+    //   files,
+    //   client,
+    //   store,
+    //   upload_image: true,
+    //   wait_complete: true,
+    // });
+    // if (r.error) {
+    //   notice_error(`${name} 云盘索引失败，因为 ${r.error.message}`);
+    //   continue;
+    // }
+    // store.update_drive(id, {
+    //   latest_analysis: dayjs().toISOString(),
+    // });
+    // notice_push_deer({
+    //   title: "云盘索引成功",
+    //   markdown: `${name} 云盘索引成功`,
+    // });
   }
 }

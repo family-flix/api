@@ -17,9 +17,10 @@ import {
 import { DriveAnalysis } from "@/domains/analysis";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
+import { DatabaseStore } from "@/domains/store";
+import { ParsedTVRecord, FileSyncTaskRecord } from "@/domains/store/types";
 import { Result } from "@/types";
-import { ParsedTVRecord, FileSyncTaskRecord } from "@/store/types";
-import { folder_client, store_factory } from "@/store";
+import { folder_client } from "@/store";
 import { is_video_file } from "@/utils";
 import { FileType } from "@/constants";
 
@@ -39,8 +40,10 @@ type ResourceSyncTaskProps = {
   task: FileSyncTaskRecord & { parsed_tv: ParsedTVRecord };
   user: User;
   drive: Drive;
-  store: ReturnType<typeof store_factory>;
+  store: DatabaseStore;
+  client: AliyunDriveClient;
   TMDB_TOKEN: string;
+  assets?: string;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
   on_finish?: () => void;
   on_error?: (error: Error) => void;
@@ -48,12 +51,20 @@ type ResourceSyncTaskProps = {
 
 export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   static async Get(
-    options: { id: string } & Pick<
-      ResourceSyncTaskProps,
-      "user" | "store" | "TMDB_TOKEN" | "on_print" | "on_finish" | "on_error"
-    >
+    options: { id: string } & {
+      user: User;
+      store: DatabaseStore;
+      TMDB_TOKEN?: string;
+      assets?: string;
+      on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
+      on_finish?: () => void;
+      on_error?: (error: Error) => void;
+    }
   ) {
-    const { id, user, store, TMDB_TOKEN, on_finish, on_print, on_error } = options;
+    const { id, user, store, TMDB_TOKEN, assets, on_finish, on_print, on_error } = options;
+    if (!TMDB_TOKEN) {
+      return Result.Err("缺少 TMDB_TOKEN");
+    }
     const sync_task = await store.prisma.bind_for_parsed_tv.findFirst({
       where: {
         id,
@@ -101,6 +112,8 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       drive,
       store,
       TMDB_TOKEN,
+      assets,
+      client: drive.client,
       on_print,
       on_finish,
       on_error,
@@ -113,19 +126,21 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   drive: ResourceSyncTaskProps["drive"];
   store: ResourceSyncTaskProps["store"];
   TMDB_TOKEN: ResourceSyncTaskProps["TMDB_TOKEN"];
+  assets: ResourceSyncTaskProps["assets"];
   client: AliyunDriveClient;
   wait_complete = false;
 
   constructor(options: Partial<{}> & ResourceSyncTaskProps) {
     super();
 
-    const { user, drive, store, task, TMDB_TOKEN, on_print, on_finish, on_error } = options;
+    const { user, drive, store, task, client, TMDB_TOKEN, assets, on_print, on_finish, on_error } = options;
     this.task = task;
     this.store = store;
     this.user = user;
     this.drive = drive;
     this.TMDB_TOKEN = TMDB_TOKEN;
-    this.client = new AliyunDriveClient({ drive_id: drive.id, store });
+    this.assets = assets;
+    this.client = client;
     if (on_print) {
       this.on_print(on_print);
     }
@@ -283,6 +298,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         user: this.user,
         store: this.store,
         TMDB_TOKEN: this.TMDB_TOKEN,
+        assets: this.assets,
         on_print: (v) => {
           this.emit(Events.Print, v);
         },

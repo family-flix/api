@@ -4,10 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
 import { parse_filename_for_video, VideoKeys, VIDEO_ALL_KEYS } from "@/utils";
 import { response_error_factory } from "@/utils/backend";
-import { User } from "@/domains/user";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -16,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!name) {
     return e("缺少 `name` 参数");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }

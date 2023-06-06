@@ -6,17 +6,19 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
+import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
+  const { authorization } = req.headers;
   const {
     id: drive_id,
     file_id = "root",
     next_marker = "",
     name,
-    page_size = "24",
+    page_size: page_size_str = "24",
   } = req.query as Partial<{
     id: string;
     file_id: string;
@@ -25,23 +27,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size: string;
   }>;
   if (!drive_id) {
-    return e("缺少云盘 id 参数");
+    return e("缺少云盘 id");
   }
-  const client = new AliyunDriveClient({
-    drive_id,
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
+  }
+  const { id: user_id } = t_res.data;
+  const page_size = Number(page_size_str);
+  const drive_res = await Drive.Get({
+    id: drive_id,
+    user_id,
     store,
   });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
   if (name) {
-    const r = await client.search_files(name, "folder");
+    const r = await drive.client.search_files(name, "folder");
     if (r.error) {
       return e(r);
     }
     res.status(200).json({ code: 0, msg: "", data: r.data });
     return;
   }
-  const r = await client.fetch_files(file_id, {
+  const r = await drive.client.fetch_files(file_id, {
     marker: next_marker,
-    page_size: Number(page_size),
+    page_size,
   });
   if (r.error) {
     return e(r);

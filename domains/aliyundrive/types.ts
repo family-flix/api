@@ -42,15 +42,20 @@ export interface PartialVideo {
 
 export type AliyunDrivePayload = {
   app_id: string;
-  drive_id: string;
+  drive_id: number;
   device_id: string;
   access_token: string;
   refresh_token: string;
   avatar: string;
   nick_name: string;
-  aliyun_user_id: string;
   user_name: string;
-  // root_folder_id?: string;
-  // total_size?: number;
-  // used_size?: number;
+  aliyun_user_id: string;
+  /** 这个名称是导出云盘凭证时会有的，和 user_name、nick_name 相比优先取这个 */
+  name?: string;
+  /** 这个是导出云盘凭证时会有的 */
+  root_folder_id: string | null;
+  /** 这个是导出云盘凭证时会有的 */
+  total_size?: number;
+  /** 这个是导出云盘凭证时会有的 */
+  used_size?: number;
 };

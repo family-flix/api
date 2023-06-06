@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少云盘 id");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
@@ -36,13 +36,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (drive === null) {
     return e("没有匹配的云盘记录");
   }
-
   const { id: drive_id, root_folder_id, root_folder_name } = drive;
   if (root_folder_id === null || root_folder_name === null) {
     return e("请先设置索引目录");
   }
-
-  const client = new AliyunDriveClient({ drive_id, store });
+  const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+  if (client_res.error) {
+    return e(client_res);
+  }
+  const client = client_res.data;
   const prev_folder = new AliyunDriveFolder(root_folder_id, {
     name: root_folder_name,
     client: folder_client({ drive_id }, store),

@@ -7,6 +7,7 @@ import { store } from "@/store";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { walk_records } from "@/domains/store/utils";
 
 async function run() {
   const drives_res = await store.find_drive_list();
@@ -18,20 +19,21 @@ async function run() {
     return;
   }
   const drive = drives[0];
-  const client = new AliyunDriveClient({ drive_id: drive.id, store });
-  await walk_table_with_pagination<
-    SharedFilesInProgressRecord & RecordCommonPart
-  >(store.find_shared_files_save_with_pagination, {
-    async on_handle(shared_files) {
-      const { url } = shared_files;
-      console.log("prepare_fetch_shared_files", url);
-      const r = await client.fetch_share_profile(url);
-      if (r.error) {
-        await store.delete_shared_file_save({ url });
-        return;
-      }
-      console.log(r.data);
-    },
+  const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+  if (client_res.error) {
+    return;
+  }
+  const client = client_res.data;
+
+  await walk_records(store.prisma.bind_for_parsed_tv, {}, async (bind) => {
+    const { url } = bind;
+    console.log("prepare_fetch_shared_files", url);
+    const r = await client.fetch_share_profile(url);
+    if (r.error) {
+      await store.delete_shared_file_save({ url });
+      return;
+    }
+    console.log(r.data);
   });
 
   console.log("Complete");

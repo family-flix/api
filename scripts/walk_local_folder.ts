@@ -21,10 +21,10 @@ async function main() {
   });
   const r = await prev_folder.profile();
   if (r.error) {
-    console.log('[]fetch folder profile failed', r.error.message);
+    console.log("[]fetch folder profile failed", r.error.message);
     return;
   }
-  const walker = new FolderWalker();
+  const walker = new FolderWalker({});
   walker.on_file = async (file) => {
     console.log(file);
   };

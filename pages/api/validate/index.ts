@@ -14,17 +14,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!token) {
     return e("缺少 token");
   }
-  const t_res = await Member.New(token);
+  const t_res = await Member.Validate(token);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id } = t_res.data;
+  const { id, remark, token: real_token } = t_res.data;
   res.status(200).json({
     code: 0,
     msg: "",
     data: {
       id,
-      token,
+      remark,
+      token: real_token,
     },
   });
 }

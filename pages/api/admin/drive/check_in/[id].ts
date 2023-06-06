@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
-import { store } from "@/store";
-import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp } from "@/types";
+import { response_error_factory } from "@/utils/backend";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -17,25 +17,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive_id) {
     return e("缺少云盘 id");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const drive_resp = await store.find_drive({
+  const drive_res = await Drive.Get({
     id: drive_id,
     user_id,
-  });
-  if (drive_resp.error) {
-    return e(drive_resp);
-  }
-  const client = new AliyunDriveClient({
-    drive_id,
     store,
   });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
+  const { client } = drive;
   const r = await client.checked_in();
   if (r.error) {
     return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: r.data });
+  res.status(200).json({ code: 0, msg: "签到成功", data: null });
 }

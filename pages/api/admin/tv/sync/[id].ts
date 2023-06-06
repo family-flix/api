@@ -20,16 +20,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id || id === "undefined") {
     return e("缺少电视剧 id");
   }
-  const token = process.env.TMDB_TOKEN;
-  if (!token) {
-    return e("缺少 TMDB_TOKEN");
-  }
-  const t_res = await User.New(authorization);
+
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id } = user;
+  const { id: user_id, settings } = user;
+  const token = settings.tmdb_token;
+  if (!token) {
+    return e("缺少 TMDB_TOKEN");
+  }
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
@@ -98,6 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
         user,
         drive,
+        client: drive.client,
         store,
         TMDB_TOKEN: token,
         on_print(v) {

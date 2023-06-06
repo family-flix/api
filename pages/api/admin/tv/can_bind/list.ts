@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size: page_size_str = "20",
   } = req.query as Partial<{ name: string; page: string; page_size: string }>;
 
-  const t_resp = await User.New(authorization);
+  const t_resp = await User.New(authorization, store);
   if (t_resp.error) {
     return e(t_resp);
   }

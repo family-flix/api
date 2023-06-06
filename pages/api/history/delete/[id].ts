@@ -4,9 +4,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { TV } from "@/domains/tv";
+import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { Member } from "@/domains/user/member";
 import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -21,6 +22,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: member_id } = t_res.data;
+
+  const history_res = await store.find_history({ id, member_id });
+  if (history_res.error) {
+    return e(history_res);
+  }
+  const history = history_res.data;
+  if (!history) {
+    return e("没有匹配的播放记录");
+  }
+  if (history.thumbnail) {
+    const tv_res = await TV.New({
+      assets: process.env.PUBLIC_PATH,
+    });
+    if (tv_res.data) {
+      const tv = tv_res.data;
+      tv.delete_snapshot(history.thumbnail);
+    }
+  }
   const r = await store.delete_history({
     id,
     member_id,
@@ -28,5 +47,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: null });
+  res.status(200).json({ code: 0, msg: "删除成功", data: null });
 }

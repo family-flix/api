@@ -1,5 +1,5 @@
 /**
- * @file 暂停一个索引任务
+ * @file 终止一个索引任务
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -21,21 +21,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少任务 id 参数");
   }
-  const t_resp = await User.New(authorization);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const { id: user_id } = t_resp.data;
+  const { id: user_id } = t_res.data;
   const existing_task_resp = await store.find_task({ id, user_id });
   if (existing_task_resp.error) {
     return e(existing_task_resp);
   }
   if (!existing_task_resp.data) {
-    return e("任务不存在");
+    return e("索引任务不存在");
   }
   const { status } = existing_task_resp.data;
   if (status !== TaskStatus.Running) {
-    return e("该任务非运行中状态");
+    return e("该索引任务非运行中状态");
   }
   const r = await store.update_task(id, {
     need_stop: 1,
@@ -44,5 +44,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: null });
+  res.status(200).json({ code: 0, msg: "中止索引任务成功", data: null });
 }

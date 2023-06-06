@@ -5,24 +5,32 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
+import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
+  const { authorization } = req.headers;
   const { parent_file_id, drive_id } = req.query as Partial<{
     parent_file_id: string;
     drive_id: string;
   }>;
   if (!drive_id) {
-    return e("Missing drive id");
+    return e("缺少云盘 id");
   }
-  const client = new AliyunDriveClient({ drive_id, store: store });
-  const { error, data } = await client.fetch_files(parent_file_id as string);
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
+  }
+  const { id: user_id } = t_res.data;
+  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
+  const { error, data } = await drive.client.fetch_files(parent_file_id as string);
   if (error) {
     res.status(200).json({ code: 1003, msg: error.message, data: null });
     return;

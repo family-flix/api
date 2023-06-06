@@ -7,25 +7,25 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { User } from "@/domains/user";
 import { FileType } from "@/constants";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { url, file_id, file_name, drive_id } = req.body as Partial<{
-    /** 分享链接 */
+    /** 分享资源链接 */
     url: string;
-    /** 分享文件的 file_id */
+    /** 要转存的分享文件的 file_id */
     file_id: string;
-    /** 分享文件的名称 */
+    /** 要转存的分享文件的名称 */
     file_name: string;
-    /** 转存到哪个网盘 */
+    /** 转存到哪个云盘 */
     drive_id: string;
   }>;
   if (!url) {
-    return e("缺少分享链接参数");
+    return e("缺少分享资源链接");
   }
   if (!file_id) {
     return e("请指定要转存的文件");
@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive_id) {
     return e("请指定转存到哪个网盘");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(existing1_res);
   }
   if (existing1_res.data) {
-    return e("网盘内已有同名文件夹");
+    return e("云盘内已有同名文件夹");
   }
   const existing2_res = await store.find_tmp_file({
     name: file_name,
@@ -61,20 +61,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(existing2_res);
   }
   if (existing2_res.data) {
-    return e("云盘内已有同名文件夹");
+    return e("最近转存过同名文件");
   }
-  const drive_res = await store.find_drive({ id: drive_id, user_id });
+  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
   if (drive_res.error) {
     return e(drive_res);
   }
   const drive = drive_res.data;
-  if (!drive) {
-    return e("没有匹配的云盘记录");
-  }
-  if (!drive.root_folder_name) {
+  const { profile, client } = drive;
+  if (!profile.root_folder_name) {
     return e("请先为云盘添加索引根目录");
   }
-  const client = new AliyunDriveClient({ drive_id, store });
+  // await client.fetch_share_profile(url, { force: true });
   const r1 = await client.save_shared_files({
     url,
     file_id,
@@ -85,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   await store.add_tmp_file({
     name: file_name,
     type: FileType.Folder,
-    parent_paths: drive.root_folder_name,
+    parent_paths: profile.root_folder_name,
     drive_id,
     user_id,
   });
@@ -110,7 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   res.status(200).json({
     code: 0,
-    msg: "",
-    data: r1.data,
+    msg: "转存成功",
+    data: null,
   });
 }

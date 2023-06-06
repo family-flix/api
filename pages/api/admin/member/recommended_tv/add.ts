@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!tv_id) {
     return e("Missing tv_id");
   }
-  const t_resp = await User.New(authorization);
+  const t_resp = await User.New(authorization, store);
   if (t_resp.error) {
     return e(t_resp);
   }

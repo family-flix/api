@@ -1,15 +1,14 @@
 /**
- * @file 刷新指定云盘信息
+ * @file 删除云盘
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { User } from "@/domains/user";
-import { bytes_to_size } from "@/utils";
 import { store } from "@/store";
-import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -28,20 +27,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(drive_res);
   }
   const drive = drive_res.data;
-  const r = await drive.refresh_profile();
+  const r = await store.delete_drive({
+    id: drive.id,
+  });
   if (r.error) {
     return e(r);
   }
-  const { used_size, total_size } = r.data;
   res.status(200).json({
     code: 0,
-    msg: "",
-    data: {
-      ...r.data,
-      used_size,
-      total_size,
-      used_size_text: bytes_to_size(used_size || 0),
-      total_size_text: bytes_to_size(total_size || 0),
-    },
+    msg: "删除成功",
+    data: null,
   });
 }

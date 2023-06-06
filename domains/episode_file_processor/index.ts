@@ -1,6 +1,7 @@
 import { FileType } from "@/constants";
 import { BaseDomain } from "@/domains/base";
 import { SearchedEpisode } from "@/domains/walker";
+import { DatabaseStore } from "@/domains/store";
 import { store_factory } from "@/store";
 import { Result } from "@/types";
 
@@ -13,11 +14,11 @@ type EpisodeFileProcessorProps = {
   user_id: string;
   drive_id: string;
   task_id?: string;
-  store: ReturnType<typeof store_factory>;
+  store: DatabaseStore;
 };
 
 export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
-  store: ReturnType<typeof store_factory>;
+  store: DatabaseStore;
   episode: SearchedEpisode;
   options: {
     user_id: string;

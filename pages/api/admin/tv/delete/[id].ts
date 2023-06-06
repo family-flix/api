@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { User } from "@/domains/user";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少电视剧 id");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
@@ -39,12 +39,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   let no_more = false;
   const page_size = 20;
 
+  const episode_where: NonNullable<Parameters<typeof store.prisma.episode.findMany>[number]>["where"] = {
+    tv_id: tv.id,
+    user_id,
+  };
+  const episode_count = await store.prisma.episode.count({ where: episode_where });
   do {
     const list = await store.prisma.episode.findMany({
-      where: {
-        tv_id: tv.id,
-        user_id,
-      },
+      where: episode_where,
       include: {
         parsed_episodes: true,
         play_histories: true,
@@ -52,17 +54,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       skip: (page - 1) * page_size,
       take: page_size,
     });
-    // console.log("删除", list.length, "个剧集");
-    no_more = list.length === 0;
+    no_more = list.length + (page - 1) * page_size >= episode_count;
     page += 1;
     for (let i = 0; i < list.length; i += 1) {
       const episode = list[i];
       const { parsed_episodes, play_histories } = episode;
       for (let j = 0; j < parsed_episodes.length; j += 1) {
         const parsed_episode = parsed_episodes[j];
-        const { drive_id, file_id, file_name } = parsed_episode;
-        const client = new AliyunDriveClient({ drive_id, store });
-        // console.log("删除文件", file_name);
+        const { drive_id, file_id } = parsed_episode;
+        const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+        if (drive_res.error) {
+          continue;
+        }
+        const client = drive_res.data.client;
         const r = await client.delete_file(file_id);
         if (r.error) {
           has_error = true;
@@ -83,31 +87,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
   } while (no_more === false);
 
+  if (has_error) {
+    return e("删除过程出现错误，请重新删除");
+  }
+
   page = 1;
   no_more = false;
+  const season_where: NonNullable<Parameters<typeof store.prisma.season.findMany>[number]>["where"] = {
+    tv_id: tv.id,
+    user_id,
+  };
+  const season_count = await store.prisma.season.count({ where: season_where });
   do {
     const list = await store.prisma.season.findMany({
-      where: {
-        tv_id: tv.id,
-        user_id,
-      },
+      where: season_where,
       include: {
         parsed_season: true,
       },
       skip: (page - 1) * page_size,
       take: page_size,
     });
-    // console.log("删除", list.length, "个季");
-    no_more = list.length === 0;
+    no_more = list.length + (page - 1) * page_size >= season_count;
     page += 1;
     for (let i = 0; i < list.length; i += 1) {
       const season = list[i];
       const { parsed_season: parsed_seasons } = season;
       for (let j = 0; j < parsed_seasons.length; j += 1) {
         const parsed_season = parsed_seasons[j];
-        const { drive_id, file_id, file_name } = parsed_season;
+        const { drive_id, file_id } = parsed_season;
         if (file_id) {
-          const client = new AliyunDriveClient({ drive_id, store });
+          const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+          if (drive_res.error) {
+            continue;
+          }
+          const client = drive_res.data.client;
           // console.log("删除文件", file_name);
           const r = await client.delete_file(file_id);
           if (r.error) {
@@ -128,29 +141,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
   } while (no_more === false);
 
+  if (has_error) {
+    return e("删除过程出现错误，请重新删除");
+  }
+
   page = 1;
   no_more = false;
+
+  const tv_where: NonNullable<Parameters<typeof store.prisma.parsed_tv.findMany>[number]>["where"] = {
+    tv_id: tv.id,
+    user_id,
+  };
+  const tv_count = await store.prisma.parsed_tv.count({ where: tv_where });
   do {
     const list = await store.prisma.parsed_tv.findMany({
-      where: {
-        tv_id: tv.id,
-        user_id,
-      },
+      where: tv_where,
       // include: {
       //   binds: true,
       // },
       skip: (page - 1) * page_size,
       take: page_size,
     });
-    // console.log("删除", list.length, "个电视剧文件夹");
-    no_more = list.length === 0;
+    no_more = list.length + (page - 1) * page_size >= tv_count;
     page += 1;
     for (let i = 0; i < list.length; i += 1) {
       const parsed_tv = list[i];
-      const { drive_id, file_id, file_name } = parsed_tv;
+      const { drive_id, file_id } = parsed_tv;
       if (file_id) {
-        const client = new AliyunDriveClient({ drive_id, store });
-        // console.log("删除文件", file_name);
+        const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+        if (drive_res.error) {
+          continue;
+        }
+        const client = drive_res.data.client;
         const r = await client.delete_file(file_id);
         if (r.error) {
           has_error = true;
@@ -168,6 +190,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (has_error) {
     return e("删除过程出现错误，请重新删除");
   }
+
   await store.prisma.tv.delete({
     where: {
       id,
@@ -175,7 +198,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   res.status(200).json({
     code: 0,
-    msg: "",
+    msg: "删除成功",
     data: null,
   });
 }

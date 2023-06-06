@@ -13,7 +13,7 @@ import {
 import { ping_drive_status } from "./ping_drive_status";
 import { walk_added_files } from "./walk_added_files";
 import { clear_expired_shared_files_in_progress } from "./clear_expired_shared_files_in_progress";
-import { find_tv_need_complete } from "./find_tv_need_complete";
+// import { find_tv_need_complete } from "./find_tv_need_complete";
 
 /**
  * 理解方式就是，每秒，都会检查是否要执行对应任务
@@ -66,19 +66,19 @@ import { find_tv_need_complete } from "./find_tv_need_complete";
     true,
     "Asia/Shanghai"
   );
-  new CronJob.CronJob(
-    "0 50 * * * *",
-    async () => {
-      console.log(
-        "执行任务 at 0 50 * * * *",
-        dayjs().format("YYYY/MM/DD HH:mm:ss")
-      );
-      find_tv_need_complete(store);
-    },
-    null,
-    true,
-    "Asia/Shanghai"
-  );
+  // new CronJob.CronJob(
+  //   "0 50 * * * *",
+  //   async () => {
+  //     console.log(
+  //       "执行任务 at 0 50 * * * *",
+  //       dayjs().format("YYYY/MM/DD HH:mm:ss")
+  //     );
+  //     find_tv_need_complete(store);
+  //   },
+  //   null,
+  //   true,
+  //   "Asia/Shanghai"
+  // );
 
   // 每天8点执行
   new CronJob.CronJob(

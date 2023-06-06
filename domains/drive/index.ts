@@ -7,6 +7,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
 import { ArticleLineNode, ArticleSectionNode } from "@/domains/article";
 import { BaseDomain } from "@/domains/base";
+import { DatabaseStore } from "@/domains/store";
 import { Result, resultify } from "@/types";
 import { r_id } from "@/utils";
 import { store_factory } from "@/store";
@@ -14,7 +15,7 @@ import { DriveRecord } from "@/store/types";
 
 const drivePayloadSchema = Joi.object({
   app_id: Joi.string().required(),
-  drive_id: Joi.string().required(),
+  drive_id: Joi.number().required(),
   device_id: Joi.string().required(),
   user_name: Joi.string().allow(null, ""),
   nick_name: Joi.string().allow(null, ""),
@@ -22,6 +23,10 @@ const drivePayloadSchema = Joi.object({
   aliyun_user_id: Joi.string().required(),
   access_token: Joi.string().required(),
   refresh_token: Joi.string().required(),
+  name: Joi.string().allow(null, ""),
+  root_folder_id: Joi.string().allow(null, ""),
+  used_size: Joi.number().allow(null, 0),
+  total_size: Joi.number().allow(null, 0),
 });
 
 enum Events {
@@ -33,15 +38,17 @@ type TheTypesOfEvents = {
 type DriveProps = {
   id: string;
   profile: Pick<DriveRecord, "name" | "root_folder_id" | "root_folder_name">;
+  client: AliyunDriveClient;
   user_id: string;
-  store: ReturnType<typeof store_factory>;
+  store: DatabaseStore;
 };
 
 export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** create drive */
-  static async Get(values: { id: string; user_id: string; store: ReturnType<typeof store_factory> }) {
+  static async Get(values: { id: string; user_id: string; store: DatabaseStore }) {
     const { id, user_id, store } = values;
     const drive_res = await store.find_drive({ id, user_id });
+    console.log(id, user_id, drive_res.data);
     if (drive_res.error) {
       return Result.Err(drive_res.error);
     }
@@ -49,7 +56,12 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (profile === null) {
       return Result.Err("没有匹配的云盘记录");
     }
-    const { name, root_folder_id, root_folder_name } = profile;
+    const { name, drive_id, root_folder_id, root_folder_name } = profile;
+    const client_res = await AliyunDriveClient.Get({ drive_id, store });
+    if (client_res.error) {
+      return Result.Err(client_res);
+    }
+    const client = client_res.data;
     const drive = new Drive({
       id,
       profile: {
@@ -57,40 +69,73 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         root_folder_id,
         root_folder_name,
       },
+      client,
       user_id,
       store,
     });
     return Result.Ok(drive);
   }
-  static async New(body: { payload: AliyunDrivePayload; store: ReturnType<typeof store_factory>; user_id: string }) {
-    const { user_id, payload, store } = body;
+  static async Add(body: { payload: AliyunDrivePayload; user_id: string; store: DatabaseStore }) {
+    const { payload, user_id, store } = body;
     const r = await resultify(drivePayloadSchema.validateAsync.bind(drivePayloadSchema))(payload);
     if (r.error) {
       return Result.Err(r.error);
     }
-    const { app_id, drive_id, device_id, avatar, aliyun_user_id, user_name, nick_name, access_token, refresh_token } =
-      r.data as AliyunDrivePayload;
-    const existing_drive = await resultify(store.prisma.drive.findUnique.bind(store.prisma.drive))({
+    const {
+      app_id,
+      drive_id,
+      device_id,
+      avatar,
+      aliyun_user_id,
+      name,
+      user_name,
+      nick_name,
+      access_token,
+      refresh_token,
+      root_folder_id,
+      used_size,
+      total_size,
+    } = r.data as AliyunDrivePayload;
+    console.log("[DOMAINS]Drive - Add", drive_id);
+    const existing_drive = await store.prisma.drive.findUnique({
       where: {
         drive_id,
       },
     });
-    if (existing_drive.error) {
-      return Result.Err(existing_drive.error);
+    if (existing_drive) {
+      return Result.Err("该云盘已存在，请检查信息后重试", undefined, { id: existing_drive.id });
     }
-    if (existing_drive.data) {
-      return Result.Err("该云盘已存在，请检查信息后重试", undefined, { id: existing_drive.data.id });
+    const client = new AliyunDriveClient({
+      // 这里给一个空的是为了下面能调用 ping 方法
+      id: "",
+      drive_id,
+      device_id,
+      access_token,
+      refresh_token,
+      root_folder_id,
+      store,
+    });
+    const status_res = await client.ping();
+    if (status_res.error) {
+      const { message } = status_res.error;
+      if (message.includes("AccessToken is invalid")) {
+        return Result.Err("云盘信息有误");
+      }
+      return Result.Err(status_res.error);
     }
-    const created_drive = await resultify(store.prisma.drive.create.bind(store.prisma.drive))({
+    const created_drive = await store.prisma.drive.create({
       data: {
         id: r_id(),
-        name: user_name || nick_name,
+        name: name || user_name || nick_name,
         avatar,
         app_id,
         drive_id,
         device_id,
         aliyun_user_id,
         user_id,
+        root_folder_id: root_folder_id ?? null,
+        used_size: used_size ?? 0,
+        total_size: total_size ?? 0,
         drive_token: {
           create: {
             id: r_id(),
@@ -101,43 +146,41 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         },
       },
     });
-    if (created_drive.error) {
-      return Result.Err(created_drive.error);
-    }
-    const drive_data = created_drive.data;
-    const { name, root_folder_id, root_folder_name } = drive_data;
+    const drive_data = created_drive;
     const drive = new Drive({
       id: drive_data.id,
       profile: {
-        name,
-        root_folder_id,
-        root_folder_name,
+        name: drive_data.name,
+        root_folder_id: drive_data.root_folder_id,
+        root_folder_name: drive_data.root_folder_name,
       },
+      client,
       user_id,
       store,
     });
     return Result.Ok(drive);
   }
 
-  name: string;
-  /** 网盘 id */
+  /** 云盘 id */
   id: string;
-  /** 网盘所属用户 id */
+  /** 云盘名称 */
+  name: string;
+  /** 云盘所属用户 id */
   user_id: string;
   profile: DriveProps["profile"];
   client: AliyunDriveClient;
-  store: ReturnType<typeof store_factory>;
+  store: DatabaseStore;
 
   constructor(options: DriveProps) {
     super();
 
-    const { id, profile, user_id, store } = options;
+    const { id, profile, client, user_id, store } = options;
     this.name = profile.name;
     this.id = id;
     this.profile = profile;
     this.user_id = user_id;
     this.store = store;
-    this.client = new AliyunDriveClient({ drive_id: id, store });
+    this.client = client;
   }
 
   /**
@@ -171,7 +214,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /**
    * 刷新网盘 token
    */
-  async refresh_token() {
+  async refresh() {
     const { client, store } = this;
     const r = await client.refresh_profile();
     if (r.error) {
@@ -180,7 +223,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const { total_size, used_size } = r.data;
     await store.prisma.drive.update({
       where: {
-        drive_id: this.id,
+        id: this.id,
       },
       data: {
         total_size,
@@ -241,7 +284,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const { root_folder_id, root_folder_name } = r2.data;
     await store.prisma.drive.update({
       where: {
-        drive_id: this.id,
+        id: this.id,
       },
       data: {
         root_folder_id,

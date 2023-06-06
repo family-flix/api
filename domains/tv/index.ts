@@ -1,9 +1,7 @@
-import path from "path";
-
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { ImageUploader } from "@/domains/uploader";
-import { r_id } from "@/utils";
 import { store_factory } from "@/store";
+import { r_id } from "@/utils";
 import { Result } from "@/types";
 
 import { format_number_with_3decimals } from "./utils";
@@ -25,15 +23,14 @@ export class TV {
     const { assets } = options;
 
     this.assets = assets;
-    this.upload = new ImageUploader();
+    this.upload = new ImageUploader({ root: assets });
   }
 
   /** 上传海报 */
   async upload_poster(original_path: string) {
     const filename = `${r_id()}.jpg`;
     const key = `/poster/${filename}`;
-    const filepath = path.join(this.assets, key);
-    const r = await this.upload.download(original_path, filepath);
+    const r = await this.upload.download(original_path, key);
     if (r.error) {
       return Result.Ok({
         img_path: key,
@@ -43,11 +40,10 @@ export class TV {
       img_path: key,
     });
   }
-
   async snapshot_media(body: {
     file_id?: string;
     cur_time: number;
-    drive_id: string;
+    drive_id: number;
     store: ReturnType<typeof store_factory>;
   }) {
     const { file_id, cur_time: original_cur_time, drive_id, store } = body;
@@ -55,15 +51,19 @@ export class TV {
       return Result.Ok(null);
     }
     const cur_time = format_number_with_3decimals(original_cur_time);
-    const client = new AliyunDriveClient({ drive_id, store });
+    const client_res = await AliyunDriveClient.Get({ drive_id, store });
+    if (client_res.error) {
+      return Result.Ok(null);
+    }
+    const client = client_res.data;
     const thumbnail_res = await client.generate_thumbnail({ file_id, cur_time: cur_time.replace(".", "") });
     if (thumbnail_res.error) {
       return Result.Ok(null);
     }
     const filename = `${r_id()}.jpg`;
     const key = `/thumbnails/${filename}`;
-    const filepath = path.join(this.assets, key);
-    const r = await this.upload.download(thumbnail_res.data.responseUrl, filepath);
+    // const filepath = path.join(this.assets, key);
+    const r = await this.upload.download(thumbnail_res.data.responseUrl, key);
     if (r.error) {
       return Result.Ok(null);
     }
@@ -74,7 +74,7 @@ export class TV {
   }
   /** 删除指定截图 */
   delete_snapshot(key: string) {
-    const filepath = path.join(this.assets, key);
-    return this.upload.delete(filepath);
+    // const filepath = path.join(this.assets, key);
+    return this.upload.delete(key);
   }
 }

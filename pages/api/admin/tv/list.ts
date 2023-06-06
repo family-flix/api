@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size: string;
   }>;
   const { authorization } = req.headers;
-  const t_resp = await User.New(authorization);
+  const t_resp = await User.New(authorization, store);
   if (t_resp.error) {
     return e(t_resp);
   }

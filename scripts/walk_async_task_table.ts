@@ -8,42 +8,36 @@ import { AsyncTaskRecord, RecordCommonPart } from "@/store/types";
 import { store } from "@/store";
 
 import { walk_table_with_pagination } from "@/domains/walker/utils";
+import { walk_records } from "@/domains/store/utils";
+import { TaskStatus } from "@/domains/job/constants";
 
 async function run() {
-  await walk_table_with_pagination<AsyncTaskRecord & RecordCommonPart>(
-    store.find_task_list_with_pagination,
-    {
-      async on_handle(episode) {
-        const { id, status, created, updated } = episode;
-        if (created.includes("GMT")) {
-          const d = dayjs(created).toISOString();
-          const r = await store.update_task(id, {
-            // @ts-ignore
-            created: d,
-          });
-          if (r.error) {
-            console.log("created failed", r.error.message);
-          }
-        }
-        if (updated.includes("GMT")) {
-          const r = await store.update_task(id, {
-            // @ts-ignore
-            updated: dayjs(updated).toISOString(),
-          });
-          if (r.error) {
-            console.log("updated failed", r.error.message);
-          }
-        }
-        if (
-          status === "Running" &&
-          dayjs(created).isBefore(dayjs().add(1, "hour"))
-        ) {
-          console.log("update episode status");
-          console.log("need update status");
-        }
-      },
+  walk_records(store.prisma.async_task, {}, async (task) => {
+    const { id, status, created, updated } = task;
+    // if (created.includes("GMT")) {
+    //   const d = dayjs(created).toISOString();
+    //   const r = await store.update_task(id, {
+    //     // @ts-ignore
+    //     created: d,
+    //   });
+    //   if (r.error) {
+    //     console.log("created failed", r.error.message);
+    //   }
+    // }
+    // if (updated.includes("GMT")) {
+    //   const r = await store.update_task(id, {
+    //     // @ts-ignore
+    //     updated: dayjs(updated).toISOString(),
+    //   });
+    //   if (r.error) {
+    //     console.log("updated failed", r.error.message);
+    //   }
+    // }
+    if (status === TaskStatus.Running && dayjs(created).isBefore(dayjs().add(1, "hour"))) {
+      console.log("update episode status");
+      console.log("need update status");
     }
-  );
+  });
   console.log("Complete");
 }
 

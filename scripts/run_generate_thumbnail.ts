@@ -47,8 +47,16 @@ async function main() {
   // const { img_path } = r.data;
   // console.log(img_path, formatVideoTime(curTime));
   // console.log(r.data);
-  const drive = new AliyunDriveClient({ drive_id: "HOuEKtDerEOikQG", store });
-  const r = await drive.generate_thumbnail({ file_id: "646b8b7db3824acadb704145ad76010b63f0c525", cur_time: "715030" });
+  // const drive = new AliyunDriveClient({ drive_id: "HOuEKtDerEOikQG", store });
+  const client_res = await AliyunDriveClient.Get({ drive_id: 123, store });
+  if (client_res.error) {
+    return;
+  }
+  const client = client_res.data;
+  const r = await client.generate_thumbnail({
+    file_id: "646b8b7db3824acadb704145ad76010b63f0c525",
+    cur_time: "715030",
+  });
   if (r.error) {
     console.log(r.error.message);
     return;

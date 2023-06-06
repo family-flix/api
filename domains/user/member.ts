@@ -1,30 +1,24 @@
-import Joi, { Err } from "joi";
+import Joi from "joi";
+import { user } from "@prisma/client";
 
-import { Drive } from "@/domains/drive";
-import { List } from "@/domains/list";
-import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
+import { User } from "@/domains/user";
 import { Result, resultify } from "@/types";
 import { random_string } from "@/utils";
 import { store } from "@/store";
 
 import { Credentials } from "./services";
-import { compare, prepare, parse_token } from "./utils";
+import { prepare, parse_token } from "./utils";
 import { encode_token } from "./jwt";
 
 const credentialsSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{8,30}$")).required(),
+  email: Joi.string().email().message("邮箱错误").required(),
+  password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{8,30}$")).message("密码错误").required(),
 });
 
 type UserUniqueID = string;
+type MemberProps = { id: string; remark: string; user: User; token: string };
 
 export class Member {
-  /** 用户 id */
-  id: UserUniqueID;
-  nickname: string = "unknown";
-  /** JWT token */
-  token: string;
-
   /** token 秘钥 */
   static SECRET = "FLIX";
   /**
@@ -44,44 +38,69 @@ export class Member {
       return Result.Err(r.error);
     }
     const id = r.data.id as UserUniqueID;
-    const existing = await resultify(store.prisma.member.findUnique.bind(store.prisma.member))({ where: { id } });
-    if (existing.error) {
-      return Result.Err(existing.error);
-    }
-    if (existing.data === null) {
+    const member = await store.prisma.member.findUnique({
+      where: { id },
+      include: {
+        user: {
+          include: {
+            settings: true,
+          },
+        },
+      },
+    });
+    if (member === null) {
       return Result.Err("无效身份凭证");
     }
-    const user = new Member({ id, token });
-    return Result.Ok(user);
+    // const member = existing;
+    const user = new User({
+      id: member.user_id,
+      settings: member.user.settings,
+      token: "",
+    });
+    return Result.Ok(new Member({ id, remark: member.remark, user, token }));
   }
-  static async NewWithPassword(values: Partial<{ email: string; password: string }>) {
-    const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
-    if (r.error) {
-      return Result.Err(r.error);
+  /**
+   * User 类工厂函数
+   * @param id
+   * @returns
+   */
+  static async Validate(id?: string) {
+    if (!id) {
+      return Result.Err("缺少 token");
     }
-    const { email, password } = values as Credentials;
-    const credential = await store.prisma.credential.findUnique({
-      where: { email },
+    const member_token = await store.prisma.member_token.findFirst({
+      where: {
+        id,
+      },
       include: {
-        user: true,
+        member: {
+          include: {
+            user: {
+              include: {
+                settings: true,
+              },
+            },
+          },
+        },
       },
     });
-    if (credential === null) {
-      return Result.Err("该邮箱不存在");
+    if (member_token === null) {
+      return Result.Err("无效身份凭证");
     }
-    const matched = await compare(credential, password);
-    if (!matched) {
-      return Result.Err("密码错误");
-    }
-    const { id: user_id } = credential.user;
-    const token = await encode_token({
-      token: {
-        id: user_id,
-      },
-      secret: Member.SECRET,
+    const { token, member_id } = member_token;
+    const user = new User({
+      id: member_token.member.user.id,
+      settings: member_token.member.user.settings,
+      token: "",
     });
-    const user = new Member({ id: user_id, token });
-    return Result.Ok(user);
+    return Result.Ok(
+      new Member({
+        id: member_id,
+        remark: member_token.member.remark,
+        user,
+        token,
+      })
+    );
   }
   static async Add(values: Partial<{ email: string; password: string }>) {
     const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
@@ -146,12 +165,19 @@ export class Member {
     }
   }
 
-  constructor(options: { id: string; token: string }) {
-    const { id, token } = options;
-    // if (!token) {
-    //   throw new Error("缺少 token 参数");
-    // }
+  /** 用户 id */
+  id: UserUniqueID;
+  user: User;
+  nickname: string = "unknown";
+  remark: string = "unknown";
+  /** JWT token */
+  token: string;
+
+  constructor(options: MemberProps) {
+    const { id, user, remark, token } = options;
     this.id = id;
+    this.user = user;
+    this.remark = remark;
     this.token = token;
   }
   /** 补全信息 */

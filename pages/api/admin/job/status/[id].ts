@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少任务 id");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
@@ -31,5 +31,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     await job.pause({ force: true });
     return e("任务耗时过长，自动中止");
   }
-  res.status(200).json({ code: 0, msg: "", data: job.profile });
+  res.status(200).json({ code: 0, msg: "获取任务状态成功", data: job.profile });
 }

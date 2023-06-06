@@ -1,30 +1,37 @@
 import Joi from "joi";
 
-import { Drive } from "@/domains/drive";
-import { List } from "@/domains/list";
-import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
+import { DatabaseStore } from "@/domains/store";
 import { Result, resultify } from "@/types";
 import { r_id } from "@/utils";
-import { store } from "@/store";
 
 import { Credentials } from "./services";
 import { compare, prepare, parse_token } from "./utils";
 import { encode_token } from "./jwt";
 
 const credentialsSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{8,30}$")).required(),
+  email: Joi.string().email().message("邮箱格式错误").required(),
+  password: Joi.string()
+    .min(6)
+    .max(20)
+    .pattern(/^(?=.*[a-zA-Z])(?=.*[0-9!@#$%^&*(),.?":{}|<>])[a-zA-Z0-9!@#$%^&*(),.?":{}|<>]+$/)
+    .message("密码必须是6-20个字符，只能包含字母、数字和标点符号（除空格），并且至少包含两种类型的字符")
+    .required(),
 });
 
+type UserProps = {
+  id: string;
+  token: string;
+  settings?: Partial<{
+    qiniu_access_token: string | null;
+    qiniu_secret_token: string | null;
+    qiniu_scope: string | null;
+    tmdb_token: string | null;
+    assets: string | null;
+  }> | null;
+};
 type UserUniqueID = string;
 
 export class User {
-  /** 用户 id */
-  id: UserUniqueID;
-  nickname: string = "unknown";
-  /** JWT token */
-  token: string;
-
   /** token 秘钥 */
   static SECRET = "FLIX";
   /**
@@ -32,7 +39,7 @@ export class User {
    * @param token
    * @returns
    */
-  static async New(token?: string) {
+  static async New(token: string | undefined, store: DatabaseStore) {
     if (!token) {
       return Result.Err("缺少 token");
     }
@@ -44,18 +51,36 @@ export class User {
       return Result.Err(r.error);
     }
     const id = r.data.id as UserUniqueID;
-    const existing = await store.find_user({ id });
-    if (existing.error) {
-      return Result.Err(existing.error);
+    const existing = await store.prisma.user.findFirst({
+      where: {
+        id,
+      },
+      include: {
+        settings: true,
+      },
+    });
+    if (!existing) {
+      return Result.Err("无效的 token");
     }
-    if (!existing.data) {
-      return Result.Err("token 已失效");
-    }
+    const { settings } = existing;
     // 要不要生成一个新的 token？
-    const user = new User({ id, token });
+    const user = new User({
+      id,
+      token,
+      settings: (() => {
+        if (settings === null) {
+          return {};
+        }
+        const { tmdb_token, assets, qiniu_access_token, qiniu_secret_token, qiniu_scope } = settings;
+        return {
+          tmdb_token: tmdb_token,
+          assets,
+        };
+      })(),
+    });
     return Result.Ok(user);
   }
-  static async NewWithPassword(values: Partial<{ email: string; password: string }>) {
+  static async NewWithPassword(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
     const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
     if (r.error) {
       return Result.Err(r.error);
@@ -83,7 +108,19 @@ export class User {
     const user = new User({ id: user_id, token });
     return Result.Ok(user);
   }
-  static async Add(values: Partial<{ email: string; password: string }>) {
+  static async Add(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
+    const users = await store.prisma.user.findMany({
+      include: {
+        credential: true,
+      },
+      take: 1,
+      orderBy: {
+        created: "asc",
+      },
+    });
+    if (users.length !== 0) {
+      return Result.Err(`已经有管理员账号了，邮箱为 ${users[0].credential?.email}`);
+    }
     const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
     if (r.error) {
       return Result.Err(r.error);
@@ -147,47 +184,80 @@ export class User {
       return Result.Err(e);
     }
   }
+  /** 修改指定邮箱密码 */
+  static async ChangePassword(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
+    const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { email, password: pw } = values as Credentials;
+    const existing_credential = await store.prisma.credential.findUnique({
+      where: { email },
+    });
+    if (!existing_credential) {
+      return Result.Err("该邮箱未注册");
+    }
+    const { id: credential_id } = existing_credential;
+    const { password, salt } = await prepare(pw);
+    const update_res = await store.prisma.credential.update({
+      where: {
+        id: credential_id,
+      },
+      data: {
+        password,
+        salt,
+      },
+      include: {
+        user: true,
+      },
+    });
+    const { user } = update_res;
+    const res = await User.Token({ id: user.id });
+    if (res.error) {
+      return Result.Err(res.error);
+    }
+    const token = res.data;
+    return Result.Ok({
+      id: user.id,
+      token,
+    });
+  }
 
-  constructor(options: { id: string; token: string }) {
-    const { id, token } = options;
-    // if (!token) {
-    //   throw new Error("缺少 token 参数");
-    // }
+  /** 用户 id */
+  id: UserUniqueID;
+  nickname: string = "unknown";
+  /** JWT token */
+  token: string;
+  settings: {
+    qiniu_access_token?: string;
+    qiniu_secret_token?: string;
+    qiniu_scope?: string;
+    tmdb_token?: string;
+    assets: string;
+  };
+
+  constructor(options: UserProps) {
+    const { id, token, settings } = options;
     this.id = id;
     this.token = token;
+    this.settings = (() => {
+      if (!settings) {
+        return {
+          assets: "./public",
+        };
+      }
+      const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, assets } = settings;
+      return {
+        qiniu_access_token: qiniu_access_token ?? undefined,
+        qiniu_secret_token: qiniu_secret_token ?? undefined,
+        qiniu_scope: qiniu_scope ?? undefined,
+        tmdb_token: tmdb_token ?? undefined,
+        assets: assets ?? "./public",
+      };
+    })();
   }
   /** 补全信息 */
   async register(values: Partial<{ email: string; password: string }>) {}
   /** 密码登录 */
   async login_with_password(values: Partial<{ email: string; password: string }>) {}
-
-  /** 添加云盘 */
-  async add_drive(body: { payload: AliyunDrivePayload }) {
-    const { payload } = body;
-    return Drive.New({ payload, user_id: this.id, store });
-  }
-  /** 根据 id 获取一个 Drive 实例 */
-  async get_drive(id?: string) {
-    if (!id) {
-      return Result.Err("缺少 drive id 参数");
-    }
-    return Drive.Get({ id, user_id: this.id, store });
-  }
-  /** 按分页返回该用户所有网盘 */
-  async list_drives_with_pagination(
-    params: Partial<{
-      page: string;
-      page_size: string;
-    }>
-  ) {
-    const { page = 1, page_size = 10 } = params;
-    const core = new List(store.prisma.drive, {
-      page: Number(page),
-      page_size: Number(page_size),
-      search: {
-        user_id: this.id,
-      },
-    });
-    return core.fetch();
-  }
 }

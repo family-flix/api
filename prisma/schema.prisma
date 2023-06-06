@@ -16,7 +16,7 @@ model drive {
         name             String
         avatar           String
         // 阿里云对网盘的唯一标志，每次请求都需要带上该参数
-        drive_id         String    @unique
+        drive_id         Int       @unique
         device_id        String
         aliyun_user_id   String
         // user_name        String
@@ -731,12 +731,13 @@ model settings {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        upload_tmdb_image  Int?    @default(0)
         qiniu_access_token String?
         qiniu_secret_token String?
         qiniu_scope        String?
         push_deer_token    String?
         tmdb_token         String?
+        // 静态资源路径前缀
+        assets             String?
         websites           String?
 
         user_id String @unique

@@ -4,50 +4,33 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { User } from "@/domains/user";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { r_id } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const {
-    url,
-    tv_id,
-    // file_id,
-    // file_name,
-    target_file_id,
-  } = req.body as Partial<{
+  const { url, tv_id, target_file_id } = req.body as Partial<{
     url: string;
     tv_id: string;
-    /** 分享文件夹 id */
-    // file_id: string;
-    /** 分享文件夹名称(同时也会用这个名字去网盘中找同名的) */
-    // file_name: string;
     /** 云盘文件夹 file_id。如果指定了该参数，就不会使用 file_name 去网盘中找同名，直接使用该参数 */
     target_file_id: string;
   }>;
-  // if (!file_id) {
-  //   return e("缺少分享文件夹 id 参数");
-  // }
-  // if (!file_name) {
-  //   return e("缺少分享文件夹名称参数");
-  // }
   if (!url) {
-    return e("缺少分享链接参数");
+    return e("缺少分享资源链接");
   }
   if (!tv_id) {
     return e("缺少电视剧 id");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-
   const sync_task = await store.prisma.bind_for_parsed_tv.findFirst({
     where: {
       url,
@@ -72,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   if (sync_task && sync_task.parsed_tv.tv) {
     const { name, original_name } = sync_task.parsed_tv.tv.profile;
-    return e(Result.Err(`该分享资源已经与 ${name || original_name} 建立了同步任务`));
+    return e(Result.Err(`该分享资源已经与 ${name || original_name} 建立了更新任务`));
   }
   // console.log("tv", tv_id, user_id);
   const tv = await store.prisma.tv.findFirst({
@@ -92,7 +75,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("该电视剧没有可以关联的文件夹");
   }
   const random_drive_id = parsed_tvs[0].drive_id;
-  const client = new AliyunDriveClient({ drive_id: random_drive_id, store });
+  const drive_res = await Drive.Get({ id: random_drive_id, user_id, store });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
+  const client = drive.client;
   const r1 = await client.fetch_share_profile(url);
   if (r1.error) {
     return e(r1);
@@ -137,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     return Result.Err(
       "该分享没有和电视剧匹配的文件夹，请手动选择",
-      "20001",
+      20001,
       parsed_tvs
         .filter((folder) => {
           return !!folder.file_id;
@@ -169,5 +157,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id,
     },
   });
-  res.status(200).json({ code: 0, msg: "", data: null });
+  res.status(200).json({ code: 0, msg: "创建更新任务成功", data: null });
 }

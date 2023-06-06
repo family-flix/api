@@ -14,12 +14,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
 
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-
+  const user = t_res.data;
+  const { id: user_id, settings } = user;
   let page = 1;
   let no_more = false;
   const page_size = 20;
@@ -44,12 +44,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const task = tasks[i];
         const { url, file_id, name, parsed_tv_id, parsed_tv } = task;
         const { drive_id } = parsed_tv;
-        const t = new ResourceSyncTask({
-          task,
-          user_id,
-          drive_id,
-          store,
-        });
+        // const task_res = await ResourceSyncTask.Get({
+        //   id,
+        //   user,
+        //   drive,
+        //   client,
+        //   store,
+        //   TMDB_TOKEN: settings.tmdb_token,
+        //   assets: settings.assets,
+        // });
         // await run_sync_task(
         //   {
         //     ...task,

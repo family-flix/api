@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { TVProfileItemInTMDB } from "@/domains/tmdb/services";
 import { User } from "@/domains/user";
-import { add_tv_from_parsed_tv_sub } from "@/domains/walker/search_tv_in_tmdb_then_update_tv";
+import { MediaSearcher } from "@/domains/searcher";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp } from "@/types";
@@ -20,11 +20,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少未识别文件夹 id");
   }
-  const t_resp = await User.New(authorization);
+  const t_resp = await User.New(authorization, store);
   if (t_resp.error) {
     return e(t_resp);
   }
-  const { id: user_id } = t_resp.data;
+  const { id: user_id, settings } = t_resp.data;
+  if (!settings.tmdb_token) {
+    return e("缺少 TMDB_TOKEN");
+  }
   const tv_res = await store.find_parsed_tv({ id, user_id });
   if (tv_res.error) {
     return e(tv_res);
@@ -32,7 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!tv_res.data) {
     return e("没有匹配的文件夹记录");
   }
-  // const unknown_tv = tv_resp.data;
+  const parsed_tv = tv_res.data;
+  const { drive_id } = parsed_tv;
   // if (unknown_tv.tv_profile_id) {
   //   return e("该电视剧已有匹配的电视剧信息");
   // }
@@ -49,20 +53,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (profile === null) {
     return e("没有匹配的电视剧详情");
   }
-  const r2 = await add_tv_from_parsed_tv_sub(
-    {
-      profile,
-      parsed_tv: tv_res.data,
-    },
-    {
-      user_id,
-      store,
-      need_upload_image: true,
-      token: process.env.TMDB_TOKEN,
-    }
-  );
+  const search = new MediaSearcher({
+    user_id,
+    drive_id,
+    token: settings.tmdb_token,
+    assets: settings.assets,
+    store,
+  });
+  const r2 = await search.link_tv_to_parsed_tv({
+    parsed_tv,
+    profile,
+  });
   if (r2.error) {
     return e(r2);
   }
-  res.status(200).json({ code: 0, msg: "", data: null });
+  res.status(200).json({ code: 0, msg: "关联成功", data: null });
 }

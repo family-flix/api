@@ -16,7 +16,7 @@ export const Result = {
     return result;
   },
   /** 构造失败结果 */
-  Err: <T>(message: string | Error | Result<null>, code?: string, data: unknown = null) => {
+  Err: <T>(message: string | Error | Result<null>, code?: number | string, data: unknown = null) => {
     const result = {
       data,
       code,

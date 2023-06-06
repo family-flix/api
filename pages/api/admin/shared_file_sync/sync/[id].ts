@@ -18,16 +18,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少同步任务 id");
   }
-  if (!process.env.TMDB_TOKEN) {
-    return e("缺少 TMDB_TOKEN");
-  }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id } = user;
-  const task_res = await ResourceSyncTask.Get({ id, user, store, TMDB_TOKEN: process.env.TMDB_TOKEN });
+  const { id: user_id, settings } = user;
+  const task_res = await ResourceSyncTask.Get({
+    id,
+    user,
+    store,
+    TMDB_TOKEN: settings.tmdb_token,
+    assets: settings.assets,
+  });
   if (task_res.error) {
     return e(task_res);
   }

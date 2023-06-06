@@ -23,19 +23,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id } = user;
+  const { id: user_id, settings } = user;
   const drive_res = await Drive.Get({ id: drive_id, user_id, store });
   if (drive_res.error) {
     return e(drive_res);
   }
   const drive = drive_res.data;
   if (!drive.has_root_folder()) {
-    return e(Result.Err("请先设置索引目录", "30001"));
+    return e(Result.Err("请先设置索引目录", 30001));
   }
   const job_res = await Job.New({ desc: `索引云盘 '${drive.name}'`, unique_id: drive.id, user_id, store });
   if (job_res.error) {
@@ -60,7 +60,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive,
     store,
     user,
-    TMDB_TOKEN: process.env.TMDB_TOKEN,
+    TMDB_TOKEN: settings.tmdb_token,
+    assets: settings.assets,
     on_print(v) {
       job.output.write(v);
     },
@@ -87,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   analysis.run();
   res.status(200).json({
     code: 0,
-    msg: "",
+    msg: "索引任务已开始",
     data: {
       job_id: job.id,
     },

@@ -5,7 +5,6 @@ import { is_video_file } from "@/utils";
 import { log } from "@/logger/log";
 import { pagination_factory, store_factory } from "@/store";
 import { ParsedTVRecord, ParsedEpisodeRecord, RecordCommonPart, ParsedSeasonRecord } from "@/store/types";
-import { qiniu_upload_online_file } from "@/utils/back_end";
 import { Result, resultify } from "@/types";
 import { FileType } from "@/constants";
 
@@ -509,41 +508,6 @@ export async function walk_table_with_pagination<T>(
     page += 1;
   } while (no_more === false);
   return Result.Ok(null);
-}
-
-/**
- * 上传 tmdb 图片到七牛云
- * @param tmdb
- * @returns
- */
-export async function upload_tmdb_images(tmdb: { tmdb_id: number; poster_path?: string; backdrop_path?: string }) {
-  const { tmdb_id, poster_path, backdrop_path } = tmdb;
-  // log("[]upload_tmdb_images", tmdb_id, poster_path, backdrop_path);
-  const result = {
-    poster_path,
-    backdrop_path,
-  };
-  if (poster_path && poster_path.includes("tmdb.org")) {
-    const r = await qiniu_upload_online_file(poster_path, `/poster/${tmdb_id}`);
-    if (r.error) {
-      log("[]upload poster failed", r.error.message);
-    }
-    if (r.data) {
-      const { url } = r.data;
-      result.poster_path = url;
-    }
-  }
-  if (backdrop_path && backdrop_path.includes("themoviedb.org")) {
-    const r = await qiniu_upload_online_file(backdrop_path, `/backdrop/${tmdb_id}`);
-    if (r.error) {
-      log("[]upload backdrop failed", r.error.message);
-    }
-    if (r.data) {
-      const { url } = r.data;
-      result.backdrop_path = url;
-    }
-  }
-  return result;
 }
 
 /** 遍历完云盘后的整个文件树 */

@@ -1,4 +1,8 @@
+/**
+ * @file 图片上传器
+ */
 import { ReadStream, createWriteStream, writeFileSync, unlink } from "fs";
+import { join } from "path";
 
 import axios from "axios";
 
@@ -6,8 +10,13 @@ import { Result } from "@/types";
 import { ensure } from "@/utils/back_end";
 
 export class ImageUploader {
+  root: string;
+  constructor(options: { root: string }) {
+    const { root } = options;
+    this.root = root;
+  }
   /** 网络地址转成 Stream 流 */
-  async request_online_url_to_stream(url: string) {
+  async online_url_to_stream(url: string) {
     try {
       const { data } = await axios.get<ReadStream>(url, {
         responseType: "stream",
@@ -34,25 +43,27 @@ export class ImageUploader {
     });
   }
   /** 下载网络图片到本地 */
-  async download(url: string, dest: string): Promise<Result<string>> {
+  async download(url: string, key: string): Promise<Result<string>> {
     const response = await axios({
       url,
       method: "GET",
       responseType: "stream",
     });
+    const filepath = join(this.root, key);
     return new Promise((resolve) => {
       response.data
-        .pipe(createWriteStream(dest))
+        .pipe(createWriteStream(filepath))
         .on("error", (err: Error) => {
           resolve(Result.Err(err.message));
         })
-        .once("close", () => resolve(Result.Ok(dest)));
+        .once("close", () => resolve(Result.Ok(filepath)));
     });
   }
   /** 删除本地图片 */
   async delete(key: string) {
+    const filepath = join(this.root, key);
     return new Promise((resolve) => {
-      unlink(key, (err) => {
+      unlink(filepath, (err) => {
         if (err) {
           resolve(Result.Err(err.message));
           return;

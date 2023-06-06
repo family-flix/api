@@ -20,7 +20,7 @@ export default async function handler(
   if (!name) {
     return e("请传入文件夹名称");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }

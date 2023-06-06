@@ -4,17 +4,21 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
-import { store } from "@/store";
 import { User } from "@/domains/user";
 import { TMDBClient } from "@/domains/tmdb";
 import { TVProfileFromTMDB } from "@/domains/tmdb/services";
+import { BaseApiResp } from "@/types";
+import { response_error_factory } from "@/utils/backend";
 import { TVProfileRecord } from "@/store/types";
+import { store } from "@/store";
 
 function need_update_profile(existing_profile: TVProfileRecord, cur: TVProfileFromTMDB) {
-  const { name, overview, poster_path, popularity, number_of_episodes, number_of_seasons } = cur;
+  const { name, overview, poster_path, backdrop_path, popularity, number_of_episodes, number_of_seasons } = cur;
   const body: Partial<{
+    name: string;
+    overview: string;
+    poster_path: string;
+    backdrop_path: string;
     season_count: number;
     episode_count: number;
     popularity: number;
@@ -27,6 +31,18 @@ function need_update_profile(existing_profile: TVProfileRecord, cur: TVProfileFr
   }
   if (popularity !== null && popularity !== existing_profile.popularity) {
     body.popularity = popularity;
+  }
+  if (name !== null && name !== existing_profile.name) {
+    body.name = name;
+  }
+  if (overview !== null && overview !== existing_profile.overview) {
+    body.overview = overview;
+  }
+  if (poster_path !== null && poster_path !== existing_profile.poster_path) {
+    body.poster_path = poster_path;
+  }
+  if (backdrop_path !== null && backdrop_path !== existing_profile.backdrop_path) {
+    body.backdrop_path = backdrop_path;
   }
   if (Object.keys(body).length === 0) {
     return null;
@@ -41,11 +57,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少电视剧 id");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const { id: user_id, settings } = t_res.data;
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
@@ -62,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     profile: { tmdb_id },
   } = tv;
   const client = new TMDBClient({
-    token: process.env.TMDB_TOKEN,
+    token: settings.tmdb_token,
   });
   const r = await client.fetch_tv_profile(tmdb_id);
   if (r.error) {
@@ -72,12 +88,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (update_payload === null) {
     res.status(200).json({
       code: 0,
-      msg: "",
+      msg: "没有要更新的内容",
       data: null,
     });
     return;
   }
-  const r2 = await store.prisma.tv_profile.update({
+  await store.prisma.tv_profile.update({
     where: {
       id: tv.profile.id,
     },
@@ -85,7 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   res.status(200).json({
     code: 0,
-    msg: "",
+    msg: "更新成功",
     data: null,
   });
 }

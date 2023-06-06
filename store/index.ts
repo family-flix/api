@@ -1,13 +1,14 @@
+import dayjs from "dayjs";
 import { PrismaClient } from "@prisma/client";
 
 import { List } from "@/domains/list";
 import { AliyunDriveFolder } from "@/domains/folder";
 import { Result, resultify, Unpacked } from "@/types";
 import { r_id } from "@/utils";
+import { DatabaseStore } from "@/domains/store";
+import { FileType } from "@/constants";
 
 import { ModelKeys } from "./types";
-import { FileType } from "@/constants";
-import dayjs from "dayjs";
 
 function add_factory<T extends PrismaClient[ModelKeys]>(model: T, options: Partial<{ safe: boolean }> = {}) {
   const { safe } = options;
@@ -158,6 +159,7 @@ export function pagination_factory<T extends PrismaClient[ModelKeys]>(model: T) 
 export const store_factory = (prisma: PrismaClient) => {
   return {
     prisma,
+    table_names: [] as ModelKeys[],
     clear_dataset: (name: ModelKeys) => {
       // @ts-ignore
       return prisma[name].deleteMany({});
@@ -185,6 +187,7 @@ export const store_factory = (prisma: PrismaClient) => {
     /** 云盘 */
     add_drive: add_factory<PrismaClient["drive"]>(prisma.drive),
     update_drive: update_factory<PrismaClient["drive"]>(prisma.drive),
+    delete_drive: delete_factory<PrismaClient["drive"]>(prisma.drive),
     find_drive: first_factory<PrismaClient["drive"]>(prisma.drive),
     find_drive_list: many_factory<PrismaClient["drive"]>(prisma.drive),
     find_drive_list_with_pagination: pagination_factory<PrismaClient["drive"]>(prisma.drive),
@@ -384,7 +387,7 @@ export const store = store_factory(new PrismaClient());
  * @param store
  * @returns
  */
-export function folder_client(body: { drive_id: string }, store: ReturnType<typeof store_factory>) {
+export function folder_client(body: { drive_id: string }, store: DatabaseStore) {
   const { drive_id } = body;
   return {
     async fetch_file(id: string) {

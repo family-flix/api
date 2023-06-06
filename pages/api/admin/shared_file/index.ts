@@ -23,9 +23,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     next_marker: string;
   }>;
   if (!url) {
-    return e("缺少分享链接参数");
+    return e("缺少分享资源链接");
   }
-  const t_res = await User.New(authorization);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
@@ -36,12 +36,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = first_drive_res.data;
   if (!drive) {
-    return e(Result.Err("请先添加一个云盘", "10002"));
+    return e(Result.Err("请先添加一个云盘", 10002));
   }
-  const client = new AliyunDriveClient({ drive_id: drive.id, store });
+  console.log(drive.name);
+  const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+  if (client_res.error) {
+    return e(client_res);
+  }
+  const client = client_res.data;
   const r1 = await client.fetch_share_profile(url);
   if (r1.error) {
-    return r1;
+    if (r1.error.message.includes("share_link is cancelled by the creator")) {
+      return e("分享链接被取消");
+    }
+    return e(r1);
   }
   const { share_id, share_title } = r1.data;
   if (parent_file_id === "root") {
