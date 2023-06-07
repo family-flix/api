@@ -5,7 +5,6 @@ import fs from "fs/promises";
 import path from "path";
 import http from "http";
 
-import FormData from "form-data";
 import qiniu from "qiniu";
 import axios from "axios";
 

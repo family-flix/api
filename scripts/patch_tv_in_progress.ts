@@ -1,14 +1,13 @@
 /**
  * @file 新增连载中的电视剧
  */
-import { Result } from "@/types";
-import { store_factory } from "@/store";
 
 import { notice_error, notice_push_deer } from "./notice";
 import { is_video_file, parse_filename_for_video } from "@/utils";
 import { DiffTypes } from "@/domains/folder_differ";
+import { DatabaseStore } from "@/domains/store";
 
-export async function patch_shared_files(store: ReturnType<typeof store_factory>) {
+export async function patch_shared_files(store: DatabaseStore) {
   // if (!process.env.Prod) {
   //   console.log("非正式环境请不要执行该代码，可能导致重复增加影片");
   //   return;
@@ -113,84 +112,84 @@ export async function patch_shared_files(store: ReturnType<typeof store_factory>
   // return Result.Ok(null);
 }
 
-export async function check_tv_in_progress_is_completed(store: ReturnType<typeof store_factory>) {
+export async function check_tv_in_progress_is_completed(store: DatabaseStore) {
   // console.log("start compare shared files");
-//   const in_progress_res = await store.find_shared_file_save_list({
-//     complete: 0,
-//     target_file_id: "not null",
-//   });
-//   if (in_progress_res.error) {
-//     return notice_error(in_progress_res);
-//   }
-//   const in_progress_list = in_progress_res.data;
-//   for (let i = 0; i < in_progress_list.length; i += 1) {
-//     const in_progress = in_progress_list[i];
-//     const { name, original_name, episode_count } = parse_filename_for_video(in_progress.name, [
-//       "name",
-//       "original_name",
-//       "episode_count",
-//     ]);
-//     // console.log("prepare patch tv in progress", in_progress.name);
-//     if (!episode_count) {
-//       continue;
-//     }
-//     if (!name && !original_name) {
-//       // 这种情况不太可能出现
-//       continue;
-//     }
-//     const { target_file_id } = in_progress;
-//     if (!target_file_id) {
-//       continue;
-//     }
-//     // const is_complete = episode_count.match(/完结/);
-//     // if (is_complete) {
-//     //   await store.update_shared_files_in_progress(in_progress.id, {
-//     //     complete: 1,
-//     //   });
-//     //   continue;
-//     // }
-//     const count = episode_count.match(/[0-9]{1,}/);
-//     if (!count) {
-//       continue;
-//     }
-//     const r = await store.operation.get<{
-//       id: string;
-//     }>(`SELECT searched_tv.poster_path,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.first_air_date,tv.id 
-// FROM tv 
-// INNER JOIN searched_tv 
-// ON tv.tv_profile_id = searched_tv.id 
-// WHERE searched_tv.name = '${name}' OR searched_tv.original_name = '${original_name}';`);
-//     if (r.error) {
-//       notice_error(r);
-//       continue;
-//     }
-//     if (!r.data) {
-//       continue;
-//     }
-//     const tv_id = r.data.id;
-//     console.log("matched tv id", in_progress.name, tv_id);
-//     const sql = `SELECT
-//     (SELECT COUNT(*) FROM episode WHERE tv_id = '${tv_id}') AS total_videos,
-//     (SELECT COUNT(*) FROM (SELECT DISTINCT SUBSTR(episode, 1, INSTR(episode, 'E') - 1) AS episode_number FROM episode WHERE tv_id = '${tv_id}')) AS total_episodes,
-//     (SELECT COUNT(*) FROM (SELECT DISTINCT episode FROM episode WHERE tv_id = '${tv_id}')) AS distinct_videos;`;
-//     const r2 = await store.operation.get<{
-//       total_videos: number;
-//       total_episodes: number;
-//       /** 不重复影片数 */
-//       distinct_videos: number;
-//     }>(sql);
-//     // console.log("is completed?", in_progress.name, r2);
-//     if (r2.error) {
-//       notice_error(r2);
-//       continue;
-//     }
-//     const { distinct_videos } = r2.data;
-//     if (distinct_videos !== Number(count[0])) {
-//       continue;
-//     }
-//     console.log(`${in_progress.name} 已完结`);
-//     store.update_shared_file_save(in_progress.id, {
-//       complete: 1,
-//     });
-//   }
+  //   const in_progress_res = await store.find_shared_file_save_list({
+  //     complete: 0,
+  //     target_file_id: "not null",
+  //   });
+  //   if (in_progress_res.error) {
+  //     return notice_error(in_progress_res);
+  //   }
+  //   const in_progress_list = in_progress_res.data;
+  //   for (let i = 0; i < in_progress_list.length; i += 1) {
+  //     const in_progress = in_progress_list[i];
+  //     const { name, original_name, episode_count } = parse_filename_for_video(in_progress.name, [
+  //       "name",
+  //       "original_name",
+  //       "episode_count",
+  //     ]);
+  //     // console.log("prepare patch tv in progress", in_progress.name);
+  //     if (!episode_count) {
+  //       continue;
+  //     }
+  //     if (!name && !original_name) {
+  //       // 这种情况不太可能出现
+  //       continue;
+  //     }
+  //     const { target_file_id } = in_progress;
+  //     if (!target_file_id) {
+  //       continue;
+  //     }
+  //     // const is_complete = episode_count.match(/完结/);
+  //     // if (is_complete) {
+  //     //   await store.update_shared_files_in_progress(in_progress.id, {
+  //     //     complete: 1,
+  //     //   });
+  //     //   continue;
+  //     // }
+  //     const count = episode_count.match(/[0-9]{1,}/);
+  //     if (!count) {
+  //       continue;
+  //     }
+  //     const r = await store.operation.get<{
+  //       id: string;
+  //     }>(`SELECT searched_tv.poster_path,searched_tv.name,searched_tv.original_name,searched_tv.overview,searched_tv.first_air_date,tv.id
+  // FROM tv
+  // INNER JOIN searched_tv
+  // ON tv.tv_profile_id = searched_tv.id
+  // WHERE searched_tv.name = '${name}' OR searched_tv.original_name = '${original_name}';`);
+  //     if (r.error) {
+  //       notice_error(r);
+  //       continue;
+  //     }
+  //     if (!r.data) {
+  //       continue;
+  //     }
+  //     const tv_id = r.data.id;
+  //     console.log("matched tv id", in_progress.name, tv_id);
+  //     const sql = `SELECT
+  //     (SELECT COUNT(*) FROM episode WHERE tv_id = '${tv_id}') AS total_videos,
+  //     (SELECT COUNT(*) FROM (SELECT DISTINCT SUBSTR(episode, 1, INSTR(episode, 'E') - 1) AS episode_number FROM episode WHERE tv_id = '${tv_id}')) AS total_episodes,
+  //     (SELECT COUNT(*) FROM (SELECT DISTINCT episode FROM episode WHERE tv_id = '${tv_id}')) AS distinct_videos;`;
+  //     const r2 = await store.operation.get<{
+  //       total_videos: number;
+  //       total_episodes: number;
+  //       /** 不重复影片数 */
+  //       distinct_videos: number;
+  //     }>(sql);
+  //     // console.log("is completed?", in_progress.name, r2);
+  //     if (r2.error) {
+  //       notice_error(r2);
+  //       continue;
+  //     }
+  //     const { distinct_videos } = r2.data;
+  //     if (distinct_videos !== Number(count[0])) {
+  //       continue;
+  //     }
+  //     console.log(`${in_progress.name} 已完结`);
+  //     store.update_shared_file_save(in_progress.id, {
+  //       complete: 1,
+  //     });
+  //   }
 }

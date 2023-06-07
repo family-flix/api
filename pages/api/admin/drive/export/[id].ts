@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { access_token, refresh_token } = drive_token_res.data;
   res.status(200).json({
     code: 0,
-    msg: "",
+    msg: "导出成功",
     data: {
       app_id,
       drive_id,

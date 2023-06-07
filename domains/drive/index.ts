@@ -6,12 +6,11 @@ import Joi from "joi";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
 import { ArticleLineNode, ArticleSectionNode } from "@/domains/article";
+import { DriveRecord } from "@/domains/store/types";
 import { BaseDomain } from "@/domains/base";
 import { DatabaseStore } from "@/domains/store";
 import { Result, resultify } from "@/types";
 import { r_id } from "@/utils";
-import { store_factory } from "@/store";
-import { DriveRecord } from "@/store/types";
 
 const drivePayloadSchema = Joi.object({
   app_id: Joi.string().required(),

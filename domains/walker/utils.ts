@@ -1,9 +1,8 @@
 import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
 import { SearchedEpisode } from "@/domains/walker";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { DatabaseStore } from "@/domains/store";
 import { is_video_file } from "@/utils";
-import { log } from "@/logger/log";
-import { pagination_factory, store_factory } from "@/store";
 import { ParsedTVRecord, ParsedEpisodeRecord, RecordCommonPart, ParsedSeasonRecord } from "@/store/types";
 import { Result, resultify } from "@/types";
 import { FileType } from "@/constants";
@@ -26,25 +25,25 @@ export type ExtraUserAndDriveInfo = {
 export async function add_parsed_infos_when_walk(
   data: SearchedEpisode,
   extra: ExtraUserAndDriveInfo,
-  store: ReturnType<typeof store_factory>
+  store: DatabaseStore
 ) {
   const { tv, season, episode } = data;
   const prefix = `${episode.parent_paths}/${episode.file_name}`;
-  log(`[${prefix}]`, "开始处理视频文件");
+  // log(`[${prefix}]`, "开始处理视频文件");
   const existing_episode_res = await store.find_parsed_episode({
     file_id: episode.file_id,
   });
   if (existing_episode_res.error) {
     // log("[ERROR]find episode request failed", existing_episode_res.error.message);
-    log(`[${prefix}]`, "判断视频文件是否存在失败");
+    // log(`[${prefix}]`, "判断视频文件是否存在失败");
     return Result.Err(existing_episode_res.error);
   }
   const existing_episode = existing_episode_res.data;
   if (!existing_episode) {
-    log(`[${prefix}]`, "是新视频文件");
+    // log(`[${prefix}]`, "是新视频文件");
     const tv_adding_res = await add_parsed_tv(data, extra, store);
     if (tv_adding_res.error) {
-      log(`[${prefix}]`, "新增电视剧信息失败", tv_adding_res.error.message);
+      // log(`[${prefix}]`, "新增电视剧信息失败", tv_adding_res.error.message);
       return Result.Err(tv_adding_res.error);
     }
     const season_adding_res = await add_parsed_season(
@@ -56,7 +55,7 @@ export async function add_parsed_infos_when_walk(
       store
     );
     if (season_adding_res.error) {
-      log(`[${prefix}]`, "新增季信息失败", season_adding_res.error.message);
+      // log(`[${prefix}]`, "新增季信息失败", season_adding_res.error.message);
       return Result.Err(season_adding_res.error);
     }
     const add_episode_res = await store.add_parsed_episode({
@@ -75,10 +74,10 @@ export async function add_parsed_infos_when_walk(
       drive_id: extra.drive_id,
     });
     if (add_episode_res.error) {
-      log(`[${prefix}]`, "视频文件保存失败", add_episode_res.error.message);
+      // log(`[${prefix}]`, "视频文件保存失败", add_episode_res.error.message);
       return add_episode_res;
     }
-    log(`[${prefix}]`, "视频文件保存成功");
+    // log(`[${prefix}]`, "视频文件保存成功");
     return Result.Ok(null);
   }
   const episode_payload: {
@@ -88,7 +87,7 @@ export async function add_parsed_infos_when_walk(
     id: existing_episode.id,
     body: {},
   };
-  log(`[${prefix}]`, "视频文件已存在，判断是否需要更新");
+  // log(`[${prefix}]`, "视频文件已存在，判断是否需要更新");
   const existing_tv_res = await store.find_parsed_tv({
     id: existing_episode.parsed_tv_id,
   });
@@ -98,12 +97,12 @@ export async function add_parsed_infos_when_walk(
   }
   const existing_tv = existing_tv_res.data;
   if (!existing_tv) {
-    log(`[${prefix}]`, "视频文件没有关联的电视剧记录，属于异常数据");
+    // log(`[${prefix}]`, "视频文件没有关联的电视剧记录，属于异常数据");
     return Result.Err("existing episode should have tv");
   }
   if (is_tv_changed(existing_tv, data)) {
     // prettier-ignore
-    log(`[${prefix}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
+    // log(`[${prefix}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
     const parsed_adding_res = await add_unique_parsed_tv(data, extra, store);
     if (parsed_adding_res.error) {
       return Result.Err(parsed_adding_res.error);
@@ -120,7 +119,7 @@ export async function add_parsed_infos_when_walk(
   }
   const existing_season = existing_season_res.data;
   if (!existing_season) {
-    log(`[${prefix}]`, "视频文件没有关联的季，属于异常数据");
+    // log(`[${prefix}]`, "视频文件没有关联的季，属于异常数据");
     return Result.Err("existing episode should have season");
   }
   if (is_season_changed(existing_season, data)) {
@@ -146,16 +145,16 @@ export async function add_parsed_infos_when_walk(
     episode_payload.body.size = episode.size;
   }
   if (Object.keys(episode_payload.body).length !== 0) {
-    log(`[${prefix}]`, "该视频文件信息发生改变，变更后的内容为", episode_payload.body);
+    // log(`[${prefix}]`, "该视频文件信息发生改变，变更后的内容为", episode_payload.body);
     const update_episode_res = await store.update_parsed_episode(episode_payload.id, episode_payload.body);
     if (update_episode_res.error) {
-      log(`[${prefix}]`, "视频文件更新失败", update_episode_res.error.message);
+      // log(`[${prefix}]`, "视频文件更新失败", update_episode_res.error.message);
       return update_episode_res;
     }
-    log(`[${prefix}]`, "视频文件更新成功");
+    // log(`[${prefix}]`, "视频文件更新成功");
     return Result.Ok(null);
   }
-  log(`[${prefix}]`, "视频文件没有变更");
+  // log(`[${prefix}]`, "视频文件没有变更");
   return Result.Ok(null);
 }
 
@@ -175,7 +174,7 @@ export async function adding_file_safely(
     size?: number;
   },
   extra: ExtraUserAndDriveInfo,
-  store: ReturnType<typeof store_factory>
+  store: DatabaseStore
 ) {
   const { file_id, name, parent_file_id, parent_paths, type, size = 0 } = file;
   const { drive_id, user_id } = extra;
@@ -219,16 +218,12 @@ export async function adding_file_safely(
  * @param extra
  * @returns
  */
-async function add_unique_parsed_tv(
-  data: SearchedEpisode,
-  extra: ExtraUserAndDriveInfo,
-  store: ReturnType<typeof store_factory>
-) {
+async function add_unique_parsed_tv(data: SearchedEpisode, extra: ExtraUserAndDriveInfo, store: DatabaseStore) {
   const { tv, episode } = data;
   // log("[UTIL]get_tv_id_by_name start", tv.name || tv.original_name);
   const { user_id, drive_id } = extra;
   const prefix = `${episode.parent_paths}/${episode.file_name}`;
-  log(`[${prefix}]`, "根据名称查找电视剧", tv.name || tv.original_name);
+  // log(`[${prefix}]`, "根据名称查找电视剧", tv.name || tv.original_name);
   const existing_tv_res = await resultify(store.prisma.parsed_tv.findFirst.bind(store.prisma.parsed_tv))({
     where: {
       OR: [
@@ -253,10 +248,10 @@ async function add_unique_parsed_tv(
     return Result.Err(existing_tv_res.error);
   }
   if (existing_tv_res.data) {
-    log(`[${prefix}]`, "查找到电视剧已存在且名称为", existing_tv_res.data.name || existing_tv_res.data.original_name);
+    // log(`[${prefix}]`, "查找到电视剧已存在且名称为", existing_tv_res.data.name || existing_tv_res.data.original_name);
     return Result.Ok(existing_tv_res.data);
   }
-  log(`[${prefix}]`, "电视剧", tv.name || tv.original_name, "不存在，新增");
+  // log(`[${prefix}]`, "电视剧", tv.name || tv.original_name, "不存在，新增");
   const parsed_tv_adding_res = await store.add_parsed_tv({
     file_id: tv.file_id || null,
     file_name: tv.file_name || null,
@@ -270,7 +265,7 @@ async function add_unique_parsed_tv(
     return Result.Err(parsed_tv_adding_res.error);
   }
   // log("[UTIL]get_tv_id_by_name end", tv.name || tv.original_name);
-  log(`[${prefix}]`, "为该视频文件新增电视剧", tv.name || tv.original_name, "成功");
+  // log(`[${prefix}]`, "为该视频文件新增电视剧", tv.name || tv.original_name, "成功");
   return Result.Ok(parsed_tv_adding_res.data);
 }
 
@@ -280,14 +275,10 @@ async function add_unique_parsed_tv(
  * @param extra
  * @returns
  */
-async function add_parsed_tv(
-  data: SearchedEpisode,
-  extra: ExtraUserAndDriveInfo,
-  store: ReturnType<typeof store_factory>
-) {
+async function add_parsed_tv(data: SearchedEpisode, extra: ExtraUserAndDriveInfo, store: DatabaseStore) {
   const { tv, episode } = data;
   const prefix = `${episode.parent_paths}/${episode.file_name}`;
-  log(`[${prefix}]`, "准备为该视频文件新增电视剧", tv.name || tv.original_name);
+  // log(`[${prefix}]`, "准备为该视频文件新增电视剧", tv.name || tv.original_name);
   const parsed_adding_res = await add_unique_parsed_tv(data, extra, store);
   if (parsed_adding_res.error) {
     return parsed_adding_res;
@@ -304,11 +295,11 @@ async function add_parsed_tv(
 async function add_unique_parsed_season(
   data: SearchedEpisode,
   extra: ExtraUserAndDriveInfo & { parsed_tv_id: string },
-  store: ReturnType<typeof store_factory>
+  store: DatabaseStore
 ) {
   const { season, episode } = data;
   const { user_id, drive_id } = extra;
-  log(`[${episode.file_name}]`, "查找是否已存在该季", season.season);
+  // log(`[${episode.file_name}]`, "查找是否已存在该季", season.season);
   const existing_season_res = await resultify(store.prisma.parsed_season.findFirst.bind(store.prisma.parsed_season))({
     where: {
       season_number: {
@@ -323,10 +314,10 @@ async function add_unique_parsed_season(
     return Result.Err(existing_season_res.error);
   }
   if (existing_season_res.data) {
-    log(`[${episode.file_name}]`, "季已存在", existing_season_res.data.season_number);
+    // log(`[${episode.file_name}]`, "季已存在", existing_season_res.data.season_number);
     return Result.Ok(existing_season_res.data);
   }
-  log(`[${episode.file_name}]`, "季", season.season, "不存在，新增");
+  // log(`[${episode.file_name}]`, "季", season.season, "不存在，新增");
   const parsed_season_adding_res = await store.add_parsed_season({
     parsed_tv_id: extra.parsed_tv_id,
     season_number: season.season,
@@ -340,7 +331,7 @@ async function add_unique_parsed_season(
     return Result.Err(parsed_season_adding_res.error);
   }
   // log("[UTIL]get_tv_id_by_name end", tv.name || tv.original_name);
-  log(`[${episode.file_name}]`, "为该视频文件新增季", season.season, "成功");
+  // log(`[${episode.file_name}]`, "为该视频文件新增季", season.season, "成功");
   return Result.Ok(parsed_season_adding_res.data);
 }
 
@@ -353,10 +344,10 @@ async function add_unique_parsed_season(
 async function add_parsed_season(
   data: SearchedEpisode,
   extra: ExtraUserAndDriveInfo & { parsed_tv_id: string },
-  store: ReturnType<typeof store_factory>
+  store: DatabaseStore
 ) {
   const { season, episode } = data;
-  log(`[${episode.file_name}]`, "准备为该视频文件新增电视剧季", season.season);
+  // log(`[${episode.file_name}]`, "准备为该视频文件新增电视剧季", season.season);
   const season_res = await add_unique_parsed_season(data, extra, store);
   if (season_res.error) {
     return Result.Err(season_res.error);
@@ -370,7 +361,7 @@ async function add_parsed_season(
 export async function change_episode_tv_id(
   new_tv: { id: string },
   episode: { id: string; tv_id: string },
-  store: ReturnType<typeof store_factory>
+  store: DatabaseStore
 ) {
   const episode_updated: { id: string; body: Record<string, string> } = {
     id: episode.id,
@@ -413,10 +404,10 @@ export function build_folder_tree(records: ParsedEpisodeRecord[]) {
     for (let j = 0; j < segments.length; j += 1) {
       const path = segments[j];
       const is_last = j === segments.length - 1;
-      log("\n");
-      log("start", path, j);
+      // log("\n");
+      // log("start", path, j);
       if (temp_tree.length === 0) {
-        log("items is empty");
+        // log("items is empty");
         const name = path;
         const sub_folder_or_file = {
           file_id: is_last ? file_id : name,
@@ -426,23 +417,23 @@ export function build_folder_tree(records: ParsedEpisodeRecord[]) {
         if (!is_last) {
           sub_folder_or_file.items = [];
         }
-        log(
-          `${is_last ? "is" : "not"} last one, so create ${is_last ? "file" : "sub folder"} then insert`,
-          path,
-          sub_folder_or_file
-        );
+        // log(
+        //   `${is_last ? "is" : "not"} last one, so create ${is_last ? "file" : "sub folder"} then insert`,
+        //   path,
+        //   sub_folder_or_file
+        // );
         temp_tree.push(sub_folder_or_file);
         if (!is_last) {
           temp_tree = sub_folder_or_file.items!;
         }
         if (is_last) {
-          log("1 need reset temp_tree");
+          // log("1 need reset temp_tree");
           temp_tree = tree;
           break;
         }
         continue;
       }
-      log("not empty", temp_tree);
+      // log("not empty", temp_tree);
       const matched_folder = temp_tree.find((f) => f.file_id === path);
       if (!matched_folder) {
         const name = path;
@@ -454,60 +445,29 @@ export function build_folder_tree(records: ParsedEpisodeRecord[]) {
         if (!is_last) {
           sub_folder_or_file.items = [];
         }
-        log(
-          `${is_last ? "is" : "not"} last one, so create ${is_last ? "file" : "sub folder"} then insert`,
-          path,
-          temp_tree
-        );
+        // log(
+        //   `${is_last ? "is" : "not"} last one, so create ${is_last ? "file" : "sub folder"} then insert`,
+        //   path,
+        //   temp_tree
+        // );
         temp_tree.push(sub_folder_or_file);
         if (!is_last) {
           temp_tree = sub_folder_or_file.items!;
         }
         if (is_last) {
-          log("2 need reset temp_tree");
+          // log("2 need reset temp_tree");
           temp_tree = tree;
           break;
         }
         continue;
       }
-      log("there has matched folder", matched_folder);
+      // log("there has matched folder", matched_folder);
       if (matched_folder.items) {
         temp_tree = matched_folder.items;
       }
     }
   }
   return tree;
-}
-
-/**
- * 通过遍历一个表格全部记录
- * @param method
- * @param options
- * @returns
- */
-export async function walk_table_with_pagination<T>(
-  method: ReturnType<typeof pagination_factory>,
-  options: {
-    body?: Record<string, unknown>;
-    on_handle: (v: T) => Promise<void>;
-  }
-) {
-  const { body = {}, on_handle } = options;
-  let no_more = false;
-  let page = 1;
-  do {
-    const resp = await method({ where: { ...body } }, { page, size: 20 });
-    if (resp.error) {
-      return resp;
-    }
-    no_more = resp.data.no_more;
-    for (let i = 0; i < resp.data.list.length; i += 1) {
-      const data = resp.data.list[i];
-      await on_handle(data as T);
-    }
-    page += 1;
-  } while (no_more === false);
-  return Result.Ok(null);
 }
 
 /** 遍历完云盘后的整个文件树 */
@@ -517,7 +477,7 @@ export type RequestedAliyunDriveFiles = PartialAliyunDriveFile & {
 
 /** 模拟请求阿里云盘用于单测 */
 export function fetch_files_factory(options: { tree: RequestedAliyunDriveFiles; size?: number }): AliyunDriveClient {
-  console.log("[]__invoke fetchFilesFactory");
+  // console.log("[]__invoke fetchFilesFactory");
   const { size = 10, tree } = options;
   function fetch_files(id: string, { marker }: { marker?: string }) {
     // console.log("[](fake fetchFiles)", id, marker);

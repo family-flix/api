@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少播放记录 id");
   }
-  const t_res = await Member.New(authorization);
+  const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }

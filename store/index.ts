@@ -379,7 +379,14 @@ export const store_factory = (prisma: PrismaClient) => {
   };
 };
 
-export const store = store_factory(new PrismaClient());
+let cached: DatabaseStore | null = null;
+export const store = (() => {
+  if (cached !== null) {
+    return cached;
+  }
+  cached = new DatabaseStore(new PrismaClient());
+  return cached;
+})();
 
 /**
  * 本地存储的 folder client，和 drive client 等同使用

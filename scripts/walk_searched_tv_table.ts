@@ -2,10 +2,8 @@
  * @file 遍历 searched_tv 表进行操作
  */
 require("dotenv").config();
-import { RecordCommonPart, TVProfileRecord } from "@/store/types";
-import { store } from "@/store";
 
-import { walk_table_with_pagination } from "@/domains/walker/utils";
+import { store } from "@/store";
 import { qiniu_upload_online_file } from "@/utils/back_end";
 import { TMDBClient } from "@/domains/tmdb";
 import { walk_records } from "@/domains/store/utils";

@@ -1,7 +1,6 @@
 import { ExtraUserAndDriveInfo } from "@/domains/walker/utils";
 import { DatabaseStore } from "@/domains/store";
 import { FileType } from "@/constants";
-import { store_factory } from "@/store";
 import { Result } from "@/types";
 import { is_video_file } from "@/utils";
 

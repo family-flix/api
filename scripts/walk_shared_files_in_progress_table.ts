@@ -2,10 +2,8 @@
  * @file 遍历 searched_tv 表进行操作
  */
 require("dotenv").config();
-import { RecordCommonPart, SharedFilesInProgressRecord } from "@/store/types";
-import { store } from "@/store";
 
-import { walk_table_with_pagination } from "@/domains/walker/utils";
+import { store } from "@/store";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { walk_records } from "@/domains/store/utils";
 

@@ -1,10 +1,9 @@
 import Joi from "joi";
-import { user } from "@prisma/client";
 
 import { User } from "@/domains/user";
+import { DatabaseStore } from "@/domains/store";
 import { Result, resultify } from "@/types";
 import { random_string } from "@/utils";
-import { store } from "@/store";
 
 import { Credentials } from "./services";
 import { prepare, parse_token } from "./utils";
@@ -26,7 +25,7 @@ export class Member {
    * @param token
    * @returns
    */
-  static async New(token?: string) {
+  static async New(token: string | undefined, store: DatabaseStore) {
     if (!token) {
       return Result.Err("缺少 token");
     }
@@ -64,7 +63,7 @@ export class Member {
    * @param id
    * @returns
    */
-  static async Validate(id?: string) {
+  static async Validate(id: string | undefined, store: DatabaseStore) {
     if (!id) {
       return Result.Err("缺少 token");
     }
@@ -102,7 +101,7 @@ export class Member {
       })
     );
   }
-  static async Add(values: Partial<{ email: string; password: string }>) {
+  static async Add(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
     const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
     if (r.error) {
       return Result.Err(r.error);

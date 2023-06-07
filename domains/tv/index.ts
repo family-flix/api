@@ -1,6 +1,6 @@
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { ImageUploader } from "@/domains/uploader";
-import { store_factory } from "@/store";
+import { DatabaseStore } from "@/domains/store";
 import { r_id } from "@/utils";
 import { Result } from "@/types";
 
@@ -40,12 +40,7 @@ export class TV {
       img_path: key,
     });
   }
-  async snapshot_media(body: {
-    file_id?: string;
-    cur_time: number;
-    drive_id: number;
-    store: ReturnType<typeof store_factory>;
-  }) {
+  async snapshot_media(body: { file_id?: string; cur_time: number; drive_id: number; store: DatabaseStore }) {
     const { file_id, cur_time: original_cur_time, drive_id, store } = body;
     if (!file_id) {
       return Result.Ok(null);

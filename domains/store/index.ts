@@ -5,6 +5,7 @@ import { add_factory, delete_factory, update_factory, first_factory, many_factor
 
 export class DatabaseStore {
   prisma: PrismaClient;
+  table_names: ModelKeys[] = [];
   /** 云盘 */
   // (add_factory<PrismaClient\["[^"]{1,}"\]>)\(prisma\.[^)]{1,}\),
   add_drive: ReturnType<typeof add_factory<PrismaClient["drive"]>>;

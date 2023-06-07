@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 
 import { BaseDomain } from "@/domains/base";
 import { Article, ArticleLineNode, ArticleTextNode } from "@/domains/article";
-import { store, store_factory } from "@/store";
+import { DatabaseStore } from "@/domains/store";
 import { AsyncTaskRecord } from "@/store/types";
 import { Result } from "@/types";
 import { r_id } from "@/utils";
@@ -16,10 +16,11 @@ type JobProps = {
   id: string;
   profile: Pick<AsyncTaskRecord, "unique_id" | "status" | "created" | "desc" | "user_id" | "output_id" | "error">;
   output: Article;
+  store: DatabaseStore;
 };
 
 export class Job extends BaseDomain<TheTypesOfEvents> {
-  static async Get(body: { id: string; user_id: string; store: ReturnType<typeof store_factory> }) {
+  static async Get(body: { id: string; user_id: string; store: DatabaseStore }) {
     const { id, user_id, store } = body;
     const r1 = await store.prisma.async_task.findFirst({
       select: {
@@ -53,17 +54,13 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         error,
       },
       output: new Article({}),
+      store,
     });
     return Result.Ok(job);
   }
 
-  static async New(body: {
-    desc: string;
-    unique_id: string;
-    user_id: string;
-    store: ReturnType<typeof store_factory>;
-  }) {
-    const { desc, unique_id, user_id } = body;
+  static async New(body: { desc: string; unique_id: string; user_id: string; store: DatabaseStore }) {
+    const { desc, unique_id, user_id, store } = body;
     const existing = await store.prisma.async_task.findFirst({
       where: {
         unique_id,
@@ -108,6 +105,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         error: null,
       },
       output,
+      store,
     });
     return Result.Ok(job);
   }
@@ -115,15 +113,17 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   id: string;
   output: Article;
   profile: JobProps["profile"];
+  store: DatabaseStore;
   // start: number;
 
   constructor(options: JobProps) {
     super();
 
-    const { id, profile, output } = options;
+    const { id, profile, output, store } = options;
     this.id = id;
     this.output = output;
     this.profile = profile;
+    this.store = store;
     // this.start = dayjs().unix();
 
     this.output.on_write(this.update_content);
@@ -134,7 +134,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (content.length === 0) {
       return;
     }
-    const output = await store.prisma.output.findUnique({
+    const output = await this.store.prisma.output.findUnique({
       where: {
         id: this.profile.output_id,
       },
@@ -145,7 +145,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     const { content: prev_content_str } = output;
     // console.log("prev_content_str", prev_content_str, content, this.profile.output_id);
     try {
-      const r = await store.prisma.output.update({
+      const r = await this.store.prisma.output.update({
         where: {
           id: this.profile.output_id,
         },
@@ -159,7 +159,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   });
   /** check need pause the task */
   check_need_pause = throttle(3000, async () => {
-    const r = await store.find_task({ id: this.id });
+    const r = await this.store.find_task({ id: this.id });
     if (r.error) {
       return Result.Ok(false);
     }
@@ -174,7 +174,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   });
   async fetch_profile() {
     // return { ...this.profile };
-    const r1 = await store.prisma.async_task.findFirst({
+    const r1 = await this.store.prisma.async_task.findFirst({
       where: {
         id: this.id,
         user_id: this.profile.user_id,
@@ -200,7 +200,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   /** pause the task */
   async pause(options: { force?: boolean } = {}) {
     const { force = false } = options;
-    const r = await store.update_task(this.id, {
+    const r = await this.store.update_task(this.id, {
       need_stop: 1,
       status: force ? TaskStatus.Paused : undefined,
     });
@@ -214,7 +214,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       })
     );
     const content = this.output.to_json();
-    await store.prisma.output.update({
+    await this.store.prisma.output.update({
       where: {
         id: this.profile.output_id,
       },
@@ -225,13 +225,13 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   }
   /** tag the task is finished */
   async finish() {
-    const r = await store.update_task(this.id, {
+    const r = await this.store.update_task(this.id, {
       status: TaskStatus.Finished,
     });
     if (r.error) {
       return Result.Err(r.error);
     }
-    const output = await store.prisma.output.findUnique({
+    const output = await this.store.prisma.output.findUnique({
       where: {
         id: this.profile.output_id,
       },
@@ -252,7 +252,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   async throw(error: Error) {
-    const r = await store.update_task(this.id, {
+    const r = await this.store.update_task(this.id, {
       status: TaskStatus.Finished,
       error: error.message,
     });

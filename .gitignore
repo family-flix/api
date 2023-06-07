@@ -40,3 +40,5 @@ next-env.d.ts
 
 .env
 /public/thumbnails
+/public/admin
+/public/mobile

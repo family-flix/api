@@ -11,7 +11,6 @@ import { User } from "@/domains/user";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { AliyunDriveFolder } from "@/domains/folder";
 import { DiffTypes, FolderDiffer } from "@/domains/folder_differ";
-import { log } from "@/logger/log";
 import { is_video_file } from "@/utils";
 import { FileType } from "@/constants";
 
@@ -70,25 +69,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   await differ.run();
   const { effects } = differ;
-  log("应用 diff 的结果，共", effects.length, "个");
+  // log("应用 diff 的结果，共", effects.length, "个");
   // const { user_id, url, store } = options;
   for (let i = 0; i < effects.length; i += 1) {
     const effect = effects[i];
     const { type: effect_type, payload } = effect;
     const { file_id, name, type, parents } = payload;
-    log(`[${name}]`, "是", effect_type === DiffTypes.Deleting ? "删除" : "新增");
+    // log(`[${name}]`, "是", effect_type === DiffTypes.Deleting ? "删除" : "新增");
     if (effect_type === DiffTypes.Deleting) {
-      log(`[${name}]`, "删除文件", file_id);
+      // log(`[${name}]`, "删除文件", file_id);
       await store.prisma.file.deleteMany({ where: { file_id } });
       continue;
     }
     if (effect_type === DiffTypes.Adding) {
       if (type === "file" && !is_video_file(name)) {
-        log(`[${name}]`, "非视频文件，跳过");
+        // log(`[${name}]`, "非视频文件，跳过");
         continue;
       }
       if (type === "folder") {
-        log(`[${name}]`, "新增文件夹");
+        // log(`[${name}]`, "新增文件夹");
         const r = await store.add_file({
           file_id,
           name,
@@ -98,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           drive_id,
         });
         if (r.error) {
-          log(`[${name}]`, "新增文件夹失败", r.error.message);
+          // log(`[${name}]`, "新增文件夹失败", r.error.message);
         }
         continue;
       }
@@ -112,7 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           drive_id,
         });
         if (r.error) {
-          log(`[${name}]`, "新增文件失败", r.error.message);
+          // log(`[${name}]`, "新增文件失败", r.error.message);
         }
       }
     }

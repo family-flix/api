@@ -4,14 +4,11 @@
 import dayjs from "dayjs";
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-// import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
-import { store_factory } from "@/store";
 
-import { notice_error, notice_push_deer } from "./notice";
 import { FileType } from "@/constants";
-import { log } from "@/logger/log";
+import { DatabaseStore } from "@/domains/store";
 
-export async function walk_added_files(store: ReturnType<typeof store_factory>) {
+export async function walk_added_files(store: DatabaseStore) {
   const drives_res = await store.find_drive_list();
   if (drives_res.error) {
     console.log("[ERROR]find drives failed,", drives_res.error.message);
@@ -34,11 +31,11 @@ export async function walk_added_files(store: ReturnType<typeof store_factory>) 
       }
     );
     if (tmp_folders_res.error) {
-      log("[ERROR]find tmp folders failed,", tmp_folders_res.error.message);
+      // log("[ERROR]find tmp folders failed,", tmp_folders_res.error.message);
       continue;
     }
     if (tmp_folders_res.data.length === 0) {
-      log("[INFO]there is no tmp folders");
+      // log("[INFO]there is no tmp folders");
       continue;
     }
     const latest_folder = tmp_folders_res.data[0];
@@ -47,7 +44,7 @@ export async function walk_added_files(store: ReturnType<typeof store_factory>) 
       latest_folder.type === FileType.File &&
       dayjs(latest_folder.updated).isBefore(dayjs(latest_analysis))
     ) {
-      log("[INFO]there is no latest tmp folder");
+      // log("[INFO]there is no latest tmp folder");
       continue;
     }
     const { root_folder_id, root_folder_name } = drive;

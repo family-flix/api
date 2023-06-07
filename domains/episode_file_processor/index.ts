@@ -2,7 +2,6 @@ import { FileType } from "@/constants";
 import { BaseDomain } from "@/domains/base";
 import { SearchedEpisode } from "@/domains/walker";
 import { DatabaseStore } from "@/domains/store";
-import { store_factory } from "@/store";
 import { Result } from "@/types";
 
 import { is_episode_changed, is_season_changed, is_tv_changed } from "./utils";

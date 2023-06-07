@@ -2,12 +2,8 @@
  * @file 遍历 tv 表进行操作
  */
 require("dotenv").config();
-import dayjs from "dayjs";
 
-import { ParsedEpisodeRecord, RecordCommonPart } from "@/store/types";
 import { store } from "@/store";
-
-import { walk_table_with_pagination } from "@/domains/walker/utils";
 import { walk_records } from "@/domains/store/utils";
 
 async function run() {

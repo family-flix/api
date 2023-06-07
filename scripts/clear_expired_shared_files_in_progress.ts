@@ -1,11 +1,9 @@
 import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { DatabaseStore } from "@/domains/store";
 import { walk_records } from "@/domains/store/utils";
-import { walk_table_with_pagination } from "@/domains/walker/utils";
-import { store_factory } from "@/store";
-import { RecordCommonPart, SharedFilesInProgressRecord } from "@/store/types";
 import { Result } from "@/types";
 
-export async function clear_expired_shared_files_in_progress(store: ReturnType<typeof store_factory>) {
+export async function clear_expired_shared_files_in_progress(store: DatabaseStore) {
   const drives = await store.prisma.drive.findMany({});
   if (drives.length === 0) {
     return;

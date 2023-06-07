@@ -3,11 +3,10 @@
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { Member } from "@/domains/user/member";
-import { episode, episode_profile, parsed_episode } from "@prisma/client";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -16,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e("缺少电视剧 id");
   }
-  const t_res = await Member.New(authorization);
+  const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
