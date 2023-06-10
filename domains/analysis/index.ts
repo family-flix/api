@@ -3,7 +3,7 @@
  * 1. 遍历云盘分析文件名，获取到剧集、电影
  * 2. 将获取到的剧集和电影在 TMDB 上搜索海报、简介等信息
  */
-import { Handler } from "mitt";
+import type { Handler } from "mitt";
 
 import { BaseDomain } from "@/domains/base";
 import { EpisodeFileProcessor } from "@/domains/episode_file_processor";

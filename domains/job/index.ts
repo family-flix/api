@@ -1,4 +1,4 @@
-import { throttle } from "lodash/fp";
+import { throttle } from "lodash";
 import dayjs from "dayjs";
 
 import { BaseDomain } from "@/domains/base";
@@ -128,7 +128,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
 
     this.output.on_write(this.update_content);
   }
-  update_content = throttle(2000, async () => {
+  update_content = throttle(async () => {
     const content = this.output.to_json();
     this.output.clear();
     if (content.length === 0) {
@@ -156,9 +156,9 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     } catch (err) {
       console.log(err);
     }
-  });
+  }, 2000);
   /** check need pause the task */
-  check_need_pause = throttle(3000, async () => {
+  check_need_pause = throttle(async () => {
     const r = await this.store.find_task({ id: this.id });
     if (r.error) {
       return Result.Ok(false);
@@ -171,7 +171,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       return Result.Ok(true);
     }
     return Result.Ok(false);
-  });
+  }, 3000);
   async fetch_profile() {
     // return { ...this.profile };
     const r1 = await this.store.prisma.async_task.findFirst({

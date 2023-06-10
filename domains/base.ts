@@ -1,8 +1,11 @@
 /**
  * 注册的监听器
  */
-import { Result } from "@/types";
-import mitt, { EventType, Handler } from "mitt";
+import type { EventType, Handler } from "mitt";
+
+import mitt from "@/modules/mitt";
+// import { Result } from "@/types";
+
 // import { Log } from './log';
 
 let _uid = 0;
@@ -28,6 +31,7 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
   _name: string = "BaseDomain";
   debug: boolean = false;
 
+  // @ts-ignore
   _emitter = mitt<BaseDomainEvents<Events>>();
   listeners: (() => void)[] = [];
 

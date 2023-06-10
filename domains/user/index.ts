@@ -41,14 +41,14 @@ export class User {
    */
   static async New(token: string | undefined, store: DatabaseStore) {
     if (!token) {
-      return Result.Err("缺少 token");
+      return Result.Err("缺少 token", 900);
     }
     const r = await parse_token({
       token,
       secret: User.SECRET,
     });
     if (r.error) {
-      return Result.Err(r.error);
+      return Result.Err(r.error.message);
     }
     const id = r.data.id as UserUniqueID;
     const existing = await store.prisma.user.findFirst({
@@ -60,7 +60,7 @@ export class User {
       },
     });
     if (!existing) {
-      return Result.Err("无效的 token");
+      return Result.Err("无效的 token", 900);
     }
     const { settings } = existing;
     // 要不要生成一个新的 token？
@@ -252,7 +252,7 @@ export class User {
         qiniu_access_token: qiniu_access_token ?? undefined,
         qiniu_secret_token: qiniu_secret_token ?? undefined,
         qiniu_scope: qiniu_scope ?? undefined,
-        tmdb_token: tmdb_token ?? 'c2e5d34999e27f8e0ef18421aa5dec38',
+        tmdb_token: tmdb_token ?? "c2e5d34999e27f8e0ef18421aa5dec38",
         assets: assets ?? "./public",
       };
     })();

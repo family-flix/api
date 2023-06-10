@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const t_res = await User.New(token, store);
   if (t_res.error) {
-    return e(t_res);
+    return e(Result.Err(t_res, t_res.code));
   }
   const { id } = t_res.data;
   res.status(200).json({

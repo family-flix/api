@@ -1,7 +1,7 @@
 /**
  * @file 文件夹遍历器
  */
-import { Handler } from "mitt";
+import type { Handler } from "mitt";
 
 import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
 import { BaseDomain } from "@/domains/base";

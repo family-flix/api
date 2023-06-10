@@ -19,6 +19,9 @@ export const Result = {
   Err: <T>(message: string | Error | Result<null>, code?: number | string, data: unknown = null) => {
     const result = {
       data,
+      /**
+       * @deprecated 把 error 类型改为 BizError 后取 error.code
+       */
       code,
       error: (() => {
         if (typeof message === "string") {

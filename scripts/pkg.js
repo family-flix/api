@@ -9,7 +9,13 @@ async function run() {
     prismaClientPkg.version = "1.0.0";
     fs.writeFileSync(".prisma/client/package.json", JSON.stringify(prismaClientPkg));
   }
-  await pkg.exec(["./index.js", "--config=scripts/pkg.json", "--target=macos", "--compress=GZip", "--out-path=bin"]);
+  await pkg.exec([
+    "./index.js",
+    "--config=scripts/pkg.json",
+    // "--targets=node16-macos-x64,node16-win-arm64,node16-linux-arm64",
+    "--compress=GZip",
+    "--out-path=bin",
+  ]);
 }
 
 run();

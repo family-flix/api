@@ -1,7 +1,7 @@
 /**
  * @file 电视剧资源同步任务
  */
-import { Handler } from "mitt";
+import type { Handler } from "mitt";
 
 import { BaseDomain } from "@/domains/base";
 import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";

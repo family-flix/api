@@ -22,6 +22,14 @@ const modules = [
     pathname: "axios/dist/node/axios.cjs",
   },
   {
+    name: "mitt",
+    pathname: "mitt/dist/mitt.js",
+  },
+  {
+    name: "lodash",
+    pathname: "lodash/lodash.js",
+  },
+  {
     name: "uuid",
     pathname: "uuid/dist/index.js",
   },

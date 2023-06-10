@@ -1,7 +1,7 @@
 /**
  * @file 对比两个文件夹的差异
  */
-import { Handler } from "mitt";
+import type { Handler } from "mitt";
 
 import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
 import { ArticleLineNode, ArticleListItemNode, ArticleListNode, ArticleTextNode } from "@/domains/article";

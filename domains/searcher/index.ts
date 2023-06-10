@@ -1,7 +1,7 @@
 /**
  * @file 影视剧搜索
  */
-import { Handler } from "mitt";
+import type { Handler } from "mitt";
 
 import { BaseDomain } from "@/domains/base";
 import { TMDBClient } from "@/domains/tmdb";
