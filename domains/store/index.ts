@@ -1,5 +1,6 @@
 import { Result } from "@/types";
 import { PrismaClient } from "@prisma/client";
+
 import { ModelKeys } from "./types";
 import { add_factory, delete_factory, update_factory, first_factory, many_factory, pagination_factory } from "./utils";
 
@@ -26,6 +27,7 @@ export class DatabaseStore {
   find_aliyun_drive_token_list: ReturnType<typeof many_factory<PrismaClient["drive_token"]>>;
   /** 电视剧详情 */
   add_tv_profile: ReturnType<typeof add_factory<PrismaClient["tv_profile"]>>;
+  delete_tv_profile: ReturnType<typeof delete_factory<PrismaClient["tv_profile"]>>;
   update_tv_profile: ReturnType<typeof update_factory<PrismaClient["tv_profile"]>>;
   find_tv_profile: ReturnType<typeof first_factory<PrismaClient["tv_profile"]>>;
   find_tv_profiles: ReturnType<typeof many_factory<PrismaClient["tv_profile"]>>;
@@ -199,6 +201,7 @@ export class DatabaseStore {
     this.find_aliyun_drive_token_list = many_factory<PrismaClient["drive_token"]>(prisma.drive_token);
     /** 电视剧详情 */
     this.add_tv_profile = add_factory<PrismaClient["tv_profile"]>(prisma.tv_profile);
+    this.delete_tv_profile = delete_factory<PrismaClient["tv_profile"]>(prisma.tv_profile);
     this.update_tv_profile = update_factory<PrismaClient["tv_profile"]>(prisma.tv_profile);
     this.find_tv_profile = first_factory<PrismaClient["tv_profile"]>(prisma.tv_profile);
     this.find_tv_profiles = many_factory<PrismaClient["tv_profile"]>(prisma.tv_profile);

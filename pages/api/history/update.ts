@@ -8,7 +8,7 @@ import { TV } from "@/domains/tv";
 import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { store } from "@/store";
+import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   //   return e(existing_history_res);
   // }
   const tv_res = await TV.New({
-    assets: user.settings.assets,
+    assets: app.assets,
   });
   if (tv_res.error) {
     return e(tv_res);
@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       duration,
       member_id,
       file_id: file_id ?? null,
-      thumbnail: thumbnail_res.data.img_path ?? null,
+      thumbnail: thumbnail_res.data?.img_path ?? null,
     });
     if (adding_res.error) {
       return e(adding_res);
@@ -130,6 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive) {
     return e("没有匹配的云盘记录");
   }
+  // console.log("[PAGE]history/update - prepare snapshot_media", file_id, drive.drive_id, current_time);
   const thumbnail_res = await tv.snapshot_media({
     file_id,
     drive_id: drive.drive_id,
@@ -139,14 +140,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (thumbnail_res.error) {
     return e(thumbnail_res);
   }
-  if (thumbnail_res.error) {
-    return e(thumbnail_res);
-  }
+  // console.log("[PAGE]history/update - thumbnail", thumbnail_res.data);
   const update_res = await store.update_history(existing_history.id, {
     episode_id,
     current_time,
     file_id: file_id ?? null,
-    thumbnail: thumbnail_res.data.img_path ?? null,
+    thumbnail: thumbnail_res.data?.img_path ?? null,
   });
   if (update_res.error) {
     return e(update_res);

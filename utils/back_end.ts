@@ -6,7 +6,7 @@ import path from "path";
 import http from "http";
 
 import qiniu from "qiniu";
-import axios from "axios";
+import axios from "@/modules/axios";
 
 import { Result } from "@/types";
 import { accessSync, mkdirSync, ReadStream } from "fs";
@@ -56,9 +56,9 @@ export function ensure_sync(filepath: string, next: string[] = []) {
 
 async function request_online_url_to_stream(url: string) {
   try {
-    const { data } = await axios.get<ReadStream>(url, {
+    const { data } = (await axios.get(url, {
       responseType: "stream",
-    });
+    })) as { data: ReadStream };
     return Result.Ok(data);
   } catch (err) {
     const e = err as Error;

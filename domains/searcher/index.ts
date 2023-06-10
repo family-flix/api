@@ -40,18 +40,18 @@ type MediaSearcherProps = {
   user_id?: string;
   assets: string;
   /** TMDB token */
-  token: string;
+  tmdb_token: string;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
 };
 
 const PAGE_SIZE = 20;
 export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   static New(body: Partial<MediaSearcherProps>) {
-    const { user_id, drive_id, token, assets, store, on_print } = body;
+    const { user_id, drive_id, tmdb_token, assets, store, on_print } = body;
     if (!store) {
       return Result.Err("缺少 store 实例");
     }
-    if (!token) {
+    if (!tmdb_token) {
       return Result.Err("缺少 TMDB token");
     }
     if (!assets) {
@@ -60,7 +60,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     const searcher = new MediaSearcher({
       user_id,
       drive_id,
-      token,
+      tmdb_token: tmdb_token,
       assets,
       store,
       on_print,
@@ -83,7 +83,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   constructor(options: MediaSearcherProps) {
     super();
 
-    const { upload_image = true, user_id, drive_id, assets, token, store, on_print } = options;
+    const { upload_image = true, user_id, drive_id, assets, tmdb_token: token, store, on_print } = options;
     this.store = store;
     this.client = new TMDBClient({ token });
     this.upload = new ImageUploader({ root: assets });
@@ -360,6 +360,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   async get_tv_profile_with_tmdb_id(info: { tmdb_id: number; original_language?: string }) {
     const { tmdb_id, original_language } = info;
     const { upload_image } = this.options;
+    const existing_res = await this.store.find_tv_profile({
+      tmdb_id,
+    });
+    if (existing_res.data) {
+      return Result.Ok(existing_res.data);
+    }
     const profile_res = await this.client.fetch_tv_profile(tmdb_id);
     if (profile_res.error) {
       return Result.Err(profile_res.error);
@@ -380,6 +386,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       in_production,
     } = profile;
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
+      console.log("check need upload images", upload_image);
       if (upload_image) {
         return this.upload_tmdb_images({
           tmdb_id,
@@ -392,16 +399,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         backdrop_path,
       });
     })();
-    const existing_res = await this.store.find_tv_profile({
-      tmdb_id,
-    });
-    if (existing_res.error) {
-      return Result.Err(`查找电视剧详情失败 ${existing_res.error.message}`);
-    }
-    if (existing_res.data) {
-      // console.log("电视剧详情已存在", name || original_name, existing_res.data.name);
-      return Result.Ok(existing_res.data);
-    }
+    // const existing_res = await this.store.find_tv_profile({
+    //   tmdb_id,
+    // });
+    // if (existing_res.error) {
+    //   return Result.Err(`查找电视剧详情失败 ${existing_res.error.message}`);
+    // }
     const t = await this.store.add_tv_profile({
       tmdb_id,
       name: name || null,
@@ -850,18 +853,27 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       backdrop_path,
     };
     const name = `${tmdb_id}.jpg`;
-    if (poster_path && poster_path.includes("tmdb.org")) {
-      const r = await this.upload.download(poster_path, `/poster/${name}`);
+    if (poster_path) {
+      const key = `/poster/${name}`;
+      const r = await this.upload.download(poster_path, key);
+      if (r.error) {
+        // console.log("download image failed 1", r.error.message);
+      }
       if (r.data) {
         result.poster_path = r.data;
       }
     }
-    if (backdrop_path && backdrop_path.includes("themoviedb.org")) {
-      const r = await this.upload.download(backdrop_path, `/backdrop/${name}`);
+    if (backdrop_path) {
+      const key = `/backdrop/${name}`;
+      const r = await this.upload.download(backdrop_path, key);
+      if (r.error) {
+        // console.log("download image failed 2", r.error.message);
+      }
       if (r.data) {
         result.backdrop_path = r.data;
       }
     }
+    // console.log("check need upload images result", result);
     return result;
   }
 

@@ -2,12 +2,45 @@ import dayjs from "dayjs";
 import { PrismaClient } from "@prisma/client";
 
 import { List } from "@/domains/list";
-import { AliyunDriveFolder } from "@/domains/folder";
-import { Result, resultify, Unpacked } from "@/types";
-import { r_id, sleep } from "@/utils";
+import { Result, Unpacked } from "@/types";
 
 import { ModelKeys } from "./types";
-import { FileType } from "@/constants";
+/**
+ * 延迟指定时间
+ * @param delay 要延迟的时间，单位毫秒
+ * @returns
+ */
+export function sleep(delay: number = 1000) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(null);
+    }, delay);
+  });
+}
+
+const defaultRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+/** 返回一条随机作为记录 id 的 15 位字符串 */
+export function r_id() {
+  return random_string(15);
+}
+/**
+ * 返回一个指定长度的随机字符串
+ * @param length
+ * @returns
+ */
+export function random_string(length: number) {
+  return random_string_with_alphabet(length, defaultRandomAlphabet);
+}
+function random_string_with_alphabet(length: number, alphabet: string) {
+  let b = new Array(length);
+  let max = alphabet.length;
+  for (let i = 0; i < b.length; i++) {
+    let n = Math.floor(Math.random() * max);
+    b[i] = alphabet[n];
+  }
+  return b.join("");
+}
 
 export function add_factory<T extends PrismaClient[ModelKeys]>(model: T, options: Partial<{ safe: boolean }> = {}) {
   const { safe } = options;

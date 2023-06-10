@@ -8,7 +8,7 @@ import { TV } from "@/domains/tv";
 import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { store } from "@/store";
+import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   if (history.thumbnail) {
     const tv_res = await TV.New({
-      assets: process.env.PUBLIC_PATH,
+      assets: app.assets,
     });
     if (tv_res.data) {
       const tv = tv_res.data;

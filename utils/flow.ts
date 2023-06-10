@@ -1,5 +1,3 @@
-import { nanoid } from "nanoid";
-
 import { Result } from "@/types";
 
 /**

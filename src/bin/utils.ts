@@ -1,16 +1,11 @@
-import { createServer } from "http";
-import { parse } from "url";
 import os from "os";
 import path from "path";
 import fs from "fs";
 import { exec } from "child_process";
 
-import next from "next";
-import { PrismaClient } from ".prisma/client";
+import { Result } from "@/types";
 
-import { Result } from "./types";
-
-function get_ip_address() {
+export function get_ip_address() {
   const interfaces = os.networkInterfaces();
   for (const interface_name in interfaces) {
     const networkInterface = interfaces[interface_name];
@@ -23,7 +18,7 @@ function get_ip_address() {
       }
     }
   }
-  return null;
+  return "0.0.0.0";
 }
 
 function check_existing(pathname: string) {
@@ -82,7 +77,7 @@ export async function ensure(filepath: string, next: string[] = []) {
   }
 }
 
-function run_command(command: string) {
+export function run_command(command: string): Promise<Result<null>> {
   return new Promise((resolve) => {
     const cp = exec(command);
     // cp.stdout?.on("data", (data) => {
@@ -101,14 +96,15 @@ function run_command(command: string) {
 }
 
 /** 检查数据库是否初始化 */
-async function check_database_initialized(filepath: string) {
+export async function check_database_initialized(filepath: string) {
   const existing = await check_existing(filepath);
   if (!existing) {
     return false;
   }
   return true;
 }
-async function setup_database(body: { dir: string; filename: string }) {
+
+export async function setup_database(body: { dir: string; filename: string }) {
   const { dir, filename } = body;
   const initialized = await check_database_initialized(path.join(dir, filename));
   if (initialized) {
@@ -119,57 +115,14 @@ async function setup_database(body: { dir: string; filename: string }) {
   return Result.Ok(null);
 }
 
-const dev = process.env.NODE_ENV !== "production";
-const app = next({ dev });
-const handle = app.getRequestHandler();
-
-const DATABASE_PATH = path.join(__dirname, "data");
-const DATABASE_FILENAME = "family-flix.db";
-const STORAGE_PATH = path.join(__dirname, "storage");
-
-async function main() {
-  await setup_database({ dir: DATABASE_PATH, filename: DATABASE_FILENAME });
-
-  const host = get_ip_address();
-  const port = 3100;
-
-  app.prepare().then(() => {
-    createServer((req, res) => {
-      const parsed_url = parse(req.url!, true);
-      const { pathname } = parsed_url;
-
-      if (pathname!.startsWith("/storage/")) {
-        const imagePath = path.join(__dirname, pathname!);
-        app.serveStatic(req, res, imagePath);
-        return;
-      }
-      handle(req, res, parsed_url);
-    }).listen(port, () => {
-      (async () => {
-        try {
-          const store = new PrismaClient({
-            //   datasources: {
-            //     db: {
-            //       url: "",
-            //     },
-            //   },
-          });
-          const admin = await store.user.findFirst({
-            include: {
-              settings: true,
-            },
-          });
-        } catch (err) {
-          const msg = (err as Error).message;
-          // if (msg.includes("Environment variable not found")) {
-          //   console.log("need setup");
-          //   return;
-          // }
-        }
-      })();
-      console.log(`> Ready on http://${host}:${port}/admin/`);
-    });
-  });
+/**
+ * 是否已经初始化完成（有配置文件、数据库文件）
+ */
+export async function has_setup(body: { database_path: string }) {
+  const { database_path } = body;
+  const existing = await check_existing(database_path);
+  if (!existing) {
+    return false;
+  }
+  return true;
 }
-
-main();

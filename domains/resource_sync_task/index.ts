@@ -297,7 +297,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         drive: this.drive,
         user: this.user,
         store: this.store,
-        TMDB_TOKEN: this.TMDB_TOKEN,
+        tmdb_token: this.TMDB_TOKEN,
         assets: this.assets,
         on_print: (v) => {
           this.emit(Events.Print, v);

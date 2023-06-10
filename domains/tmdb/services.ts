@@ -2,8 +2,7 @@
  * @file TMDB api
  * @doc https://developer.themoviedb.org/reference/intro/getting-started
  */
-import axios from "axios";
-
+import axios from "@/modules/axios";
 import { Result, Unpacked, UnpackedResult } from "@/types";
 import { query_stringify } from "@/utils";
 
@@ -27,10 +26,10 @@ function fix_TMDB_image_path({
     poster_path: string;
   }> = {};
   if (backdrop_path) {
-    result.backdrop_path = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
+    result.backdrop_path = `https://proxy.funzm.com/api/tmdb_site/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
   }
   if (poster_path) {
-    result.poster_path = `https://image.tmdb.org/t/p/w600_and_h900_bestv2${poster_path}`;
+    result.poster_path = `https://proxy.funzm.com/api/tmdb_image/t/p/w600_and_h900_bestv2${poster_path}`;
   }
   return result;
 }

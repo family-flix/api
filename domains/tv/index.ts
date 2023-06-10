@@ -56,7 +56,8 @@ export class TV {
       return Result.Ok(null);
     }
     const filename = `${r_id()}.jpg`;
-    const key = `/thumbnails/${filename}`;
+    const key = `/thumbnail/${filename}`;
+    // console.log("[DOMAIN]TV - snapshot - before download", key);
     // const filepath = path.join(this.assets, key);
     const r = await this.upload.download(thumbnail_res.data.responseUrl, key);
     if (r.error) {

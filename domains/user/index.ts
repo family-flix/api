@@ -233,6 +233,7 @@ export class User {
     qiniu_secret_token?: string;
     qiniu_scope?: string;
     tmdb_token?: string;
+    /** 请使用 app.assets */
     assets: string;
   };
 
@@ -251,7 +252,7 @@ export class User {
         qiniu_access_token: qiniu_access_token ?? undefined,
         qiniu_secret_token: qiniu_secret_token ?? undefined,
         qiniu_scope: qiniu_scope ?? undefined,
-        tmdb_token: tmdb_token ?? undefined,
+        tmdb_token: tmdb_token ?? 'c2e5d34999e27f8e0ef18421aa5dec38',
         assets: assets ?? "./public",
       };
     })();

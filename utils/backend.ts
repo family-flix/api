@@ -10,7 +10,6 @@ import { Result, resultify } from "@/types";
 //   TmpEpisodeRecord,
 //   TVRecord,
 // } from "@/store/types";
-import { bytes_to_size, find_resolution_from_paths } from ".";
 import { decode_token } from "@/domains/user/jwt";
 
 /**

@@ -2,7 +2,8 @@
  * @file 阿里云盘
  * @doc https://www.yuque.com/aliyundrive/zpfszx
  */
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axios from "@/modules/axios";
+import type { AxiosError, AxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
 
 import { DatabaseStore } from "@/domains/store";
@@ -665,7 +666,7 @@ export class AliyunDriveClient {
       return Result.Err("请先调用 fetch_share_profile 方法");
     }
     const { share_id, share_title, share_name } = r1.data;
-    console.log("target folder id", target_file_id, this.root_folder_id);
+    // console.log("target folder id", target_file_id, this.root_folder_id);
     const r2 = await this.request.post(
       API_HOST + "/v2/file/copy",
       {

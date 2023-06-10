@@ -41,7 +41,7 @@ type DriveAnalysisProps = {
   user: User;
   store: DatabaseStore;
   assets: string;
-  TMDB_TOKEN: string;
+  tmdb_token: string;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
   /** 索引失败 */
   on_error?: (error: Error) => void;
@@ -51,8 +51,8 @@ type DriveAnalysisProps = {
 
 export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
   static async New(body: Partial<DriveAnalysisProps>) {
-    const { drive, store, user, TMDB_TOKEN, assets, on_print, on_finish, on_error } = body;
-    if (!TMDB_TOKEN) {
+    const { drive, store, user, tmdb_token, assets, on_print, on_finish, on_error } = body;
+    if (!tmdb_token) {
       return Result.Err("缺少 TMDB_TOKEN");
     }
     if (!drive) {
@@ -71,7 +71,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       drive,
       store,
       user,
-      TMDB_TOKEN,
+      tmdb_token: tmdb_token,
       assets,
       on_print,
       on_finish,
@@ -86,17 +86,17 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
 
   need_stop = false;
   episode_count = 0;
-  TMDB_TOKEN: string;
+  tmdb_token: string;
   assets: string;
 
   constructor(options: Partial<{}> & DriveAnalysisProps) {
     super();
 
-    const { drive, store, user, TMDB_TOKEN, assets, on_print, on_finish, on_error } = options;
+    const { drive, store, user, tmdb_token, assets, on_print, on_finish, on_error } = options;
     this.store = store;
     this.drive = drive;
     this.user = user;
-    this.TMDB_TOKEN = TMDB_TOKEN;
+    this.tmdb_token = tmdb_token;
     this.assets = assets;
     if (on_print) {
       this.on_print(on_print);
@@ -354,7 +354,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     const r2 = await MediaSearcher.New({
       user_id: user.id,
       drive_id: drive.id,
-      token: this.TMDB_TOKEN,
+      tmdb_token: this.tmdb_token,
       store,
       assets: this.assets,
       on_print: (v) => {

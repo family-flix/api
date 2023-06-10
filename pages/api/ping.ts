@@ -7,5 +7,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+  // console.log(EncryptJWT, jwtDecrypt);
   res.status(200).json({ code: 0, msg: "ok", data: null });
 }

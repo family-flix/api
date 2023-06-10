@@ -1,15 +1,10 @@
-import { EncryptJWT, jwtDecrypt } from "jose";
-import hkdf from "@panva/hkdf";
 import dayjs from "dayjs";
-import { v4 as uuid } from "uuid";
 
-import {
-  JWTDecodeParams,
-  JWTEncodeParams,
-  JWT,
-  Secret,
-  JWTOptions,
-} from "./types";
+import { v4 as uuid } from "@/modules/uuid";
+import { EncryptJWT, jwtDecrypt } from "@/modules/jose";
+import { hkdf } from "@/modules/@panva/hkdf";
+
+import { JWTDecodeParams, JWTEncodeParams, JWT, Secret, JWTOptions } from "./types";
 
 const DEFAULT_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 const now = () => dayjs().unix();
@@ -21,11 +16,7 @@ const now = () => dayjs().unix();
  * @param {string} params.secret
  * @param {number} params.maxAge
  */
-export async function encode_token({
-  token = {},
-  secret,
-  maxAge = DEFAULT_MAX_AGE,
-}: JWTEncodeParams) {
+export async function encode_token({ token = {}, secret, maxAge = DEFAULT_MAX_AGE }: JWTEncodeParams) {
   const encryptionSecret = await get_derived_encryption_key(secret);
   return await new EncryptJWT(token)
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
@@ -36,10 +27,7 @@ export async function encode_token({
 }
 
 /** Decodes a NextAuth.js issued JWT. */
-export async function decode_token({
-  token,
-  secret,
-}: JWTDecodeParams): Promise<JWT | null> {
+export async function decode_token({ token, secret }: JWTDecodeParams): Promise<JWT | null> {
   if (!token) return null;
   const encryptionSecret = await get_derived_encryption_key(secret);
   const { payload } = await jwtDecrypt(token, encryptionSecret, {
@@ -92,11 +80,5 @@ export async function decode_token({
 // }
 
 async function get_derived_encryption_key(secret: Secret) {
-  return await hkdf(
-    "sha256",
-    secret,
-    "",
-    "com.funzm Generated Encryption Key",
-    32
-  );
+  return await hkdf("sha256", secret, "", "com.funzm Generated Encryption Key", 32);
 }

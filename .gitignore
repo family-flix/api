@@ -11,6 +11,7 @@
 
 # next.js
 /.next/
+/production/
 /out/
 
 # production
@@ -39,6 +40,17 @@ yarn-error.log*
 next-env.d.ts
 
 .env
-/public/thumbnails
+
+/public/dist-admin
 /public/admin
+/public/dist-mobile
 /public/mobile
+/public/setup
+/public/family-flix.db
+/bin
+/data
+/storage
+/index.js
+/modules
+/a.js
+/a

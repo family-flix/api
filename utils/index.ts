@@ -1,4 +1,3 @@
-import chalk from "chalk";
 import Nzh from "nzh";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
@@ -701,7 +700,7 @@ export function parse_filename_for_video(
       }
       return regexp;
     })();
-    log("[1]start extra content for", chalk.greenBright(unique), "and cur filename is", chalk.blueBright(cur_filename));
+    // log("[1]start extra content for", chalk.greenBright(unique), "and cur filename is", chalk.blueBright(cur_filename));
     /**
      * 如果重复出现同一个信息，比如 S01E22.第22集，这里「集数」重复出现了
      * 会导致 `第22集` 没有被移除，被下一个正则捕获，出现错误信息。打开后性能也提升没多少，还存在错误信息，干脆关了

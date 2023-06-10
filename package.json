@@ -10,27 +10,36 @@
     "start": "next start --port 3200",
     "schedule": "vite-node scripts/schedule",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pkg": "node scripts/build && node scripts/pkg"
+  },
+  "pkg": {
+    "assets": [
+      "package.json",
+      "production/**/*",
+      "public/**/*",
+      "prisma/**/*"
+    ],
+    "scripts": [
+      "package.json"
+    ]
   },
   "dependencies": {
     "@panva/hkdf": "^1.0.4",
     "@peculiar/webcrypto": "^1.4.3",
     "@prisma/client": "4.13.0",
-    "@types/node": "18.11.18",
     "axios": "^1.2.3",
     "chalk": "^5.2.0",
     "cron": "^2.2.0",
     "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
-    "eslint": "8.32.0",
-    "eslint-config-next": "13.1.5",
+    "express": "^4.18.2",
     "joi": "^17.9.1",
     "jose": "^4.14.1",
     "jsonwebtoken": "^9.0.0",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
     "mitt": "^3.0.0",
-    "nanoid": "^4.0.0",
     "next": "^13.1.6",
     "nzh": "^1.0.8",
     "pino": "^8.10.0",
@@ -42,14 +51,18 @@
   },
   "devDependencies": {
     "@types/cron": "^2.0.0",
+    "@types/express": "^4.17.17",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/lodash": "^4.14.191",
+    "@types/node": "18.11.18",
     "@types/qs": "^6.9.7",
     "@types/react": "18.2.8",
     "@types/uuid": "^9.0.1",
-    "autoprefixer": "^10.4.13",
+    "@vercel/ncc": "^0.36.1",
+    "eslint": "8.32.0",
+    "eslint-config-next": "13.1.5",
     "husky": "^8.0.3",
-    "postcss": "^8.4.21",
+    "pkg": "^5.8.1",
     "prisma": "^4.14.0",
     "vite-node": "^0.28.3",
     "vitest": "^0.28.2"

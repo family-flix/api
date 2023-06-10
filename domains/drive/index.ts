@@ -47,7 +47,6 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   static async Get(values: { id: string; user_id: string; store: DatabaseStore }) {
     const { id, user_id, store } = values;
     const drive_res = await store.find_drive({ id, user_id });
-    console.log(id, user_id, drive_res.data);
     if (drive_res.error) {
       return Result.Err(drive_res.error);
     }

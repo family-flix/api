@@ -8,10 +8,10 @@ import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DriveAnalysis } from "@/domains/analysis";
 import { Job } from "@/domains/job";
+import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
-import { store } from "@/store";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
+import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -39,20 +39,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const job_res = await Job.New({ desc: `索引云盘 '${drive.name}'`, unique_id: drive.id, user_id, store });
   if (job_res.error) {
-    // article.write(
-    //   new ArticleLineNode({
-    //     type: "error",
-    //     children: [
-    //       new ArticleLineNode({
-    //         type: "a",
-    //         children: [`[${drive_id}]`, "有进行中的索引任务，点击前往查看"],
-    //         value: {
-    //           task_id: existing_task_res.data.id,
-    //         },
-    //       }),
-    //     ],
-    //   })
-    // );
     return e(job_res);
   }
   const job = job_res.data;
@@ -60,8 +46,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive,
     store,
     user,
-    TMDB_TOKEN: settings.tmdb_token,
-    assets: settings.assets,
+    tmdb_token: settings.tmdb_token,
+    assets: app.assets,
     on_print(v) {
       job.output.write(v);
     },
@@ -88,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   analysis.run();
   res.status(200).json({
     code: 0,
-    msg: "索引任务已开始",
+    msg: "开始索引任务",
     data: {
       job_id: job.id,
     },
