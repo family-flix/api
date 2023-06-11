@@ -7,7 +7,7 @@ async function run() {
   const prismaClientPkg = require(".prisma/client/package.json");
   if (!prismaClientPkg.version) {
     prismaClientPkg.version = "1.0.0";
-    fs.writeFileSync(".prisma/client/package.json", JSON.stringify(prismaClientPkg));
+    fs.writeFileSync("node_modules/.prisma/client/package.json", JSON.stringify(prismaClientPkg));
   }
   await pkg.exec([
     "./index.js",

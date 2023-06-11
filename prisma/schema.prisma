@@ -193,10 +193,11 @@ model parsed_season {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        season_number String
-        file_id       String?
-        file_name     String?
-        can_search    Int?    @default(1)
+        season_number         String
+        file_id               String?
+        file_name             String?
+        can_search            Int?    @default(1)
+        correct_season_number String?
 
         season_id    String?
         season       season?   @relation(fields: [season_id], references: [id])

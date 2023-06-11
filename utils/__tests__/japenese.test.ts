@@ -111,4 +111,15 @@ describe("动漫", () => {
       episode_name: "Baha",
     });
   });
+  test("【推しの子】 我家的英雄 - 03 (Baha 1920x1080 AVC AAC MP4) [CD2BE146].mp4", () => {
+    const name = "【推しの子】 我家的英雄 - 03 (Baha 1920x1080 AVC AAC MP4) [CD2BE146].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "我家的英雄",
+      original_name: "",
+      season: "",
+      episode: "E03",
+      episode_name: "Baha",
+    });
+  });
 });

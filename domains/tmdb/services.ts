@@ -307,7 +307,7 @@ export async function fetch_season_profile(
 ) {
   const { tv_id, season_number } = body;
   if (season_number === undefined) {
-    return Result.Err("Please pass season number");
+    return Result.Err("请传入季数");
   }
   const endpoint = `/tv/${tv_id}/season/${season_number}`;
   const { api_key, language } = options;
@@ -362,6 +362,10 @@ export async function fetch_season_profile(
     language,
   });
   if (result.error) {
+    // console.log("find season in tmdb failed", result.error.message);
+    if (result.error.message.includes("404")) {
+      return Result.Ok(null);
+    }
     return Result.Err(result.error);
   }
   const { id, name, overview, air_date, episodes, poster_path } = result.data;
@@ -405,10 +409,10 @@ export async function fetch_episode_profile(
 ) {
   const { tv_id, season_number, episode_number } = body;
   if (season_number === undefined) {
-    return Result.Err("Please pass season number");
+    return Result.Err("请传入季数");
   }
   if (episode_number === undefined) {
-    return Result.Err("Please pass season number");
+    return Result.Err("请传入集数");
   }
   const endpoint = `/tv/${tv_id}/season/${season_number}/episode/${episode_number}`;
   const { api_key, language } = option;
@@ -429,6 +433,10 @@ export async function fetch_episode_profile(
     language,
   });
   if (result.error) {
+    // console.log("find episode in tmdb failed", result.error.message);
+    if (result.error.message.includes("404")) {
+      return Result.Ok(null);
+    }
     return Result.Err(result.error);
   }
   const { id, name, overview, air_date } = result.data;

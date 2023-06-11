@@ -109,8 +109,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     }
   }
 
-  async run(files?: { name: string; type: string }[]) {
+  async run(files?: { name: string; type: string }[], options: Partial<{ force: boolean }> = {}) {
     const { drive, user, store } = this;
+    const { force = false } = options;
     const {
       client,
       profile: { root_folder_name },
@@ -354,6 +355,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     const r2 = await MediaSearcher.New({
       user_id: user.id,
       drive_id: drive.id,
+      force,
       tmdb_token: this.tmdb_token,
       store,
       assets: this.assets,
@@ -376,6 +378,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     const searcher = r2.data;
     await searcher.run();
     this.emit(Events.Finished);
+    return Result.Ok(null);
   }
 
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {

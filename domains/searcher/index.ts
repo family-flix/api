@@ -20,6 +20,8 @@ enum Events {
   AddEpisode,
   AddMovie,
   Print,
+  Finish,
+  Error,
 }
 type TheTypesOfEvents = {
   [Events.AddTV]: void;
@@ -27,6 +29,8 @@ type TheTypesOfEvents = {
   [Events.AddEpisode]: void;
   [Events.AddMovie]: void;
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
+  [Events.Finish]: void;
+  [Events.Error]: Error;
 };
 
 type MediaSearcherProps = {
@@ -38,16 +42,20 @@ type MediaSearcherProps = {
   drive_id?: string;
   /** 仅处理该用户的所有未匹配电视剧 */
   user_id?: string;
+  /** 强制索引全部，忽略 can_search 为 0 */
+  force?: boolean;
   assets: string;
   /** TMDB token */
   tmdb_token: string;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
+  on_finish?: () => void;
+  on_error?: (v: Error) => void;
 };
 
 const PAGE_SIZE = 20;
 export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   static New(body: Partial<MediaSearcherProps>) {
-    const { user_id, drive_id, tmdb_token, assets, store, on_print } = body;
+    const { user_id, drive_id, tmdb_token, assets, force, store, on_print, on_finish, on_error } = body;
     if (!store) {
       return Result.Err("缺少 store 实例");
     }
@@ -60,14 +68,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     const searcher = new MediaSearcher({
       user_id,
       drive_id,
+      force,
       tmdb_token: tmdb_token,
       assets,
       store,
       on_print,
+      on_finish,
+      on_error,
     });
     return Result.Ok(searcher);
   }
 
+  force: boolean;
   store: DatabaseStore;
   client: TMDBClient;
   upload: ImageUploader;
@@ -83,8 +95,20 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   constructor(options: MediaSearcherProps) {
     super();
 
-    const { upload_image = true, user_id, drive_id, assets, tmdb_token: token, store, on_print } = options;
+    const {
+      upload_image = true,
+      user_id,
+      drive_id,
+      force = false,
+      assets,
+      tmdb_token: token,
+      store,
+      on_print,
+      on_finish,
+      on_error,
+    } = options;
     this.store = store;
+    this.force = force;
     this.client = new TMDBClient({ token });
     this.upload = new ImageUploader({ root: assets });
     this.options = {
@@ -95,6 +119,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (on_print) {
       this.on_print(on_print);
     }
+    if (on_finish) {
+      this.on_finish(on_finish);
+    }
+    if (on_error) {
+      this.on_error(on_error);
+    }
   }
 
   /** 开始搜索 */
@@ -102,6 +132,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     await this.process_parsed_tv_list();
     await this.process_parsed_season_list();
     await this.process_parsed_episode_list();
+    this.emit(Events.Finish);
     return Result.Ok(null);
   }
   /** 处理所有没有匹配好电视剧详情的电视剧 */
@@ -112,7 +143,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     const store = this.store;
     const where: NonNullable<Parameters<typeof store.prisma.parsed_tv.findMany>[number]>["where"] = {
       tv_id: null,
-      can_search: 1,
+      can_search: this.force ? undefined : 1,
       user_id,
       drive_id,
     };
@@ -300,26 +331,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(tv_res.error);
     }
     const tv = tv_res.data;
-    console.log("before update tv", parsed_tv.id, tv.id);
-    try {
-      await this.store.prisma.parsed_tv.update({
-        where: {
-          id: parsed_tv.id,
-        },
-        data: {
-          tv_id: tv.id,
-          can_search: 0,
-        },
-      });
-    } catch (err) {
-      const e = err as Error;
-      return Result.Err(e.message, 10003);
+    const r = await this.store.update_parsed_tv(parsed_tv.id, {
+      tv_id: tv.id,
+      can_search: 0,
+    });
+    if (r.error) {
+      return Result.Err(r.error, 10003);
     }
-    // const r2 = await this.store.update_parsed_tv(parsed_tv.id, {});
-    // if (r2.error) {
-    //   console.log("update parsed tv failed", r2.error.message);
-    //   return Result.Err(r2.error, "10003");
-    // }
     return Result.Ok({
       ...tv,
       profile,
@@ -476,7 +494,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
 
     const where: NonNullable<Parameters<typeof this.store.prisma.parsed_season.findMany>[number]>["where"] = {
       season_id: null,
-      can_search: 1,
+      can_search: this.force ? undefined : 1,
       user_id,
       drive_id,
     };
@@ -489,7 +507,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         }),
       })
     );
-    //       log("找到", parsed_season_list.length, "个需要处理的季");
     do {
       const parsed_season_list = await this.store.prisma.parsed_season.findMany({
         where,
@@ -504,6 +521,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           },
         },
       });
+      // console.log("找到", parsed_season_list.length, "个需要处理的季", where);
       no_more = parsed_season_list.length + (page - 1) * PAGE_SIZE >= count;
       page += 1;
       for (let j = 0; j < parsed_season_list.length; j += 1) {
@@ -631,6 +649,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error);
     }
+    if (r.data === null) {
+      return Result.Ok(null);
+    }
     const existing_res = await this.store.find_season_profile({
       tmdb_id: r.data.id,
     });
@@ -653,8 +674,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(adding_res.data);
   }
 
-  // search_episode_profile_then_link_parsed_episode
-
   async process_parsed_episode_list() {
     const { user_id, drive_id } = this.options;
     let page = 1;
@@ -662,7 +681,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
 
     const where: NonNullable<Parameters<typeof this.store.prisma.parsed_episode.findMany>[number]>["where"] = {
       episode_id: null,
-      can_search: 1,
+      can_search: this.force ? undefined : 1,
       user_id,
       drive_id,
     };
@@ -690,12 +709,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           },
         },
       });
+      // console.log("找到", parsed_episode_list.length, "个需要添加的剧集", where);
       no_more = parsed_episode_list.length + (page - 1) * PAGE_SIZE >= count;
       page += 1;
-      //       log("找到", parsed_episode_list.length, "个需要添加的剧集");
       for (let i = 0; i < parsed_episode_list.length; i += 1) {
         const parsed_episode = parsed_episode_list[i];
         const { parsed_tv, parsed_season, season_number, episode_number } = parsed_episode;
+        // console.log(parsed_episode);
         const { name, original_name, correct_name } = parsed_tv;
         const prefix = correct_name || name || original_name;
         // this.emit(
@@ -859,6 +879,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error);
     }
+    if (r.data === null) {
+      return Result.Ok(null);
+    }
     const existing_res = await this.store.find_episode_profile({
       tmdb_id: r.data.id,
     });
@@ -924,6 +947,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
 
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
     return this.on(Events.Print, handler);
+  }
+  on_finish(handler: Handler<TheTypesOfEvents[Events.Finish]>) {
+    return this.on(Events.Finish, handler);
+  }
+  on_error(handler: Handler<TheTypesOfEvents[Events.Error]>) {
+    return this.on(Events.Error, handler);
   }
 }
 

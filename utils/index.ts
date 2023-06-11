@@ -48,10 +48,10 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode", "episode_name"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("隐门")) {
+    if (!filename.includes("十八年后的终极告白")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -176,7 +176,7 @@ export function parse_filename_for_video(
     {
       // 后面的 \([0-9]{1,3}\) 是因为存在 28(1).mkv 这种文件名
       regexp:
-        /_File|HDJ|RusDub|Mandarin\.CHS|[0-9]{5,}|\([0-9]{1,3}\)|百度云盘下载|主演团陪看|超前点播直播现场|[A-Z][A-Z0-9]{6}[A-Z]/,
+        /_File|HDJ|RusDub|Mandarin\.CHS|[0-9]{5,}|\([0-9]{1,3}\)|百度云盘下载|主演团陪看|又名|超前点播直播现场|\.[A-Z0-9]{8}\./,
     },
     {
       // 这个包含了用什么格式封装(后缀)的信息
@@ -359,8 +359,8 @@ export function parse_filename_for_video(
     // 总季数，要放在「中文名称」前面
     {
       desc: "总季数1",
-      regexp: /[0-9]{1,}[-+]([0-9]{1,})[季部]{0,1}/,
-      pick: [1],
+      regexp: /([0-9]{1,}[-+][0-9]{1,})[季部]{0,1}/,
+      // pick: [1],
     },
     {
       // 重复出现，不要删除，是为了移除和中文名连在一起的「第n季」
@@ -411,6 +411,12 @@ export function parse_filename_for_video(
       // 这里之所以可能出现 第.55.集 这种情况是最开始将「空格」替换成了 . 符号
       regexp: /第{0,1}[\.]{0,1}[0-9]{1,}[\.]{0,1}[集話话]/,
       priority: 1,
+    },
+    {
+      key: k("name"),
+      desc: "number.number 结尾的剧集名",
+      regexp: /([\u4e00-\u9fa5]{1,}[0-9]{1}\.[0-9]{1})([^0-9]|$)/,
+      pick: [1],
     },
     {
       // 针对国产剧，有一些加在名称后面的数字表示季，如还珠格格2、魔幻手机2傻妞归来、魔幻手机2:傻妞归来
@@ -742,7 +748,7 @@ export function parse_filename_for_video(
       const index = pick[i];
       const c = m[index];
       let from = cur_filename.indexOf(c);
-      if (from === -1 && m.index !== undefined) {
+      if (from === -1 && m.index !== undefined && from >= m.index) {
         from = m.index;
       }
       // log("[4]pick content in", index, "is", c);
