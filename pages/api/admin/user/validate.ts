@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const t_res = await User.New(token, store);
   if (t_res.error) {
-    return e(Result.Err(t_res, t_res.code));
+    return e(Result.Err(t_res.error, t_res.code));
   }
   const { id } = t_res.data;
   res.status(200).json({

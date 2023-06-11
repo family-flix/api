@@ -153,6 +153,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         //   }
         // }
         const r = await this.search_tv_profile_then_link_parsed_tv(parsed_tv);
+        console.log("after this.search_tv_profile_then_link_parsed_tv");
         if (r.error) {
           this.emit(
             Events.Print,
@@ -167,20 +168,39 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         }
         // log(`[${prefix}]`, "添加电视剧详情成功");
         await (async () => {
-          //   log(`[${prefix}]`, "检查能否建立同步任务", r.data.profile.in_production, parsed_tv.file_name);
+          console.log(`[${prefix}]`, "检查能否建立同步任务", r.data.profile.in_production, parsed_tv.file_name);
           if (r.data.profile.in_production && parsed_tv.file_name) {
-            //     log(`[${prefix}]`, "处于更新中，建立一个资源同步任务");
+            // console.log(`[${prefix}]`, "处于更新中");
             const transfer_res = await this.store.find_shared_file_save({
               name: parsed_tv.file_name,
               drive_id,
               user_id,
             });
             if (transfer_res.error) {
+              // console.log(`[${prefix}]`, "获取转存记录失败", transfer_res.error.message);
+              this.emit(
+                Events.Print,
+                new ArticleLineNode({
+                  children: [`[${prefix}]`, "建立同步任务失败", transfer_res.error.message].map((text) => {
+                    return new ArticleTextNode({ text: String(text) });
+                  }),
+                })
+              );
               return;
             }
             if (!transfer_res.data) {
+              // console.log(`[${prefix}]`, "不存在转存记录");
+              this.emit(
+                Events.Print,
+                new ArticleLineNode({
+                  children: [`[${prefix}]`, "建立同步任务失败", "不存在同名转存记录"].map((text) => {
+                    return new ArticleTextNode({ text: String(text) });
+                  }),
+                })
+              );
               return;
             }
+            // console.log(`[${prefix}]`, "建立一个资源同步任务");
             const { url, file_id, name } = transfer_res.data;
             const r = await this.store.add_sync_task({
               url,
@@ -191,6 +211,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               user_id,
             });
             if (r.error) {
+              this.emit(
+                Events.Print,
+                new ArticleLineNode({
+                  children: [`[${prefix}]`, "建立同步任务失败", r.error.message].map((text) => {
+                    return new ArticleTextNode({ text: String(text) });
+                  }),
+                })
+              );
               return;
             }
             this.emit(
@@ -272,13 +300,26 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(tv_res.error);
     }
     const tv = tv_res.data;
-    const r2 = await this.store.update_parsed_tv(parsed_tv.id, {
-      tv_id: tv.id,
-      can_search: 0,
-    });
-    if (r2.error) {
-      return Result.Err(r2.error, "10003");
+    console.log("before update tv", parsed_tv.id, tv.id);
+    try {
+      await this.store.prisma.parsed_tv.update({
+        where: {
+          id: parsed_tv.id,
+        },
+        data: {
+          tv_id: tv.id,
+          can_search: 0,
+        },
+      });
+    } catch (err) {
+      const e = err as Error;
+      return Result.Err(e.message, 10003);
     }
+    // const r2 = await this.store.update_parsed_tv(parsed_tv.id, {});
+    // if (r2.error) {
+    //   console.log("update parsed tv failed", r2.error.message);
+    //   return Result.Err(r2.error, "10003");
+    // }
     return Result.Ok({
       ...tv,
       profile,

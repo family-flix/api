@@ -1,39 +1,42 @@
 /**
- * @file 增量索引云盘（仅索引通过「转存」操作转存到云盘的文件，速度更快）
+ * @file 全量索引云盘（支持传入文件夹 id 表示仅索引该文件夹）
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-// import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 import { User } from "@/domains/user";
-import { store } from "@/store";
+import { Drive } from "@/domains/drive";
+import { DriveAnalysis } from "@/domains/analysis";
+import { Job } from "@/domains/job";
+import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
+import { app, store } from "@/store";
 import { FileType } from "@/constants";
-import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id: drive_id } = req.query as Partial<{
     id: string;
+    target_folder: string;
   }>;
   if (!drive_id) {
-    return e("缺少云盘 id 参数");
+    return e(Result.Err("缺少云盘 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id, settings } = user;
   const drive_res = await Drive.Get({ id: drive_id, user_id, store });
   if (drive_res.error) {
     return e(drive_res);
   }
   const drive = drive_res.data;
-  const { root_folder_id, root_folder_name } = drive.profile;
-  if (!root_folder_name) {
-    return e("请先设置索引根目录");
+  if (!drive.has_root_folder()) {
+    return e(Result.Err("请先设置索引目录", 30001));
   }
   const tmp_folders = await store.prisma.tmp_file.findMany({
     where: {
@@ -43,26 +46,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (tmp_folders.length === 0) {
-    return Result.Err("没有找到可索引的转存文件");
+    return e(Result.Err("没有找到可索引的转存文件"));
   }
-  const client = drive.client;
-  // const drive_analysis = await
-  // const r = await walk_drive({
-  //   drive_id,
-  //   user_id,
-  //   client,
-  //   files: tmp_folders.map((folder) => {
-  //     const { name } = folder;
-  //     return {
-  //       name: `${root_folder_name}/${name}`,
-  //       type: "folder",
-  //     };
-  //   }),
-  //   store,
-  //   upload_image: true,
-  // });
-  // if (r.error) {
-  //   return e(r);
-  // }
-  res.status(200).json({ code: 0, msg: "", data: null });
+  const job_res = await Job.New({ desc: `索引云盘 '${drive.name}'`, unique_id: drive.id, user_id, store });
+  if (job_res.error) {
+    return e(job_res);
+  }
+  const job = job_res.data;
+  const r2 = await DriveAnalysis.New({
+    drive,
+    store,
+    user,
+    tmdb_token: settings.tmdb_token,
+    assets: app.assets,
+    on_print(v) {
+      job.output.write(v);
+    },
+    on_finish() {
+      job.output.write(
+        new ArticleLineNode({
+          children: [
+            new ArticleTextNode({
+              text: "索引完成",
+            }),
+          ],
+        })
+      );
+      job.finish();
+    },
+    on_error() {
+      job.finish();
+    },
+  });
+  if (r2.error) {
+    return e(r2);
+  }
+  const analysis = r2.data;
+  const { root_folder_name } = drive.profile;
+  // console.log("[]", tmp_folders);
+  analysis.run(
+    tmp_folders.map((file) => {
+      const { name, parent_paths, type } = file;
+      return {
+        name: (() => {
+          if (parent_paths) {
+            return `${parent_paths}/${name}`;
+          }
+          return `${name}`;
+        })(),
+        type: type === FileType.File ? "file" : "folder",
+      };
+    })
+  );
+  res.status(200).json({
+    code: 0,
+    msg: "开始索引任务",
+    data: {
+      job_id: job.id,
+    },
+  });
 }

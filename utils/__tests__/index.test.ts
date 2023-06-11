@@ -951,6 +951,17 @@ describe("提取视频信息", () => {
       episode_name: "",
     });
   });
+  test("Y 隐门 (2023)(25集)又名十八年后的终极告白3.0(1-3)", () => {
+    const name = "Y 隐门 (2023)(25集)又名十八年后的终极告白3.0(1-3)";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "隐门",
+      original_name: "",
+      season: "S01",
+      episode: "",
+      episode_name: "",
+    });
+  });
 });
 
 describe.skip("是否是季数", () => {

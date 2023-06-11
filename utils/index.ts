@@ -48,12 +48,9 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode", "episode_name"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("老友记S02")) {
+    if (!filename.includes("隐门")) {
       return;
     }
-    // if (!filename.includes("小谢尔顿S05E09")) {
-    //   return;
-    // }
     console.log(...args);
   }
   // @ts-ignore
@@ -159,6 +156,8 @@ export function parse_filename_for_video(
     "tri",
     "xtm.dvd-halfcd2.",
     "BeanSub&FZSD&LoliHouse",
+    "BeanSub&FZSD",
+    "BeanSub",
     "tvzongheba",
   ]
     .map((s) => `${s}`)
@@ -176,7 +175,8 @@ export function parse_filename_for_video(
     // 奇怪的冗余信息
     {
       // 后面的 \([0-9]{1,3}\) 是因为存在 28(1).mkv 这种文件名
-      regexp: /_File|HDJ|RusDub|Mandarin\.CHS|[0-9]{5,}|\([0-9]{1,3}\)|百度云盘下载|主演团陪看|超前点播直播现场/,
+      regexp:
+        /_File|HDJ|RusDub|Mandarin\.CHS|[0-9]{5,}|\([0-9]{1,3}\)|百度云盘下载|主演团陪看|超前点播直播现场|[A-Z][A-Z0-9]{6}[A-Z]/,
     },
     {
       // 这个包含了用什么格式封装(后缀)的信息
@@ -359,7 +359,8 @@ export function parse_filename_for_video(
     // 总季数，要放在「中文名称」前面
     {
       desc: "总季数1",
-      regexp: /[0-9]{1,}[-+][0-9]{1,}[季部]{0,1}/,
+      regexp: /[0-9]{1,}[-+]([0-9]{1,})[季部]{0,1}/,
+      pick: [1],
     },
     {
       // 重复出现，不要删除，是为了移除和中文名连在一起的「第n季」
@@ -527,7 +528,7 @@ export function parse_filename_for_video(
 
     {
       // HEVC=H265? AVC=H264？
-      regexp: /(HE|A)VC/,
+      regexp: /(HE|A)[VC]C/,
     },
     {
       regexp: /(MPEG|VP9|AV1){1}/,
@@ -700,6 +701,8 @@ export function parse_filename_for_video(
       }
       return regexp;
     })();
+    log("\n");
+    log("[1]extra start", unique, "from", cur_filename);
     // log("[1]start extra content for", chalk.greenBright(unique), "and cur filename is", chalk.blueBright(cur_filename));
     /**
      * 如果重复出现同一个信息，比如 S01E22.第22集，这里「集数」重复出现了
@@ -722,6 +725,7 @@ export function parse_filename_for_video(
       }
     }
     const m = cur_filename.match(regexp);
+    log("[3]extra result", m);
     if (!m) {
       continue;
     }

@@ -15,14 +15,12 @@ describe("动漫", () => {
       original_name: "",
       season: "S01",
       episode: "E166-167",
-      episode_name:
-        "最终话-二人の绊.四魂のかけらを使え！（两人的羁绊.使用四魂碎片吧！-前后篇）",
+      episode_name: "最终话-二人の绊.四魂のかけらを使え！（两人的羁绊.使用四魂碎片吧！-前后篇）",
     });
   });
 
   test("犬夜叉 - OVA.2010-01-29：It’s a Rumic World 犬夜叉～黒い鐵砕牙（黑色的铁碎牙）；1920×1080P.mkv", () => {
-    const name =
-      "犬夜叉 - OVA.2010-01-29：It’s a Rumic World 犬夜叉～黒い鐵砕牙（黑色的铁碎牙）；1920×1080P.mkv";
+    const name = "犬夜叉 - OVA.2010-01-29：It’s a Rumic World 犬夜叉～黒い鐵砕牙（黑色的铁碎牙）；1920×1080P.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "犬夜叉",
@@ -89,6 +87,28 @@ describe("动漫", () => {
       season: "",
       episode: "E35",
       episode_name: "アプリモンスターズ",
+    });
+  });
+  test("[BeanSub&FZSD][Jigokuraku][07][GB][1080P][x264_ACC].mp4", () => {
+    const name = "[BeanSub&FZSD][Jigokuraku][07][GB][1080P][x264_ACC].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Jigokuraku",
+      season: "",
+      episode: "E07",
+      episode_name: "",
+    });
+  });
+  test("【推しの子】 屍體如山的死亡遊戲 - 03 (Baha 1920x1080 AVC AAC MP4) [FFE940AF].mp4", () => {
+    const name = "【推しの子】 屍體如山的死亡遊戲 - 03 (Baha 1920x1080 AVC AAC MP4) [FFE940AF].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "屍體如山的死亡遊戲",
+      original_name: "",
+      season: "",
+      episode: "E03",
+      episode_name: "Baha",
     });
   });
 });
