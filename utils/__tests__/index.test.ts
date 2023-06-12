@@ -973,6 +973,17 @@ describe("提取视频信息", () => {
       episode_name: "",
     });
   });
+  test("S熟年 [2023]", () => {
+    const name = "S熟年 [2023]";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "熟年",
+      original_name: "",
+      season: "",
+      episode: "",
+      episode_name: "",
+    });
+  });
 });
 
 describe.skip("是否是季数", () => {

@@ -184,7 +184,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         //   }
         // }
         const r = await this.search_tv_profile_then_link_parsed_tv(parsed_tv);
-        console.log("after this.search_tv_profile_then_link_parsed_tv");
+        // console.log("after this.search_tv_profile_then_link_parsed_tv");
         if (r.error) {
           this.emit(
             Events.Print,
@@ -199,7 +199,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         }
         // log(`[${prefix}]`, "添加电视剧详情成功");
         await (async () => {
-          console.log(`[${prefix}]`, "检查能否建立同步任务", r.data.profile.in_production, parsed_tv.file_name);
+          // console.log(`[${prefix}]`, "检查能否建立同步任务", r.data.profile.in_production, parsed_tv.file_name);
           if (r.data.profile.in_production && parsed_tv.file_name) {
             // console.log(`[${prefix}]`, "处于更新中");
             const transfer_res = await this.store.find_shared_file_save({
@@ -445,7 +445,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       in_production,
     } = profile;
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
-      console.log("check need upload images", upload_image);
+      // console.log("check need upload images", upload_image);
       if (upload_image) {
         return this.upload_tmdb_images({
           tmdb_id,

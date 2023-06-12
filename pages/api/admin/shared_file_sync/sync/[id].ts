@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { User } from "@/domains/user";
-import { store } from "@/store";
+import { app, store } from "@/store";
 import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { Job } from "@/domains/job";
 
@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user,
     store,
     TMDB_TOKEN: settings.tmdb_token,
-    assets: settings.assets,
+    assets: app.assets,
   });
   if (task_res.error) {
     return e(task_res);
@@ -58,5 +58,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: { job_id: job.id } });
+  res.status(200).json({ code: 0, msg: "开始同步", data: { job_id: job.id } });
 }

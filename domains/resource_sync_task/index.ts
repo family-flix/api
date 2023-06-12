@@ -65,6 +65,9 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     if (!TMDB_TOKEN) {
       return Result.Err("缺少 TMDB_TOKEN");
     }
+    if (!assets) {
+      return Result.Err("缺少静态资源目录");
+    }
     const sync_task = await store.prisma.bind_for_parsed_tv.findFirst({
       where: {
         id,
@@ -157,7 +160,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       new ArticleLineNode({
         children: [
           new ArticleHeadNode({
-            level: 1,
+            level: 3,
             text: "开始执行同步任务",
           }),
         ],
@@ -311,7 +314,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           Events.Print,
           new ArticleLineNode({
             // type: "success",
-            children: ["索引失败，中止此处任务", analysis_res.error.message].map((text) => {
+            children: ["索引失败，中止该任务", analysis_res.error.message].map((text) => {
               return new ArticleTextNode({
                 text,
               });

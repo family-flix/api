@@ -48,10 +48,10 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode", "episode_name"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("十八年后的终极告白")) {
+    if (!filename.includes("熟年")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -163,7 +163,7 @@ export function parse_filename_for_video(
     .map((s) => `${s}`)
     .join("|");
   // 这里会和 publishers2 同时出现导致无法一起移除，所以会和上面一起出现的单独列出来
-  const publishers2 = ["MyTVSuper", "FLTTH", "BOBO", "rartv", "Prof", "CYW", "Ma10p", ""].map((s) => `${s}`).join("|");
+  const publishers2 = ["MyTVSuper", "FLTTH", "BOBO", "rartv", "Prof", "CYW", "Ma10p"].map((s) => `${s}`).join("|");
   const extra: ExtraRule[] = [
     // 一些发布者信息
     {
@@ -204,7 +204,12 @@ export function parse_filename_for_video(
        * 如 `M 魔幻手机`，会变成 `魔幻手机`
        * `A Hard Day's Night` 不会被处理，仍保留原文
        */
-      regexp: /^[A-Za-z]{1}[\. -（）⌒·★]{0,1}(?=[\u4e00-\u9fa5]{1,})/,
+      regexp: /^[A-Za-z]{1}[\. -（）⌒·★]{1}(?=[\u4e00-\u9fa5]{1,})/,
+      before() {
+        if (cur_filename.match(/^[A-Za-z][\u4e00-\u9fa5]{1,}/)) {
+          cur_filename = cur_filename.replace(/(^[A-Za-z])([\u4e00-\u9fa5]{1,})/, "$1 $2");
+        }
+      },
     },
     {
       regexp: /含[\u4e00-\u9fa5]{1,}[0-9]{1,}部全系列/,

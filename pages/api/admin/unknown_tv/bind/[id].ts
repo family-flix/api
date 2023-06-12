@@ -8,7 +8,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { TVProfileItemInTMDB } from "@/domains/tmdb/services";
 import { User } from "@/domains/user";
 import { MediaSearcher } from "@/domains/searcher";
-import { store } from "@/store";
+import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp } from "@/types";
 
@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user_id,
     drive_id,
     tmdb_token: settings.tmdb_token,
-    assets: settings.assets,
+    assets: app.assets,
     store,
   });
   const r2 = await search.link_tv_to_parsed_tv({

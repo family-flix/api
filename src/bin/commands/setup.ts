@@ -6,7 +6,7 @@ import fs from "fs";
 
 import { Result } from "@/types";
 
-import { check_database_initialized, ensure } from "../utils";
+import { check_database_initialized, ensure, run_command } from "../utils";
 
 async function setup_database(body: { dir: string; filename: string; public_path: string }) {
   const { dir, filename, public_path } = body;
@@ -15,6 +15,7 @@ async function setup_database(body: { dir: string; filename: string; public_path
     return Result.Ok(null);
   }
   await ensure(dir);
+  // run_command();
   fs.copyFileSync(path.join(public_path, filename), path.join(dir, filename));
   return Result.Ok(null);
 }
