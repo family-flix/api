@@ -536,7 +536,6 @@ export class AliyunDriveClient {
     }
     return Result.Ok(result.data);
   }
-
   cached_share_token: Record<string, string> = {};
   /**
    * 获取分享详情
@@ -746,6 +745,48 @@ export class AliyunDriveClient {
       share_title,
       share_name,
     });
+  }
+  /** 分享文件 */
+  async create_shared_resource(file_ids: string[]) {
+    const r = await this.request.post<{
+      share_url: string;
+      file_id: string;
+      display_name: string;
+    }>(API_HOST + "/adrive/v2/share_link/create", {
+      expiration: dayjs().add(1, "day").toISOString(),
+      sync_to_homepage: false,
+      share_pwd: "",
+      drive_id: String(this.drive_id),
+      file_id_list: file_ids,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    return Result.Ok({
+      share_url: r.data.share_url,
+      file_id: r.data.file_id,
+      file_name: r.data.display_name,
+    });
+  }
+  /** 将云盘内的文件，移动到另一个云盘 */
+  async move_files_to_drive(file_ids: string[], other_drive: AliyunDriveClient) {
+    const r = await this.create_shared_resource(file_ids);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { share_url, file_id, file_name } = r.data;
+    const r2 = await other_drive.fetch_share_profile(share_url);
+    if (r2.error) {
+      return Result.Err(r2.error);
+    }
+    const r3 = await other_drive.save_shared_files({
+      url: share_url,
+      file_id,
+    });
+    if (r3.error) {
+      return Result.Err(r3.error);
+    }
+    return Result.Ok({ file_id, file_name });
   }
   async ping() {
     // await this.ensure_initialized();

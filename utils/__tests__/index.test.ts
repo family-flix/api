@@ -984,6 +984,28 @@ describe("提取视频信息", () => {
       episode_name: "",
     });
   });
+  test("粤语10", () => {
+    const name = "粤语10";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E10",
+      episode_name: "",
+    });
+  });
+  test("1080P国粤双语", () => {
+    const name = "1080P国粤双语";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+      episode_name: "",
+    });
+  });
 });
 
 describe.skip("是否是季数", () => {

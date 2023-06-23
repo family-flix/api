@@ -27,7 +27,7 @@ export class Member {
    */
   static async New(token: string | undefined, store: DatabaseStore) {
     if (!token) {
-      return Result.Err("缺少 token");
+      return Result.Err("缺少 token", 900);
     }
     const r = await parse_token({
       token,
@@ -65,7 +65,7 @@ export class Member {
    */
   static async Validate(id: string | undefined, store: DatabaseStore) {
     if (!id) {
-      return Result.Err("缺少 token");
+      return Result.Err("缺少 token", 900);
     }
     const member_token = await store.prisma.member_token.findFirst({
       where: {

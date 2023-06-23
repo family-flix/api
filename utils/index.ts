@@ -48,10 +48,10 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode", "episode_name"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("熟年")) {
-      return;
-    }
-    console.log(...args);
+    // if (!filename.includes("熟年")) {
+    //   return;
+    // }
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -220,7 +220,7 @@ export function parse_filename_for_video(
       regexp: /([0-9]{1,}集){0,1}((持续){0,1}更新中|[已全]\.{0,1}完结)/,
     },
     {
-      regexp: /国语(中字|繁字|无字|内嵌){0,1}|繁体中字|双语中字|中英双字|[国粤韩英日]{1,3}[双三]语|双语源码/,
+      regexp: /[国粤]语(中字|繁字|无字|内嵌){0,1}|繁体中字|双语中字|中英双字|[国粤韩英日]{1,3}[双三]语|双语源码/,
     },
     {
       regexp: /((默认){0,1}[粤国英]语音[轨频])(合成版){0,1}|亚马逊版/,

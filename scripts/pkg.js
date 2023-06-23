@@ -12,6 +12,7 @@ async function run() {
   await pkg.exec([
     "./index.js",
     "--config=scripts/pkg.json",
+    "--debug",
     // "--targets=node16-macos-x64,node16-win-arm64,node16-linux-arm64",
     "--compress=GZip",
     "--out-path=bin",

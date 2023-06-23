@@ -11,8 +11,7 @@
       "../node_modules/.prisma",
       "../node_modules/dayjs",
       "../node_modules/lodash/**/*"
-    ],
-    "scripts": ["modules/**/*"]
+    ]
   },
   "dependencies": {
     "@peculiar/webcrypto": "^1.4.3",

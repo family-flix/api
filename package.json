@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3100",
+    "dev": "node static.js & next dev --port 3200",
     "db": "npx prisma studio",
     "build": "next build",
     "check": "tsc --noEmit",

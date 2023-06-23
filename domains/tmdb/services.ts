@@ -144,6 +144,66 @@ export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCom
 export type TVProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof search_tv_in_tmdb>>>["list"][number];
 
 /**
+ * 根据关键字搜索电视剧
+ * @param keyword
+ */
+export async function search_movie_in_tmdb(keyword: string, options: TMDBRequestCommentPart & { page?: number }) {
+  const endpoint = `/search/movie`;
+  const { page, api_key, language } = options;
+  const query = {
+    api_key,
+    language,
+    query: keyword,
+    page,
+    include_adult: "false",
+  };
+  const result = await request.get<{
+    page: number;
+    total_pages: number;
+    total_results: number;
+    results: {
+      adult: boolean;
+      backdrop_path: string;
+      genre_ids: number[];
+      id: number;
+      original_language: string;
+      original_title: string;
+      overview: string;
+      popularity: number;
+      poster_path: string;
+      release_date: string;
+      title: string;
+      video: boolean;
+      vote_average: number;
+      vote_count: number;
+    }[];
+  }>(endpoint, query);
+  // '/search/tv?api_key=XXX&language=zh-CN&query=Modern%20Family&page=1&include_adult=false'
+  const { error, data } = result;
+  if (error) {
+    return Result.Err(error.message);
+  }
+  const resp = {
+    page: data.page,
+    total: data.total_results,
+    list: data.results.map((result) => {
+      const { title, original_title, backdrop_path, poster_path } = result;
+      return {
+        ...result,
+        name: title,
+        original_name: original_title,
+        ...fix_TMDB_image_path({
+          backdrop_path,
+          poster_path,
+        }),
+      };
+    }),
+  };
+  return Result.Ok(resp);
+}
+export type MovieProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof search_movie_in_tmdb>>>["list"][number];
+
+/**
  * 获取电视剧详情
  * @link https://developers.themoviedb.org/3/tv/get-tv-details
  * @param id 电视剧 tmdb id
@@ -451,3 +511,94 @@ export async function fetch_episode_profile(
 }
 
 export type EpisodeProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_episode_profile>>>;
+
+/**
+ * 获取电视剧详情
+ * @link https://developers.themoviedb.org/3/tv/get-tv-details
+ * @param id 电视剧 tmdb id
+ */
+export async function fetch_movie_profile(
+  id: number | undefined,
+  query: {
+    api_key: string;
+    language?: Language;
+  }
+) {
+  if (id === undefined) {
+    return Result.Err("请传入电影 id");
+  }
+  const endpoint = `/movie/${id}`;
+  const { api_key, language } = query;
+  const result = await request.get<{
+    adult: boolean;
+    backdrop_path: string;
+    belongs_to_collection: {
+      id: number;
+      name: string;
+      poster_path: string;
+      backdrop_path: string;
+    };
+    budget: number;
+    genres: {
+      id: number;
+      name: string;
+    }[];
+    homepage: string;
+    id: number;
+    imdb_id: string;
+    original_language: string;
+    original_title: string;
+    overview: string;
+    popularity: number;
+    poster_path: string;
+    production_companies: {
+      id: number;
+      logo_path: string;
+      name: string;
+      origin_country: string;
+    }[];
+    production_countries: {
+      iso_3166_1: string;
+      name: string;
+    }[];
+    release_date: string;
+    revenue: number;
+    runtime: number;
+    spoken_languages: {
+      english_name: string;
+      iso_639_1: string;
+      name: string;
+    }[];
+    status: string;
+    tagline: string;
+    title: string;
+    video: boolean;
+    vote_average: number;
+    vote_count: number;
+  }>(endpoint, {
+    api_key,
+    language,
+  });
+  if (result.error) {
+    return Result.Err(result.error);
+  }
+  const { overview, tagline, status, title, original_title, vote_average, poster_path, backdrop_path, popularity } =
+    result.data;
+  return Result.Ok({
+    id,
+    title,
+    original_title,
+    name: title,
+    original_name: original_title,
+    overview,
+    tagline,
+    status,
+    vote_average,
+    popularity,
+    ...fix_TMDB_image_path({
+      poster_path,
+      backdrop_path,
+    }),
+  });
+}
+export type MovieProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_movie_profile>>>;

@@ -1,7 +1,15 @@
 /**
  * @file TMDB 搜索客户端
  */
-import { fetch_episode_profile, fetch_season_profile, fetch_tv_profile, Language, search_tv_in_tmdb } from "./services";
+import {
+  fetch_episode_profile,
+  fetch_season_profile,
+  fetch_tv_profile,
+  fetch_movie_profile,
+  Language,
+  search_tv_in_tmdb,
+  search_movie_in_tmdb,
+} from "./services";
 
 export class TMDBClient {
   options: {
@@ -79,6 +87,25 @@ export class TMDBClient {
         language,
       }
     );
+    return result;
+  }
+  /** 根据关键字搜索电影 */
+  async search_movie(keyword: string, extra: Partial<{ page: number; language: "zh-CN" | "en-US" }> = {}) {
+    const { token } = this.options;
+    const { page, language } = extra;
+    return search_movie_in_tmdb(keyword, {
+      page,
+      api_key: token,
+      language: language || this.options.language,
+    });
+  }
+  /** 获取电视剧详情 */
+  async fetch_movie_profile(id: number) {
+    const { token, language } = this.options;
+    const result = await fetch_movie_profile(id, {
+      api_key: token,
+      language,
+    });
     return result;
   }
 }

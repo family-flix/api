@@ -13,6 +13,7 @@ import { Result } from "@/types";
 import { episode_to_num, season_to_num } from "@/utils";
 
 import { extra_searched_tv_field } from "./utils";
+import { ParsedMovieRecord } from "@/store/types";
 
 enum Events {
   AddTV,
@@ -132,6 +133,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     await this.process_parsed_tv_list();
     await this.process_parsed_season_list();
     await this.process_parsed_episode_list();
+    await this.process_parsed_movie_list();
     this.emit(Events.Finish);
     return Result.Ok(null);
   }
@@ -902,6 +904,241 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(adding_res.error);
     }
     return Result.Ok(adding_res.data);
+  }
+
+  async process_parsed_movie_list() {
+    const { user_id, drive_id } = this.options;
+    let page = 1;
+    let no_more = false;
+
+    const where: NonNullable<Parameters<typeof this.store.prisma.parsed_movie.findMany>[number]>["where"] = {
+      movie_id: null,
+      can_search: this.force ? undefined : 1,
+      user_id,
+      drive_id,
+    };
+    const count = await this.store.prisma.parsed_movie.count({ where });
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["找到", count, "个需要搜索的电影"].map((text) => {
+          return new ArticleTextNode({ text: String(text) });
+        }),
+      })
+    );
+    do {
+      const parsed_movie_list = await this.store.prisma.parsed_movie.findMany({
+        where,
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+      });
+      // console.log("找到", parsed_episode_list.length, "个需要添加的剧集", where);
+      no_more = parsed_movie_list.length + (page - 1) * PAGE_SIZE >= count;
+      page += 1;
+      for (let i = 0; i < parsed_movie_list.length; i += 1) {
+        const parsed_movie = parsed_movie_list[i];
+        const { name, original_name, correct_name, parent_paths, file_name } = parsed_movie;
+        const prefix = correct_name || name || original_name;
+        if (prefix === null) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [`${parent_paths}/${file_name}`, "没有解析出名称"].map((text) => {
+                return new ArticleTextNode({ text });
+              }),
+            })
+          );
+          continue;
+        }
+        const r = await this.add_movie_from_parsed_movie({
+          parsed_movie,
+        });
+        if (r.error) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [`[${prefix}]`, "添加电影详情失败", r.error.message].map((text) => {
+                return new ArticleTextNode({ text });
+              }),
+            })
+          );
+          //   log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情失败", r.error.message);
+        }
+        // log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情成功");
+      }
+    } while (no_more === false);
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["所有电影搜索完成"].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
+  }
+  /** 根据 parsed_movie 搜索电视剧详情 */
+  async get_movie_profile(movie: ParsedMovieRecord) {
+    const { name, original_name, correct_name } = movie;
+    // log("[](search_tv_in_tmdb)start search", tv.name || tv.original_name);
+    let movie_profile = null;
+    if (correct_name) {
+      //       log(`[${prefix}]`, "使用", correct_name, "搜索");
+      const r = await this.search_movie_in_tmdb(correct_name);
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      movie_profile = r.data;
+    }
+    if (movie_profile === null && name) {
+      //       log(`[${prefix}]`, "使用", name, "搜索");
+      const r = await this.search_movie_in_tmdb(name);
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      movie_profile = r.data;
+    }
+    if (movie_profile === null && original_name) {
+      //       log(`[${prefix}]`, "使用", original_name, "搜索");
+      const processed_original_name = original_name.split(".").join(" ");
+      const r = await this.search_movie_in_tmdb(processed_original_name);
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      movie_profile = r.data;
+    }
+    if (movie_profile === null) {
+      return Result.Ok(null);
+    }
+    //     log(`[${prefix}]`, "使用", original_name, "搜索到的结果为", tv_profile.name || tv_profile.original_name);
+    return Result.Ok(movie_profile);
+  }
+  async add_movie_from_parsed_movie(body: { parsed_movie: ParsedMovieRecord }) {
+    const { parsed_movie } = body;
+    const { id, name, original_name, correct_name } = parsed_movie;
+    const { user_id } = this.options;
+    const prefix = `${correct_name || name || original_name}`;
+    const profile_res = await this.get_movie_profile(parsed_movie);
+    if (profile_res.error) {
+      return Result.Err(profile_res.error, "10001");
+    }
+    if (profile_res.data === null) {
+      this.store.update_parsed_episode(id, {
+        can_search: 0,
+      });
+      return Result.Err("没有搜索到电影详情");
+    }
+    const movie_res = await (async () => {
+      const existing_res = await this.store.find_movie({
+        profile_id: profile_res.data.id,
+      });
+      if (existing_res.error) {
+        return Result.Err(existing_res.error);
+      }
+      if (existing_res.data) {
+        return Result.Ok(existing_res.data);
+      }
+      const adding_res = await this.store.add_movie({
+        profile_id: profile_res.data.id,
+        user_id,
+      });
+      if (adding_res.error) {
+        return Result.Err(adding_res.error);
+      }
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: [`[${prefix}]`, "新增电影详情成功"].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
+      return Result.Ok(adding_res.data);
+    })();
+    if (movie_res.error) {
+      return Result.Err(movie_res.error);
+    }
+    const r2 = await this.store.update_parsed_movie(parsed_movie.id, {
+      movie_id: movie_res.data.id,
+      can_search: 0,
+    });
+    if (r2.error) {
+      return Result.Err(r2.error, "10003");
+    }
+    return Result.Ok(r2.data);
+  }
+  /** 使用名字在 tmdb 搜索电影，并返回 movie_profile 记录 */
+  async search_movie_in_tmdb(name: string) {
+    const r1 = await this.client.search_movie(name);
+    if (r1.error) {
+      return Result.Err(
+        ["[ERROR]tmdbClient.search_tv failed, param is", name, ", because ", r1.error.message].join(" ")
+      );
+    }
+    const { list } = r1.data;
+    if (list.length === 0) {
+      return Result.Ok(null);
+    }
+    const matched = (() => {
+      const a = list.find((movie) => movie.name === name);
+      if (!a) {
+        return list[0];
+      }
+      return a;
+    })();
+    const movie_item = list[0];
+    const r = await this.get_movie_profile_with_tmdb_id({
+      tmdb_id: movie_item.id,
+      original_language: movie_item.original_language,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    return Result.Ok(r.data);
+  }
+  /** 获取 tv_profile，如果没有就创建 */
+  async get_movie_profile_with_tmdb_id(info: { tmdb_id: number; original_language?: string }) {
+    const { tmdb_id, original_language } = info;
+    const { upload_image } = this.options;
+    const existing_res = await this.store.find_movie_profile({
+      tmdb_id,
+    });
+    if (existing_res.data) {
+      return Result.Ok(existing_res.data);
+    }
+    const profile_res = await this.client.fetch_movie_profile(tmdb_id);
+    if (profile_res.error) {
+      return Result.Err(profile_res.error);
+    }
+    const profile = profile_res.data;
+    const { name, original_name, overview, poster_path, backdrop_path, popularity, vote_average, status } = profile;
+    const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
+      if (upload_image) {
+        return this.upload_tmdb_images({
+          tmdb_id,
+          poster_path,
+          backdrop_path,
+        });
+      }
+      return Promise.resolve({
+        poster_path,
+        backdrop_path,
+      });
+    })();
+    const t = await this.store.add_movie_profile({
+      tmdb_id,
+      name: name || null,
+      original_name: original_name || null,
+      overview: overview || null,
+      poster_path: uploaded_poster_path || null,
+      backdrop_path: uploaded_backdrop_path || null,
+      original_language: original_language || null,
+      popularity,
+      vote_average,
+    });
+    if (t.error) {
+      return Result.Err(t.error);
+    }
+    return Result.Ok(t.data);
   }
 
   /**

@@ -23,16 +23,13 @@ async function main() {
   // const pkg = require(path.join(__dirname, "package.json"));
   // console.log(pkg);
   process.env.DATABASE_PATH = `file://${app.database_path}`;
-  const initialized = await has_setup({ database_path: app.database_path });
-  if (!initialized) {
-    const r = await setup({ dir: app.database_dir, filename: app.database_name, public_path });
-    if (r.error) {
-      console.log(r.error.message);
-      return;
-    }
-    console.log("初始化完成，准备启动应用");
+  const r = await setup({ app });
+  if (r.error) {
+    console.log("初始化失败", r.error.message);
+    return;
   }
   start({
+    dev: process.env.NODE_ENV !== "production",
     port: 3100,
     // pathname: admin === null ? "/setup" : "/admin",
     pathname: "/admin",

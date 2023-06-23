@@ -45,11 +45,11 @@ export class DatabaseStore {
   find_episode_profile_list: ReturnType<typeof many_factory<PrismaClient["episode_profile"]>>;
   find_episode_profile_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["episode_profile"]>>;
   /** 电影详情 */
-  add_movie_profile: ReturnType<typeof add_factory<PrismaClient["episode_profile"]>>;
-  update_movie_profile: ReturnType<typeof update_factory<PrismaClient["episode_profile"]>>;
-  find_movie_profile: ReturnType<typeof first_factory<PrismaClient["episode_profile"]>>;
-  find_movie_profile_list: ReturnType<typeof many_factory<PrismaClient["episode_profile"]>>;
-  find_movie_profile_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["episode_profile"]>>;
+  add_movie_profile: ReturnType<typeof add_factory<PrismaClient["movie_profile"]>>;
+  update_movie_profile: ReturnType<typeof update_factory<PrismaClient["movie_profile"]>>;
+  find_movie_profile: ReturnType<typeof first_factory<PrismaClient["movie_profile"]>>;
+  find_movie_profile_list: ReturnType<typeof many_factory<PrismaClient["movie_profile"]>>;
+  find_movie_profile_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["movie_profile"]>>;
   /** 电视剧 */
   add_tv: ReturnType<typeof add_factory<PrismaClient["tv"]>>;
   update_tv: ReturnType<typeof update_factory<PrismaClient["tv"]>>;
@@ -97,6 +97,13 @@ export class DatabaseStore {
   find_parsed_episode: ReturnType<typeof first_factory<PrismaClient["parsed_episode"]>>;
   find_parsed_episode_list: ReturnType<typeof many_factory<PrismaClient["parsed_episode"]>>;
   find_parsed_episode_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["parsed_episode"]>>;
+  /** 从云盘文件解析出的电视剧集信息 */
+  add_parsed_movie: ReturnType<typeof add_factory<PrismaClient["parsed_movie"]>>;
+  update_parsed_movie: ReturnType<typeof update_factory<PrismaClient["parsed_movie"]>>;
+  delete_parsed_movie: ReturnType<typeof delete_factory<PrismaClient["parsed_movie"]>>;
+  find_parsed_movie: ReturnType<typeof first_factory<PrismaClient["parsed_movie"]>>;
+  find_parsed_movie_list: ReturnType<typeof many_factory<PrismaClient["parsed_movie"]>>;
+  find_parsed_movie_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["parsed_movie"]>>;
   /** 播放记录 */
   add_history: ReturnType<typeof add_factory<PrismaClient["play_history"]>>;
   update_history: ReturnType<typeof update_factory<PrismaClient["play_history"]>>;
@@ -223,12 +230,12 @@ export class DatabaseStore {
       prisma.episode_profile
     );
     /** 电影详情 */
-    this.add_movie_profile = add_factory<PrismaClient["episode_profile"]>(prisma.episode_profile);
-    this.update_movie_profile = update_factory<PrismaClient["episode_profile"]>(prisma.episode_profile);
-    this.find_movie_profile = first_factory<PrismaClient["episode_profile"]>(prisma.episode_profile);
-    this.find_movie_profile_list = many_factory<PrismaClient["episode_profile"]>(prisma.episode_profile);
-    this.find_movie_profile_list_with_pagination = pagination_factory<PrismaClient["episode_profile"]>(
-      prisma.episode_profile
+    this.add_movie_profile = add_factory<PrismaClient["movie_profile"]>(prisma.movie_profile);
+    this.update_movie_profile = update_factory<PrismaClient["movie_profile"]>(prisma.movie_profile);
+    this.find_movie_profile = first_factory<PrismaClient["movie_profile"]>(prisma.movie_profile);
+    this.find_movie_profile_list = many_factory<PrismaClient["movie_profile"]>(prisma.movie_profile);
+    this.find_movie_profile_list_with_pagination = pagination_factory<PrismaClient["movie_profile"]>(
+      prisma.movie_profile
     );
     /** 电视剧 */
     this.add_tv = add_factory<PrismaClient["tv"]>(prisma.tv);
@@ -281,6 +288,13 @@ export class DatabaseStore {
     this.find_parsed_episode_list_with_pagination = pagination_factory<PrismaClient["parsed_episode"]>(
       prisma.parsed_episode
     );
+    /** 从云盘文件解析出的电影信息 */
+    this.add_parsed_movie = add_factory<PrismaClient["parsed_movie"]>(prisma.parsed_movie);
+    this.update_parsed_movie = update_factory<PrismaClient["parsed_movie"]>(prisma.parsed_movie);
+    this.delete_parsed_movie = delete_factory<PrismaClient["parsed_movie"]>(prisma.parsed_movie);
+    this.find_parsed_movie = first_factory<PrismaClient["parsed_movie"]>(prisma.parsed_movie);
+    this.find_parsed_movie_list = many_factory<PrismaClient["parsed_movie"]>(prisma.parsed_movie);
+    this.find_parsed_movie_list_with_pagination = pagination_factory<PrismaClient["parsed_movie"]>(prisma.parsed_movie);
     /** 播放记录 */
     this.add_history = add_factory<PrismaClient["play_history"]>(prisma.play_history);
     this.update_history = update_factory<PrismaClient["play_history"]>(prisma.play_history);

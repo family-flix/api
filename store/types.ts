@@ -5,6 +5,7 @@ import {
   episode,
   file,
   parsed_episode,
+  parsed_movie,
   parsed_season,
   parsed_tv,
   PrismaClient,
@@ -16,6 +17,7 @@ import {
 export type DriveRecord = drive;
 export type FilesRecord = file;
 export type ParsedTVRecord = parsed_tv;
+export type ParsedMovieRecord = parsed_movie;
 export type AsyncTaskRecord = async_task;
 export type ParsedSeasonRecord = parsed_season;
 export type ParsedEpisodeRecord = parsed_episode;

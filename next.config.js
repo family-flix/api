@@ -8,10 +8,13 @@ module.exports = {
         destination: "/admin/index.html",
       },
       {
+        source: "/pc/:path*",
+        destination: "/pc/index.html",
+      },
+      {
         source: "/mobile/:path*",
         destination: "/mobile/index.html",
       },
     ];
   },
 };
-

@@ -154,6 +154,26 @@ model episode_profile {
         episode episode?
 }
 
+model movie_profile {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        tmdb_id           Int
+        name              String?
+        original_name     String?
+        overview          String?
+        poster_path       String?
+        backdrop_path     String?
+        air_date          String?
+        original_language String?
+        popularity        Float?  @default(0)
+        vote_average      Float?  @default(0)
+        vote_count        Float?  @default(0)
+
+        movie movie?
+}
+
 // 根据 parsed_episode 创建的电视剧
 model parsed_tv {
         id      String   @id
@@ -261,6 +281,8 @@ model parsed_movie {
 
         // 电视剧名称
         name           String
+        original_name  String?
+        correct_name   String?
         // 云盘文件 id
         file_id        String
         // 云盘文件名称
@@ -272,15 +294,15 @@ model parsed_movie {
         // 1文件 2文件夹 3未知
         type           Int
         // 文件大小
-        size           Float? @default(0)
+        size           Float?  @default(0)
+        can_search     Int?    @default(1)
 
-        // 关联云盘文件
-        // file_id String @unique
-        // file    file   @relation(fields: [file_id], references: [id], onDelete: Cascade)
+        movie_id String?
+        movie    movie?  @relation(fields: [movie_id], references: [id], onDelete: Cascade)
         drive_id String
-        drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        drive    drive   @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         user_id  String
-        user     user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user     user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("ParsedMovie")
 }
@@ -358,16 +380,15 @@ model movie {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        // 电影名称
-        name          String?
-        // 电影原始名称/外文名称
-        original_name String?
+        profile_id String        @unique
+        profile    movie_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
         // 关联 user 表
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        play_histories play_history[]
+        play_history  play_history?
+        parsed_movies parsed_movie[]
 
         @@map("Movie")
 }
@@ -621,6 +642,15 @@ model log {
 
         @@map("Log")
 }
+
+// model qrcode {
+//         id      String   @id
+//         created DateTime @default(now())
+//         updated DateTime @default(now())
+//         title   String
+
+//         @@map("Qrcode")
+// }
 
 model member {
         id       String   @id

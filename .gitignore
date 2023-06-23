@@ -43,8 +43,8 @@ next-env.d.ts
 
 /public/dist-admin
 /public/admin
-/public/dist-mobile
 /public/mobile
+/public/pc
 /public/setup
 /public/family-flix.db
 /bin

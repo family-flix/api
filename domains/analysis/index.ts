@@ -7,6 +7,7 @@ import type { Handler } from "mitt";
 
 import { BaseDomain } from "@/domains/base";
 import { EpisodeFileProcessor } from "@/domains/episode_file_processor";
+import { MovieFileProcessor } from "@/domains/movie_file_processor";
 import { AliyunDriveFolder } from "@/domains/folder";
 import { MediaSearcher } from "@/domains/searcher";
 import {
@@ -283,15 +284,16 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       return;
     };
     walker.on_movie = async (parsed) => {
-      // log("索引到电影", parsed);
       // const r = await check_need_stop(async_task_id);
       // if (r && r.data) {
       //   need_stop = true;
       //   walker.stop = true;
       //   return;
       // }
-      // await adding_episode_when_walk(tasks, { user_id, drive_id }, store);
-      // return;
+      const processor = new MovieFileProcessor({ movie: parsed, user_id: user.id, drive_id: drive.id, store });
+      await processor.run();
+      this.episode_count += 1;
+      return;
     };
     // @todo 如果希望仅索引一个文件夹，是否可以这里直接传目标文件夹，而不是每次都从根文件夹开始索引？
     const folder = new AliyunDriveFolder(drive.profile.root_folder_id!, {

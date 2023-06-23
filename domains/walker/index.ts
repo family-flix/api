@@ -46,6 +46,16 @@ export type SearchedEpisode = {
   /** 代码中走了哪个分支，方便定位问题 */
   _position?: string;
 };
+export type SearchedMovie = {
+  file_id: string;
+  file_name: string;
+  name: string;
+  original_name: string;
+  parent_paths: string;
+  parent_file_id: string;
+  size: number;
+  _position: string;
+};
 export type ParentFolder = Pick<ReturnType<typeof parse_filename_for_video>, "name" | "original_name" | "season"> & {
   /** 文件夹或文件 id */
   file_id: string;
@@ -130,7 +140,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   /** 找到一个剧集时的回调 */
   on_episode: (tasks: SearchedEpisode) => Promise<void> = promise_noop;
   /** 找到一个电影时的回调 */
-  on_movie: (movie: {}) => Promise<void> = promise_noop;
+  on_movie: (movie: SearchedMovie) => Promise<void> = promise_noop;
   /** 解析到影片文件但解析失败时的回调 */
   on_error: (file: { file_id: string; name: string; parent_paths: string; _position: string }) => void = noop;
   on_warning: (file: { file_id: string; name: string; parent_paths: string; _position: string }) => void = noop;
@@ -336,7 +346,8 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       await this.on_movie({
         file_id,
         file_name: name,
-        name,
+        name: parsed_info.name,
+        original_name: parsed_info.original_name,
         parent_paths,
         parent_file_id,
         size,

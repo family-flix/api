@@ -19,23 +19,28 @@ const app = next({
           source: "/mobile/:path*",
           destination: "/mobile/index.html",
         },
+        {
+          source: "/pc/:path*",
+          destination: "/pc/index.html",
+        },
       ];
     },
   },
 });
 const handle = app.getRequestHandler();
 
-export async function start(options: { port: number; pathname: string; assets: string }): Promise<
+export async function start(options: { dev: boolean; port: number; pathname: string; assets: string }): Promise<
   Result<{
     host: string;
     port: number;
     pathname: string;
   }>
 > {
-  const { pathname, assets, port = 3000 } = options;
+  const { dev, pathname, assets, port = 3000 } = options;
   //   const { pathname } = options;
   //   await setup_database({ dir: DATABASE_PATH, filename: DATABASE_FILENAME });
   //   await check_database_initialized();
+  // const handle = app.getRequestHandler();
 
   const host = get_ip_address();
   // const host = "0.0.0.0";

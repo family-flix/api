@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { token } = req.body as Partial<{ token: string }>;
   if (!token) {
-    return e("缺少 token");
+    return e(Result.Err("缺少 token", 900));
   }
   const t_res = await User.New(token, store);
   if (t_res.error) {
