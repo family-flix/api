@@ -3,11 +3,23 @@ import fs from "fs/promises";
 
 import { start } from "./commands/start";
 import { setup } from "./commands/setup";
-import { has_setup } from "./utils";
 import { Application } from "./application";
+
+function parse_argv(args: string[]) {
+  // const args = process.argv.slice(2);
+  const options: Record<string, string | boolean> = {};
+  args.forEach((arg) => {
+    if (arg.startsWith("--")) {
+      const [key, value] = arg.slice(2).split("=");
+      options[key] = value || true;
+    }
+  });
+  return options;
+}
 
 async function main() {
   const app = new Application({ root_path: process.cwd() });
+  const args = parse_argv(process.argv);
 
   console.log("应用信息");
   // console.log("项目当前目录", app.root_path);
@@ -28,9 +40,20 @@ async function main() {
     console.log("初始化失败", r.error.message);
     return;
   }
+  const DEFAULT_PORT = 3100;
+  const { port = DEFAULT_PORT } = args;
   start({
     dev: process.env.NODE_ENV !== "production",
-    port: 3100,
+    port: (() => {
+      if (typeof port === "boolean") {
+        return DEFAULT_PORT;
+      }
+      if (typeof port === "string") {
+        const n = Number(port);
+        return Number.isNaN(n) ? DEFAULT_PORT : n;
+      }
+      return port;
+    })(),
     // pathname: admin === null ? "/setup" : "/admin",
     pathname: "/admin",
     assets: app.assets,

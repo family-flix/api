@@ -72,7 +72,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     const existing_episode = existing_episode_res.data;
 
     function log(...args: unknown[]) {
-      // if (!tv.name.includes("十八年后")) {
+      // if (!tv.name.includes("夏日")) {
       //   return;
       // }
       // console.log(...args);

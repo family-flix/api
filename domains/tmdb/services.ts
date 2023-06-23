@@ -187,11 +187,12 @@ export async function search_movie_in_tmdb(keyword: string, options: TMDBRequest
     page: data.page,
     total: data.total_results,
     list: data.results.map((result) => {
-      const { title, original_title, backdrop_path, poster_path } = result;
+      const { title, original_title, backdrop_path, poster_path, release_date } = result;
       return {
         ...result,
         name: title,
         original_name: original_title,
+        air_date: release_date,
         ...fix_TMDB_image_path({
           backdrop_path,
           poster_path,
@@ -582,14 +583,26 @@ export async function fetch_movie_profile(
   if (result.error) {
     return Result.Err(result.error);
   }
-  const { overview, tagline, status, title, original_title, vote_average, poster_path, backdrop_path, popularity } =
-    result.data;
+  const {
+    overview,
+    tagline,
+    status,
+    title,
+    original_title,
+    vote_average,
+    release_date,
+    poster_path,
+    backdrop_path,
+    popularity,
+  } = result.data;
   return Result.Ok({
     id,
     title,
     original_title,
     name: title,
     original_name: original_title,
+    air_date: release_date,
+    release_date,
     overview,
     tagline,
     status,

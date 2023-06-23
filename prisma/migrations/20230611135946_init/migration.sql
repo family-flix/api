@@ -107,6 +107,7 @@ CREATE TABLE "ParsedSeason" (
     "file_id" TEXT,
     "file_name" TEXT,
     "can_search" INTEGER DEFAULT 1,
+    "correct_season_number" TEXT,
     "season_id" TEXT,
     "parsed_tv_id" TEXT NOT NULL,
     "drive_id" TEXT NOT NULL,

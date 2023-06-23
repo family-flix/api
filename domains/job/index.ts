@@ -145,6 +145,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     const { content: prev_content_str } = output;
     // console.log("prev_content_str", prev_content_str, content, this.profile.output_id);
     try {
+      // @todo 这里总是出错，Timeout 是为什么，怎么解决？
       const r = await this.store.prisma.output.update({
         where: {
           id: this.profile.output_id,

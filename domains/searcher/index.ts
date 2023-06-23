@@ -728,7 +728,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         //     }),
         //   })
         // );
-        // log(`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息");
+        // console.log(`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息");
         const r = await this.add_episode_from_parsed_episode({
           parsed_tv,
           parsed_season,
@@ -1085,7 +1085,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
       return a;
     })();
-    const movie_item = list[0];
+    const movie_item = matched;
     const r = await this.get_movie_profile_with_tmdb_id({
       tmdb_id: movie_item.id,
       original_language: movie_item.original_language,
@@ -1110,7 +1110,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(profile_res.error);
     }
     const profile = profile_res.data;
-    const { name, original_name, overview, poster_path, backdrop_path, popularity, vote_average, status } = profile;
+    const { name, original_name, overview, poster_path, backdrop_path, popularity, vote_average, air_date } = profile;
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
       if (upload_image) {
         return this.upload_tmdb_images({
@@ -1132,6 +1132,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       poster_path: uploaded_poster_path || null,
       backdrop_path: uploaded_backdrop_path || null,
       original_language: original_language || null,
+      air_date,
       popularity,
       vote_average,
     });

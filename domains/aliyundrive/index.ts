@@ -790,7 +790,12 @@ export class AliyunDriveClient {
   }
   async ping() {
     // await this.ensure_initialized();
-    return this.request.post(API_HOST + "/adrive/v2/user/get", {});
+    const r = await this.request.post(API_HOST + "/adrive/v2/user/get", {});
+    if (r.error) {
+      console.log(r.error);
+      return Result.Err(r.error);
+    }
+    return Result.Ok(null);
   }
   /** 文件移入回收站 */
   async delete_file(file_id: string) {
