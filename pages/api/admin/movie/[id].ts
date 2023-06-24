@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (tv === null) {
-    return e("没有匹配的电视剧记录");
+    return e("没有匹配的电影记录");
   }
 
   const data = (() => {
@@ -47,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       poster_path,
       backdrop_path,
       original_language,
+      tmdb_id: profile.tmdb_id,
       sources,
     };
   })();

@@ -18,4 +18,16 @@ describe("电影", () => {
       episode_name: "UHD",
     });
   });
+
+  test("Q 请回答1988蓝光版", () => {
+    const name = "Q 请回答1988蓝光版";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "请回答1988",
+      original_name: "",
+      season: "",
+      episode: "",
+      episode_name: "",
+    });
+  });
 });

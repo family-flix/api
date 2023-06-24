@@ -193,6 +193,7 @@ export async function search_movie_in_tmdb(keyword: string, options: TMDBRequest
         name: title,
         original_name: original_title,
         air_date: release_date,
+        first_air_date: release_date,
         ...fix_TMDB_image_path({
           backdrop_path,
           poster_path,

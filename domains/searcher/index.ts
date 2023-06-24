@@ -1012,6 +1012,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     //     log(`[${prefix}]`, "使用", original_name, "搜索到的结果为", tv_profile.name || tv_profile.original_name);
     return Result.Ok(movie_profile);
   }
+  /** 新增电影和电影详情 */
   async add_movie_from_parsed_movie(body: { parsed_movie: ParsedMovieRecord }) {
     const { parsed_movie } = body;
     const { id, name, original_name, correct_name } = parsed_movie;

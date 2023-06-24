@@ -69,10 +69,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = drive_res.data;
   const { profile, client } = drive;
-  if (!profile.root_folder_name) {
-    return e("请先为云盘添加索引根目录");
+  if (!drive.has_root_folder()) {
+    return e("请先为云盘设置索引根目录");
   }
-  // await client.fetch_share_profile(url, { force: true });
   const r1 = await client.save_shared_files({
     url,
     file_id,
@@ -83,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   await store.add_tmp_file({
     name: file_name,
     type: FileType.Folder,
-    parent_paths: profile.root_folder_name,
+    parent_paths: profile.root_folder_name!,
     drive_id,
     user_id,
   });

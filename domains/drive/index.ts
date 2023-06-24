@@ -232,7 +232,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   }
 
   has_root_folder() {
-    if (this.profile.root_folder_id === null) {
+    if (!this.profile.root_folder_id || !this.profile.root_folder_name) {
       return false;
     }
     return true;

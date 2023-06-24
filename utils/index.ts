@@ -306,11 +306,7 @@ export function parse_filename_for_video(
     { regexp: /GB/ },
     // 分辨率
     {
-      regexp: /蓝光/,
-    },
-    {
-      key: k("resolution"),
-      regexp: /(蓝光){0,1}4[kK]/,
+      regexp: /蓝光版{0,1}/,
     },
     {
       key: k("resolution"),

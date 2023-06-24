@@ -1,5 +1,5 @@
 /**
- * @file TMDB 搜索电视剧
+ * @file TMDB 搜索影视剧
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -18,11 +18,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page: page_str = "1",
     page_size: page_size_str = "20",
     token,
+    type = "1",
   } = req.query as Partial<{
     keyword: string;
     page: string;
     page_size: string;
     token?: string;
+    /** 搜索电视剧1 还是电影2 */
+    type?: string;
   }>;
   if (!keyword) {
     return e("缺少搜索关键字");
@@ -38,7 +41,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const page = Number(page_str);
   const page_size = Number(page_size_str);
-  const r = await tmdb.search_tv(keyword, { page });
+  const r = await (() => {
+    if (type === "2") {
+      return tmdb.search_movie(keyword, { page });
+    }
+    return tmdb.search_tv(keyword, { page });
+  })();
   if (r.error) {
     return e(r);
   }
