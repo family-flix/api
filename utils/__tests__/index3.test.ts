@@ -18,8 +18,7 @@ describe("动漫", () => {
     });
   });
   test("[1080P][DBD制作组&离谱Sub][龙珠GT][特典映像][01][HEVC-10bit][AC3].mkv", () => {
-    const name =
-      "[1080P][DBD制作组&离谱Sub][龙珠GT][特典映像][01][HEVC-10bit][AC3].mkv";
+    const name = "[1080P][DBD制作组&离谱Sub][龙珠GT][特典映像][01][HEVC-10bit][AC3].mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "龙珠GT",
@@ -41,8 +40,7 @@ describe("动漫", () => {
     });
   });
   test("师兄啊师兄. 09（纯享版）酒玖师叔与李长寿生情？齐源渡劫竟出现乌龙事件！", () => {
-    const name =
-      "师兄啊师兄. 09（纯享版）酒玖师叔与李长寿生情？齐源渡劫竟出现乌龙事件！";
+    const name = "师兄啊师兄. 09（纯享版）酒玖师叔与李长寿生情？齐源渡劫竟出现乌龙事件！";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "师兄啊师兄",
@@ -119,8 +117,7 @@ describe("动漫", () => {
     });
   });
   test("[BeanSub][Nanatsu_no_Taizai_Fundo_no_Shinpan][23][GB][1080P][x264_AAC].mp4", () => {
-    const name =
-      "[BeanSub][Nanatsu_no_Taizai_Fundo_no_Shinpan][23][GB][1080P][x264_AAC].mp4";
+    const name = "[BeanSub][Nanatsu_no_Taizai_Fundo_no_Shinpan][23][GB][1080P][x264_AAC].mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -131,8 +128,7 @@ describe("动漫", () => {
     });
   });
   test("[SAIO-Raws] Nanatsu no Taizai Seisen no Shirushi 03 [BD 1920x1080 HEVC-10bit OPUS ASSx2].mkv", () => {
-    const name =
-      "[SAIO-Raws] Nanatsu no Taizai Seisen no Shirushi 03 [BD 1920x1080 HEVC-10bit OPUS ASSx2].mkv";
+    const name = "[SAIO-Raws] Nanatsu no Taizai Seisen no Shirushi 03 [BD 1920x1080 HEVC-10bit OPUS ASSx2].mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
@@ -154,27 +150,26 @@ describe("动漫", () => {
       episode_name: "祭天大典",
     });
   });
-  test("[J2] 龍珠改 第098話.mp4", () => {
-    const name = "[J2] 龍珠改 第098話.mp4";
+  test("九尾狐转15.mp4", () => {
+    const name = "九尾狐转15.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "龍珠改",
+      name: "九尾狐转",
       original_name: "",
       season: "",
-      episode: "E098",
+      episode: "E15",
       episode_name: "",
     });
   });
-  test("[KTXP][Made in Abyss - Dawn of the Deep Soul][SP04][GB][1080p][BDrip].mp4", () => {
-    const name =
-      "[KTXP][Made in Abyss - Dawn of the Deep Soul][SP04][GB][1080p][BDrip].mp4";
+  test("九尾狐传9.mp4", () => {
+    const name = "九尾狐传9.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "",
-      original_name: "Made.in.Abyss.Dawn.of.the.Deep.Soul",
-      season: "SP",
-      episode: "E04",
-      episode_name: "BDrip",
+      name: "九尾狐传",
+      original_name: "",
+      season: "",
+      episode: "E09",
+      episode_name: "",
     });
   });
 });

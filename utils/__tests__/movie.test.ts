@@ -30,4 +30,16 @@ describe("电影", () => {
       episode_name: "",
     });
   });
+
+  test("玩具总动员4.mp4", () => {
+    const name = "玩具总动员4.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "玩具总动员",
+      original_name: "",
+      season: "",
+      episode: "E04",
+      episode_name: "",
+    });
+  });
 });

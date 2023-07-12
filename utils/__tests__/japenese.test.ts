@@ -122,4 +122,81 @@ describe("动漫", () => {
       episode_name: "Baha",
     });
   });
+  test("【勇者字幕组】【假面骑士亚马逊】【第4话】【冲吧！愤怒的丛林者】.mp4", () => {
+    const name = "【勇者字幕组】【假面骑士亚马逊】【第4话】【冲吧！愤怒的丛林者】.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "假面骑士亚马逊",
+      original_name: "",
+      season: "",
+      episode: "E04",
+      episode_name: "冲吧！愤怒的丛林者",
+    });
+  });
+  test("[KRL][Kamen Rider Wizard][20][BDRip][1080p][x265_FLAC][HEVC][2AE13DF1].mkv", () => {
+    const name = "[KRL][Kamen Rider Wizard][20][BDRip][1080p][x265_FLAC][HEVC][2AE13DF1].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Kamen.Rider.Wizard",
+      season: "",
+      episode: "E20",
+      episode_name: "",
+    });
+  });
+  // test("2012.假面骑士.巫骑.Wizard", () => {
+  //   const name = "2012.假面骑士.巫骑.Wizard";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "假面骑士.巫骑",
+  //     original_name: "Wizard",
+  //     season: "",
+  //     episode: "",
+  //     episode_name: "",
+  //   });
+  // });
+  test("[Shimazu] 廻り廻って in your pocket (BDRip 1920x1080p AVC FLAC).mkv", () => {
+    const name = "[Shimazu] 廻り廻って in your pocket (BDRip 1920x1080p AVC FLAC).mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "廻り廻って",
+      original_name: "in.your.pocket",
+      season: "",
+      episode: "",
+      episode_name: "",
+    });
+  });
+  test("[天の翼&FLT][假面骑士1号][完成披露会][1920X1080][X264(10-bit) AAC][BDrip][MP4].mp4", () => {
+    const name = "[天の翼&FLT][假面骑士1号][完成披露会][1920X1080][X264(10-bit) AAC][BDrip][MP4].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "假面骑士1号",
+      original_name: "",
+      season: "",
+      episode: "",
+      episode_name: "完成披露会",
+    });
+  });
+  test("[J2] 龍珠改 第098話.mp4", () => {
+    const name = "[J2] 龍珠改 第098話.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "龍珠改",
+      original_name: "",
+      season: "",
+      episode: "E098",
+      episode_name: "",
+    });
+  });
+  test("[KTXP][Made in Abyss - Dawn of the Deep Soul][SP04][GB][1080p][BDrip].mp4", () => {
+    const name = "[KTXP][Made in Abyss - Dawn of the Deep Soul][SP04][GB][1080p][BDrip].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Made.in.Abyss.Dawn.of.the.Deep.Soul",
+      season: "SP",
+      episode: "E04",
+      episode_name: "BDrip",
+    });
+  });
 });

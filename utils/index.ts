@@ -7,7 +7,7 @@ dayjs.extend(relative_time);
 dayjs.locale("zh-cn");
 const nzhcn = Nzh.cn;
 
-const video_file_regexp = /\.[mM][kM][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$/;
+const video_file_type_regexp = /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$/;
 export type ParsedFilename = {
   /** 译名 */
   name: string;
@@ -26,6 +26,7 @@ export const VIDEO_KEYS_MAP = {
   encode: "",
   voice_encode: "",
   episode_count: "",
+  type: "",
 };
 export type VideoKeys = keyof typeof VIDEO_KEYS_MAP;
 export const VIDEO_ALL_KEYS = Object.keys(VIDEO_KEYS_MAP) as VideoKeys[];
@@ -42,16 +43,24 @@ export const VIDEO_KEY_NAME_MAP: Record<VideoKeys, string> = {
   encode: "视频编码方式",
   voice_encode: "音频编码方式",
   episode_count: "总集数",
+  type: "后缀",
 };
+
+/**
+ * 从一个文件名中解析出影视剧信息
+ * @param filename
+ * @param keys
+ * @returns
+ */
 export function parse_filename_for_video(
   filename: string,
   keys: VideoKeys[] = ["name", "original_name", "season", "episode", "episode_name"]
 ) {
   function log(...args: unknown[]) {
-    // if (!filename.includes("熟年")) {
-    //   return;
-    // }
-    // console.log(...args);
+    if (!filename.includes("Dawn of the Deep Soul")) {
+      return;
+    }
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -65,14 +74,31 @@ export function parse_filename_for_video(
     }, {});
   const k = has_key_factory(keys);
   // 做一些预处理
-  let original_name = filename.replace(/^\[[a-zA-Z0-9-]{1,}]/, "");
+  // 移除 [name][] 前面的 [name]，大部分日本动漫前面的 [name] 是发布者信息
+  log("filename is", filename);
+  let original_name = filename.replace(/^\[[a-zA-Z0-9-]{1,}\]/, ".").replace(/^\[[^\]]{1,}\](?=\[)/, "");
+  log("original_name is", original_name);
   original_name = original_name
+    .replace(/^\./, "")
     .replace(/ - /g, ".")
-    .replace(/[ _]/g, ".")
+    .replace(/[ _丨]/g, ".")
     .replace(/\]\[/, ".")
     .replace(/[【】《》「」\[\]]{1,}/g, ".")
     .replace(/^\./, "")
     .replace(/\+{1,}/g, ".")
+    .replace(/(^[\u4e00-\u9fa5]{1,})([0-9]{1,})(\.[a-zA-Z]{1,}[0-9a-zA-Z]{1,}$)/, (matched, p1, p2, p3) => {
+      return (
+        p1 +
+        "." +
+        (() => {
+          if (p2.length < 2) {
+            return "0" + p2;
+          }
+          return p2;
+        })() +
+        p3
+      );
+    })
     .replace(/(https{0,1}:){0,1}(\/\/){0,1}[0-9a-zA-Z]{1,}\.(com|cn)/, "");
   let cur_filename = original_name;
   log("start name", cur_filename);
@@ -150,8 +176,11 @@ export function parse_filename_for_video(
     "tv综合吧",
     "DBD制作组&离谱Sub.",
     "艺声译影",
+    "推しの子",
+    "Shimazu",
     "BOBO",
     "VCB-Studio",
+    "GOTV-TS",
     "tvr",
     "tri",
     "xtm.dvd-halfcd2.",
@@ -172,15 +201,17 @@ export function parse_filename_for_video(
     {
       regexp: new RegExp(publishers2),
     },
+    {
+      regexp: /[^字]{1,}字幕组\.{0,1}/,
+    },
     // 奇怪的冗余信息
     {
-      // 后面的 \([0-9]{1,3}\) 是因为存在 28(1).mkv 这种文件名
-      regexp:
-        /_File|HDJ|RusDub|Mandarin\.CHS|[0-9]{5,}|\([0-9]{1,3}\)|百度云盘下载|主演团陪看|又名|超前点播直播现场|\.[A-Z0-9]{8}\./,
-    },
-    {
-      // 这个包含了用什么格式封装(后缀)的信息
-      regexp: /GOTV-(TS|MKV)/,
+      regexp: /_File|HDJ|RusDub|Mandarin\.CHS|[0-9]{5,}|百度云盘下载|主演团陪看|又名|超前点播直播现场|\.[A-Z0-9]{8}\./,
+      before() {
+        // 存在 28(1).mkv 这种文件名
+        const regex = /(?<=\d)[(（][0-9]{1,}[）)]/g;
+        cur_filename = cur_filename.replace(regex, "");
+      },
     },
     {
       regexp: /repack/,
@@ -195,7 +226,8 @@ export function parse_filename_for_video(
     },
     // 文件后缀
     {
-      regexp: video_file_regexp,
+      key: k("type"),
+      regexp: video_file_type_regexp,
     },
     // 一些国产剧影片特有的信息？
     {
@@ -216,23 +248,17 @@ export function parse_filename_for_video(
     },
     {
       // 多少集，包含「更新中」信息
-      key: k("episode_count"),
+      // key: k("episode_count"),
       regexp: /([0-9]{1,}集){0,1}((持续){0,1}更新中|[已全]\.{0,1}完结)/,
+    },
+    {
+      regexp: /付费|去除|保留|官方/,
     },
     {
       regexp: /[国粤]语(中字|繁字|无字|内嵌){0,1}|繁体中字|双语中字|中英双字|[国粤韩英日]{1,3}[双三]语|双语源码/,
     },
     {
       regexp: /((默认){0,1}[粤国英]语音[轨频])(合成版){0,1}|亚马逊版/,
-    },
-    {
-      regexp: /去除/,
-    },
-    {
-      regexp: /保留/,
-    },
-    {
-      regexp: /官方/,
     },
     {
       // 字幕及其语言
@@ -310,7 +336,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("resolution"),
-      regexp: /(蓝光){0,1}4[kK]/,
+      regexp: /(蓝光){0,1}(4[kK])\.{0,}/,
     },
     // 剧集的额外信息
     {
@@ -342,44 +368,39 @@ export function parse_filename_for_video(
     {
       // EP01-40，表示 1 到 40 集
       desc: "总集数1",
-      regexp: /[eE][pP][0-9]{1,}-[0-9]{1,}/,
+      regexp: /[eE][pP][0-9]{1,}-([0-9]{1,})/,
     },
     {
       desc: "总集数2",
-      regexp: /全[0-9]{1,}[集話话]/,
+      regexp: /全([0-9]{1,})[集話话]/,
     },
     {
       desc: "总集数3",
-      regexp: /[0-9]{1,}[集話话]全/,
+      regexp: /([0-9]{1,})[集話话]全/,
     },
     {
       key: k("episode"),
       desc: "多集合并场景",
-      regexp: /第[0-9]{1,}-[0-9]{1,}[集話话]/,
+      regexp: /第[1-9]{1,}-[0-9]{1,}[集話话]/,
     },
     // 总季数，要放在「中文名称」前面
     {
       desc: "总季数1",
-      regexp: /([0-9]{1,}[-+][0-9]{1,})[季部]{0,1}/,
+      // 1-3 季
+      regexp: /([1-9]{1,}[-+][1-9]{1,})[季部]{0,1}/,
       // pick: [1],
     },
     {
       // 重复出现，不要删除，是为了移除和中文名连在一起的「第n季」
       key: k("season"),
       desc: "总季数2",
-      regexp: /第[0-9]{1,}[季部]/,
+      regexp: /第[1-9]{1,}[季部]/,
     },
-    // {
-    //   regexp: /[^.][sS][0-9]{1,}/,
-    //   before() {
-    //     cur_filename = normalize_season_number(cur_filename);
-    //   },
-    // },
     {
       key: k("season"),
       desc: "special season1",
       // 一些日本动漫会有的，和「剧场版」等做区分？
-      regexp: /本篇|完结篇|OVA|付费彩蛋|特典映像|番外篇/,
+      regexp: /本篇|完结篇|OVA|特典映像|番外篇|特辑篇/,
     },
     {
       key: k("season"),
@@ -388,7 +409,7 @@ export function parse_filename_for_video(
       before() {
         if (cur_filename.match(/(^|[^a-zA-Z])[sS][pP]($|[^a-zA-Z])/)) {
           cur_filename = cur_filename.replace(/(^|[^a-zA-Z])([sS][pP])($|[^a-zA-Z])/, "$1.SP.$3");
-          log("add dot before SP and after SP");
+          // log("add dot before SP and after SP");
           return undefined;
         }
         return {
@@ -404,6 +425,10 @@ export function parse_filename_for_video(
     // 集数
     {
       key: k("episode"),
+      regexp: /续集|彩蛋[0-9]{0,}|花絮[0-9]{0,}/,
+    },
+    {
+      key: k("episode"),
       regexp: /第[\u4e00-\u9fa5]{1,}[集話话]/,
       priority: 1,
     },
@@ -415,14 +440,15 @@ export function parse_filename_for_video(
     },
     {
       key: k("name"),
+      // 如「十八年后的告白2.0」
       desc: "number.number 结尾的剧集名",
       regexp: /([\u4e00-\u9fa5]{1,}[0-9]{1}\.[0-9]{1})([^0-9]|$)/,
       pick: [1],
     },
     {
-      // 针对国产剧，有一些加在名称后面的数字表示季，如还珠格格2、魔幻手机2傻妞归来、魔幻手机2:傻妞归来
+      // 针对国产剧，有一些加在名称后面的数字表示季，如还珠格格2、欢乐颂3_01
       key: k("season"),
-      regexp: /[\u4e00-\u9fa5]{1,}([1-9]{1}[:：]{0,1}[\u4e00-\u9fa5]{0,})(\.|$|-)/,
+      regexp: /[\u4e00-\u9fa5]{1,}([1-9]{1}[:：]{0,1})(\.|$|-)/,
       priority: 1,
       pick: [1],
     },
@@ -431,10 +457,11 @@ export function parse_filename_for_video(
       key: k("name"),
       desc: "japanese name",
       regexp:
-        /^\[{0,1}[0-9]{0,}([\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff][0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff，：·]{0,}[0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff])\]{0,1}/,
+        /^\[{0,1}[0-9]{0,}([\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff][0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff，：· ]{0,}[0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff])\]{0,1}/,
       before() {
+        cur_filename = cur_filename.replace(/^\.{2,}/, "");
         const include_japanese = is_japanese(cur_filename);
-        log("[japanese-name]maybe japanese", include_japanese);
+        // log("[japanese-name]maybe japanese", include_japanese);
         if (!include_japanese) {
           return {
             skip: true,
@@ -450,7 +477,17 @@ export function parse_filename_for_video(
             skip: true,
           };
         }
+        if (result.episode && original_name.indexOf(result.episode) < i) {
+          return {
+            skip: true,
+          };
+        }
       },
+    },
+    {
+      key: k("original_name"),
+      desc: "korean name",
+      regexp: /\[{0,1}[0-9]{0,}[\uac00-\ud7a3][0-9a-zA-Z\uac00-\ud7a3，：·]{0,}[\uac00-\ud7a30-9a-zA-Z]/,
     },
     // 中文名称，放在「分辨率」后面，是支持 影片名1080p 这种情况能被正确识别为「影片名」，而不是「影片名1080」
     // 因为影片名支持以数字结尾，如「还珠格格3」
@@ -507,6 +544,11 @@ export function parse_filename_for_video(
       key: k("source"),
       regexp: /DVD(-{0,1}[rR]ip){0,1}/,
     },
+    {
+      key: k("source"),
+      // 指从 Blu-ray 光盘中提取出来的视频文件
+      regexp: /BDRip/,
+    },
     /**
      * 色深，和 10bit/8bit 同等概念？
      * 但也有 HDR 和 10bit 同时存在的，并且单独将这个称为「HDR类型」
@@ -524,18 +566,21 @@ export function parse_filename_for_video(
     },
     // 编码方式
     {
-      key: k("encode"),
+      key: k("resolution"),
       regexp: /[hH][dD]1080[pP]/,
     },
     {
       key: k("encode"),
       // 能处理 HD4K、HD265 这种异常数据
-      regexp: /[xX]{0,1}[hH]{0,1}[dD]{0,1}[.]{0,1}26[45]{1}/,
+      regexp: /[xX]{0,1}[hH]{0,1}[dD]{0,1}\.{0,1}26[45]{1}(_FLAC){0,1}/,
+      before() {
+        cur_filename = cur_filename.replace(/([xX]26[45])\.(FLAC)/, "$1_$2");
+      },
     },
 
     {
       // HEVC=H265? AVC=H264？
-      regexp: /(HE|A)[VC]C/,
+      regexp: /(HE|A)[VC]C(\.FLAC){0,1}/,
     },
     {
       regexp: /(MPEG|VP9|AV1){1}/,
@@ -603,6 +648,10 @@ export function parse_filename_for_video(
     },
     {
       key: k("season"),
+      regexp: /Ⅱ/,
+    },
+    {
+      key: k("season"),
       regexp: /第[\u4e00-\u9fa5]{1,}[季部]/,
     },
     {
@@ -617,6 +666,11 @@ export function parse_filename_for_video(
     {
       key: k("episode"),
       regexp: /Episode\.[0-9]{1,}/,
+    },
+    {
+      key: k("episode"),
+      regexp: /[（(]([0-9]{1,})[)）]/,
+      pick: [1],
     },
     {
       key: k("episode"),
@@ -799,12 +853,27 @@ export function parse_filename_for_video(
  */
 export function format_number(number: string, prefix = "S") {
   // console.log("(format_number) - season", number);
+  if (number === "Ⅱ") {
+    return "S02";
+  }
   if (!number.match(/[0-9]/) && !number.match(/[零一二三四五六七八九十]/)) {
     if (number === "本篇") {
       return "S01";
     }
     if (number === "OVA") {
       return "OVA";
+    }
+    return number;
+  }
+  if (number.match(/彩蛋/)) {
+    if (!number.match(/[0-9]{1,}/)) {
+      return "彩蛋01";
+    }
+    return number;
+  }
+  if (number.match(/花絮/)) {
+    if (!number.match(/[0-9]{1,}/)) {
+      return "花絮01";
     }
     return number;
   }
@@ -1086,7 +1155,7 @@ export function is_video_relative_file(filename: string) {
 }
 
 export function is_video_file(filename: string) {
-  return video_file_regexp.test(filename);
+  return video_file_type_regexp.test(filename);
 }
 
 export function query_stringify(query: Record<string, string | number | undefined | null>) {
@@ -1274,6 +1343,14 @@ export function is_japanese(text: string) {
   const chinese_char = text.match(/[\u4e00-\u9fff]/g) || [];
   const japanese_char = text.match(/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/g) || [];
   if (japanese_char.length > chinese_char.length) {
+    return true;
+  }
+  return false;
+}
+export function is_korean(text: string) {
+  const chinese_char = text.match(/[\u4e00-\u9fff]/g) || [];
+  const korean_char = text.match(/[\uac00-\ud7a3]/g) || [];
+  if (korean_char.length > chinese_char.length) {
     return true;
   }
   return false;

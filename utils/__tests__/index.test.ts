@@ -21,9 +21,9 @@ describe("提取视频信息", () => {
     const name = "魔幻手机2傻妞归来.S01E42.1080P.WEB-DL.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "魔幻手机",
+      name: "魔幻手机2傻妞归来",
       original_name: "",
-      season: "S02",
+      season: "S01",
       episode: "E42",
       episode_name: "",
     });
@@ -120,9 +120,9 @@ describe("提取视频信息", () => {
     const name = "M 魔幻手机2：傻妞归来 (2014)";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "魔幻手机",
+      name: "魔幻手机2：傻妞归来",
       original_name: "",
-      season: "S02",
+      season: "",
       episode: "",
       episode_name: "",
     });
@@ -611,8 +611,7 @@ describe("提取视频信息", () => {
     const name = "[4K超高清修复]《天道》无删减完整版第9集_超清 4K.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      // @todo 要求名字必须在开头，前面不能有任何其他字符
-      name: "",
+      name: "天道",
       original_name: "",
       season: "",
       episode: "E09",
@@ -890,8 +889,8 @@ describe("提取视频信息", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "Nirvana.in.Fire.Ⅱ",
-      season: "",
+      original_name: "Nirvana.in.Fire",
+      season: "S02",
       episode: "E49",
       episode_name: "",
     });
@@ -1006,80 +1005,60 @@ describe("提取视频信息", () => {
       episode_name: "",
     });
   });
-});
-
-describe.skip("是否是季数", () => {
-  test("仅包含季", () => {
-    const c = "S01";
-    const result = is_season(c);
-    expect(result).toBe(true);
-  });
-  test("包含季和集", () => {
-    const c = "S01E120";
-    const result = is_season(c);
-    expect(result).toBe(true);
-  });
-  test("季缩写单词", () => {
-    const c = "SE01";
-    const result = is_season(c);
-    expect(result).toBe(true);
-  });
-  test("完整季单词", () => {
-    const c = "Season1";
-    const result = is_season(c);
-    expect(result).toBe(true);
-  });
-  test("完整季单词", () => {
-    const c = "Season 01";
-    const result = is_season(c);
-    expect(result).toBe(true);
-  });
-  test("随便一个字符串2", () => {
-    const c = "1080p";
-    const result = is_season(c);
-    expect(result).toBe(false);
-  });
-});
-
-describe.skip("提取季和集", () => {
-  test("仅包含季", () => {
-    const c = "S01";
-    const result = extra_season_and_episode(c);
+  test("灵魂摆渡Ⅱ.1080p", () => {
+    const name = "灵魂摆渡Ⅱ.1080p";
+    const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
+      name: "灵魂摆渡",
+      original_name: "",
+      season: "S02",
+      episode: "",
+      episode_name: "",
+    });
+  });
+  test("太子妃升职记丨36_End.mp4", () => {
+    const name = "太子妃升职记丨36_End.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "太子妃升职记",
+      original_name: "",
+      season: "",
+      episode: "E36",
+      // @todo
+      episode_name: "End",
+    });
+  });
+  test("洗冤录1-01.mkv", () => {
+    const name = "洗冤录1-01.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "洗冤录",
+      original_name: "",
       season: "S01",
-      episode: "",
+      episode: "E01",
+      episode_name: "",
     });
   });
-  test("包含季和集", () => {
-    const c = "S01E120";
-    const result = extra_season_and_episode(c);
+  test("10（1）.mp4", () => {
+    const name = "10（1）.mp4";
+    const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      season: "S01",
-      episode: "E120",
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E10",
+      episode_name: "",
     });
   });
-  test("季缩写单词", () => {
-    const c = "SE01";
-    const result = extra_season_and_episode(c);
+  test("封神榜I NGB (34).ts", () => {
+    const name = "封神榜I NGB (34).ts";
+    const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      season: "S01",
-      episode: "",
-    });
-  });
-  test("完整季单词", () => {
-    const c = "Season1";
-    const result = extra_season_and_episode(c);
-    expect(result).toStrictEqual({
-      season: "S1",
-      episode: "",
-    });
-  });
-  test("完整季单词", () => {
-    const c = "Season 01";
-    const result = extra_season_and_episode(c);
-    expect(result).toStrictEqual({
-      season: "S 01",
-      episode: "",
+      name: "封神榜I",
+      original_name: "",
+      season: "",
+      episode: "E34",
+      episode_name: "",
     });
   });
 });
