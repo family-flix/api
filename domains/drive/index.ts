@@ -18,7 +18,7 @@ const drivePayloadSchema = Joi.object({
   device_id: Joi.string().required(),
   user_name: Joi.string().allow(null, ""),
   nick_name: Joi.string().allow(null, ""),
-  avatar: Joi.string(),
+  avatar: Joi.string().allow(null, ""),
   aliyun_user_id: Joi.string().required(),
   access_token: Joi.string().required(),
   refresh_token: Joi.string().required(),
@@ -94,7 +94,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       used_size,
       total_size,
     } = r.data as AliyunDrivePayload;
-    console.log("[DOMAINS]Drive - Add", drive_id);
+    // console.log("[DOMAINS]Drive - Add", drive_id);
     const existing_drive = await store.prisma.drive.findUnique({
       where: {
         drive_id,

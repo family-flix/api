@@ -57,10 +57,10 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode", "episode_name"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("Dawn of the Deep Soul")) {
-      return;
-    }
-    console.log(...args);
+    // if (!filename.includes("熟-年")) {
+    //   return;
+    // }
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -76,7 +76,10 @@ export function parse_filename_for_video(
   // 做一些预处理
   // 移除 [name][] 前面的 [name]，大部分日本动漫前面的 [name] 是发布者信息
   log("filename is", filename);
-  let original_name = filename.replace(/^\[[a-zA-Z0-9-]{1,}\]/, ".").replace(/^\[[^\]]{1,}\](?=\[)/, "");
+  let original_name = filename
+    .replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
+    .replace(/^\[[^\]]{1,}\](?=\[)/, "")
+    .replace(/^【[^】]{1,}】/, "");
   log("original_name is", original_name);
   original_name = original_name
     .replace(/^\./, "")
@@ -99,6 +102,8 @@ export function parse_filename_for_video(
         p3
       );
     })
+    // 2001三少爷的剑31.mkv 处理成 三少爷的剑.2001.31.mkv
+    .replace(/([0-9]{4})([\u4e00-\u9fa5]{1,})([0-9]{1,})(.{1,})/, "$2.$1.$3.$4")
     .replace(/(https{0,1}:){0,1}(\/\/){0,1}[0-9a-zA-Z]{1,}\.(com|cn)/, "");
   let cur_filename = original_name;
   log("start name", cur_filename);
@@ -177,6 +182,7 @@ export function parse_filename_for_video(
     "DBD制作组&离谱Sub.",
     "艺声译影",
     "推しの子",
+    "傅艺伟",
     "Shimazu",
     "BOBO",
     "VCB-Studio",
@@ -192,7 +198,9 @@ export function parse_filename_for_video(
     .map((s) => `${s}`)
     .join("|");
   // 这里会和 publishers2 同时出现导致无法一起移除，所以会和上面一起出现的单独列出来
-  const publishers2 = ["MyTVSuper", "FLTTH", "BOBO", "rartv", "Prof", "CYW", "Ma10p"].map((s) => `${s}`).join("|");
+  const publishers2 = ["MyTVSuper", "SS的笔记", "FLTTH", "BOBO", "rartv", "Prof", "CYW", "Ma10p"]
+    .map((s) => `${s}`)
+    .join("|");
   const extra: ExtraRule[] = [
     // 一些发布者信息
     {
@@ -206,12 +214,16 @@ export function parse_filename_for_video(
     },
     // 奇怪的冗余信息
     {
-      regexp: /_File|HDJ|RusDub|Mandarin\.CHS|[0-9]{5,}|百度云盘下载|主演团陪看|又名|超前点播直播现场|\.[A-Z0-9]{8}\./,
+      regexp:
+        /_File|HDJ|RusDub|Mandarin|[0-9]{5,}|百度云盘下载|主演团陪看|又名|超前点播直播现场|\.(?=[A-Z0-9]{1,}[A-Z])(?=[A-Z0-9]{1,}[0-9])[A-Z0-9]{8}\./,
       before() {
         // 存在 28(1).mkv 这种文件名
         const regex = /(?<=\d)[(（][0-9]{1,}[）)]/g;
         cur_filename = cur_filename.replace(regex, "");
       },
+    },
+    {
+      regexp: /[cC][hH][sS]\.{0,1}[jJ][pP][nN]/,
     },
     {
       regexp: /repack/,
@@ -252,10 +264,11 @@ export function parse_filename_for_video(
       regexp: /([0-9]{1,}集){0,1}((持续){0,1}更新中|[已全]\.{0,1}完结)/,
     },
     {
-      regexp: /付费|去除|保留|官方/,
+      regexp: /付费|去除|保留|官方|公众号[:：]{0,1}/,
     },
     {
-      regexp: /[国粤]语(中字|繁字|无字|内嵌){0,1}|繁体中字|双语中字|中英双字|[国粤韩英日]{1,3}[双三]语|双语源码/,
+      regexp:
+        /[国粤日]语(中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日]{1,3}[双三]语|双语源码/,
     },
     {
       regexp: /((默认){0,1}[粤国英]语音[轨频])(合成版){0,1}|亚马逊版/,
@@ -266,17 +279,36 @@ export function parse_filename_for_video(
         /(内封|内嵌|外挂){0,1}[简繁中英多]{1,}[文语語]{0,1}字幕|无字|(内封|内嵌|内挂|无|[软硬])字幕版{0,1}|(内封|内嵌|外挂)(多国){0,1}字幕|(内封|内嵌|外挂)[简繁中英][简繁中英]|(内封|内嵌|外挂)/,
     },
     {
+      regexp: /[\u4e00-\u9fa5]{0,}压制组{0,1}/,
+    },
+    {
       regexp: /杜比视界/,
     },
     {
-      regexp: /高码|超{0,1}高{0,1}清(修复版{0,1}){0,1}|[0-9]{2,4}重置版|多语版/,
+      regexp: /高清|超清|超高清/,
+    },
+    {
+      regexp: /高码|修复版{0,1}|[0-9]{2,4}重置版|多语版/,
+    },
+    {
+      regexp: /重置版/,
     },
     {
       regexp: /([0-9]{1,}部){0,1}剧场版/,
     },
     {
-      regexp: /超{0,1}高{0,1}清/,
+      regexp: /[超高]清/,
     },
+    {
+      regexp: /修复版/,
+    },
+    {
+      regexp: /高码|[0-9]{2,4}重置版|多语版|网络版|劇場版/,
+    },
+    {
+      regexp: /([0-9]{1,}部){0,1}剧场版/,
+    },
+
     {
       regexp: /无台标(水印版){0,1}/,
     },
@@ -448,7 +480,7 @@ export function parse_filename_for_video(
     {
       // 针对国产剧，有一些加在名称后面的数字表示季，如还珠格格2、欢乐颂3_01
       key: k("season"),
-      regexp: /[\u4e00-\u9fa5]{1,}([1-9]{1}[:：]{0,1})(\.|$|-)/,
+      regexp: /[\u4e00-\u9fa5]{1,}(0{0,1}(?!0)[1-9]{1,2}[:：]{0,1})(\.|$|-)/,
       priority: 1,
       pick: [1],
     },
@@ -498,7 +530,7 @@ export function parse_filename_for_video(
       regexp: /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5，：·]{0,}[0-9a-zA-Z\u4e00-\u9fa5])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
-        cur_filename = cur_filename.replace(/^([0-9]{4}\.)([\u4e00-\u9fa5]{1,})/, "$2.$1");
+        cur_filename = cur_filename.replace(/^([0-9]{4}\.{1,})([\u4e00-\u9fa5]{1,})/, "$2.$1");
         // 把 老友记S02 这种情况转换成 老友记.S02
         cur_filename = cur_filename.replace(/^([\u4e00-\u9fa5]{1,})([sS][0-9]{1,})/, "$1.$2");
         // 如果名字前面有很多冗余信息，前面就会出现 ..名称 这种情况，就需要手动处理掉
@@ -533,7 +565,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("source"),
-      regexp: /HDTV/,
+      regexp: /HDTV([Rr][Ii][Pp]){0,1}/,
     },
     {
       key: k("source"),
@@ -542,12 +574,8 @@ export function parse_filename_for_video(
     },
     {
       key: k("source"),
-      regexp: /DVD(-{0,1}[rR]ip){0,1}/,
-    },
-    {
-      key: k("source"),
       // 指从 Blu-ray 光盘中提取出来的视频文件
-      regexp: /BDRip/,
+      regexp: /([bB][dD]|[wW][eE][bB]|[dD][vV][dD])-{0,1}[rR][iI][pP]/,
     },
     /**
      * 色深，和 10bit/8bit 同等概念？
@@ -684,7 +712,7 @@ export function parse_filename_for_video(
       // 日文 \u0800-\u4e00 还要包含中文字符范围
       // 英文 a-zA-Z
       const name_regexp =
-        /[0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[ \.\-&'（）：！？～0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[）0-9a-zA-Z!！？\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]/;
+        /[0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[ \.\-&!'（）：！？～0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[）0-9a-zA-Z!！？\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]/;
       const remove_multiple_dot = () => {
         // log("[6.0]before original_name or episode name", cur_filename);
         // 后面的 ` 符号可以换成任意生僻字符，这个极度重要！！

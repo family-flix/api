@@ -321,7 +321,7 @@ model tv {
         user_id    String
         user       user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        play_history    play_history?
+        play_histories  play_history[]
         seasons         season[]
         episodes        episode[]
         parsed_tvs      parsed_tv[]
@@ -387,8 +387,8 @@ model movie {
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        play_history  play_history?
-        parsed_movies parsed_movie[]
+        play_histories play_history[]
+        parsed_movies  parsed_movie[]
 
         @@map("Movie")
 }
@@ -399,6 +399,7 @@ model async_task {
         updated DateTime @default(now())
 
         unique_id String
+        type      Int?    @default(0)
         desc      String?
         status    Int?    @default(0)
         need_stop Int?    @default(0)
@@ -417,13 +418,24 @@ model output {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        // article node 转成的 json
-        content String
+        lines output_line[]
 
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         async_task async_task?
+}
+
+model output_line {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        // json
+        content String
+
+        output_id String?
+        output    output? @relation(fields: [output_id], references: [id])
 }
 
 model play_history {

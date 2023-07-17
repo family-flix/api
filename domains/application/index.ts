@@ -41,7 +41,7 @@ export class Application {
     const { root_path } = options;
     this.root_path = root_path;
     const database_dir = path.join(root_path, "data");
-    const database_name = "family-flix.db";
+    const database_name = "family-flix.db?connection_limit=1";
     const storage_path = path.join(root_path, "storage");
     this.database_path = path.join(database_dir, database_name);
     this.database_dir = database_dir;

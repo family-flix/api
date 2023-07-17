@@ -18,13 +18,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id } = req.query as Partial<{ id: string }>;
   const body = req.body as TVProfileItemInTMDB;
   if (!id) {
-    return e("缺少未识别文件夹 id");
+    return e("缺少电视剧 id");
   }
-  const t_resp = await User.New(authorization, store);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const { id: user_id, settings } = t_resp.data;
+  const { id: user_id, settings } = t_res.data;
   if (!settings.tmdb_token) {
     return e("缺少 TMDB_TOKEN");
   }
@@ -33,26 +33,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(tv_res);
   }
   if (!tv_res.data) {
-    return e("没有匹配的文件夹记录");
+    return e("没有匹配的电视剧记录");
   }
   const parsed_tv = tv_res.data;
   const { drive_id } = parsed_tv;
-  // if (unknown_tv.tv_profile_id) {
-  //   return e("该电视剧已有匹配的电视剧信息");
-  // }
-  const { id: tmdb_id } = body as TVProfileItemInTMDB & {
+  const { id: tmdb_id, name } = body as TVProfileItemInTMDB & {
     id?: string;
   };
-  const profile_res = await store.find_tv_profile({
-    tmdb_id,
-  });
-  if (profile_res.error) {
-    return e(profile_res.error);
-  }
-  const profile = profile_res.data;
-  if (profile === null) {
-    return e("没有匹配的电视剧详情");
-  }
   const search = new MediaSearcher({
     user_id,
     drive_id,
@@ -60,6 +47,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     assets: app.assets,
     store,
   });
+  const profile_res = await search.get_tv_profile_with_tmdb_id({ tmdb_id });
+  if (profile_res.error) {
+    return e(profile_res);
+  }
+  const profile = profile_res.data;
   const r2 = await search.link_tv_to_parsed_tv({
     parsed_tv,
     profile,
@@ -67,5 +59,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r2.error) {
     return e(r2);
   }
+  await store.update_parsed_tv(parsed_tv.id, {
+    correct_name: profile.name,
+  });
   res.status(200).json({ code: 0, msg: "关联成功", data: null });
 }

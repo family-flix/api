@@ -172,4 +172,59 @@ describe("动漫", () => {
       episode_name: "",
     });
   });
+  test("灌篮高手日语版098.mp4", () => {
+    const name = "灌篮高手日语版098.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "灌篮高手",
+      original_name: "",
+      season: "",
+      episode: "E098",
+      episode_name: "",
+    });
+  });
+  test("2001三少爷的剑31.mkv", () => {
+    const name = "2001三少爷的剑31.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "三少爷的剑",
+      original_name: "",
+      season: "",
+      episode: "E31",
+      episode_name: "",
+    });
+  });
+  test("彩蛋1：腹肌胸肌肱二头肌！路哥这完美身材我爱了！.mp4", () => {
+    const name = "彩蛋1：腹肌胸肌肱二头肌！路哥这完美身材我爱了！.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "彩蛋1",
+      episode_name: "腹肌胸肌肱二头肌！路哥这完美身材我爱了！",
+    });
+  });
+  test("S 熟-年 [2023][40集持续更新中]", () => {
+    const name = "S 熟-年 [2023][40集持续更新中]";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+      episode_name: "熟-年",
+    });
+  });
+  test("好先生(未删减版)—1080P.HEVC.H264.AAC", () => {
+    const name = "好先生(未删减版)—1080P.HEVC.H264.AAC";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "好先生",
+      original_name: "",
+      season: "",
+      episode: "",
+      episode_name: "",
+    });
+  });
 });

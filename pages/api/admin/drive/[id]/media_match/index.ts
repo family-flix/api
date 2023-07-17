@@ -11,6 +11,7 @@ import { Job } from "@/domains/job";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { app, store } from "@/store";
+import { TaskTypes } from "@/domains/job/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -39,7 +40,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive.has_root_folder()) {
     return e(Result.Err("请先设置索引目录", 30001));
   }
-  const job_res = await Job.New({ desc: `搜索云盘 '${drive.name}' 索引结果`, unique_id: drive.id, user_id, store });
+  const job_res = await Job.New({
+    desc: `云盘 '${drive.name}' 影视剧搜索详情信息`,
+    type: TaskTypes.SearchMedia,
+    unique_id: drive.id,
+    user_id,
+    store,
+  });
   if (job_res.error) {
     return e(job_res);
   }

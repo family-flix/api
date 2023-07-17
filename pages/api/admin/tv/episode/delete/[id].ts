@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       continue;
     }
     const drive = drive_res.data;
-    const r = await drive.client.delete_file(file_id);
+    const r = await drive.client.to_trash(file_id);
     if (r.error) {
       continue;
     }

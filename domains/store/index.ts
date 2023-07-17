@@ -139,6 +139,13 @@ export class DatabaseStore {
   find_task_list: ReturnType<typeof many_factory<PrismaClient["async_task"]>>;
   delete_task: ReturnType<typeof delete_factory<PrismaClient["async_task"]>>;
   find_task_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["async_task"]>>;
+  /** log */
+  add_output_line: ReturnType<typeof add_factory<PrismaClient["output_line"]>>;
+  update_output_line: ReturnType<typeof update_factory<PrismaClient["output_line"]>>;
+  find_output_line: ReturnType<typeof first_factory<PrismaClient["output_line"]>>;
+  find_output_line_list: ReturnType<typeof many_factory<PrismaClient["output_line"]>>;
+  delete_output_line: ReturnType<typeof delete_factory<PrismaClient["output_line"]>>;
+  find_output_line_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["output_line"]>>;
   /** 云盘签到 */
   add_check_in: ReturnType<typeof add_factory<PrismaClient["drive_check_in"]>>;
   /** 电视剧详情快照 */
@@ -325,13 +332,20 @@ export class DatabaseStore {
     this.find_recommended_tv_with_pagination = pagination_factory<PrismaClient["recommended_tv"]>(
       prisma.recommended_tv
     );
-    /** 索引任务 */
+    /** 异步任务 */
     this.add_task = add_factory<PrismaClient["async_task"]>(prisma.async_task);
     this.update_task = update_factory<PrismaClient["async_task"]>(prisma.async_task);
     this.find_task = first_factory<PrismaClient["async_task"]>(prisma.async_task);
     this.find_task_list = many_factory<PrismaClient["async_task"]>(prisma.async_task);
     this.delete_task = delete_factory<PrismaClient["async_task"]>(prisma.async_task);
     this.find_task_list_with_pagination = pagination_factory<PrismaClient["async_task"]>(prisma.async_task);
+    /** log */
+    this.add_output_line = add_factory<PrismaClient["output_line"]>(prisma.output_line);
+    this.update_output_line = update_factory<PrismaClient["output_line"]>(prisma.output_line);
+    this.find_output_line = first_factory<PrismaClient["output_line"]>(prisma.output_line);
+    this.find_output_line_list = many_factory<PrismaClient["output_line"]>(prisma.output_line);
+    this.delete_output_line = delete_factory<PrismaClient["output_line"]>(prisma.output_line);
+    this.find_output_line_list_with_pagination = pagination_factory<PrismaClient["output_line"]>(prisma.output_line);
     /** 云盘签到 */
     this.add_check_in = add_factory<PrismaClient["drive_check_in"]>(prisma.drive_check_in);
     /** 电视剧详情快照 */

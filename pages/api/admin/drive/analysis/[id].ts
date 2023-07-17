@@ -12,6 +12,7 @@ import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { app, store } from "@/store";
+import { TaskTypes } from "@/domains/job/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -40,11 +41,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive.has_root_folder()) {
     return e(Result.Err("请先设置索引目录", 30001));
   }
-  const job_res = await Job.New({ desc: `索引云盘 '${drive.name}'`, unique_id: drive.id, user_id, store });
+  const job_res = await Job.New({
+    desc: `索引云盘 '${drive.name}'`,
+    type: TaskTypes.DriveAnalysis,
+    unique_id: drive.id,
+    user_id,
+    store,
+  });
   if (job_res.error) {
     return e(job_res);
   }
   const job = job_res.data;
+  console.log("开始索引");
   const r2 = await DriveAnalysis.New({
     drive,
     store,
@@ -55,6 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.output.write(v);
     },
     on_finish() {
+      console.log("索引完成");
       job.output.write(
         new ArticleLineNode({
           children: [
@@ -74,6 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(r2);
   }
   const analysis = r2.data;
+  // console.log("[API]admin/drive/analysis/[id].ts - before analysis.run");
   analysis.run(
     (() => {
       if (!target_folders) {

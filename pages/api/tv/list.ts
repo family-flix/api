@@ -45,6 +45,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           ]
         : undefined,
     },
+    episodes: {
+      some: {},
+    },
   };
   const count = await store.prisma.tv.count({
     where,

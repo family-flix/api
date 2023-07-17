@@ -15,10 +15,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const {
     url,
+    code,
     file_id: parent_file_id = "root",
     next_marker = "initial",
   } = req.query as Partial<{
     url: string;
+    code: string;
     file_id: string;
     next_marker: string;
   }>;
@@ -44,7 +46,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(client_res);
   }
   const client = client_res.data;
-  const r1 = await client.fetch_share_profile(url);
+  const r1 = await client.fetch_share_profile(url, {
+    code,
+  });
   if (r1.error) {
     if (r1.error.message.includes("share_link is cancelled by the creator")) {
       return e("分享链接被取消");

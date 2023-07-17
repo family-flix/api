@@ -26,7 +26,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       profile: true,
-      play_history: true,
+      play_histories: {
+        where: {
+          member_id,
+          tv_id: id,
+        },
+      },
       // episodes: {
       //   include: {
       //     profile: true,
@@ -53,11 +58,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (tv === null) {
     return e("没有匹配的电视剧记录");
   }
-  const { profile, play_history, seasons } = tv;
+  const { profile, play_histories, seasons } = tv;
   if (seasons.length === 0) {
     return e("该电视剧没有季列表");
   }
   const min_season = seasons[0];
+  const play_history =
+    play_histories.find((p) => {
+      return p.member_id === member_id && p.tv_id === id;
+    }) ?? null;
   const playing_episode = await (async () => {
     if (play_history === null) {
       const episode = await store.prisma.episode.findFirst({

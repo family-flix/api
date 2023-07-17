@@ -11,6 +11,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { User } from "@/domains/user";
 import { store } from "@/store";
+import { TaskTypes } from "@/domains/job/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -29,6 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     unique_id: "sync_all_tv",
     desc: "同步所有电视剧新增影片",
+    type: TaskTypes.TVSync,
     user_id,
     store,
   });

@@ -96,7 +96,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (play_info_res.data.length === 1) {
       return play_info_res.data[0];
     }
-    const matched_resolution = play_info_res.data.find((r) => {
+    let matched_resolution = play_info_res.data.find((r) => {
+      return !r.url.includes("pdsapi");
+    });
+    if (matched_resolution) {
+      return matched_resolution;
+    }
+    matched_resolution = play_info_res.data.find((r) => {
       return r.type === type;
     });
     if (matched_resolution) {
@@ -107,35 +113,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (recommend.url.includes("x-oss-additional-headers=referer")) {
     return e("视频文件无法播放，请修改 refresh_token");
   }
+  // if (recommend.url.includes("https://pdsapi")) {
+  //   await (async () => {
+  //     const request = axios.create({
+  //       maxRedirects: 0,
+  //       transformResponse: [],
+  //     });
+  //     try {
+  //       await request.get(recommend.url);
+  //     } catch (err) {
+  //       const { response } = err as { response: { status: number; data: string } };
+  //       if (response.status !== 302) {
+  //         return;
+  //       }
+  //       const u = response.data.match(/href="([^"]{1,})"/);
+  //       if (!u) {
+  //         return;
+  //       }
+  //       recommend.url = decodeURIComponent(u[1].replace(/amp;/g, ""));
+  //       // recommend.url = u[1].replace(/amp;/g, "");
+  //     }
+  //   })();
+  // }
+  // console.log("set recoommend url", recommend.url);
+  // recommend.url = decodeURIComponent(
+  //   "https://ccp-bj29-video-preview.oss-enet.aliyuncs.com/lt/000417124791AFC1E1E8251DA76C17EB3FC9BA3F_459059310__sha1_bj29_6ea35024/HD/media.m3u8?di=bj29&dr=528581012&f=64afa10c905f191f641048e6ad35a2589869987a&security-token=CAIS%2BgF1q6Ft5B2yfSjIr5fdGcPfmrRtwLaZeBHwljIANMdhtYfS1jz2IHFPeHJrBeAYt%2FoxmW1X5vwSlq5rR4QAXlDfNV%2FLA3WpqFHPWZHInuDox55m4cTXNAr%2BIhr%2F29CoEIedZdjBe%2FCrRknZnytou9XTfimjWFrXWv%2Fgy%2BQQDLItUxK%2FcCBNCfpPOwJms7V6D3bKMuu3OROY6Qi5TmgQ41Uh1jgjtPzkkpfFtkGF1GeXkLFF%2B97DRbG%2FdNRpMZtFVNO44fd7bKKp0lQLukMWr%2Fwq3PIdp2ma447NWQlLnzyCMvvJ9OVDFyN0aKEnH7J%2Bq%2FzxhTPrMnpkSlacGoABJZZD3HTGRs6bHAJS5PumFtTqRT3C6Wp%2Ba8UpC7HEjcFdkUTD3kh8sxm1oNOSAw85cc3%2Fyz0lQ2ahhlbhmkWAGkYNbk9LdjZPJXkBAYGWVE5honVROdeOS5km0AG%2BYJmSH5lzxKsN5jnQSrYuBZmsxj%2FaxsvUx0hai6a%2Fh3Dqd8w%3D&u=4494cd0a0f4f48bf9075f32174a7948b&x-oss-access-key-id=STS.NThRykwkLwtrz7Ar2U8HMZBy4&x-oss-additional-headers=referer&x-oss-expires=1689449146&x-oss-process=hls%2Fsign%2Cparams_ZGksZHIsZix1%2Cheaders_cmVmZXJlcg%3D%3D&x-oss-signature=IAS3nnBl9QkrtdjsmqbioK%2BtoRDN6p%2BmIo06ENB%2FKFQ%3D&x-oss-signature-version=OSS2"
+  // );
   const { name, overview } = profile;
-  (() => {
-    const { url, type, width, height } = recommend;
-    const result: MediaFile & { other: MediaFile[] } = {
-      id,
-      name: name || episode_number,
-      overview: overview || "",
-      season_number,
-      episode_number,
-      file_id,
-      url,
-      thumbnail,
-      type,
-      width,
-      height,
-      // 其他分辨率的视频源
-      other: play_info_res.data.map((res) => {
-        const { url, type, width, height } = res;
-        return {
-          id: file_id,
-          file_id,
-          url,
-          thumbnail,
-          type,
-          width,
-          height,
-        };
-      }),
-    };
-    res.status(200).json({ code: 0, msg: "", data: result });
-  })();
+  const { url, type: t, width, height } = recommend;
+  const result: MediaFile & { other: MediaFile[] } = {
+    id,
+    name: name || episode_number,
+    overview: overview || "",
+    season_number,
+    episode_number,
+    file_id,
+    url,
+    thumbnail,
+    type: t,
+    width,
+    height,
+    // 其他分辨率的视频源
+    other: play_info_res.data.map((res) => {
+      const { url, type, width, height } = res;
+      return {
+        id: file_id,
+        file_id,
+        url,
+        thumbnail,
+        type,
+        width,
+        height,
+      };
+    }),
+  };
+  res.status(200).json({ code: 0, msg: "", data: result });
 }

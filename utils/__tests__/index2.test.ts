@@ -444,7 +444,7 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "S17",
       episode: "E03",
-      episode_name: "霸王龙压制组T-Rex",
+      episode_name: "T-Rex",
     });
   });
   test("[Prof] S02E02 - Mortynight Run.mkv", () => {
@@ -515,6 +515,39 @@ describe("提取视频信息", () => {
       original_name: "greys",
       season: "S03",
       episode: "E25",
+      episode_name: "",
+    });
+  });
+  test("Oh.No!Here.Comes.Trouble.S01E01.2023.2160p.WEB-DL.H265.DDP2.0.Gz.mkv", () => {
+    const name = "Oh.No!Here.Comes.Trouble.S01E01.2023.2160p.WEB-DL.H265.DDP2.0.Gz.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Oh.No!Here.Comes.Trouble",
+      season: "S01",
+      episode: "E01",
+      episode_name: "",
+    });
+  });
+  test("逃避可耻却有用.NIGERUHA.HAJIDAGA.YAKUNITATSU.Ep10.Chi_Jap.HDTVrip.1280X720-ZhuixinFan.mp4", () => {
+    const name = "逃避可耻却有用.NIGERUHA.HAJIDAGA.YAKUNITATSU.Ep10.Chi_Jap.HDTVrip.1280X720-ZhuixinFan.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "逃避可耻却有用",
+      original_name: "NIGERUHA.HAJIDAGA.YAKUNITATSU",
+      season: "",
+      episode: "E10",
+      episode_name: "Chi.Jap.-ZhuixinFan",
+    });
+  });
+  test("1080P官中压制", () => {
+    const name = "1080P官中压制";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
       episode_name: "",
     });
   });

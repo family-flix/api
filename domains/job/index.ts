@@ -4,17 +4,27 @@ import dayjs from "dayjs";
 import { BaseDomain } from "@/domains/base";
 import { Article, ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { DatabaseStore } from "@/domains/store";
-import { AsyncTaskRecord } from "@/store/types";
+import { AsyncTaskRecord } from "@/domains/store/types";
 import { Result } from "@/types";
 import { r_id } from "@/utils";
 
-import { TaskStatus } from "./constants";
+import { TaskStatus, TaskTypes } from "./constants";
 
 enum Events {}
 type TheTypesOfEvents = {};
+type JobNewProps = {
+  unique_id: string;
+  type: TaskTypes;
+  desc: string;
+  user_id: string;
+  store: DatabaseStore;
+};
 type JobProps = {
   id: string;
-  profile: Pick<AsyncTaskRecord, "unique_id" | "status" | "created" | "desc" | "user_id" | "output_id" | "error">;
+  profile: Pick<
+    AsyncTaskRecord,
+    "unique_id" | "type" | "status" | "created" | "desc" | "user_id" | "output_id" | "error"
+  >;
   output: Article;
   store: DatabaseStore;
 };
@@ -27,6 +37,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         id: true,
         desc: true,
         unique_id: true,
+        type: true,
         created: true,
         status: true,
         output: true,
@@ -41,13 +52,14 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (!r1) {
       return Result.Err("没有匹配的任务记录");
     }
-    const { desc, unique_id, created, status, output_id, error } = r1;
+    const { desc, unique_id, type, created, status, output_id, error } = r1;
     const job = new Job({
       id,
       profile: {
         status,
         desc,
         unique_id,
+        type,
         created,
         user_id,
         output_id,
@@ -59,7 +71,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(job);
   }
 
-  static async New(body: { desc: string; unique_id: string; user_id: string; store: DatabaseStore }) {
+  static async New(body: JobNewProps) {
     const { desc, unique_id, user_id, store } = body;
     const existing = await store.prisma.async_task.findFirst({
       where: {
@@ -80,7 +92,6 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         output: {
           create: {
             id: r_id(),
-            content: "[]",
             user_id,
           },
         },
@@ -91,11 +102,12 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         },
       },
     });
-    const { id, status, output_id, created } = res;
+    const { id, status, type, output_id, created } = res;
     const output = new Article({});
     const job = new Job({
       id,
       profile: {
+        type,
         status,
         desc,
         unique_id,
@@ -128,6 +140,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
 
     this.output.on_write(this.update_content);
   }
+  pending_lines = [];
   update_content = throttle(async () => {
     const content = this.output.to_json();
     this.output.clear();
@@ -142,22 +155,14 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (output === null) {
       return;
     }
-    const { content: prev_content_str } = output;
-    // console.log("prev_content_str", prev_content_str, content, this.profile.output_id);
-    try {
-      // @todo 这里总是出错，Timeout 是为什么，怎么解决？
-      const r = await this.store.prisma.output.update({
-        where: {
-          id: this.profile.output_id,
-        },
-        data: {
-          content: JSON.stringify(JSON.parse(prev_content_str).concat(content)),
-        },
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  }, 2000);
+    content.forEach((c) => {
+      const data = {
+        output_id: this.profile.output_id,
+        content: JSON.stringify(c),
+      };
+      this.store.add_output_line(data);
+    });
+  }, 5000);
   /** check need pause the task */
   check_need_pause = throttle(async () => {
     const r = await this.store.find_task({ id: this.id });
@@ -174,28 +179,60 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(false);
   }, 3000);
   async fetch_profile() {
-    // return { ...this.profile };
     const r1 = await this.store.prisma.async_task.findFirst({
       where: {
         id: this.id,
         user_id: this.profile.user_id,
       },
       include: {
-        output: true,
+        output: {
+          include: {
+            _count: true,
+            lines: {
+              take: 20,
+              orderBy: {
+                created: "asc",
+              },
+            },
+          },
+        },
       },
     });
     if (!r1) {
       return Result.Err("没有匹配的任务记录");
     }
     const { desc, unique_id, created, status, output, error } = r1;
-    const { content } = output;
+    const { lines, _count } = output;
     return Result.Ok({
       status,
       desc,
       unique_id,
       created,
-      content,
+      lines,
+      more_line: _count.lines > 20,
       error,
+    });
+  }
+  async fetch_lines_of_output(params: { page: number; page_size: number }) {
+    const { page, page_size } = params;
+    const where: NonNullable<Parameters<typeof this.store.prisma.output_line.findMany>[number]>["where"] = {
+      output_id: this.profile.output_id,
+    };
+    const count = await this.store.prisma.output_line.count({ where });
+    const list = await this.store.prisma.output_line.findMany({
+      where,
+      take: page_size,
+      skip: (page - 1) * page_size,
+      orderBy: {
+        created: 'asc',
+      }
+    });
+    return Result.Ok({
+      page,
+      page_size,
+      total: count,
+      no_more: (page - 1) * page_size + list.length >= count,
+      list,
     });
   }
   /** pause the task */
@@ -205,23 +242,21 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       need_stop: 1,
       status: force ? TaskStatus.Paused : undefined,
     });
-    this.output.write(
-      new ArticleLineNode({
-        children: [
-          new ArticleTextNode({
-            text: "主动中止索引任务",
-          }),
-        ],
-      })
-    );
-    const content = this.output.to_json();
-    await this.store.prisma.output.update({
-      where: {
-        id: this.profile.output_id,
-      },
-      data: {
-        content: JSON.stringify(content),
-      },
+    const content = this.output
+      .write(
+        new ArticleLineNode({
+          children: [
+            new ArticleTextNode({
+              text: "主动中止索引任务",
+            }),
+          ],
+        })
+      )
+      .to_json();
+    const output_id = this.profile.output_id;
+    await this.store.add_output_line({
+      output_id,
+      content: JSON.stringify(content),
     });
   }
   /** tag the task is finished */
@@ -240,16 +275,6 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (output === null) {
       return Result.Ok(null);
     }
-    // const content = this.output.to_json();
-    // const { content: prev_content_str } = output;
-    // await store.prisma.output.update({
-    //   where: {
-    //     id: this.profile.output_id,
-    //   },
-    //   data: {
-    //     content: JSON.stringify(JSON.parse(prev_content_str).concat(content)),
-    //   },
-    // });
     return Result.Ok(null);
   }
   async throw(error: Error) {
@@ -264,7 +289,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   }
   is_to_long() {
     const { status, created } = this.profile;
-    if (status === TaskStatus.Running && dayjs(created).add(15, "minute").isBefore(dayjs())) {
+    if (status === TaskStatus.Running && dayjs(created).add(50, "minute").isBefore(dayjs())) {
       // this.pause({ force: true });
       // return Result.Ok("任务耗时过长，自动中止");
       return true;

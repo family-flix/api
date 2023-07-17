@@ -48,7 +48,7 @@ export class User {
       secret: User.SECRET,
     });
     if (r.error) {
-      return Result.Err(r.error.message);
+      return Result.Err(r.error.message, 900);
     }
     const id = r.data.id as UserUniqueID;
     const existing = await store.prisma.user.findFirst({

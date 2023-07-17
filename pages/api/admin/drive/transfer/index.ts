@@ -14,6 +14,7 @@ import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
 import { FileType } from "@/constants";
 import { file } from "@prisma/client";
+import { TaskTypes } from "@/domains/job/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -51,11 +52,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!target_drive.has_root_folder()) {
     return e(Result.Err("请先设置目标云盘索引目录", 30001));
   }
-  const r = await source_drive.client.move_files_to_drive([file_id], target_drive.client);
+  const r = await source_drive.client.move_files_to_drive_with_quick({
+    file_ids: [file_id],
+    target_drive_client: target_drive.client,
+    target_folder_id: "root",
+  });
   if (r.error) {
     return Result.Err(r);
   }
-  const r2 = await source_drive.client.delete_file(file_id);
+  const r2 = await source_drive.client.to_trash(file_id);
   if (r2.error) {
     return Result.Err(r2);
   }
@@ -70,6 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     desc: `移动文件后索引云盘 '${target_drive.name}'`,
     unique_id: target_drive.id,
+    type: TaskTypes.TVTransfer,
     user_id,
     store,
   });
@@ -106,6 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(r3);
   }
   const analysis = r3.data;
+  // console.log("[API]admin/drive/transfer/index.ts - before await analysis.run");
   const r4 = await analysis.run(
     [{ name: `${target_drive.profile.root_folder_name}/${r.data.file_name}`, type: "folder" }],
     {

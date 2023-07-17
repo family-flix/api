@@ -27,15 +27,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       profile: true,
-      play_history: true,
+      play_histories: {
+        where: {
+          movie_id: id,
+          member_id,
+        },
+      },
       parsed_movies: true,
     },
   });
   if (movie === null) {
     return e("没有匹配的电影记录");
   }
-  const { profile, play_history, parsed_movies } = movie;
-  console.log("play_history", play_history);
+  const { profile, play_histories, parsed_movies } = movie;
+  const play_history =
+    play_histories.find((p) => {
+      return p.movie_id === id && p.member_id === member_id;
+    }) ?? null;
   const { current_time, thumbnail, file_id } = await (async () => {
     if (play_history === null) {
       const r = {
@@ -54,7 +62,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return r;
   })();
   const { name, original_name, overview, poster_path, popularity } = profile;
-  console.log("file_id", file_id);
   const data = {
     id,
     name: name || original_name,

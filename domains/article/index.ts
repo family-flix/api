@@ -1,6 +1,7 @@
 /**
  * @file 一篇文章的抽象节点
  * 为了消息提示
+ * https://github.com/ueberdosis/tiptap 参考这个的数据结构重构
  */
 import type { Handler } from "mitt";
 

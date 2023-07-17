@@ -6,14 +6,18 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
+  const { id, include_file } = req.query as Partial<{
+    id: string;
+    /** 同时删除云盘内剧集文件 */
+    include_file: string;
+  }>;
   if (!id) {
     return e("缺少电视剧 id");
   }
@@ -66,11 +70,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         if (drive_res.error) {
           continue;
         }
-        const client = drive_res.data.client;
-        const r = await client.delete_file(file_id);
-        if (r.error) {
-          has_error = true;
-          continue;
+        if (include_file) {
+          const client = drive_res.data.client;
+          const r = await client.to_trash(file_id);
+          if (r.error) {
+            has_error = true;
+            continue;
+          }
         }
         await store.delete_file({ file_id });
         await store.delete_parsed_episode({ id: parsed_episode.id });
@@ -83,12 +89,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const { id } = history;
         await store.delete_history({ id });
       }
-      await store.delete_episode({ id: episode.id });
+      const r = await store.delete_episode({ id: episode.id });
+      console.log("store.delete_episode", r.error);
     }
   } while (no_more === false);
 
   if (has_error) {
-    return e("删除过程出现错误，请重新删除");
+    return e(Result.Err("删除过程出现错误，请重新删除"));
   }
 
   page = 1;
@@ -120,12 +127,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           if (drive_res.error) {
             continue;
           }
-          const client = drive_res.data.client;
-          // console.log("删除文件", file_name);
-          const r = await client.delete_file(file_id);
-          if (r.error) {
-            has_error = true;
-            continue;
+          if (include_file) {
+            const client = drive_res.data.client;
+            const r = await client.to_trash(file_id);
+            if (r.error) {
+              has_error = true;
+              continue;
+            }
           }
           await store.delete_file({ file_id });
         }
@@ -137,12 +145,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (has_error) {
         continue;
       }
-      await store.delete_season({ id: season.id });
+      await store.prisma.episode.deleteMany({
+        where: {
+          season_id: season.id,
+        },
+      });
+      await store.prisma.parsed_episode.deleteMany({
+        where: {
+          parsed_season: {
+            season_id: season.id,
+          },
+        },
+      });
+      await store.prisma.parsed_season.deleteMany({
+        where: {
+          season_id: season.id,
+        },
+      });
+      const r = await store.delete_season({ id: season.id });
+      console.log("store.delete_season", r.error);
     }
   } while (no_more === false);
 
   if (has_error) {
-    return e("删除过程出现错误，请重新删除");
+    return e(Result.Err("删除过程出现错误，请重新删除"));
   }
 
   page = 1;
@@ -153,12 +179,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user_id,
   };
   const tv_count = await store.prisma.parsed_tv.count({ where: tv_where });
+  // console.log("parsed_tv_count", tv_count);
   do {
     const list = await store.prisma.parsed_tv.findMany({
       where: tv_where,
-      // include: {
-      //   binds: true,
-      // },
       skip: (page - 1) * page_size,
       take: page_size,
     });
@@ -172,25 +196,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         if (drive_res.error) {
           continue;
         }
-        const client = drive_res.data.client;
-        const r = await client.delete_file(file_id);
-        if (r.error) {
-          has_error = true;
-          continue;
+        if (include_file) {
+          const client = drive_res.data.client;
+          const r = await client.to_trash(file_id);
+          if (r.error) {
+            has_error = true;
+            continue;
+          }
         }
         await store.delete_file({ file_id });
       }
       if (has_error) {
         continue;
       }
-      await store.delete_parsed_tv({ id: parsed_tv.id });
+      const r = await store.delete_parsed_tv({ id: parsed_tv.id });
+      // console.log("store.delete_parsed_tv", r.error);
     }
   } while (no_more === false);
-
   if (has_error) {
-    return e("删除过程出现错误，请重新删除");
+    return e(Result.Err("删除过程出现错误，请重新删除"));
   }
-
   await store.prisma.tv.delete({
     where: {
       id,

@@ -33,9 +33,7 @@ export const salt = () => uid(128) as SALT;
  * Applies `PBKDF2` with a SHA256 hexadecimal digest.
  */
 export function hash(password: string, salt: SALT): Promise<PASSWORD> {
-  return PBKDF2("SHA-256", password, salt, 1000, 64).then(
-    toHEX
-  ) as Promise<PASSWORD>;
+  return PBKDF2("SHA-256", password, salt, 1000, 64).then(toHEX) as Promise<PASSWORD>;
 }
 
 /**
@@ -88,11 +86,7 @@ import { decode_token } from "./jwt";
 
 const crypto1 = new Crypto();
 
-export function keyload(
-  algo: Algorithms.Keying,
-  secret: string,
-  scopes: KeyUsage[]
-): Promise<CryptoKey> {
+export function keyload(algo: Algorithms.Keying, secret: string, scopes: KeyUsage[]): Promise<CryptoKey> {
   return crypto1.subtle.importKey("raw", encode(secret), algo, false, scopes);
 }
 
@@ -398,8 +392,7 @@ export function viaHEX(input: string): Uint8Array {
 export const uuid = () => crypto.randomUUID();
 
 // Alphabet for `uid` generator
-const ALPHANUM =
-  /*#__PURE__*/ "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_";
+const ALPHANUM = /*#__PURE__*/ "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_";
 
 // (ulid) Crockford's Base32
 const BASE32 = /*#__PURE__*/ "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
@@ -436,8 +429,7 @@ export const Encoder = /*#__PURE__*/ new TextEncoder();
 export const Decoder = /*#__PURE__*/ new TextDecoder();
 
 export const encode = (input: string) => Encoder.encode(input);
-export const decode = (input: ArrayBufferView | ArrayBuffer, stream = false) =>
-  Decoder.decode(input, { stream });
+export const decode = (input: ArrayBufferView | ArrayBuffer, stream = false) => Decoder.decode(input, { stream });
 
 export function byteLength(input?: string): number {
   return input ? Encoder.encode(input).byteLength : 0;
@@ -446,28 +438,22 @@ export function byteLength(input?: string): number {
 /**
  * 解析 token
  */
-export async function parse_token({
-  token,
-  secret,
-}: {
-  token?: string;
-  secret: string;
-}) {
+export async function parse_token({ token, secret }: { token?: string; secret: string }) {
   if (!token) {
-    return Result.Err("Missing auth token");
+    return Result.Err("缺少 token");
   }
   const user_res = await resultify(decode_token)({ token, secret });
   if (user_res.error) {
-    return Result.Err(user_res.error);
+    return Result.Err(user_res.error, 900);
   }
   const user = user_res.data;
   if (user === null) {
-    return Result.Err("invalid token");
+    return Result.Err("token 不合法", 900);
   }
   if (user.id) {
     return Result.Ok({
       id: user.id,
     });
   }
-  return Result.Err("invalid token");
+  return Result.Err("token 不合法", 900);
 }

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "AsyncTask" ADD COLUMN "type" INTEGER DEFAULT 0;

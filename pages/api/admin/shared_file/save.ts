@@ -14,9 +14,11 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { url, file_id, file_name, drive_id } = req.body as Partial<{
+  const { url, code, file_id, file_name, drive_id } = req.body as Partial<{
     /** 分享资源链接 */
     url: string;
+    /** 分享资源链接 */
+    code: string;
     /** 要转存的分享文件的 file_id */
     file_id: string;
     /** 要转存的分享文件的名称 */
@@ -72,9 +74,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive.has_root_folder()) {
     return e("请先为云盘设置索引根目录");
   }
-  const r1 = await client.save_shared_files({
+  const r1 = await client.save_multiple_shared_files({
     url,
-    file_id,
+    code,
+    file_ids: [{ file_id }],
   });
   if (r1.error) {
     return e(r1);

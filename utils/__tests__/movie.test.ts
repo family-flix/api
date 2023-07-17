@@ -42,4 +42,27 @@ describe("电影", () => {
       episode_name: "",
     });
   });
+  test("1990.傅艺伟. 封神榜 4K. 高清修复", () => {
+    const name = "1990.傅艺伟. 封神榜 4K. 高清修复";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "封神榜",
+      original_name: "",
+      season: "",
+      episode: "",
+      episode_name: "",
+    });
+  });
+  test("碟中谍7：致命清算（上）.mp4", () => {
+    const name = "碟中谍7：致命清算（上）.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      // @todo
+      name: "碟中谍7：致命清算",
+      original_name: "",
+      season: "",
+      episode: "",
+      episode_name: "",
+    });
+  });
 });

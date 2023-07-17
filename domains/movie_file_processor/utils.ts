@@ -1,5 +1,5 @@
-import { ParsedEpisodeRecord, ParsedMovieRecord, ParsedSeasonRecord, ParsedTVRecord } from "@/store/types";
-import { SearchedEpisode, SearchedMovie } from "@/domains/walker";
+import { ParsedMovieRecord } from "@/domains/store/types";
+import { SearchedMovie } from "@/domains/walker";
 
 /**
  * 判断两个电影信息是否有改变（名称有改变）

@@ -8,11 +8,12 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
+import { ParsedEpisodeRecord } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
+  const { tv_id: id } = req.query as Partial<{ tv_id: string }>;
   if (!id || id === "undefined") {
     return e("缺少电视剧 id");
   }
@@ -29,9 +30,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       _count: true,
       profile: true,
-      episodes: {
+      parsed_tvs: {
+        orderBy: {
+          name: "asc",
+        },
+      },
+      play_histories: {
         include: {
-          parsed_episodes: true,
+          episode: true,
+          member: true,
         },
       },
       seasons: {
@@ -54,14 +61,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           season_number: "asc",
         },
       },
+      episodes: {
+        include: {
+          parsed_episodes: true,
+        },
+      },
     },
   });
   if (tv === null) {
     return e("没有匹配的电视剧记录");
   }
-
   const data = (() => {
-    const { id, profile, seasons, episodes, _count } = tv;
+    const { id, profile, seasons, episodes, parsed_tvs, play_histories, _count } = tv;
+    const source_size_count = (() => {
+      let size_count = 0;
+      const parsed_episodes = episodes.reduce((total, cur) => {
+        return total.concat(cur.parsed_episodes);
+      }, [] as ParsedEpisodeRecord[]);
+      for (let i = 0; i < parsed_episodes.length; i += 1) {
+        const parsed_episode = parsed_episodes[i];
+        const { drive_id, size } = parsed_episode;
+        size_count += size ?? 0;
+      }
+      return size_count;
+    })();
     const {
       name,
       original_name,
@@ -71,18 +94,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       original_language,
       first_air_date,
       episode_count,
-      season_count,
+      tmdb_id,
     } = profile;
     const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
-    const sources = episodes
-      .map((episode) => {
-        const { parsed_episodes } = episode;
-        return parsed_episodes;
-      })
-      .reduce((total, cur) => {
-        return total.concat(cur);
-      }, []);
-
     return {
       id,
       name: name || original_name,
@@ -91,6 +105,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       backdrop_path,
       original_language,
       first_air_date,
+      tmdb_id,
+      size_count: source_size_count,
       incomplete,
       seasons: seasons.map((season) => {
         const { id, season_number, profile, episodes } = season;
@@ -100,17 +116,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           name: name || season_number,
           overview,
           episodes: episodes.map((episode) => {
-            const { id, profile, episode_number } = episode;
+            const { id, profile, episode_number, parsed_episodes } = episode;
             const { name, overview } = profile;
             return {
               id,
               name: name || episode_number,
               overview,
+              sources: parsed_episodes,
             };
           }),
         };
       }),
-      sources,
+      parsed_tvs,
+      play_histories,
     };
   })();
 

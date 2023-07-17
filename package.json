@@ -1,6 +1,6 @@
 {
   "name": "@family-flix/api",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "scripts": {
     "dev": "node static.js & next dev --port 3200",
@@ -43,9 +43,11 @@
     "next": "^13.1.6",
     "nzh": "^1.0.8",
     "pino": "^8.10.0",
+    "pinyin": "^3.0.0-alpha.5",
     "qiniu": "^7.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "tencentcloud-sdk-nodejs-asr": "^4.0.642",
     "typescript": "4.9.4",
     "uuid": "^9.0.0"
   },

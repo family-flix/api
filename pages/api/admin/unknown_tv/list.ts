@@ -12,7 +12,7 @@ import { User } from "@/domains/user";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
-  const { page = "1", page_size = "20" } = query as Partial<{
+  const { page: page_str = "1", page_size: page_size_str = "20" } = query as Partial<{
     page: string;
     page_size: string;
   }>;
@@ -22,27 +22,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const r2 = await store.find_parsed_tv_list_with_pagination(
-    {
-      where: {
-        tv_id: null,
-        user_id,
-      },
-      select: {
-        id: true,
-        name: true,
-        original_name: true,
-        file_name: true,
-      },
+  const page = Number(page_str);
+  const page_size = Number(page_size_str);
+  const where: NonNullable<Parameters<typeof store.prisma.parsed_tv.findMany>[number]>["where"] = {
+    tv_id: null,
+    user_id,
+  };
+  const count = await store.prisma.parsed_tv.count({ where });
+  const list = await store.prisma.parsed_tv.findMany({
+    where,
+    select: {
+      id: true,
+      name: true,
+      original_name: true,
+      file_name: true,
     },
-    { page: Number(page), size: Number(page_size) }
-  );
-  if (r2.error) {
-    return e(r2);
-  }
+    take: page_size,
+    skip: (page - 1) * page_size,
+    orderBy: {
+      created: "asc",
+    },
+  });
   res.status(200).json({
     code: 0,
     msg: "",
-    data: r2.data,
+    data: {
+      page,
+      page_size,
+      no_more: list.length + (page - 1) * page_size >= count,
+      total: count,
+      list,
+    },
   });
 }

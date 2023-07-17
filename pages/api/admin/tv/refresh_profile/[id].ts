@@ -1,5 +1,5 @@
 /**
- * @file 管理后台/刷新从 TMDB 搜索到的电视剧详情
+ * @file 管理后台 刷新/绑定电视剧详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -7,10 +7,11 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { TMDBClient } from "@/domains/tmdb";
 import { TVProfileFromTMDB } from "@/domains/tmdb/services";
-import { BaseApiResp } from "@/types";
+import { TVProfileRecord } from "@/domains/store/types";
+import { MediaSearcher } from "@/domains/searcher";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { TVProfileRecord } from "@/store/types";
-import { store } from "@/store";
+import { app, store } from "@/store";
 
 function need_update_profile(existing_profile: TVProfileRecord, cur: TVProfileFromTMDB) {
   const { name, overview, poster_path, backdrop_path, popularity, number_of_episodes, number_of_seasons } = cur;
@@ -54,6 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
+  const { tmdb_id } = req.body as { tmdb_id: string };
   if (!id) {
     return e("缺少电视剧 id");
   }
@@ -61,7 +63,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id, settings } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id, settings } = user;
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
@@ -72,17 +75,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (tv === null) {
-    return e("没有匹配的电视剧记录");
+    return e(Result.Err("没有匹配的电视剧记录"));
   }
-  const {
-    profile: { tmdb_id },
-  } = tv;
   const client = new TMDBClient({
     token: settings.tmdb_token,
   });
-  const r = await client.fetch_tv_profile(tmdb_id);
+  const r = await client.fetch_tv_profile(tmdb_id ? Number(tmdb_id) : tv.profile.tmdb_id);
   if (r.error) {
-    return e(r);
+    return e(r.error);
   }
   const update_payload = need_update_profile(tv.profile, r.data);
   if (update_payload === null) {
@@ -93,6 +93,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     return;
   }
+  const searcher_res = await MediaSearcher.New({
+    user_id: user.id,
+    tmdb_token: user.settings.tmdb_token,
+    assets: app.assets,
+    store,
+  });
+  if (searcher_res.error) {
+    return e(searcher_res.error);
+  }
+  const searcher = searcher_res.data;
+  const profile = await searcher.normalize_tv_profile(
+    {
+      tmdb_id: tmdb_id ? Number(tmdb_id) : tv.profile.tmdb_id,
+    },
+    r.data
+  );
   await store.prisma.tv_profile.update({
     where: {
       id: tv.profile.id,
@@ -102,6 +118,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   res.status(200).json({
     code: 0,
     msg: "更新成功",
-    data: null,
+    data: profile,
   });
 }

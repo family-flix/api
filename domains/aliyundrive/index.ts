@@ -8,7 +8,7 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { DatabaseStore } from "@/domains/store";
 import { DriveRecord } from "@/domains/store/types";
-import { query_stringify } from "@/utils";
+import { query_stringify, sleep } from "@/utils";
 import { Result } from "@/types";
 
 import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo } from "./types";
@@ -324,11 +324,7 @@ export class AliyunDriveClient {
     }
     await this.ensure_initialized();
     const { page_size = 20, marker } = options;
-    const body = {
-      parent_file_id: folder_file_id,
-      drive_id: String(this.drive_id),
-      marker,
-    };
+    await sleep(800);
     const r = await this.request.post<{
       items: AliyunDriveFileResp[];
       next_marker: string;
@@ -388,7 +384,11 @@ export class AliyunDriveClient {
       return Result.Err("缺少文件夹名称");
     }
     await this.ensure_initialized();
-    const r = await this.request.post(API_HOST + "/adrive/v2/file/createWithFolders", {
+    const r = await this.request.post<{
+      file_id: string;
+      file_name: string;
+      parent_file_id: string;
+    }>(API_HOST + "/adrive/v2/file/createWithFolders", {
       check_name_mode: "refuse",
       drive_id: String(this.drive_id),
       name,
@@ -398,7 +398,7 @@ export class AliyunDriveClient {
     if (r.error) {
       return Result.Err(r.error);
     }
-    return Result.Ok(null);
+    return Result.Ok(r.data);
   }
 
   /** 获取一个文件的详细信息，包括其路径 */
@@ -480,15 +480,18 @@ export class AliyunDriveClient {
       file_id,
       drive_id: String(this.drive_id),
       category: "live_transcoding",
-      template_id: "",
-      url_expire_sec: 14400,
+      template_id: "QHD|FHD|HD|SD|LD",
+      url_expire_sec: 60 * 60 * 2,
       get_subtitle_info: true,
+      // with_play_cursor: false,
     });
     if (result.error) {
       return result;
     }
     // console.log(
     //   "[]fetch_video_preview_info success",
+    //   file_id,
+    //   this.drive_id,
     //   result.data.video_preview_play_info.live_transcoding_task_list
     // );
     const a = format_M3U8_manifest(result.data.video_preview_play_info.live_transcoding_task_list);
@@ -506,6 +509,38 @@ export class AliyunDriveClient {
       order_by: "updated_at DESC",
       query: `name match "${name}" and type = "${type}"`,
       video_thumbnail_process: "video/snapshot,t_1000,f_jpg,ar_auto,w_300",
+    });
+    if (result.error) {
+      return result;
+    }
+    return Result.Ok(result.data);
+  }
+  /** 移动指定文件到指定文件夹 */
+  async move_files_to_folder(body: { files: { file_id: string }[]; target_folder_id: string }) {
+    await this.ensure_initialized();
+    const { files, target_folder_id } = body;
+    const result = await this.request.post<{
+      items: AliyunDriveFileResp[];
+    }>(API_HOST + "/v3/batch", {
+      drive_id: String(this.drive_id),
+      requests: files.map((file) => {
+        const { file_id } = file;
+        return {
+          body: {
+            file_id,
+            to_parent_file_id: target_folder_id,
+            to_drive_id: String(this.drive_id),
+            drive_id: String(this.drive_id),
+          },
+          headers: {
+            "Content-Type": "application/json",
+          },
+          id: file_id,
+          method: "POST",
+          url: "/file/move",
+        };
+      }),
+      resource: "file",
     });
     if (result.error) {
       return result;
@@ -537,22 +572,29 @@ export class AliyunDriveClient {
     return Result.Ok(result.data);
   }
   cached_share_token: Record<string, string> = {};
+  async fetch_share_token(body: { url: string; code?: string }) {
+    const { url, code } = body;
+    const matched_share_id = url.match(/\/s\/([a-zA-Z0-9]{1,})$/);
+    if (!matched_share_id) {
+      return Result.Err("Invalid url, it must includes share_id like 'hFgvpSXzCYd' at the end of url");
+    }
+    const share_id = matched_share_id[1];
+    const r1 = await this.request.post<{
+      expire_time: string;
+      expires_in: number;
+      share_token: string;
+    }>("/v2/share_link/get_share_token", {
+      share_id,
+      share_pwd: code,
+    });
+    return r1;
+  }
   /**
    * 获取分享详情
    * @param url 分享链接
    */
-  async fetch_share_profile(
-    url: string,
-    options: Partial<{ force: boolean }> = {}
-  ): Promise<
-    Result<{
-      share_id: string;
-      share_token: string;
-      share_title?: string;
-      share_name?: string;
-    }>
-  > {
-    const { force = false } = options;
+  async fetch_share_profile(url: string, options: Partial<{ code: string; force: boolean }> = {}) {
+    const { code, force = false } = options;
     const matched_share_id = url.match(/\/s\/([a-zA-Z0-9]{1,})$/);
     if (!matched_share_id) {
       return Result.Err("Invalid url, it must includes share_id like 'hFgvpSXzCYd' at the end of url");
@@ -562,6 +604,9 @@ export class AliyunDriveClient {
       return Result.Ok({
         share_id,
         share_token: this.share_token,
+        share_name: undefined,
+        share_title: undefined,
+        files: [] as { file_id: string; file_name: string; type: "folder" | "file" }[],
       });
     }
     await this.ensure_initialized();
@@ -569,8 +614,14 @@ export class AliyunDriveClient {
       creator_id: string;
       share_name: string;
       share_title: string;
+      file_infos: {
+        file_id: string;
+        file_name: string;
+        type: "folder" | "file";
+      }[];
     }>(API_HOST + "/adrive/v2/share_link/get_share_by_anonymous", {
       share_id,
+      code,
     });
     if (r1.error) {
       return Result.Err(r1.error);
@@ -583,6 +634,7 @@ export class AliyunDriveClient {
           expires_in: number;
         }>(API_HOST + "/v2/share_link/get_share_token", {
           share_id,
+          share_pwd: code,
         });
         if (r2.error) {
           return Result.Err(r2.error);
@@ -601,12 +653,14 @@ export class AliyunDriveClient {
       return Result.Err(share_token_resp.error);
     }
     const token = share_token_resp.data.share_token;
+    const { share_name, share_title, file_infos } = r1.data;
     this.share_token = token;
     return Result.Ok({
       share_token: token,
       share_id,
-      share_name: r1.data.share_name,
-      share_title: r1.data.share_title,
+      share_name,
+      share_title,
+      files: file_infos,
     });
   }
   async fetch_shared_files(
@@ -643,7 +697,10 @@ export class AliyunDriveClient {
     );
     return r3;
   }
-  /** 转存分享的文件 */
+  /**
+   * 转存分享的文件
+   * @deprecated 请使用 save_multiple_shared_files
+   */
   async save_shared_files(options: {
     /** 分享链接 */
     url: string;
@@ -678,7 +735,6 @@ export class AliyunDriveClient {
         "x-share-token": this.share_token,
       }
     );
-    // console.log("save file result", r2.error, r2.data);
     if (r2.error) {
       return Result.Err(r2.error);
     }
@@ -692,72 +748,227 @@ export class AliyunDriveClient {
   async save_multiple_shared_files(options: {
     /** 分享链接 */
     url: string;
-    files: {
-      /** 要转存的文件/文件夹 id */
+    /** 提取码 */
+    code?: string;
+    /** 需要转存的文件 */
+    file_ids?: {
       file_id: string;
     }[];
     /** 转存到网盘指定的文件夹 id */
     target_file_id?: string;
   }) {
     await this.ensure_initialized();
-    const { url, files, target_file_id = this.root_folder_id } = options;
-    const r1 = await this.fetch_share_profile(url);
-    // console.log("fetch shared file info", r1);
+    const { url, code, file_ids, target_file_id = this.root_folder_id } = options;
+    const r1 = await this.fetch_share_profile(url, { code });
     if (r1.error) {
       return Result.Err(r1.error);
     }
     if (this.share_token === null) {
       return Result.Err("Please invoke fetch_share_profile first");
     }
-    const { share_id, share_title, share_name } = r1.data;
-    const r2 = await this.request.post(
-      API_HOST + "/adrive/v2/batch",
-      {
-        requests: files.map((file) => {
-          const { file_id } = file;
-          return {
-            body: {
-              auto_rename: true,
-              file_id,
-              share_id,
-              to_parent_file_id: target_file_id,
-              to_drive_id: String(this.drive_id),
-            },
-            headers: {
-              "Content-Type": "application/json",
-            },
-            id: "0",
-            method: "POST",
-            url: "/file/copy",
-          };
-        }),
-        resource: "file",
-      },
-      {
-        "x-share-token": this.share_token,
-      }
-    );
+    const { share_id, share_title, share_name, files } = r1.data;
+    const share_files = file_ids || files;
+    // console.log("save_multiple_shared_files", share_files);
+    const body = {
+      requests: share_files.map((file, i) => {
+        const { file_id } = file;
+        return {
+          body: {
+            auto_rename: true,
+            file_id,
+            share_id,
+            to_parent_file_id: target_file_id,
+            to_drive_id: String(this.drive_id),
+          },
+          headers: {
+            "Content-Type": "application/json",
+          },
+          id: String(i),
+          method: "POST",
+          url: "/file/copy",
+        };
+      }),
+      resource: "file",
+    };
+    const r2 = await this.request.post<{
+      responses: {
+        body: {
+          code: string;
+          message: string;
+          async_task_id?: string;
+          file_id: string;
+          domain_id: string;
+        };
+        // 其实是 index
+        id: string;
+        status: number;
+      }[];
+    }>(API_HOST + "/adrive/v2/batch", body, {
+      "x-share-token": this.share_token,
+    });
     if (r2.error) {
       return Result.Err(r2.error);
     }
+    const responses = r2.data.responses.map((resp) => {
+      // console.log("1", resp);
+      const { id, status, body } = resp;
+      return {
+        id,
+        index: Number(id) + 1,
+        status,
+        body,
+      };
+    });
+    // 可能容量已经超出，这时不会尝试创建转存任务，直接返回失败
+    const error_body = responses.find((resp) => {
+      return ![200, 202].includes(resp.status);
+    });
+    if (error_body) {
+      return Result.Err(`存在转存失败的记录，第 ${error_body.index} 个，因为 ${error_body.body.message}`);
+    }
+    const async_task_list = responses
+      .map((resp) => {
+        return resp.body.async_task_id;
+      })
+      .filter((id) => {
+        if (!id) {
+          return false;
+        }
+        return true;
+      }) as string[];
+    // console.log("async task list", async_task_list);
+    if (async_task_list.length !== 0) {
+      await sleep(1000);
+      const r2 = await this.fetch_multiple_async_task({ async_task_ids: async_task_list });
+      if (r2.error) {
+        return Result.Err("转存状态未知，可尝试重新转存");
+      }
+      const { responses } = r2.data;
+      const error_body = responses.find((resp) => {
+        // console.log("2", resp);
+        return resp.status !== 200 || !!resp.body.message;
+      });
+      if (error_body) {
+        return Result.Err(
+          `${(() => {
+            if (error_body.index) {
+              return `第 ${error_body.index} 个文件转存失败`;
+            }
+            return "转存文件失败";
+          })()}，因为 ${error_body.body.message}`
+        );
+      }
+      return Result.Ok(null);
+    }
+    // console.log("save_multiple_shared_files", responses);
     return Result.Ok({
       share_id,
       share_title,
       share_name,
     });
   }
+  /** 获取多个异步任务状态 */
+  async fetch_multiple_async_task(args: { async_task_ids: string[] }) {
+    const { async_task_ids } = args;
+    const body = {
+      requests: async_task_ids.map((id) => {
+        return {
+          body: {
+            async_task_id: id,
+          },
+          headers: {
+            "Content-Type": "application/json",
+          },
+          id,
+          method: "POST",
+          url: "/async_task/get",
+        };
+      }),
+      resource: "file",
+    };
+    const r2 = await this.request.post<{
+      responses: {
+        body: {
+          code: string;
+          message: string;
+          total_process: number;
+          state: "PartialSucceed";
+          async_task_id: string;
+          consumed_process: number;
+          status: "PartialSucceed";
+        };
+        id: string;
+        status: number;
+      }[];
+    }>(API_HOST + "/adrive/v2/batch", body, {
+      "x-share-token": this.share_token,
+    });
+    if (r2.error) {
+      return Result.Err(r2.error);
+    }
+    const { responses } = r2.data;
+    return Result.Ok({
+      responses: responses.map((resp) => {
+        const { id, status, body } = resp;
+        return {
+          id,
+          index: (() => {
+            const n = Number(id);
+            if (Number.isNaN(n)) {
+              return null;
+            }
+            return n + 1;
+          })(),
+          status,
+          body,
+        };
+      }),
+    });
+  }
   /** 分享文件 */
   async create_shared_resource(file_ids: string[]) {
-    const r = await this.request.post<{
-      share_url: string;
-      file_id: string;
-      display_name: string;
-    }>(API_HOST + "/adrive/v2/share_link/create", {
+    await this.ensure_initialized();
+    const body = {
       expiration: dayjs().add(1, "day").toISOString(),
       sync_to_homepage: false,
       share_pwd: "",
       drive_id: String(this.drive_id),
       file_id_list: file_ids,
+    };
+    console.log("[DOMAIN]AliyunDrive - create_shared_resource", body);
+    const r = await this.request.post<{
+      share_url: string;
+      file_id: string;
+      display_name: string;
+      file_id_list: string[];
+    }>(API_HOST + "/adrive/v2/share_link/create", body);
+    if (r.error) {
+      // console.log("[DOMAIN]AliyunDrive - create_shared_resource failed", r.error.message);
+      return Result.Err(r.error);
+    }
+    const { share_url, file_id, display_name } = r.data;
+    return Result.Ok({
+      share_url,
+      file_id,
+      file_name: display_name,
+    });
+  }
+  /**
+   * 创建快传分享资源
+   */
+  async create_quick_shared_resource(file_ids: string[]) {
+    await this.ensure_initialized();
+    const r = await this.request.post<{
+      share_url: string;
+      file_id: string;
+      display_name: string;
+    }>(API_HOST + "/adrive/v1/share/create", {
+      drive_file_list: file_ids.map((id) => {
+        return {
+          file_id: id,
+          drive_id: String(this.drive_id),
+        };
+      }),
     });
     if (r.error) {
       return Result.Err(r.error);
@@ -768,20 +979,111 @@ export class AliyunDriveClient {
       file_name: r.data.display_name,
     });
   }
+  /** 获取快传分享资源 */
+  async fetch_quick_shared_resource(url: string) {
+    await this.ensure_initialized();
+    const matched_share_id = url.match(/\/t\/([a-zA-Z0-9]{1,})$/);
+    if (!matched_share_id) {
+      return Result.Err("Invalid url, it must includes share_id like 'hFgvpSXzCYd' at the end of url");
+    }
+    const share_id = matched_share_id[1];
+    const r = await this.request.post<{
+      share_url: string;
+      file_id: string;
+      display_name: string;
+    }>(API_HOST + `/adrive/v1/share/getByAnonymous?share_id=${share_id}`, {
+      share_id,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    return Result.Ok(r.data);
+  }
+  async save_quick_shared_resource(body: { url: string }) {
+    await this.ensure_initialized();
+    const { url } = body;
+    const matched_share_id = url.match(/\/t\/([a-zA-Z0-9]{1,})$/);
+    if (!matched_share_id) {
+      return Result.Err("Invalid url, it must includes share_id like 'hFgvpSXzCYd' at the end of url");
+    }
+    const share_id = matched_share_id[1];
+    const token_res = await this.request.post<{
+      share_token: string;
+    }>(API_HOST + "/adrive/v1/share/getShareToken", {
+      share_id,
+    });
+    if (token_res.error) {
+      return Result.Err(token_res.error);
+    }
+    const token = token_res.data.share_token;
+    const r = await this.request.post<{
+      items: {
+        id: string;
+        status: number;
+        body: {
+          domain_id: string;
+          drive_id: string;
+          file_id: string;
+        };
+      }[];
+      to_drive_id: string;
+      to_parent_file_id: string;
+    }>(
+      API_HOST + "/adrive/v1/share/saveFile",
+      {
+        share_id,
+      },
+      {
+        "x-share-token": token,
+      }
+    );
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    return Result.Ok(r.data);
+  }
   /** 将云盘内的文件，移动到另一个云盘 */
-  async move_files_to_drive(file_ids: string[], other_drive: AliyunDriveClient) {
+  async move_files_to_drive(body: {
+    file_ids: string[];
+    target_drive_client: AliyunDriveClient;
+    target_folder_id: string;
+  }) {
+    const { file_ids, target_drive_client: other_drive } = body;
+    // console.log("[DOMAIN]move_files_to_drive - file_ids is", file_ids);
     const r = await this.create_shared_resource(file_ids);
     if (r.error) {
       return Result.Err(r.error);
     }
     const { share_url, file_id, file_name } = r.data;
-    const r2 = await other_drive.fetch_share_profile(share_url);
+    await sleep(file_ids.length * 500);
+    const r2 = await other_drive.save_multiple_shared_files({
+      url: share_url,
+    });
     if (r2.error) {
       return Result.Err(r2.error);
     }
-    const r3 = await other_drive.save_shared_files({
+    return Result.Ok({ file_id, file_name });
+  }
+  /** 将云盘内的文件，移动到另一个云盘 */
+  async move_files_to_drive_with_quick(body: {
+    file_ids: string[];
+    target_drive_client: AliyunDriveClient;
+    target_folder_id: string;
+  }) {
+    const { file_ids, target_drive_client: other_drive } = body;
+    const r = await this.create_quick_shared_resource(file_ids);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { share_url, file_id, file_name } = r.data;
+    // console.log('share url', share_url);
+    const r2 = await other_drive.fetch_quick_shared_resource(share_url);
+    if (r2.error) {
+      return Result.Err(r2.error);
+    }
+    const r3 = await other_drive.save_quick_shared_resource({
       url: share_url,
-      file_id,
+      // file_id,
     });
     if (r3.error) {
       return Result.Err(r3.error);
@@ -792,15 +1094,26 @@ export class AliyunDriveClient {
     // await this.ensure_initialized();
     const r = await this.request.post(API_HOST + "/adrive/v2/user/get", {});
     if (r.error) {
-      console.log(r.error);
       return Result.Err(r.error);
     }
     return Result.Ok(null);
   }
   /** 文件移入回收站 */
-  async delete_file(file_id: string) {
+  async to_trash(file_id: string) {
     await this.ensure_initialized();
     const r = await this.request.post(API_HOST + "/adrive/v2/recyclebin/trash", {
+      drive_id: String(this.drive_id),
+      file_id,
+    });
+    if (r.error) {
+      return r;
+    }
+    return Result.Ok(null);
+  }
+  /** 从回收站删除文件 */
+  async delete_file(file_id: string) {
+    await this.ensure_initialized();
+    const r = await this.request.post(API_HOST + "/v3/file/delete", {
       drive_id: String(this.drive_id),
       file_id,
     });

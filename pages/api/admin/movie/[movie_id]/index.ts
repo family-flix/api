@@ -12,8 +12,8 @@ import { User } from "@/domains/user";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
-  if (!id || id === "undefined") {
+  const { movie_id } = req.query as Partial<{ movie_id: string }>;
+  if (!movie_id || movie_id === "undefined") {
     return e("缺少电影 id");
   }
   const t_res = await User.New(authorization, store);
@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = t_res.data;
   const tv = await store.prisma.movie.findFirst({
     where: {
-      id,
+      id: movie_id,
       user_id,
     },
     include: {

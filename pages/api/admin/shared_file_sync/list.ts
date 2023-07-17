@@ -45,6 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               profile: true,
             },
           },
+          drive: true,
         },
       },
     },
@@ -80,6 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             name: parsed_tv.tv?.profile.name,
             overview: parsed_tv.tv?.profile.overview,
             poster_path: parsed_tv.tv?.profile.poster_path,
+          },
+          drive: {
+            id: parsed_tv?.drive.id,
+            name: parsed_tv?.drive.name,
           },
         };
       }),

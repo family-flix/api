@@ -13,26 +13,47 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { file_id, drive_id } = req.query as Partial<{
+  const { file_id, include_drive = "0" } = req.query as Partial<{
     file_id: string;
-    drive_id: string;
+    include_drive: "0" | "1";
   }>;
-  if (!drive_id) {
-    return e("缺少云盘 id");
+  if (!file_id) {
+    return e("缺少文件 id");
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
-  if (drive_res.error) {
-    return e(drive_res);
+  const file_res = await store.find_file({
+    file_id,
+  });
+  if (file_res.error) {
+    return e(file_res);
   }
-  const drive = drive_res.data;
-  const { error, data } = await drive.client.delete_file(file_id as string);
-  if (error) {
-    return e(error);
+  const file = file_res.data;
+  if (file && include_drive === "1") {
+    const { drive_id } = file;
+    const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+    if (drive_res.error) {
+      return e(drive_res);
+    }
+    const drive = drive_res.data;
+    const r = await drive.client.to_trash(file_id);
+    if (r.error) {
+      return e(r);
+    }
   }
-  res.status(200).json({ code: 0, msg: "", data });
+  await (async () => {
+    await store.delete_file({
+      file_id,
+    });
+  })();
+  await store.delete_parsed_episode({
+    file_id,
+  });
+  await store.delete_parsed_movie({
+    file_id,
+  });
+  res.status(200).json({ code: 0, msg: "删除文件成功", data: null });
 }

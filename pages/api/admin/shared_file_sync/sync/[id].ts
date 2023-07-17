@@ -10,6 +10,7 @@ import { User } from "@/domains/user";
 import { app, store } from "@/store";
 import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { Job } from "@/domains/job";
+import { TaskTypes } from "@/domains/job/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -41,6 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     unique_id: id,
     desc: `同步电视剧 '${name || original_name}' 新增影片`,
+    type: TaskTypes.TVSync,
     user_id,
     store,
   });

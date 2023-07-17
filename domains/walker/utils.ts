@@ -2,8 +2,8 @@ import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
 import { SearchedEpisode } from "@/domains/walker";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { DatabaseStore } from "@/domains/store";
+import { ParsedTVRecord, ParsedEpisodeRecord, RecordCommonPart, ParsedSeasonRecord } from "@/domains/store/types";
 import { is_video_file } from "@/utils";
-import { ParsedTVRecord, ParsedEpisodeRecord, RecordCommonPart, ParsedSeasonRecord } from "@/store/types";
 import { Result, resultify } from "@/types";
 import { FileType } from "@/constants";
 

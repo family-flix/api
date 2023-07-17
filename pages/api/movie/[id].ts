@@ -12,8 +12,8 @@ import { Drive } from "@/domains/drive";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id, type } = req.query as Partial<{ id: string; type: string }>;
-  if (!id) {
+  const { movie_id, type } = req.query as Partial<{ movie_id: string; type: string }>;
+  if (!movie_id) {
     return e("缺少电影 id");
   }
   const t_res = await Member.New(authorization, store);
@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const member = t_res.data;
   const movie = await store.prisma.movie.findFirst({
     where: {
-      id,
+      id: movie_id,
     },
     include: {
       profile: true,
@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   (() => {
     const { url, type, width, height } = recommend;
     const result: MediaFile & { other: MediaFile[] } = {
-      id,
+      id: movie_id,
       name: name || undefined,
       overview: overview || "",
       file_id,

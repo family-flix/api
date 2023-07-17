@@ -14,15 +14,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  const { name } = req.body as Partial<{ name: string }>;
-
+  const body = req.body as Partial<{ id: number }>;
   if (!id) {
     return e("缺少电影 id");
   }
-  if (!name) {
-    return e("缺少正确的电影名称");
+  if (!body.id) {
+    return e("缺少正确的电影详情");
   }
-
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -35,13 +33,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (!parsed_movie) {
-    return e("没有匹配的季");
+    return e("没有匹配的电影");
   }
-
   const { drive_id } = parsed_movie;
-  if (parsed_movie.name === name) {
-    return e(`名称已经是 '${name}' 了`);
-  }
   const searcher_res = await MediaSearcher.New({
     user_id: user.id,
     drive_id,
@@ -54,17 +48,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(searcher_res);
   }
   const searcher = searcher_res.data;
-  const r = await searcher.add_movie_from_parsed_movie({
-    parsed_movie: {
-      ...parsed_movie,
-      correct_name: name,
-    },
+  const profile_res = await searcher.get_movie_profile_with_tmdb_id({
+    tmdb_id: body.id,
   });
-  if (r.error) {
-    return e(r.error);
+  if (profile_res.error) {
+    return e(profile_res.error);
+  }
+  const profile = profile_res.data;
+  const r1 = await searcher.link_movie_profile({
+    parsed_movie,
+    profile,
+  });
+  if (r1.error) {
+    return e(r1);
   }
   const r2 = await store.update_parsed_movie(parsed_movie.id, {
-    correct_name: name,
+    correct_name: profile_res.data.name,
   });
   if (r2.error) {
     return e(r2);

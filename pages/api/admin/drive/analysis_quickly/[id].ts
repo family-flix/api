@@ -13,6 +13,7 @@ import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { app, store } from "@/store";
 import { FileType } from "@/constants";
+import { TaskTypes } from "@/domains/job/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -40,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const tmp_folders = await store.prisma.tmp_file.findMany({
     where: {
-      type: FileType.Folder,
+      type: FileType.File,
       drive_id,
       user_id,
     },
@@ -48,7 +49,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (tmp_folders.length === 0) {
     return e(Result.Err("没有找到可索引的转存文件"));
   }
-  const job_res = await Job.New({ desc: `索引云盘 '${drive.name}'`, unique_id: drive.id, user_id, store });
+  const job_res = await Job.New({
+    desc: `快速索引云盘 '${drive.name}'`,
+    type: TaskTypes.DriveAnalysis,
+    unique_id: drive.id,
+    user_id,
+    store,
+  });
   if (job_res.error) {
     return e(job_res);
   }
@@ -83,17 +90,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const analysis = r2.data;
   const { root_folder_name } = drive.profile;
-  // console.log("[]", tmp_folders);
+  // console.log("[API]admin/drive/analysis_quickly/[id].ts - before await analysis.run", tmp_folders.length);
   analysis.run(
     tmp_folders.map((file) => {
       const { name, parent_paths, type } = file;
       return {
-        name: (() => {
-          if (parent_paths) {
-            return `${parent_paths}/${name}`;
-          }
-          return `${name}`;
-        })(),
+        name: [root_folder_name, parent_paths, name].filter(Boolean).join("/"),
         type: type === FileType.File ? "file" : "folder",
       };
     })

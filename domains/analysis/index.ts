@@ -38,6 +38,8 @@ type TheTypesOfEvents = {
   [Events.Finished]: void;
 };
 type DriveAnalysisProps = {
+  /** 当存在该值时会强制进行搜索 */
+  extra_scope?: string[];
   drive: Drive;
   user: User;
   store: DatabaseStore;
@@ -52,7 +54,7 @@ type DriveAnalysisProps = {
 
 export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
   static async New(body: Partial<DriveAnalysisProps>) {
-    const { drive, store, user, tmdb_token, assets, on_print, on_finish, on_error } = body;
+    const { extra_scope, drive, store, user, tmdb_token, assets, on_print, on_finish, on_error } = body;
     if (!tmdb_token) {
       return Result.Err("缺少 TMDB_TOKEN");
     }
@@ -69,10 +71,11 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("缺少用户信息");
     }
     const r = new DriveAnalysis({
+      extra_scope,
       drive,
       store,
       user,
-      tmdb_token: tmdb_token,
+      tmdb_token,
       assets,
       on_print,
       on_finish,
@@ -87,18 +90,22 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
 
   need_stop = false;
   episode_count = 0;
+  extra_scope?: string[];
   tmdb_token: string;
   assets: string;
 
   constructor(options: Partial<{}> & DriveAnalysisProps) {
     super();
 
-    const { drive, store, user, tmdb_token, assets, on_print, on_finish, on_error } = options;
+    const { extra_scope, drive, store, user, tmdb_token, assets, on_print, on_finish, on_error } = options;
     this.store = store;
     this.drive = drive;
     this.user = user;
     this.tmdb_token = tmdb_token;
     this.assets = assets;
+    if (extra_scope) {
+      this.extra_scope = extra_scope;
+    }
     if (on_print) {
       this.on_print(on_print);
     }
@@ -117,17 +124,6 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       client,
       profile: { root_folder_name },
     } = drive;
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [
-          new ArticleHeadNode({
-            level: 1,
-            text: `索引云盘 '${drive.name}'`,
-          }),
-        ],
-      })
-    );
     if (!drive.has_root_folder()) {
       this.emit(
         Events.Print,
@@ -154,21 +150,26 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         this.emit(Events.Print, v);
       },
     });
-    //     let need_stop = false;
+    let direct_search = false;
+    // console.log("[DOMAIN]analysis/index - before files.length === 0");
     if (files !== undefined && Array.isArray(files)) {
       if (files.length === 0) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: "没有要索引的文件，完成索引",
-              }),
-            ],
-          })
-        );
-        this.emit(Events.Finished);
-        return Result.Ok(null);
+        direct_search = true;
+        if (!this.extra_scope) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [
+                new ArticleTextNode({
+                  text: "没有要索引的文件，完成索引",
+                }),
+              ],
+            })
+          );
+          // console.log("[DOMAIN]analysis/index - after files.length === 0", drive.name);
+          this.emit(Events.Finished);
+          return Result.Ok(null);
+        }
       }
       // ${files.length ? " - 仅" + files.map((f) => f.name).join("、") : ""
       this.emit(
@@ -200,7 +201,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         let need_skip_file = true;
         for (let i = 0; i < cloned_files.length; i += 1) {
           const { name: target_file_name, type: target_file_type } = cloned_files[i];
-          // log(`[${drive_id}]`, "检查是否要跳过", `${cur_file.parent_paths}/${cur_file.name}`, {
+          // console.log(`[${drive_id}]`, "检查是否要跳过", `${cur_file.parent_paths}/${cur_file.name}`, {
           //   target_file_name,
           //   target_file_type,
           //   cur_file,
@@ -220,6 +221,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         return need_skip_file;
       };
     }
+    // console.log("[DOMAIN]analysis/index - after files.length !== 0", drive.name);
     walker.on_error = (file) => {
       // this.emit(
       //   Events.Print,
@@ -255,12 +257,14 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         // user_id: user.id,
       });
       if (tmp_file_res.error) {
+        // console.log("[DOMAIN]analysis/index - after tmp_file_res.error", tmp_file_res.error.message);
         // console.log("[]walker.on_file - find tmp_file failed", tmp_file_res.error.message);
         return;
       }
       const tmp_file = tmp_file_res.data;
       if (!tmp_file) {
         // console.log("[]walker.on_file - find tmp_file failed not found", name, clean_parent_paths);
+        // console.log("[DOMAIN]analysis/index - after !tmp_file");
         return;
       }
       const r2 = await store.delete_tmp_file({
@@ -270,6 +274,12 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         // console.log("[]walker.on_file - delete tmp_file failed", r2.error.message);
       }
     };
+    const added_parsed_tv_list: {
+      name: string;
+    }[] = [];
+    const added_parsed_movie_list: {
+      name: string;
+    }[] = [];
     //     let count = 0;
     walker.on_episode = async (parsed) => {
       //       const r = await check_need_stop(task_id);
@@ -279,8 +289,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       //         return;
       //       }
       const processor = new EpisodeFileProcessor({ episode: parsed, user_id: user.id, drive_id: drive.id, store });
-      await processor.run();
       this.episode_count += 1;
+      added_parsed_tv_list.push(parsed.tv);
+      await processor.run();
       return;
     };
     walker.on_movie = async (parsed) => {
@@ -291,45 +302,45 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       //   return;
       // }
       const processor = new MovieFileProcessor({ movie: parsed, user_id: user.id, drive_id: drive.id, store });
-      await processor.run();
       this.episode_count += 1;
+      added_parsed_movie_list.push(parsed);
+      await processor.run();
       return;
     };
     // @todo 如果希望仅索引一个文件夹，是否可以这里直接传目标文件夹，而不是每次都从根文件夹开始索引？
     const folder = new AliyunDriveFolder(drive.profile.root_folder_id!, {
       client,
     });
-    const r = await folder.profile();
-    if (r.error) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["获取索引根目录失败", r.error.message].map((text) => {
-            return new ArticleTextNode({ text });
-          }),
-        })
-      );
-      this.emit(Events.Error, new Error("获取索引根目录失败"));
-      return Result.Err(r.error);
+    // console.log("[DOMAIN]analysis/index - before folder.profile()");
+    if (!direct_search) {
+      const r = await folder.profile();
+      if (r.error) {
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: ["获取索引根目录失败", r.error.message].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
+        this.emit(Events.Error, new Error("获取索引根目录失败"));
+        // console.log("[DOMAIN]analysis/index - after 获取索引根目录失败");
+        return Result.Err(r.error);
+      }
+      // console.log("[DOMAIN]analysis/index - before walker.detect");
+      // @todo 如果 detect 由于内部调用 folder.next() 报错，这里没有处理会导致一直 pending
+      await walker.detect(folder);
+      // console.log("[DOMAIN]analysis/index - after walker.detect");
     }
-    // @todo 如果 detect 由于内部调用 folder.next() 报错，这里没有处理会导致一直 pending
-    await walker.detect(folder);
     if (this.episode_count === 0) {
       this.emit(
         Events.Print,
         new ArticleLineNode({
-          children: [`[${drive.name}]`, "查找到视频文件数为 0。结束索引"].map((text) => {
+          children: [`[${drive.name}]`, "遍历云盘没有查找到新增影视剧"].map((text) => {
             return new ArticleTextNode({ text });
           }),
         })
       );
-      this.emit(Events.Finished);
-      // log(`[${drive_id}]`, "没有索引到任一视频文件，完成索引");
-
-      //       await store.update_task(task_id, {
-      //         status: TaskStatus.Finished,
-      //       });
-      return Result.Ok(null);
     }
     this.emit(
       Events.Print,
@@ -378,7 +389,16 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r2.error);
     }
     const searcher = r2.data;
-    await searcher.run();
+    const files_prepare_search = added_parsed_movie_list.concat(added_parsed_tv_list).concat(
+      this.extra_scope
+        ? this.extra_scope.map((n) => {
+            return { name: n };
+          })
+        : []
+    );
+    // console.log("[DOMAIN]analysis/index - before searcher.run", files_prepare_search);
+    await searcher.run(files_prepare_search);
+    // console.log("[DOMAIN]analysis/index - after searcher.run");
     this.emit(Events.Finished);
     return Result.Ok(null);
   }

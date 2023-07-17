@@ -14,7 +14,6 @@ import {
   ArticleSectionNode,
   ArticleTextNode,
 } from "@/domains/article";
-import { DriveAnalysis } from "@/domains/analysis";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DatabaseStore } from "@/domains/store";
@@ -25,6 +24,8 @@ import { is_video_file } from "@/utils";
 import { FileType } from "@/constants";
 
 enum Events {
+  /** 新增文件 */
+  File,
   /** 输出日志 */
   Print,
   /** 同步完成 */
@@ -32,6 +33,7 @@ enum Events {
   Error,
 }
 type TheTypesOfEvents = {
+  [Events.File]: { name: string; parent_paths: string; type: FileType };
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
   [Events.Finish]: void;
   [Events.Error]: Error;
@@ -42,8 +44,10 @@ type ResourceSyncTaskProps = {
   drive: Drive;
   store: DatabaseStore;
   client: AliyunDriveClient;
-  TMDB_TOKEN: string;
+  TMDB_TOKEN?: string;
   assets?: string;
+  wait_complete?: boolean;
+  on_file?: (v: { name: string; parent_paths: string; type: FileType }) => void;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
   on_finish?: () => void;
   on_error?: (error: Error) => void;
@@ -54,14 +58,12 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     options: { id: string } & {
       user: User;
       store: DatabaseStore;
-      TMDB_TOKEN?: string;
-      assets?: string;
-      on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
-      on_finish?: () => void;
-      on_error?: (error: Error) => void;
-    }
+    } & Pick<
+        ResourceSyncTaskProps,
+        "TMDB_TOKEN" | "assets" | "wait_complete" | "on_file" | "on_print" | "on_finish" | "on_error"
+      >
   ) {
-    const { id, user, store, TMDB_TOKEN, assets, on_finish, on_print, on_error } = options;
+    const { id, user, store, TMDB_TOKEN, assets, wait_complete, on_file, on_finish, on_print, on_error } = options;
     if (!TMDB_TOKEN) {
       return Result.Err("缺少 TMDB_TOKEN");
     }
@@ -114,9 +116,11 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       user,
       drive,
       store,
+      wait_complete,
       TMDB_TOKEN,
       assets,
       client: drive.client,
+      on_file,
       on_print,
       on_finish,
       on_error,
@@ -136,7 +140,20 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   constructor(options: Partial<{}> & ResourceSyncTaskProps) {
     super();
 
-    const { user, drive, store, task, client, TMDB_TOKEN, assets, on_print, on_finish, on_error } = options;
+    const {
+      user,
+      drive,
+      store,
+      task,
+      client,
+      TMDB_TOKEN,
+      assets,
+      wait_complete,
+      on_file,
+      on_print,
+      on_finish,
+      on_error,
+    } = options;
     this.task = task;
     this.store = store;
     this.user = user;
@@ -144,6 +161,12 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     this.TMDB_TOKEN = TMDB_TOKEN;
     this.assets = assets;
     this.client = client;
+    if (wait_complete !== undefined) {
+      this.wait_complete = wait_complete;
+    }
+    if (on_file) {
+      this.on_file(on_file);
+    }
     if (on_print) {
       this.on_print(on_print);
     }
@@ -288,75 +311,11 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       this.emit(
         Events.Print,
         new ArticleLineNode({
-          // type: "success",
           children: [
             new ArticleTextNode({
-              text: "完成资源同步，开始索引新增影片",
+              text: "完成资源同步",
             }),
           ],
-        })
-      );
-      const analysis_res = await DriveAnalysis.New({
-        drive: this.drive,
-        user: this.user,
-        store: this.store,
-        tmdb_token: this.TMDB_TOKEN,
-        assets: this.assets,
-        on_print: (v) => {
-          this.emit(Events.Print, v);
-        },
-        on_finish: () => {
-          this.emit(Events.Finish);
-        },
-      });
-      if (analysis_res.error) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            // type: "success",
-            children: ["索引失败，中止该任务", analysis_res.error.message].map((text) => {
-              return new ArticleTextNode({
-                text,
-              });
-            }),
-          })
-        );
-        this.emit(Events.Finish);
-        return Result.Err(analysis_res.error);
-      }
-      const analysis = analysis_res.data;
-      const files_res = await store.find_tmp_files({
-        user_id: this.user.id,
-        drive_id: this.drive.id,
-      });
-      if (files_res.error) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: ["获取转存的新文件失败", files_res.error.message].map((text) => {
-              return new ArticleTextNode({
-                text,
-              });
-            }),
-          })
-        );
-        this.emit(Events.Finish);
-        return Result.Err(files_res.error);
-      }
-      const { root_folder_name } = this.drive.profile;
-      const files = files_res.data;
-      analysis.run(
-        files.map((file) => {
-          const { name, parent_paths, type } = file;
-          return {
-            name: (() => {
-              if (parent_paths) {
-                return `${root_folder_name}/${parent_paths}/${name}`;
-              }
-              return `${root_folder_name}/${name}`;
-            })(),
-            type: type === FileType.File ? "file" : "folder",
-          };
         })
       );
     })();
@@ -374,7 +333,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     const user_id = this.user.id;
     const drive_id = this.drive.id;
     //     log("应用 diff 的结果，共", effects.length, "个");
-    const errors: Error[] = [];
+    // const errors: Error[] = [];
     for (let i = 0; i < effects.length; i += 1) {
       const effect = effects[i];
       const { type: effect_type, payload } = effect;
@@ -440,7 +399,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
             new ArticleLineNode({
               children: [
                 new ArticleTextNode({
-                  text: `文件夹 '${prefix}' 已经转存到云盘中`,
+                  text: `'${prefix}' 已经在云盘中`,
                 }),
               ],
             })
@@ -477,6 +436,11 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           continue;
         }
         // 这里的「临时文件」之所以没有 file_id，是因为转存到云盘后，才生成了 file_id，上面的 file_id 是分享资源的，不是转存到云盘后的
+        this.emit(Events.File, {
+          name,
+          parent_paths,
+          type: type === "file" ? FileType.File : FileType.Folder,
+        });
         const r4 = await store.add_tmp_file({
           name,
           parent_paths,
@@ -512,6 +476,9 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
 
+  on_file(handler: Handler<TheTypesOfEvents[Events.File]>) {
+    return this.on(Events.File, handler);
+  }
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
     return this.on(Events.Print, handler);
   }

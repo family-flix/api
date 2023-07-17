@@ -64,16 +64,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id,
     },
     include: {
-      parsed_tvs: true,
+      profile: true,
+      parsed_tvs: {
+        include: {
+          drive: true,
+        },
+      },
     },
   });
   if (tv === null) {
     return e("没有匹配的电视剧记录");
   }
-  const { parsed_tvs } = tv;
-  if (parsed_tvs.length === 0) {
-    return e("该电视剧没有可以关联的文件夹");
-  }
+  const { parsed_tvs, profile } = tv;
+  // if (parsed_tvs.length === 0) {
+  //   return e("该电视剧没有可以关联的文件夹");
+  // }
   const random_drive_id = parsed_tvs[0].drive_id;
   const drive_res = await Drive.Get({ id: random_drive_id, user_id, store });
   if (drive_res.error) {
@@ -96,16 +101,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const matched_folder_res = await (async () => {
     // 外部传入了云盘文件夹 id,指定要存到这个文件夹随
     if (files.length === 1 && target_file_id) {
-      const parsed_tv_res = await store.find_parsed_tv({
-        file_id: target_file_id,
-      });
+      const parsed_tv_res = await (async () => {
+        const existing_res = await store.find_parsed_tv({
+          file_id: target_file_id,
+        });
+        if (existing_res.error) {
+          return Result.Err(existing_res.error);
+        }
+        if (existing_res.data) {
+          return Result.Ok(existing_res.data);
+        }
+        const f_res = await store.find_file({
+          file_id: target_file_id,
+        });
+        if (f_res.error) {
+          return Result.Err(f_res.error);
+        }
+        if (!f_res.data) {
+          return Result.Err("没有匹配的文件夹记录");
+        }
+        const r = await store.add_parsed_tv({
+          name: profile.name,
+          original_name: profile.original_name,
+          file_id: target_file_id,
+          file_name: f_res.data.name,
+          can_search: 0,
+          tv_id: tv_id,
+          drive_id: f_res.data.drive_id,
+          user_id,
+        });
+        if (r.error) {
+          return Result.Err(r.error);
+        }
+        return Result.Ok(r.data);
+      })();
       if (parsed_tv_res.error) {
         return Result.Err(parsed_tv_res.error);
       }
       const parsed_tv = parsed_tv_res.data;
-      if (!parsed_tv) {
-        return Result.Err("不存在匹配的云盘文件夹");
-      }
       const { id } = parsed_tv;
       return Result.Ok({
         target_folder: {
@@ -123,22 +156,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         return Result.Ok({ target_folder: parsed_tv, shared_folder: matched });
       }
     }
-    return Result.Err(
-      "该分享没有和电视剧匹配的文件夹，请手动选择",
-      20001,
-      parsed_tvs
-        .filter((folder) => {
-          return !!folder.file_id;
-        })
-        .map((folder) => {
-          const { id, file_id, file_name } = folder;
-          return {
-            id,
-            file_id,
-            file_name,
-          };
-        })
-    );
+    const folders = parsed_tvs
+      .filter((folder) => {
+        return !!folder.file_id;
+      })
+      .map((folder) => {
+        const { id, file_id, file_name, drive } = folder;
+        return {
+          id,
+          file_id,
+          file_name,
+          drive: {
+            id: drive.id,
+            name: drive.name,
+          },
+        };
+      });
+    // console.log("[API]admin/shared_file_sync/add", folders);
+    if (folders.length === 0) {
+      return Result.Err("该分享没有和电视剧匹配的文件夹，请搜索", 20002);
+    }
+    return Result.Err("该分享没有和电视剧匹配的文件夹，请手动选择", 20001, folders);
   })();
   if (matched_folder_res.error) {
     return e(matched_folder_res);

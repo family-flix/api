@@ -65,6 +65,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const data = {
     total: count,
     no_more: list.length + (page - 1) * page_size >= count,
+    page,
+    page_size,
     list: list.map((tv) => {
       const { id, profile } = tv;
       const { name, original_name, overview, air_date, poster_path, popularity } = profile;

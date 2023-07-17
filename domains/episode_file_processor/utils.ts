@@ -1,4 +1,4 @@
-import { ParsedEpisodeRecord, ParsedSeasonRecord, ParsedTVRecord } from "@/store/types";
+import { ParsedEpisodeRecord, ParsedSeasonRecord, ParsedTVRecord } from "@/domains/store/types";
 import { SearchedEpisode } from "@/domains/walker";
 
 /**
