@@ -3,7 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 
-import { parse_filename_for_video } from "../index";
+import { parse_filename_for_video } from "../parse_filename_for_video";
 
 describe("韩语影视剧", () => {
   test("Q 请回答1988.응답하라1988.S01E12.2015.1080P.MKV", () => {
@@ -14,7 +14,6 @@ describe("韩语影视剧", () => {
       original_name: "응답하라1988",
       season: "S01",
       episode: "E12",
-      episode_name: "",
     });
   });
 });

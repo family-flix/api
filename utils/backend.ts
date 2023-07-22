@@ -1,15 +1,6 @@
-// import jwt from "jsonwebtoken";
-// import jwt_decode from "jwt-decode";
 import { NextApiResponse } from "next";
 
 import { Result, resultify } from "@/types";
-// import { store } from "@/store";
-// import {
-//   RecordCommonPart,
-//   SeasonRecord,
-//   TmpEpisodeRecord,
-//   TVRecord,
-// } from "@/store/types";
 import { decode_token } from "@/domains/user/jwt";
 
 /**

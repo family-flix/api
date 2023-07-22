@@ -3,7 +3,8 @@
  */
 import { describe, expect, test } from "vitest";
 
-import { extra_season_and_episode, is_season, parse_filename_for_video } from "../index";
+import { extra_season_and_episode, is_season } from "../index";
+import { parse_filename_for_video } from "../parse_filename_for_video";
 
 describe("提取视频信息", () => {
   test("Modern.Family", () => {
@@ -14,7 +15,6 @@ describe("提取视频信息", () => {
       original_name: "Modern.Family",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
   test("2.Broke.Girls", () => {
@@ -25,7 +25,6 @@ describe("提取视频信息", () => {
       original_name: "2.Broke.Girls",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
   test("Modern.Family.S01", () => {
@@ -36,7 +35,6 @@ describe("提取视频信息", () => {
       original_name: "Modern.Family",
       season: "S01",
       episode: "",
-      episode_name: "",
     });
   });
   test("Modern.Family.S01.1080p", () => {
@@ -47,7 +45,6 @@ describe("提取视频信息", () => {
       original_name: "Modern.Family",
       season: "S01",
       episode: "",
-      episode_name: "",
     });
   });
   test("Modern.Family.2009.S01.1080p", () => {
@@ -58,7 +55,6 @@ describe("提取视频信息", () => {
       original_name: "Modern.Family",
       season: "S01",
       episode: "",
-      episode_name: "",
     });
   });
   test("[摩登家庭].Modern.Family.2009.S01.1080p", () => {
@@ -69,7 +65,6 @@ describe("提取视频信息", () => {
       original_name: "Modern.Family",
       season: "S01",
       episode: "",
-      episode_name: "",
     });
   });
   test("[摩登家庭].Modern.Family.2009.第十季.1080p", () => {
@@ -80,7 +75,6 @@ describe("提取视频信息", () => {
       original_name: "Modern.Family",
       season: "S10",
       episode: "",
-      episode_name: "",
     });
   });
   test("Futurama.S07E22.Leela.and.the.Genestalk.1080p.Blu-ray.DD5.1.x264-CtrlHD", () => {
@@ -91,7 +85,6 @@ describe("提取视频信息", () => {
       original_name: "Futurama",
       season: "S07",
       episode: "E22",
-      episode_name: "Leela.and.the.Genestalk",
     });
   });
   test("The.Tudors.S04E07.1080p.Blu-ray.x265.10bit.AC3￡cXcY@FRDS", () => {
@@ -102,7 +95,6 @@ describe("提取视频信息", () => {
       original_name: "The.Tudors",
       season: "S04",
       episode: "E07",
-      episode_name: "",
     });
   });
   test("Anne.with.an.E.S03E09.1080p.BluRay.x264", () => {
@@ -113,7 +105,6 @@ describe("提取视频信息", () => {
       original_name: "Anne.with.an.E",
       season: "S03",
       episode: "E09",
-      episode_name: "",
     });
   });
   test("Desperate Housewives S06E21 1080p WEB-DL DD+ 5.1 x264-TrollHD", () => {
@@ -124,7 +115,6 @@ describe("提取视频信息", () => {
       original_name: "Desperate.Housewives",
       season: "S06",
       episode: "E21",
-      episode_name: "",
     });
   });
 
@@ -136,7 +126,6 @@ describe("提取视频信息", () => {
       original_name: "Young.Sheldon",
       season: "S01",
       episode: "E22",
-      episode_name: "",
     });
   });
   test("S01E07 - A No-Rough-Stuff-Type Deal", () => {
@@ -147,7 +136,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "S01",
       episode: "E07",
-      episode_name: "A.No-Rough-Stuff-Type.Deal",
     });
   });
   test("老友记.S01E24.瑞秋知道了", () => {
@@ -158,7 +146,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "S01",
       episode: "E24",
-      episode_name: "瑞秋知道了",
     });
   });
   test("The.Sopranos.S01E13.1999.1080P.Blu-ray.x265.AC3.cXcY@FRDS.mkv", () => {
@@ -169,7 +156,6 @@ describe("提取视频信息", () => {
       original_name: "The.Sopranos",
       season: "S01",
       episode: "E13",
-      episode_name: "",
     });
   });
   test("Futurama.S07E01.The.Bots.and.the.Bees.1080p.BluRay.DD5.1.x264-CtrlHD.mkv", () => {
@@ -180,7 +166,6 @@ describe("提取视频信息", () => {
       original_name: "Futurama",
       season: "S07",
       episode: "E01",
-      episode_name: "The.Bots.and.the.Bees",
     });
   });
   test("Futurama.S07E14.2-D.Blacktop.1080p.Blu-ray.DD5.1.x264-CtrlHD.mkv", () => {
@@ -191,7 +176,6 @@ describe("提取视频信息", () => {
       original_name: "Futurama",
       season: "S07",
       episode: "E14",
-      episode_name: "2-D.Blacktop",
     });
   });
   test("Futurama.S07E15.Fry.and.Leela's.Big.Fling.1080p.Blu-ray.DD5.1.x264-CtrlHD.mkv", () => {
@@ -202,7 +186,6 @@ describe("提取视频信息", () => {
       original_name: "Futurama",
       season: "S07",
       episode: "E15",
-      episode_name: "Fry.and.Leela's.Big.Fling",
     });
   });
   test("The.Boys.S03E04.Glorious.Five.Year.Plan.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb.mkv", () => {
@@ -213,7 +196,6 @@ describe("提取视频信息", () => {
       original_name: "The.Boys",
       season: "S03",
       episode: "E04",
-      episode_name: "Glorious.Five.Year.Plan",
     });
   });
   test("老友记.S03E04.赌城行（上）.mkv", () => {
@@ -224,7 +206,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "S03",
       episode: "E04",
-      episode_name: "赌城行（上）",
     });
   });
   test("Rick and Morty - 302 - Rickmancing the Stone.mkv", () => {
@@ -235,7 +216,6 @@ describe("提取视频信息", () => {
       original_name: "Rick.and.Morty",
       season: "",
       episode: "E302",
-      episode_name: "Rickmancing.the.Stone",
     });
   });
   test("Futurama.S02E01.1080p.WEB.h264-NiXON.mkv", () => {
@@ -246,7 +226,6 @@ describe("提取视频信息", () => {
       original_name: "Futurama",
       season: "S02",
       episode: "E01",
-      episode_name: "",
     });
   });
   test("Ekaterina.2014.S01E02.HDTV.(1080i).MediaClub.mp4", () => {
@@ -257,7 +236,6 @@ describe("提取视频信息", () => {
       original_name: "Ekaterina",
       season: "S01",
       episode: "E02",
-      episode_name: "",
     });
   });
   test("叶卡捷琳娜大帝.Екатерина.Самозванцы (2019).S03E03.mp4", () => {
@@ -268,7 +246,6 @@ describe("提取视频信息", () => {
       original_name: "Екатерина.Самозванцы",
       season: "S03",
       episode: "E03",
-      episode_name: "",
     });
   });
   test("The.Queens.Gambit.S01E01.2160p.NF.WEBRip.DDP5.1.x265-NTb.mkv", () => {
@@ -279,7 +256,6 @@ describe("提取视频信息", () => {
       original_name: "The.Queens.Gambit",
       season: "S01",
       episode: "E01",
-      episode_name: "",
     });
   });
   test("gotham.s01.e01.1080p.bluray.x264-rovers.mkv", () => {
@@ -290,7 +266,6 @@ describe("提取视频信息", () => {
       original_name: "gotham",
       season: "S01",
       episode: "E01",
-      episode_name: "",
     });
   });
   test("Gotham.S02E02.1080p.BluRay.x264-SHORTBREHD.mkv", () => {
@@ -301,7 +276,6 @@ describe("提取视频信息", () => {
       original_name: "Gotham",
       season: "S02",
       episode: "E02",
-      episode_name: "",
     });
   });
   test("The.Originals.S03E01.中英字幕.WEB-HR.AAC.1024X576.x264.mp4", () => {
@@ -312,7 +286,6 @@ describe("提取视频信息", () => {
       original_name: "The.Originals",
       season: "S03",
       episode: "E01",
-      episode_name: "",
     });
   });
   test("Grey's.Anatomy.S01E01.A.Hard.Day's.Night.h.264-TjHD.mkv", () => {
@@ -323,7 +296,6 @@ describe("提取视频信息", () => {
       original_name: "Grey's.Anatomy",
       season: "S01",
       episode: "E01",
-      episode_name: "A.Hard.Day's.Night",
     });
   });
   test("Emily.in.Paris.S02E04.Jules.and.Em.1080p.NF.WEB-DL.DDP5.1.HDR.H.265-TEPES.mkv", () => {
@@ -334,7 +306,6 @@ describe("提取视频信息", () => {
       original_name: "Emily.in.Paris",
       season: "S02",
       episode: "E04",
-      episode_name: "Jules.and.Em",
     });
   });
   test("The Walking Dead - S01E06 - WEBDL-1080p h264 EAC3 5.1 - DSNP.mkv", () => {
@@ -345,7 +316,6 @@ describe("提取视频信息", () => {
       original_name: "The.Walking.Dead",
       season: "S01",
       episode: "E06",
-      episode_name: "",
     });
   });
   test("Bones.S04E07.WEB-DL.1080p.RusDub.Eng.SubEngSDH.mkv", () => {
@@ -356,7 +326,6 @@ describe("提取视频信息", () => {
       original_name: "Bones",
       season: "S04",
       episode: "E07",
-      episode_name: "",
     });
   });
   test("Bones.S10E06.The.Lost.Love.in.the.Foreign.Land.1080p.AMZN.WEB-DL.DD+5.1.H.265-SiGMA.mkv", () => {
@@ -367,7 +336,6 @@ describe("提取视频信息", () => {
       original_name: "Bones",
       season: "S10",
       episode: "E06",
-      episode_name: "The.Lost.Love.in.the.Foreign.Land",
     });
   });
   test("Friends.S10E17E18.2003.1080p.Blu-ray.x265.AC3￡cXcY@FRDS.mkv", () => {
@@ -378,7 +346,6 @@ describe("提取视频信息", () => {
       original_name: "Friends",
       season: "S10",
       episode: "E17-18",
-      episode_name: "",
     });
   });
   test("月光骑士.1080p.內封官方多語字幕", () => {
@@ -389,7 +356,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
   test("Criminal.Minds.S07E23-E24.Hit&Run.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv", () => {
@@ -400,7 +366,6 @@ describe("提取视频信息", () => {
       original_name: "Criminal.Minds",
       season: "S07",
       episode: "E23-24",
-      episode_name: "Hit&Run",
     });
   });
   test("S01E04.M.Night.Shaym-Aliens!.mkv", () => {
@@ -411,7 +376,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "S01",
       episode: "E04",
-      episode_name: "M.Night.Shaym-Aliens!",
     });
   });
   test("Criminal.Minds.S04E09.52.Pickup.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv", () => {
@@ -422,7 +386,6 @@ describe("提取视频信息", () => {
       original_name: "Criminal.Minds",
       season: "S04",
       episode: "E09",
-      episode_name: "52.Pickup",
     });
   });
   test("Gravity.Falls.S01E19.Dreamscaperers.1080p.WEB-DL.DD5.1.H.264-BS666.mkv", () => {
@@ -433,7 +396,6 @@ describe("提取视频信息", () => {
       original_name: "Gravity.Falls",
       season: "S01",
       episode: "E19",
-      episode_name: "Dreamscaperers",
     });
   });
   test("实习Y生格L.S17E03.HD1080P.YYeTs.中英双字.霸王龙压制组T-Rex.mp4", () => {
@@ -444,7 +406,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "S17",
       episode: "E03",
-      episode_name: "T-Rex",
     });
   });
   test("[Prof] S02E02 - Mortynight Run.mkv", () => {
@@ -455,7 +416,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "S02",
       episode: "E02",
-      episode_name: "Mortynight.Run",
     });
   });
   test("tvr-greys-S03e02-720p.mkv", () => {
@@ -466,7 +426,6 @@ describe("提取视频信息", () => {
       original_name: "greys",
       season: "S03",
       episode: "E02",
-      episode_name: "",
     });
   });
   test("老友记S02.Friends.1995.1080p.Blu-ray.x265.AC3￡cXcY@FRDS", () => {
@@ -482,7 +441,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "S02",
       episode: "",
-      episode_name: "Friends",
     });
   });
   test("Light.The.Night.S02E08.NF.WEB-DL.1080p.H264.DDP5.1.mp4", () => {
@@ -493,7 +451,6 @@ describe("提取视频信息", () => {
       original_name: "Light.The.Night",
       season: "S02",
       episode: "E08",
-      episode_name: "",
     });
   });
   test("2021.华灯初上.1-3季", () => {
@@ -504,7 +461,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
   test("tvr-greys-S03e25-720p.mkv", () => {
@@ -515,7 +471,6 @@ describe("提取视频信息", () => {
       original_name: "greys",
       season: "S03",
       episode: "E25",
-      episode_name: "",
     });
   });
   test("Oh.No!Here.Comes.Trouble.S01E01.2023.2160p.WEB-DL.H265.DDP2.0.Gz.mkv", () => {
@@ -526,7 +481,6 @@ describe("提取视频信息", () => {
       original_name: "Oh.No!Here.Comes.Trouble",
       season: "S01",
       episode: "E01",
-      episode_name: "",
     });
   });
   test("逃避可耻却有用.NIGERUHA.HAJIDAGA.YAKUNITATSU.Ep10.Chi_Jap.HDTVrip.1280X720-ZhuixinFan.mp4", () => {
@@ -537,7 +491,6 @@ describe("提取视频信息", () => {
       original_name: "NIGERUHA.HAJIDAGA.YAKUNITATSU",
       season: "",
       episode: "E10",
-      episode_name: "Chi.Jap.-ZhuixinFan",
     });
   });
   test("1080P官中压制", () => {
@@ -548,7 +501,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
 });

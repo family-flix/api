@@ -3,7 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 
-import { parse_filename_for_video } from "../index";
+import { parse_filename_for_video } from "../parse_filename_for_video";
 
 describe("动漫", () => {
   test("犬夜叉 - 本篇 - 第166-167话：最终话-二人の绊 四魂のかけらを使え！（两人的羁绊 使用四魂碎片吧！-前后篇）；640×480P.mkv", () => {
@@ -15,7 +15,6 @@ describe("动漫", () => {
       original_name: "",
       season: "S01",
       episode: "E166-167",
-      episode_name: "最终话-二人の绊.四魂のかけらを使え！（两人的羁绊.使用四魂碎片吧！-前后篇）",
     });
   });
 
@@ -27,7 +26,6 @@ describe("动漫", () => {
       original_name: "",
       season: "OVA",
       episode: "",
-      episode_name: "It’s.a.Rumic.World.犬夜叉～黒い鐵砕牙（黑色的铁碎牙）",
     });
   });
 
@@ -39,7 +37,6 @@ describe("动漫", () => {
       original_name: "",
       season: "SP",
       episode: "",
-      episode_name: "",
     });
   });
 
@@ -51,7 +48,6 @@ describe("动漫", () => {
       original_name: "",
       season: "OVA",
       episode: "E02",
-      episode_name: "最後のマジカル大戦",
     });
   });
   test("第17集 キケンがグルグル!.mp4", () => {
@@ -62,7 +58,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E17",
-      episode_name: "キケンがグルグル!",
     });
   });
   test("49. さらばヌメモン.mkv", () => {
@@ -73,7 +68,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E49",
-      episode_name: "さらばヌメモン",
     });
   });
   // @todo 难搞
@@ -86,7 +80,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E35",
-      episode_name: "アプリモンスターズ",
     });
   });
   test("[BeanSub&FZSD][Jigokuraku][07][GB][1080P][x264_ACC].mp4", () => {
@@ -97,7 +90,6 @@ describe("动漫", () => {
       original_name: "Jigokuraku",
       season: "",
       episode: "E07",
-      episode_name: "",
     });
   });
   test("【推しの子】 屍體如山的死亡遊戲 - 03 (Baha 1920x1080 AVC AAC MP4) [FFE940AF].mp4", () => {
@@ -108,7 +100,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E03",
-      episode_name: "Baha",
     });
   });
   test("【推しの子】 我家的英雄 - 03 (Baha 1920x1080 AVC AAC MP4) [CD2BE146].mp4", () => {
@@ -119,7 +110,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E03",
-      episode_name: "Baha",
     });
   });
   test("【勇者字幕组】【假面骑士亚马逊】【第4话】【冲吧！愤怒的丛林者】.mp4", () => {
@@ -130,7 +120,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E04",
-      episode_name: "冲吧！愤怒的丛林者",
     });
   });
   test("[KRL][Kamen Rider Wizard][20][BDRip][1080p][x265_FLAC][HEVC][2AE13DF1].mkv", () => {
@@ -141,7 +130,6 @@ describe("动漫", () => {
       original_name: "Kamen.Rider.Wizard",
       season: "",
       episode: "E20",
-      episode_name: "",
     });
   });
   // test("2012.假面骑士.巫骑.Wizard", () => {
@@ -163,7 +151,6 @@ describe("动漫", () => {
       original_name: "in.your.pocket",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
   test("[天の翼&FLT][假面骑士1号][完成披露会][1920X1080][X264(10-bit) AAC][BDrip][MP4].mp4", () => {
@@ -174,7 +161,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "",
-      episode_name: "完成披露会",
     });
   });
   test("[J2] 龍珠改 第098話.mp4", () => {
@@ -185,7 +171,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E098",
-      episode_name: "",
     });
   });
   test("[KTXP][Made in Abyss - Dawn of the Deep Soul][SP04][GB][1080p][BDrip].mp4", () => {
@@ -196,7 +181,6 @@ describe("动漫", () => {
       original_name: "Made.in.Abyss.Dawn.of.the.Deep.Soul",
       season: "SP",
       episode: "E04",
-      episode_name: "",
     });
   });
   test("[公众号：SS的笔记/腹肌崩坏太郎番外/星空][假面骑士01 番外][奇迹的身份改变！？或人VS腹肌崩坏太郎 宿命的段子对决].mp4", () => {
@@ -207,8 +191,7 @@ describe("动漫", () => {
       name: "假面骑士",
       original_name: "",
       season: "S01",
-      episode: "",
-      episode_name: "番外.奇迹的身份改变！？或人VS腹肌崩坏太郎.宿命的段子对决",
+      episode: "番外",
     });
   });
   test("【蓝色狂想制作】数码宝贝1：大冒险第48集-轰炸指令！无限龙兽1080P.mkv", () => {
@@ -219,7 +202,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E48",
-      episode_name: "轰炸指令！无限龙兽",
     });
   });
   test("[EMTP-Raws&TamersUnion]デジモンアドベンチャー：[66][WEBrip][x264_AAC][CHS_JPN].mp4", () => {
@@ -230,7 +212,6 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E66",
-      episode_name: "",
     });
   });
   test("风间公亲-教场0-Kazama.Kimichika.Kyojo.Zero.Ep03.Chi_Jap.HDTVrip.1280X720.mp4", () => {
@@ -241,7 +222,86 @@ describe("动漫", () => {
       original_name: "",
       season: "",
       episode: "E03",
-      episode_name: "教场0-Kazama.Kimichika.Kyojo.Zero",
+    });
+  });
+  test("[1080P][DBD制作组&离谱Sub][龙珠GT][NCOP2][HEVC-10bit][AC3].mkv", () => {
+    const name = "[1080P][DBD制作组&离谱Sub][龙珠GT][NCOP2][HEVC-10bit][AC3].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "龙珠GT",
+      original_name: "NCOP2",
+      season: "",
+      episode: "",
+    });
+  });
+  test("[1080P][DBD制作组&离谱Sub][龙珠GT][60][HEVC-10bit][AC3].mkv", () => {
+    const name = "[1080P][DBD制作组&离谱Sub][龙珠GT][60][HEVC-10bit][AC3].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "龙珠GT",
+      original_name: "",
+      season: "",
+      episode: "E60",
+    });
+  });
+  test("[BeanSub][Nanatsu_no_Taizai_Fundo_no_Shinpan][23][GB][1080P][x264_AAC].mp4", () => {
+    const name = "[BeanSub][Nanatsu_no_Taizai_Fundo_no_Shinpan][23][GB][1080P][x264_AAC].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Nanatsu.no.Taizai.Fundo.no.Shinpan",
+      season: "",
+      episode: "E23",
+    });
+  });
+  test("[SAIO-Raws] Nanatsu no Taizai Seisen no Shirushi 03 [BD 1920x1080 HEVC-10bit OPUS ASSx2].mkv", () => {
+    const name = "[SAIO-Raws] Nanatsu no Taizai Seisen no Shirushi 03 [BD 1920x1080 HEVC-10bit OPUS ASSx2].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Nanatsu.no.Taizai.Seisen.no.Shirushi",
+      season: "",
+      episode: "E03",
+    });
+  });
+  test("[ANi] 政宗君的復仇 R - 03 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4", () => {
+    const name = "[ANi] 政宗君的復仇 R - 03 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "政宗君的復仇",
+      original_name: "",
+      season: "",
+      episode: "E03",
+    });
+  });
+  test("Z 最好的老师 1年后、我被学生■了 [2023]更新中", () => {
+    const name = "Z 最好的老师 1年后、我被学生■了 [2023]更新中";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "最好的老师",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("[DAY][仮面戦隊ゴライダー][PR1][BDrip][1080P][X264 FLAC].mkv", () => {
+    const name = "[DAY][仮面戦隊ゴライダー][PR1][BDrip][1080P][X264 FLAC].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "仮面戦隊ゴライダー",
+      original_name: "",
+      season: "",
+      episode: "PR1",
+    });
+  });
+  test("Numbers：大厦森林的监视者们 [2023][12集持续更新中]", () => {
+    const name = "Numbers：大厦森林的监视者们 [2023][12集持续更新中]";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
     });
   });
 });

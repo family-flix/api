@@ -3,7 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 
-import { parse_filename_for_video } from "../index";
+import { parse_filename_for_video } from "../parse_filename_for_video";
 
 describe("电影", () => {
   test("Everything Everywhere All At Once.2022.UHD.Bluray.2160p.DV.HEVC.TrueHD 7.1.mkv", () => {
@@ -15,7 +15,6 @@ describe("电影", () => {
       season: "",
       episode: "",
       // @todo 这个是什么意义
-      episode_name: "UHD",
     });
   });
 
@@ -27,7 +26,6 @@ describe("电影", () => {
       original_name: "",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
 
@@ -39,7 +37,6 @@ describe("电影", () => {
       original_name: "",
       season: "",
       episode: "E04",
-      episode_name: "",
     });
   });
   test("1990.傅艺伟. 封神榜 4K. 高清修复", () => {
@@ -50,7 +47,6 @@ describe("电影", () => {
       original_name: "",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
   test("碟中谍7：致命清算（上）.mp4", () => {
@@ -62,7 +58,6 @@ describe("电影", () => {
       original_name: "",
       season: "",
       episode: "",
-      episode_name: "",
     });
   });
 });

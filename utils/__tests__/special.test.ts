@@ -3,7 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 
-import { parse_filename_for_video } from "../index";
+import { parse_filename_for_video } from "../parse_filename_for_video";
 
 describe("番外", () => {
   test("重启人生番外篇", () => {
@@ -14,7 +14,6 @@ describe("番外", () => {
       original_name: "",
       season: "番外篇",
       episode: "",
-      episode_name: "",
     });
   });
 
@@ -26,7 +25,6 @@ describe("番外", () => {
       original_name: "",
       season: "",
       episode: "续集",
-      episode_name: "",
     });
   });
 
@@ -38,7 +36,6 @@ describe("番外", () => {
       original_name: "",
       season: "",
       episode: "续集",
-      episode_name: "",
     });
   });
 
@@ -50,7 +47,6 @@ describe("番外", () => {
       original_name: "",
       season: "",
       episode: "彩蛋",
-      episode_name: "",
     });
   });
   test("今生也是第一次_彩蛋.mp4", () => {
@@ -61,7 +57,6 @@ describe("番外", () => {
       original_name: "",
       season: "",
       episode: "彩蛋",
-      episode_name: "",
     });
   });
   test("彩蛋.mp4", () => {
@@ -72,7 +67,6 @@ describe("番外", () => {
       original_name: "",
       season: "",
       episode: "彩蛋",
-      episode_name: "",
     });
   });
   test("无间 彩蛋3 1080P(高清SDR)(1080344)_Tacit0924.mp4", () => {
@@ -83,7 +77,6 @@ describe("番外", () => {
       original_name: "",
       season: "",
       episode: "彩蛋3",
-      episode_name: "",
     });
   });
   test("花絮13 王蝉动捕演员刘珂君助力凡人修仙传特别篇.mp4", () => {
@@ -94,7 +87,6 @@ describe("番外", () => {
       original_name: "",
       season: "",
       episode: "花絮13",
-      episode_name: "王蝉动捕演员刘珂君助力凡人修仙传特别篇",
     });
   });
 });

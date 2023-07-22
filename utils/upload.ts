@@ -1,58 +1,10 @@
-/**
- * @file 只在后端使用的工具方法
- */
-import fs from "fs/promises";
-import path from "path";
-import http from "http";
+import { ReadStream } from "fs";
 
 import qiniu from "qiniu";
 import axios from "@/modules/axios";
 
 import { Result } from "@/types";
-import { accessSync, mkdirSync, ReadStream } from "fs";
 import { random_string } from ".";
-
-/**
- * 确保某个路径必然存在
- * @param filepath
- */
-export async function ensure(filepath: string, next: string[] = []) {
-  const { ext, dir } = path.parse(filepath);
-  const isFile = ext !== undefined && ext !== "";
-  if (isFile) {
-    filepath = dir;
-  }
-  try {
-    await fs.access(filepath);
-    if (next.length !== 0) {
-      const theDirPrepareCreate = next.pop();
-      await fs.mkdir(theDirPrepareCreate!);
-      await ensure(filepath, next);
-    }
-  } catch {
-    const needToCreate = path.dirname(filepath);
-    await ensure(needToCreate, next.concat(filepath));
-  }
-}
-
-export function ensure_sync(filepath: string, next: string[] = []) {
-  const { ext, dir } = path.parse(filepath);
-  const isFile = ext !== undefined && ext !== "";
-  if (isFile) {
-    filepath = dir;
-  }
-  try {
-    accessSync(filepath);
-    if (next.length !== 0) {
-      const theDirPrepareCreate = next.pop();
-      mkdirSync(theDirPrepareCreate!);
-      ensure_sync(filepath, next);
-    }
-  } catch {
-    const needToCreate = path.dirname(filepath);
-    ensure_sync(needToCreate, next.concat(filepath));
-  }
-}
 
 async function request_online_url_to_stream(url: string) {
   try {
