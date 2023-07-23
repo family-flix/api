@@ -21,7 +21,7 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { FileType } from "@/constants";
-import { parse_filename_for_video } from "@/utils";
+import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { TaskTypes } from "@/domains/job/constants";
 
 type TheFilePrepareTransfer = {

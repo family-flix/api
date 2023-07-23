@@ -1,7 +1,5 @@
 import {
-  has_key_factory,
   video_file_type_regexp,
-  is_japanese,
   normalize_episode_number,
   remove_str,
   chinese_num_to_num,
@@ -46,16 +44,15 @@ export const VIDEO_KEY_NAME_MAP: Record<VideoKeys, string> = {
  * @param keys
  * @returns
  */
-
 export function parse_filename_for_video(
   filename: string,
   keys: VideoKeys[] = ["name", "original_name", "season", "episode"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("天鹅挽歌")) {
+    if (!filename.includes("王蝉动捕演员刘珂君助力凡人修仙")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -113,6 +110,8 @@ export function parse_filename_for_video(
     pick?: number[];
     /** 优先级，默认为 0，如某个设置了大于该值的，覆盖 */
     priority?: number;
+    /** 提取后，用该字符作为替换 */
+    placeholder?: string;
     /** 执行该正则前调用 */
     before?: () => void | Partial<{
       /** 是否跳过该正则 */
@@ -436,7 +435,7 @@ export function parse_filename_for_video(
       key: k("season"),
       desc: "special season1",
       // 一些日本动漫会有的，和「剧场版」等做区分？
-      regexp: /本篇|完结篇|OVA|特典映像|番外篇|特辑篇/,
+      regexp: /本篇|完结篇|OVA([^编編篇]{1,}[编編篇]){0,1}|特典映像|番外篇|特辑篇/,
     },
     {
       key: k("season"),
@@ -465,14 +464,15 @@ export function parse_filename_for_video(
     // 集数
     {
       key: k("episode"),
-      regexp: /续集|彩蛋[0-9]{0,}|花絮[0-9]{0,}|番外[0-9]{0,}|BONUS|[pP][rR][0-9]{0,}[\.$]/,
-    },
-    {
-      key: k("episode"),
       regexp: /^[0-9]{1,}$/,
       before() {
         cur_filename = cur_filename.replace(/^\.{2,}/, "").replace(/\.{1,}$/, "");
       },
+    },
+    {
+      key: k("episode"),
+      regexp: /续集|彩蛋[0-9]{0,}|花絮[0-9]{0,}|番外[0-9]{0,}|BONUS|[pP][rR][0-9]{0,}[\.$]/,
+      placeholder: ".",
     },
     {
       key: k("episode"),
@@ -516,13 +516,17 @@ export function parse_filename_for_video(
       pick: [1],
     },
     {
+      key: k("name"),
+      regexp: /^[a-zA-Z：]{1,}[\u4e00-\u9fa5]{1,}/,
+    },
+    {
       // 日文名称
       key: k("name"),
       desc: "japanese name",
       regexp:
         /^\[{0,1}[0-9]{0,}([\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff][0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff，：· ]{0,}[0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff])\]{0,1}/,
       before() {
-        cur_filename = cur_filename.replace(/^\.{2,}/, "");
+        // cur_filename = cur_filename.replace(/^\.{2,}/, "");
         const include_japanese = is_japanese(cur_filename);
         // log("[japanese-name]maybe japanese", include_japanese);
         if (!include_japanese) {
@@ -565,7 +569,7 @@ export function parse_filename_for_video(
         // 把 老友记S02 这种情况转换成 老友记.S02
         cur_filename = cur_filename.replace(/^([\u4e00-\u9fa5]{1,})([sS][0-9]{1,})/, "$1.$2");
         // 如果名字前面有很多冗余信息，前面就会出现 ..名称 这种情况，就需要手动处理掉
-        cur_filename = cur_filename.replace(/^\.{2,}/, "");
+        // cur_filename = cur_filename.replace(/^\.{2,}/, "");
         const include_japanese = is_japanese(cur_filename);
         if (include_japanese) {
           return {
@@ -809,7 +813,7 @@ export function parse_filename_for_video(
     })(),
   ];
   for (let i = 0; i < extra.length; i += 1) {
-    const { key, desc, regexp, priority, pick = [0], when, before, after } = extra[i];
+    const { key, desc, regexp, priority, placeholder, pick = [0], when, before, after } = extra[i];
     if (!cur_filename) {
       break;
     }
@@ -872,7 +876,7 @@ export function parse_filename_for_video(
       // log("[4]pick content in", index, "is", c);
       if (m[index] !== undefined) {
         extracted_content += c;
-        cur_filename = remove_str(cur_filename, from, c.length);
+        cur_filename = remove_str(cur_filename, from, c.length, placeholder);
       }
     }
     log("[5]extracted content for", unique, "is", extracted_content);
@@ -1001,4 +1005,30 @@ export function format_number(n: string, prefix = "S") {
     return `${e}.${extra}`;
   }
   return e;
+}
+
+export function has_key_factory(keys: VideoKeys[]) {
+  return (key: VideoKeys) => {
+    if (keys.includes(key)) {
+      return key;
+    }
+    return undefined;
+  };
+}
+
+export function is_japanese(text: string) {
+  const chinese_char = text.match(/[\u4e00-\u9fff]/g) || [];
+  const japanese_char = text.match(/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/g) || [];
+  if (japanese_char.length > chinese_char.length) {
+    return true;
+  }
+  return false;
+}
+export function is_korean(text: string) {
+  const chinese_char = text.match(/[\u4e00-\u9fff]/g) || [];
+  const korean_char = text.match(/[\uac00-\ud7a3]/g) || [];
+  if (korean_char.length > chinese_char.length) {
+    return true;
+  }
+  return false;
 }

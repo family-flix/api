@@ -13,6 +13,7 @@ import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { app, store } from "@/store";
 import { TaskTypes } from "@/domains/job/constants";
+import { FileType } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -22,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     force: string;
   }>;
   const { target_folders } = req.body as Partial<{
-    target_folders: { name: string; type: string }[];
+    target_folders: { file_id: string; parent_paths?: string; name: string; type: string }[];
   }>;
   if (!drive_id) {
     return e(Result.Err("缺少云盘 id"));
@@ -38,11 +39,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(drive_res);
   }
   const drive = drive_res.data;
-  if (!drive.has_root_folder()) {
+  if (!target_folders && !drive.has_root_folder()) {
     return e(Result.Err("请先设置索引目录", 30001));
   }
   const job_res = await Job.New({
-    desc: `索引云盘 '${drive.name}'`,
+    desc: `索引云盘 '${drive.name}'${(() => {
+      if (!target_folders) {
+        return "";
+      }
+      if (!Array.isArray(target_folders)) {
+        return "";
+      }
+      return " 部分文件";
+    })()}`,
     type: TaskTypes.DriveAnalysis,
     unique_id: drive.id,
     user_id,
@@ -84,18 +93,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const analysis = r2.data;
   // console.log("[API]admin/drive/analysis/[id].ts - before analysis.run");
-  analysis.run(
-    (() => {
-      if (!target_folders) {
-        return undefined;
-      }
-      if (!Array.isArray(target_folders)) {
-        return undefined;
-      }
-      return target_folders;
-    })(),
-    { force: force === "1" }
-  );
+  const the_files_prepare_analysis = await (async () => {
+    if (!target_folders) {
+      return undefined;
+    }
+    if (!Array.isArray(target_folders)) {
+      return undefined;
+    }
+    if (target_folders && target_folders[0] && target_folders[0].parent_paths) {
+      return target_folders.map((f) => {
+        const { name, parent_paths, type } = f;
+        return {
+          name: [parent_paths, name].filter(Boolean).join("/"),
+          type,
+        };
+      });
+    }
+    const files = await store.prisma.file.findMany({
+      where: {
+        name: {
+          in: target_folders.map((f) => f.name),
+        },
+      },
+    });
+    return files.map((f) => {
+      const { name, parent_paths, type } = f;
+      return {
+        name: [parent_paths, name].filter(Boolean).join("/"),
+        type: type === FileType.File ? "file" : "folder",
+      };
+    });
+  })();
+  analysis.run(the_files_prepare_analysis, { force: force === "1" });
   res.status(200).json({
     code: 0,
     msg: "开始索引任务",

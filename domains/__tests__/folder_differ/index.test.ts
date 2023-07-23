@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import { fetch_files_factory } from "@/domains/walker/utils";
 
 import { DiffTypes, FolderDiffer } from "../../folder_differ";
@@ -71,11 +71,11 @@ describe("compare two folder", () => {
         },
       ],
     };
-    const folder1 = new AliyunDriveFolder("1", {
+    const folder1 = new Folder("1", {
       name: "1",
       client: fetch_files_factory({ tree: cur_tree }),
     });
-    const folder2 = new AliyunDriveFolder("1", {
+    const folder2 = new Folder("1", {
       name: "1",
       client: fetch_files_factory({ tree: prev_tree }),
     });
@@ -224,11 +224,11 @@ describe("compare two folder", () => {
         },
       ],
     };
-    const folder1 = new AliyunDriveFolder("1", {
+    const folder1 = new Folder("1", {
       name: "1",
       client: fetch_files_factory({ size: 5, tree: cur_tree }),
     });
-    const folder2 = new AliyunDriveFolder("1", {
+    const folder2 = new Folder("1", {
       name: "1",
       client: fetch_files_factory({ size: 5, tree: prev_tree }),
     });

@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 
-import { bytes_to_size, is_japanese, normalize_episode_number, relative_time_from_now } from "..";
+import { bytes_to_size, normalize_episode_number, relative_time_from_now } from "..";
+import { is_japanese } from "../parse_filename_for_video";
 
 // describe("tv is changed", () => {
 //   test("empty name to has value", () => {

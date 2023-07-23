@@ -2,12 +2,15 @@
  * @file 阿里云盘
  * @doc https://www.yuque.com/aliyundrive/zpfszx
  */
+import { Handler } from "mitt";
 import axios from "@/modules/axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
 
 import { DatabaseStore } from "@/domains/store";
 import { DriveRecord } from "@/domains/store/types";
+import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
+import { BaseDomain } from "@/domains/base";
 import { query_stringify, sleep } from "@/utils";
 import { Result } from "@/types";
 
@@ -48,7 +51,16 @@ type RequestClient = {
   ) => Promise<Result<T>>;
   post: <T>(url: string, body?: Record<string, unknown>, headers?: Record<string, unknown>) => Promise<Result<T>>;
 };
-
+enum Events {
+  TransferFinish,
+  TransferFailed,
+  Print,
+}
+type TheTypesOfEvents = {
+  [Events.TransferFinish]: void;
+  [Events.TransferFailed]: Error;
+  [Events.Print]: ArticleLineNode;
+};
 type AliyunDriveProps = {
   id: string;
   drive_id: number;
@@ -59,7 +71,7 @@ type AliyunDriveProps = {
   store: DatabaseStore;
 };
 
-export class AliyunDriveClient {
+export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   static async Get(options: Partial<{ drive_id: number; store: DatabaseStore }>) {
     const { drive_id, store } = options;
     if (!store) {
@@ -146,6 +158,8 @@ export class AliyunDriveClient {
   store: DatabaseStore;
 
   constructor(options: AliyunDriveProps) {
+    super();
+
     const { id, drive_id, device_id, root_folder_id, access_token, refresh_token, store } = options;
     this.id = id;
     this.drive_id = drive_id;
@@ -311,7 +325,7 @@ export class AliyunDriveClient {
   /** 获取文件列表 */
   async fetch_files(
     /** 该文件夹下的文件列表，默认 root 表示根目录 */
-    folder_file_id: string = "root",
+    file_id: string = "root",
     options: Partial<{
       /** 每页数量 */
       page_size: number;
@@ -319,7 +333,7 @@ export class AliyunDriveClient {
       marker: string;
     }> = {}
   ) {
-    if (folder_file_id === undefined) {
+    if (file_id === undefined) {
       return Result.Err("请传入要获取的文件夹 file_id");
     }
     await this.ensure_initialized();
@@ -330,7 +344,7 @@ export class AliyunDriveClient {
       next_marker: string;
     }>(API_HOST + "/adrive/v3/file/list", {
       all: false,
-      parent_file_id: folder_file_id,
+      parent_file_id: file_id,
       drive_id: String(this.drive_id),
       limit: page_size,
       marker,
@@ -470,6 +484,22 @@ export class AliyunDriveClient {
     });
     return result;
   }
+  async fetch_parent_paths_of_folder(folder: { file_id: string }) {
+    await this.ensure_initialized();
+    const { file_id } = folder;
+    const result = await this.request.post<{
+      items: {
+        file_id: string;
+        name: string;
+        parent_file_id: string;
+        type: "folder" | "file";
+      }[];
+    }>(API_HOST + "/adrive/v1/file/get_path", {
+      file_id,
+      drive_id: String(this.drive_id),
+    });
+    return result;
+  }
   async fetch_video_preview_info(file_id: string) {
     await this.ensure_initialized();
     const result = await this.request.post<{
@@ -481,6 +511,7 @@ export class AliyunDriveClient {
       drive_id: String(this.drive_id),
       category: "live_transcoding",
       template_id: "QHD|FHD|HD|SD|LD",
+      // 60s * 6min * 2h
       url_expire_sec: 60 * 60 * 2,
       get_subtitle_info: true,
       // with_play_cursor: false,
@@ -761,12 +792,23 @@ export class AliyunDriveClient {
     const { url, code, file_ids, target_file_id = this.root_folder_id } = options;
     const r1 = await this.fetch_share_profile(url, { code });
     if (r1.error) {
+      this.emit(Events.TransferFailed, r1.error);
       return Result.Err(r1.error);
     }
     if (this.share_token === null) {
-      return Result.Err("Please invoke fetch_share_profile first");
+      const error = new Error("Please invoke fetch_share_profile first");
+      this.emit(Events.TransferFailed, error);
+      return Result.Err(error);
     }
     const { share_id, share_title, share_name, files } = r1.data;
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["获取分享资源详情成功，共有", String(files.length), "个文件"].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
     const share_files = file_ids || files;
     // console.log("save_multiple_shared_files", share_files);
     const body = {
@@ -807,6 +849,7 @@ export class AliyunDriveClient {
       "x-share-token": this.share_token,
     });
     if (r2.error) {
+      this.emit(Events.TransferFailed, r2.error);
       return Result.Err(r2.error);
     }
     const responses = r2.data.responses.map((resp) => {
@@ -824,7 +867,9 @@ export class AliyunDriveClient {
       return ![200, 202].includes(resp.status);
     });
     if (error_body) {
-      return Result.Err(`存在转存失败的记录，第 ${error_body.index} 个，因为 ${error_body.body.message}`);
+      const err = new Error(`存在转存失败的记录，第 ${error_body.index} 个，因为 ${error_body.body.message}`);
+      this.emit(Events.TransferFailed, err);
+      return Result.Err(err);
     }
     const async_task_list = responses
       .map((resp) => {
@@ -839,9 +884,19 @@ export class AliyunDriveClient {
     // console.log("async task list", async_task_list);
     if (async_task_list.length !== 0) {
       await sleep(1000);
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["获取转存任务状态"].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
       const r2 = await this.fetch_multiple_async_task({ async_task_ids: async_task_list });
       if (r2.error) {
-        return Result.Err("转存状态未知，可尝试重新转存");
+        const err = new Error("转存状态未知，可尝试重新转存");
+        this.emit(Events.TransferFailed, err);
+        return Result.Err(err);
       }
       const { responses } = r2.data;
       const error_body = responses.find((resp) => {
@@ -849,7 +904,7 @@ export class AliyunDriveClient {
         return resp.status !== 200 || !!resp.body.message;
       });
       if (error_body) {
-        return Result.Err(
+        const err = new Error(
           `${(() => {
             if (error_body.index) {
               return `第 ${error_body.index} 个文件转存失败`;
@@ -857,9 +912,19 @@ export class AliyunDriveClient {
             return "转存文件失败";
           })()}，因为 ${error_body.body.message}`
         );
+        this.emit(Events.TransferFailed, err);
+        return Result.Err(err);
       }
-      return Result.Ok(null);
     }
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["转存成功"].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
+    this.emit(Events.TransferFinish);
     // console.log("save_multiple_shared_files", responses);
     return Result.Ok({
       share_id,
@@ -1110,6 +1175,20 @@ export class AliyunDriveClient {
     }
     return Result.Ok(null);
   }
+  async fetch_files_in_recycle_bin(body: { next_marker?: string } = {}) {
+    const { next_marker } = body;
+    await this.ensure_initialized();
+    const r = await this.request.post(API_HOST + "/adrive/v2/recyclebin/list", {
+      drive_id: String(this.drive_id),
+      limit: 20,
+      order_by: "name",
+      order_direction: "DESC",
+    });
+    if (r.error) {
+      return r;
+    }
+    return Result.Ok(r.data);
+  }
   /** 从回收站删除文件 */
   async delete_file(file_id: string) {
     await this.ensure_initialized();
@@ -1352,6 +1431,16 @@ export class AliyunDriveClient {
     }
     const { result } = data;
     return Result.Ok(result);
+  }
+
+  on_transfer_failed(handler: Handler<TheTypesOfEvents[Events.TransferFailed]>) {
+    return this.on(Events.TransferFailed, handler);
+  }
+  on_transfer_finish(handler: Handler<TheTypesOfEvents[Events.TransferFinish]>) {
+    return this.on(Events.TransferFinish, handler);
+  }
+  on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
+    return this.on(Events.Print, handler);
   }
 }
 

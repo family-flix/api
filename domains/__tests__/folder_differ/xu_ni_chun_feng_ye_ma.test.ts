@@ -9,18 +9,18 @@ import {
 import { data, id } from "@/domains/__tests__/mock/xu_ni_chun_feng_ye_ma";
 import { data as updated_data } from "@/domains/__tests__/mock/xu_ni_chun_feng_ye_ma.update";
 import { DiffTypes, FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 
 describe("detect a tv dir", () => {
   test("许你春风野马", async () => {
-    const prev_folder = new AliyunDriveFolder(id, {
+    const prev_folder = new Folder(id, {
       name: "tv",
       client: fetch_files_factory({
         size: 20,
         tree: data,
       }),
     });
-    const folder = new AliyunDriveFolder(id, {
+    const folder = new Folder(id, {
       name: "tv",
       client: fetch_files_factory({
         size: 20,

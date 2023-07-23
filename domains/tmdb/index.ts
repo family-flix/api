@@ -1,6 +1,7 @@
 /**
  * @file TMDB 搜索客户端
  */
+import { Result } from "@/types";
 import {
   fetch_episode_profile,
   fetch_season_profile,
@@ -53,20 +54,24 @@ export class TMDBClient {
     return result;
   }
   /** 获取季详情 */
-  async fetch_season_profile(body: { tv_id: string | number; season_number: string | number }) {
+  async fetch_season_profile(body: { tv_id: number; season_number: string | number }) {
     const { tv_id, season_number } = body;
     const { token, language } = this.options;
-    const result = await fetch_season_profile(
-      {
-        tv_id,
-        season_number,
-      },
-      {
-        api_key: token,
-        language,
-      }
-    );
-    return result;
+    const r = await fetch_tv_profile(tv_id, {
+      api_key: token,
+      language,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { seasons } = r.data;
+    const matched_season = seasons.find((s) => {
+      return s.season_number === season_number;
+    });
+    if (!matched_season) {
+      return Result.Err("没有匹配的结果");
+    }
+    return Result.Ok(matched_season);
   }
   /** 获取剧集详情 */
   async fetch_episode_profile(body: {

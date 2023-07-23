@@ -137,7 +137,7 @@ describe("filter file", () => {
 
   it("downloads/T 他是谁 (2023)(24集持续更新中)/扫码特惠购买阿里云盘会员，VX小程序24小时自动充值，官方授权店铺(5)(1).png", () => {
     const need_skip = need_skip_the_file_when_walk({
-      target_file_name: "downloads/T 他是谁 (2023)(24集持续更新中)/4K/他是谁_09_4K_Tacit0924.mp4 file",
+      target_file_name: "downloads/T 他是谁 (2023)(24集持续更新中)/4K/他是谁_09_4K_Tacit0924.mp4",
       target_file_type: "file",
       cur_file: {
         name: "扫码特惠购买阿里云盘会员，VX小程序24小时自动充值，官方授权店铺(5)(1).png",
@@ -169,6 +169,30 @@ describe("filter file", () => {
         name: "C 朝鲜律师 (16集全完结)",
         type: "folder",
         parent_paths: "downloads",
+      },
+    });
+    expect(need_skip).toBe(true);
+  });
+  it("video/tv2/大宋少年志", () => {
+    const need_skip = need_skip_the_file_when_walk({
+      target_file_name: "video/tv2/大宋少年志",
+      target_file_type: "folder",
+      cur_file: {
+        name: "tv",
+        type: "folder",
+        parent_paths: "video",
+      },
+    });
+    expect(need_skip).toBe(true);
+  });
+  it("video/tv2/大宋少年志", () => {
+    const need_skip = need_skip_the_file_when_walk({
+      target_file_name: "video/tv2/大宋少年志",
+      target_file_type: "folder",
+      cur_file: {
+        name: "movie",
+        type: "folder",
+        parent_paths: "video",
       },
     });
     expect(need_skip).toBe(true);

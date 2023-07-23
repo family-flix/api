@@ -12,9 +12,14 @@ import { User } from "@/domains/user";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
-  const { page: page_str = "1", page_size: page_size_str = "20" } = query as Partial<{
+  const {
+    name,
+    page: page_str = "1",
+    page_size: page_size_str = "20",
+  } = query as Partial<{
     page: string;
     page_size: string;
+    name: string;
   }>;
   const { authorization } = req.headers;
   const t_res = await User.New(authorization, store);
@@ -29,6 +34,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     movie_id: null,
     user_id,
   };
+  if (name) {
+    where.OR = [
+      {
+        name: {
+          contains: name,
+        },
+      },
+      {
+        file_name: {
+          contains: name,
+        },
+      },
+    ];
+  }
   const list = await store.prisma.parsed_movie.findMany({
     where,
     orderBy: {

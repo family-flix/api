@@ -185,31 +185,21 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         user_id: this.profile.user_id,
       },
       include: {
-        output: {
-          include: {
-            _count: true,
-            lines: {
-              take: 20,
-              orderBy: {
-                created: "asc",
-              },
-            },
-          },
-        },
+        output: true,
       },
     });
     if (!r1) {
       return Result.Err("没有匹配的任务记录");
     }
     const { desc, unique_id, created, status, output, error } = r1;
-    const { lines, _count } = output;
+    // const { lines, _count } = output;
     return Result.Ok({
       status,
       desc,
       unique_id,
       created,
-      lines,
-      more_line: _count.lines > 20,
+      // lines,
+      // more_line: _count.lines > 20,
       error,
     });
   }
@@ -224,8 +214,8 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       take: page_size,
       skip: (page - 1) * page_size,
       orderBy: {
-        created: 'asc',
-      }
+        created: "asc",
+      },
     });
     return Result.Ok({
       page,

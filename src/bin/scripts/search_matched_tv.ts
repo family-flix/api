@@ -1,6 +1,6 @@
 // require("dotenv").config();
 
-import { sleep } from "@/utils/flow";
+import { sleep } from "@/utils";
 
 async function main() {
   sleep(1);

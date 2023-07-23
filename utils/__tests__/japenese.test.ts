@@ -298,10 +298,20 @@ describe("动漫", () => {
     const name = "Numbers：大厦森林的监视者们 [2023][12集持续更新中]";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "",
+      name: "Numbers：大厦森林的监视者们",
       original_name: "",
       season: "",
       episode: "",
+    });
+  });
+  test("OVA冒険編 第3集.mp4", () => {
+    const name = "OVA冒険編 第3集.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "OVA冒険編",
+      episode: "E03",
     });
   });
 });

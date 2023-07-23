@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
-import { parse_filename_for_video, VideoKeys, VIDEO_ALL_KEYS } from "@/utils";
+import { parse_filename_for_video, VideoKeys, VIDEO_ALL_KEYS } from "@/utils/parse_filename_for_video";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 

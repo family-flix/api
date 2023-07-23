@@ -9,7 +9,7 @@ import { response_error_factory } from "@/utils/backend";
 import { folder_client, store } from "@/store";
 import { User } from "@/domains/user";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import { DiffTypes, FolderDiffer } from "@/domains/folder_differ";
 import { is_video_file } from "@/utils";
 import { FileType } from "@/constants";
@@ -44,11 +44,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(client_res);
   }
   const client = client_res.data;
-  const prev_folder = new AliyunDriveFolder(root_folder_id, {
+  const prev_folder = new Folder(root_folder_id, {
     name: root_folder_name,
     client: folder_client({ drive_id }, store),
   });
-  const folder = new AliyunDriveFolder(root_folder_id, {
+  const folder = new Folder(root_folder_id, {
     name: root_folder_name,
     client: {
       fetch_files: async (file_id: string, options: Partial<{ marker: string; page_size: number }> = {}) => {
@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   for (let i = 0; i < effects.length; i += 1) {
     const effect = effects[i];
     const { type: effect_type, payload } = effect;
-    const { file_id, name, type, parents } = payload;
+    const { id: file_id, name, type, parents } = payload;
     // log(`[${name}]`, "是", effect_type === DiffTypes.Deleting ? "删除" : "新增");
     if (effect_type === DiffTypes.Deleting) {
       // log(`[${name}]`, "删除文件", file_id);
@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           file_id,
           name,
           type: FileType.Folder,
-          parent_file_id: parents[parents.length - 1].file_id,
+          parent_file_id: parents[parents.length - 1].id,
           parent_paths: parents.map((p) => p.name).join("/"),
           drive_id,
         });
@@ -106,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           file_id,
           name,
           type: FileType.File,
-          parent_file_id: parents[parents.length - 1].file_id,
+          parent_file_id: parents[parents.length - 1].id,
           parent_paths: parents.map((p) => p.name).join("/"),
           drive_id,
         });

@@ -8,6 +8,7 @@ import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { bytes_to_size } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -18,6 +19,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type: type_str,
     name,
   } = req.query as Partial<{ page: string; page_size: string; type: string; name: string }>;
+  const { order } = req.body as {
+    order: Record<string, "asc" | "desc">;
+  };
 
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -28,17 +32,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page_size = Number(page_size_str);
   const type = type_str ? Number(type_str) : null;
 
-  const where: NonNullable<Parameters<typeof store.prisma.file.findMany>[number]>["where"] = {
-    user_id: user.id,
-  };
-  if (name !== undefined) {
-    where.name = {
-      contains: name,
+  const where = (() => {
+    const where: NonNullable<Parameters<typeof store.prisma.file.findMany>[number]>["where"] = {
+      user_id: user.id,
     };
-  }
-  if (type !== null) {
-    where.type = type;
-  }
+    if (name !== undefined) {
+      where.OR = [
+        {
+          name: {
+            contains: name,
+          },
+        },
+        {
+          parent_paths: {
+            contains: name,
+          },
+        },
+      ];
+    }
+    if (type !== null) {
+      where.type = type;
+    }
+    return where;
+  })();
+  const orderBy = (() => {
+    let orderBy: NonNullable<Parameters<typeof store.prisma.file.findMany>[number]>["orderBy"] = {
+      name: "desc",
+    };
+    if (order) {
+      orderBy = order;
+    }
+    return orderBy;
+  })();
   const count = await store.prisma.file.count({
     where,
   });
@@ -49,9 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     take: page_size,
     skip: (page - 1) * page_size,
-    orderBy: {
-      name: "desc",
-    },
+    orderBy,
   });
   res.status(200).json({
     code: 0,
@@ -61,7 +84,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page_size,
       total: count,
       no_more: list.length + (page - 1) * page_size >= count,
-      list,
+      list: list.map((file) => {
+        const { id, file_id, name, parent_paths, type, size, drive } = file;
+        return {
+          id,
+          file_id,
+          unique_id: file_id,
+          name,
+          parent_paths,
+          type,
+          size: bytes_to_size(size ?? 0),
+          drive: {
+            id: drive.id,
+            name: drive.name,
+            avatar: drive.avatar,
+          },
+        };
+      }),
     },
   });
 }

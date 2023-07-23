@@ -3,7 +3,7 @@
  */
 import type { Handler } from "mitt";
 
-import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
+import { File, Folder } from "@/domains/folder";
 import { ArticleLineNode, ArticleListItemNode, ArticleListNode, ArticleTextNode } from "@/domains/article";
 import { BaseDomain } from "@/domains/base";
 
@@ -21,16 +21,16 @@ export enum DiffTypes {
 export type DifferEffect = {
   type: DiffTypes;
   payload: {
-    file_id: string;
+    id: string;
     parent_file_id?: string;
     name: string;
     type: "folder" | "file";
     parents: {
-      file_id: string;
+      id: string;
       name: string;
     }[];
     prev_folder: {
-      file_id: string;
+      id: string;
       name: string;
     };
   };
@@ -38,8 +38,8 @@ export type DifferEffect = {
 type MaybeActionPayload = Record<
   string,
   {
-    file: AliyunDriveFolder | AliyunDriveFile;
-    prev_folder: AliyunDriveFolder;
+    file: Folder | File;
+    prev_folder: Folder;
   }
 >;
 enum Events {
@@ -50,22 +50,22 @@ type TheTypesOfEvents = {
 };
 type FolderDifferProps = {
   /** 要对比的新文件夹实例 */
-  folder: AliyunDriveFolder;
+  folder: Folder;
   /** 要对比的旧文件夹实例 */
-  prev_folder: AliyunDriveFolder;
+  prev_folder: Folder;
   /** 判断两个文件是否相同的键 */
-  unique_key: "file_id" | "name";
+  unique_key: "name" | "id";
   /** 判断是否忽略 */
-  filter?: (file: AliyunDriveFile | AliyunDriveFolder) => boolean;
+  filter?: (file: File | Folder) => boolean;
   on_print?: (node: ArticleLineNode) => void;
 };
 
 export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
-  folder: AliyunDriveFolder;
+  folder: Folder;
   // parent_folders: AliyunDriveFolder[] = [];
-  prev_folder: AliyunDriveFolder;
+  prev_folder: Folder;
   // prev_parent_folders: AliyunDriveFolder[] = [];
-  unique_key: "file_id" | "name";
+  unique_key: "name" | "id";
   filter?: FolderDifferProps["filter"];
   /** 是否在对比子文件夹。该变量的目的在于保留不确定是新增还是移动的文件，放在最后回到根目录时再判断 */
   is_child = false;
@@ -182,13 +182,13 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
       if (is_root_folder) {
         // log(prefix, "完成对比，获取新增与删除的文件列表");
         const deleting_actions = Object.keys(this.maybe_deleting).map((unique_key) => {
-          const { file_id, parent_file_id, name, type, parents } = this.maybe_deleting[unique_key].file;
+          const { id: file_id, parent_file_id, name, type, parents } = this.maybe_deleting[unique_key].file;
           // log("[DOMAIN](FolderDiffer)must be deleting", name);
           // log(prefix, "删除的文件", name);
           const r = {
             type: DiffTypes.Deleting,
             payload: {
-              file_id,
+              id: file_id,
               parent_file_id,
               name,
               type,
@@ -203,20 +203,20 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
         });
         this.effects.push(...deleting_actions);
         const adding_actions = Object.keys(this.maybe_adding).map((unique_key) => {
-          const { file_id, name, type, parent_file_id, parents } = this.maybe_adding[unique_key].file;
+          const { id: file_id, name, type, parent_file_id, parents } = this.maybe_adding[unique_key].file;
           const prev_folder = this.maybe_adding[unique_key].prev_folder;
           // log(prefix, "新增的文件", name, "应该添加到", prev_folder.name, "文件夹中");
           // log("[DOMAIN](FolderDiffer)must be adding", name);
           const r = {
             type: DiffTypes.Adding,
             payload: {
-              file_id,
+              id: file_id,
               parent_file_id,
               name,
               type,
               parents,
               prev_folder: {
-                file_id: prev_folder.file_id,
+                id: prev_folder.id,
                 name: prev_folder.name,
               },
             },
@@ -446,8 +446,8 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
         // log("[DOMAIN](FolderDiffer)1.1 - is same, check is folder then compare sub files", cur_unique, prev_unique);
         if (cur_file.type === "folder" && prev_file.type === "folder") {
           const sub_diff = new FolderDiffer({
-            prev_folder: prev_file as AliyunDriveFolder,
-            folder: cur_file as AliyunDriveFolder,
+            prev_folder: prev_file as Folder,
+            folder: cur_file as Folder,
             unique_key: this.unique_key,
             filter: this.filter,
             on_print: (node) => {
@@ -536,10 +536,10 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
         // log(prefix, "两个文件没有变化");
         // log(`[DOMAIN](FolderDiffer)2.3 - ${cur_file.name} and ${map[unique_key].name} is same, so no change`);
         if (cur_file.type === "folder" && map[unique_key].file.type === "folder") {
-          const prev_file = map[unique_key].file as AliyunDriveFolder;
+          const prev_file = map[unique_key].file as Folder;
           const sub_diff = new FolderDiffer({
             prev_folder: prev_file,
-            folder: cur_file as AliyunDriveFolder,
+            folder: cur_file as Folder,
             unique_key: this.unique_key,
             filter: this.filter,
             on_print: (node) => {
@@ -589,7 +589,7 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
       // );
       // 这里会重复添加，但是用 v 做 key 所以实际上没有重复添加成功
       this.maybe_adding[unique_key] = {
-        file: cur_file as AliyunDriveFolder,
+        file: cur_file as Folder,
         prev_folder: this.prev_folder,
       } as MaybeActionPayload[string];
     }

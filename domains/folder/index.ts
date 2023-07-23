@@ -1,13 +1,25 @@
 /**
- * @file 一个阿里云文件夹
+ * @file 文件夹、文件
  */
-import { Result } from "@/types";
-import { sleep } from "@/utils/flow";
-import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
+import { Handler } from "mitt";
 
-export class AliyunDriveFolder {
+import { BaseDomain } from "@/domains/base";
+import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
+import { Result } from "@/types";
+import { sleep } from "@/utils";
+
+enum Events {
+  File,
+  Error,
+}
+type TheTypesOfEvents = {
+  [Events.File]: {};
+  [Events.Error]: Error;
+};
+
+export class Folder extends BaseDomain<TheTypesOfEvents> {
   /** 文件夹 id */
-  file_id: string;
+  id: string;
   /** 父文件夹 id */
   parent_file_id: string = "root";
   /** 文件夹名 */
@@ -16,15 +28,15 @@ export class AliyunDriveFolder {
   type: "folder" = "folder";
   size: number = 0;
   /** 该文件夹的子文件/子文件夹 */
-  items: (AliyunDriveFile | AliyunDriveFolder)[] = [];
+  items: (File | Folder)[] = [];
   /** 该文件夹所在上下文 */
   parents: {
-    file_id: string;
+    id: string;
     name: string;
   }[] = [];
   /** 获取下一页的标志 */
   next_marker: string = "initial";
-  cur_items: (AliyunDriveFile | AliyunDriveFolder)[] = [];
+  cur_items: (File | Folder)[] = [];
   /** 每次请求间的间隔时间 */
   delay?: number;
   /** 获取该文件夹信息及子文件夹/文件的方法合集对象 */
@@ -43,17 +55,22 @@ export class AliyunDriveFolder {
     id: string,
     options: {
       name?: string;
-      client: AliyunDriveFolder["client"];
-      parents?: { file_id: string; name: string }[];
+      client: Folder["client"];
+      parents?: { id: string; name: string }[];
     } = { client: null }
   ) {
+    super();
+
     const { client, name, parents = [] } = options;
     if (name) {
       this.name = name;
     }
     this.parents = parents;
-    this.file_id = id;
+    this.id = id;
     this.client = client;
+  }
+  get parent_paths() {
+    return this.parents.map((c) => c.name).join("/");
   }
   /** 获取并设置文件夹详情（名称等信息） */
   async profile() {
@@ -63,7 +80,7 @@ export class AliyunDriveFolder {
     if (!this.client.fetch_file) {
       return Result.Err("云盘实例缺少 fetch_file 方法");
     }
-    const r = await this.client.fetch_file(this.file_id);
+    const r = await this.client.fetch_file(this.id);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -81,6 +98,12 @@ export class AliyunDriveFolder {
     this.name = name;
     this.size = size;
     return Result.Ok(null);
+  }
+  async walk() {
+    do {
+      await this.next();
+    } while (this.next_marker);
+    return this.items;
   }
   /** 获取该文件夹下的子文件夹，每次调用的结果不同，开始是第一页，然后是第二页 */
   async next() {
@@ -100,34 +123,35 @@ export class AliyunDriveFolder {
     if (this.next_marker === "") {
       return Result.Ok([]);
     }
-    const r = await this.client.fetch_files(this.file_id, {
+    const r = await this.client.fetch_files(this.id, {
       marker: this.next_marker === "initial" ? "" : this.next_marker,
     });
     if (r.error) {
-      return r;
+      this.emit(Events.Error, r.error);
+      return Result.Err(r.error);
     }
     const { items, next_marker } = r.data;
     this.next_marker = next_marker;
     const folder_or_files = items.map((f) => {
       const { type, file_id } = f;
       const parents = this.parents.concat({
-        file_id: this.file_id,
+        id: this.id,
         name: this.name,
       });
       if (type === "folder") {
-        const folder = new AliyunDriveFolder(file_id, {
+        const folder = new Folder(file_id, {
           client: this.client,
           parents,
         });
-        folder.parent_file_id = this.file_id;
+        folder.parent_file_id = this.id;
         folder.set_profile(f);
         return folder;
       }
-      const file = new AliyunDriveFile(file_id, {
+      const file = new File(file_id, {
         client: this.client,
         parents,
       });
-      file.parent_file_id = this.file_id;
+      file.parent_file_id = this.id;
       file.set_profile(f);
       return file;
     });
@@ -138,14 +162,22 @@ export class AliyunDriveFolder {
   set_delay(delay?: number) {
     this.delay = delay;
   }
-  get parent_paths() {
-    return this.parents.map((c) => c.name).join("/");
+  to_json() {
+    return {
+      id: this.id,
+      name: this.name,
+      parent_paths: this.parent_paths,
+    };
+  }
+
+  on_file(handler: Handler<TheTypesOfEvents[Events.File]>) {
+    return this.on(Events.File, handler);
   }
 }
 
-export class AliyunDriveFile {
+export class File {
   /** 文件夹 id */
-  file_id: string;
+  id: string;
   /** 父文件夹 id */
   parent_file_id: string = "";
   /** 文件类型 */
@@ -154,18 +186,18 @@ export class AliyunDriveFile {
   name: string = "";
   /** 文件大小（单位字节） */
   size: number = 0;
-  parents: AliyunDriveFolder["parents"];
+  parents: Folder["parents"];
   /** 获取该文件信息的方法合集对象 */
-  private client: AliyunDriveFolder["client"];
+  private client: Folder["client"];
   constructor(
     id: string,
     options: {
-      client: AliyunDriveFile["client"];
-      parents: AliyunDriveFile["parents"];
+      client: File["client"];
+      parents: File["parents"];
     }
   ) {
     const { client, parents } = options;
-    this.file_id = id;
+    this.id = id;
     this.client = client;
     this.parents = parents;
   }
@@ -173,6 +205,13 @@ export class AliyunDriveFile {
     const { name, size = 0 } = profile;
     this.name = name;
     this.size = size;
+  }
+  to_json() {
+    return {
+      id: this.id,
+      name: this.name,
+      parent_paths: this.parent_paths,
+    };
   }
   get parent_paths() {
     return this.parents.map((c) => c.name).join("/");

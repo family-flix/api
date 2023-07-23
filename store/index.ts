@@ -1,5 +1,5 @@
 import { Application } from "@/domains/application";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import { DatabaseStore } from "@/domains/store";
 import { FileType } from "@/constants";
 import { Result, resultify } from "@/types";
@@ -65,5 +65,5 @@ export function folder_client(body: { drive_id: string }, store: DatabaseStore) 
       };
       return Result.Ok(result);
     },
-  } as AliyunDriveFolder["client"];
+  } as Folder["client"];
 }

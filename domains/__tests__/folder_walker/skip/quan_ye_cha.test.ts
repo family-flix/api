@@ -7,7 +7,7 @@ import {
   adding_file_safely,
 } from "@/domains/walker/utils";
 import { FolderWalker } from "@/domains/walker";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import { data, id } from "@/domains/__tests__/mock/quan_ye_cha";
 
 import { test_store } from "../../store";
@@ -62,7 +62,7 @@ describe("detect a tv dir", () => {
       handle_episode(task);
       add_parsed_infos_when_walk(task, { user_id, drive_id }, test_store);
     };
-    const folder = new AliyunDriveFolder(id, {
+    const folder = new Folder(id, {
       client: fetch_files_factory({
         tree: data,
       }),

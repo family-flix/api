@@ -45,6 +45,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           ]
         : undefined,
     },
+    parsed_movies: {
+      some: {},
+    },
     user_id,
   };
   const count = await store.prisma.movie.count({

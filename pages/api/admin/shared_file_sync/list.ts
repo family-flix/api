@@ -77,11 +77,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           file_id,
           file_name: name,
           url,
-          tv: {
-            name: parsed_tv.tv?.profile.name,
-            overview: parsed_tv.tv?.profile.overview,
-            poster_path: parsed_tv.tv?.profile.poster_path,
-          },
+          tv: (() => {
+            if (!parsed_tv.tv) {
+              return null;
+            }
+            const { name, overview, poster_path } = parsed_tv.tv.profile;
+            return {
+              name,
+              overview,
+              poster_path,
+            };
+          })(),
           drive: {
             id: parsed_tv?.drive.id,
             name: parsed_tv?.drive.name,

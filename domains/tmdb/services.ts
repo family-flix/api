@@ -18,8 +18,8 @@ function fix_TMDB_image_path({
   backdrop_path,
   poster_path,
 }: Partial<{
-  backdrop_path: string;
-  poster_path: string;
+  backdrop_path?: string;
+  poster_path?: string;
 }>) {
   const result: Partial<{
     backdrop_path: string;
@@ -351,6 +351,7 @@ export async function fetch_tv_profile(
   });
 }
 export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_tv_profile>>>;
+export type PartialSeasonFromTMDB = TVProfileFromTMDB["seasons"][number];
 
 /**
  * 获取电视剧某一季详情
@@ -360,7 +361,7 @@ export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_
 export async function fetch_season_profile(
   body: {
     tv_id: number | string;
-    season_number: number | string | undefined;
+    season_number: number | undefined;
   },
   options: {
     api_key: string;

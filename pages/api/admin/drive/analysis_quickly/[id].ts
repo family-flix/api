@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const tmp_folders = await store.prisma.tmp_file.findMany({
     where: {
-      type: FileType.File,
+      // type: FileType.File,
       drive_id,
       user_id,
     },

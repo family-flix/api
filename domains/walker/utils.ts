@@ -542,63 +542,6 @@ export function find_child_recursive(file: RequestedAliyunDriveFiles, id: string
   return null;
 }
 
-/**
- * 在遍历文件夹的过程中，根据给定的目标文件/文件夹，和当前遍历到的文件夹/文件进行对比，判断是否要跳过
- */
-export function need_skip_the_file_when_walk(options: {
-  target_file_name: string;
-  target_file_type: string;
-  cur_file: { type: string; name: string; parent_paths: string };
-}) {
-  const { target_file_name, target_file_type, cur_file } = options;
-  const { type: cur_type, name, parent_paths: cur_file_parent_paths } = cur_file;
-  if (target_file_type === "folder") {
-    // 如果希望只处理指定文件夹，比如 a/b
-    if (cur_type === "file") {
-      // 遍历到 a/b/c/d/e.mp4 时，parent_paths = a/b/c/d 符合
-      // 遍历到 a/f/g.mp4 时，parent_paths = a/f 不符合
-      // 遍历到 a/f.mp4 时，parent_paths = a，不符合
-      if (cur_file_parent_paths.startsWith(target_file_name)) {
-        return false;
-      }
-    }
-    if (cur_type === "folder") {
-      // cur_file.name = d; cur_file.parent_paths = a/b/c
-      // cur_file.name = c; cur_file.parent_paths = a/b
-      // cur_file.name = b; cur_file.parent_paths = a
-      // cur_file.name = a; cur_file.parent_paths = null
-      if (`${cur_file_parent_paths}/${name}`.startsWith(target_file_name)) {
-        return false;
-      }
-      if (target_file_name.startsWith(`${cur_file_parent_paths}/${name}`)) {
-        return false;
-      }
-    }
-  }
-  if (target_file_type === "file") {
-    // 如果只希望处理指定文件，比如 a/b/c/d/e.mp4
-    if (cur_type === "file") {
-      // 当前遍历到文件 a/b/c/e.mp4
-      if (`${cur_file_parent_paths}/${name}` === target_file_name) {
-        return false;
-      }
-    }
-    if (cur_type === "folder") {
-      // cur_file.name = d; cur_file.parent_paths = a/b/c
-      // cur_file.name = c; cur_file.parent_paths = a/b
-      // cur_file.name = b; cur_file.parent_paths = a
-      // cur_file.name = a; cur_file.parent_paths = null
-      if (target_file_name.startsWith(`${cur_file_parent_paths}/${name}`)) {
-        return false;
-      }
-      if (`${cur_file_parent_paths}/${name}`.startsWith(target_file_name)) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 type DuplicateEpisodes = Record<
   string,
   (Pick<ParsedEpisodeRecord, "id" | "file_id" | "file_name" | "parent_paths"> & {

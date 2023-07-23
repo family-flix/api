@@ -5,17 +5,17 @@ import { fetch_files_factory } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/feng_qi_luo_yang";
 import { data as updated_data } from "@/domains/__tests__/mock/feng_qi_luo_yang.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 
 describe("detect a tv dir", () => {
   test("风起洛阳", async () => {
-    const prev_folder = new AliyunDriveFolder(id, {
+    const prev_folder = new Folder(id, {
       client: fetch_files_factory({
         tree: data,
       }),
     });
     await prev_folder.profile();
-    const folder = new AliyunDriveFolder(id, {
+    const folder = new Folder(id, {
       client: fetch_files_factory({
         tree: updated_data,
       }),

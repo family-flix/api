@@ -4,7 +4,7 @@
 require("dotenv").config();
 
 import { store } from "@/store";
-import { qiniu_upload_online_file } from "@/utils/back_end";
+import { qiniu_upload_online_file } from "@/utils/upload";
 import { TMDBClient } from "@/domains/tmdb";
 import { walk_records } from "@/domains/store/utils";
 

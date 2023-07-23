@@ -8,9 +8,10 @@ import { is_video_file } from "@/utils";
  * 在遍历文件夹的过程中，根据给定的目标文件/文件夹，和当前遍历到的文件夹/文件进行对比，判断是否要跳过
  */
 export function need_skip_the_file_when_walk(options: {
-  // 完整路径包含文件名
+  /** 判断是否要处理的文件 */
   target_file_name: string;
   target_file_type: string;
+  /** 当前遍历到的文件 */
   cur_file: { type: string; name: string; parent_paths: string };
 }) {
   const { target_file_name, target_file_type, cur_file } = options;
@@ -30,10 +31,12 @@ export function need_skip_the_file_when_walk(options: {
       // cur_file.name = c; cur_file.parent_paths = a/b
       // cur_file.name = b; cur_file.parent_paths = a
       // cur_file.name = a; cur_file.parent_paths = null
-      if (`${cur_file_parent_paths}/${name}`.startsWith(target_file_name)) {
+      const cur_filepath = [cur_file_parent_paths, name, ""].join("/");
+      if (cur_filepath.startsWith(target_file_name)) {
         return false;
       }
-      if (target_file_name.startsWith(`${cur_file_parent_paths}/${name}`)) {
+      // console.log(target_file_name, target_file_name.startsWith(cur_filepath));
+      if (target_file_name.startsWith(cur_filepath)) {
         return false;
       }
     }
@@ -61,7 +64,6 @@ export function need_skip_the_file_when_walk(options: {
   }
   return true;
 }
-
 /**
  * 遍历云盘时保存遍历到的视频文件夹/文件
  * @param file
@@ -82,9 +84,9 @@ export async function adding_file_safely(
 ) {
   const { file_id, name, parent_file_id, parent_paths, type, size = 0 } = file;
   const { drive_id, user_id } = extra;
-  if (type === "file" && !is_video_file(name)) {
-    return Result.Err("不是合法的视频文件");
-  }
+  // if (type === "file" && !is_video_file(name)) {
+  //   return Result.Err("不是合法的视频文件");
+  // }
   const existing_folder_res = await store.find_file({ file_id });
   if (existing_folder_res.error) {
     return Result.Err(existing_folder_res.error);

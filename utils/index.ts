@@ -2,7 +2,6 @@ import Nzh from "nzh";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 import relative_time from "dayjs/plugin/relativeTime";
-import { parse_filename_for_video, VideoKeys } from "./parse_filename_for_video";
 
 dayjs.extend(relative_time);
 dayjs.locale("zh-cn");
@@ -16,104 +15,16 @@ export type ParsedFilename = {
   original_name: string;
 };
 
-export function has_key_factory(keys: VideoKeys[]) {
-  return (key: VideoKeys) => {
-    if (keys.includes(key)) {
-      return key;
-    }
-    return undefined;
-  };
-}
-
-export function is_season(s: string) {
-  if (s[0] === "第" && s[s.length - 1] === "季") {
-    return true;
-  }
-  if (/(SE|Season){1} {0,}[0-9]{1}/.test(s)) {
-    return true;
-  }
-  return /^[sS][0-9]{1,}[eE]{0,1}[0-9]{0,}/.test(s);
-}
-export function extra_season_and_episode(c: string) {
-  let i = 0;
-  let inSeason = false;
-  let inEpisode = false;
-  const result = {
-    season: "",
-    episode: "",
-  };
-  if (!is_season(c)) {
-    result;
-  }
-  while (i < c.length) {
-    const s = c[i];
-    if (s.toUpperCase() === "S") {
-      if (c[i + 1].toUpperCase() === "E" && /[0-9]/.test(c[i + 2])) {
-        inSeason = true;
-        result.season += s.toUpperCase();
-        i += 2;
-        continue;
-      }
-      // log("[]extra", c, c.slice(i, 6));
-      if (c.slice(i, 6).toLowerCase() === "season") {
-        inSeason = true;
-        result.season += s.toUpperCase();
-        i += 6;
-        continue;
-      }
-      inSeason = true;
-      result.season += s;
-      i += 1;
-      continue;
-    }
-    if (s === "第") {
-      inSeason = true;
-      result.season += s;
-      i += 1;
-      continue;
-    }
-    if (s.toUpperCase() === "E") {
-      inEpisode = true;
-      inSeason = false;
-      result.episode += s;
-      i += 1;
-      continue;
-    }
-    if (inEpisode) {
-      result.episode += s;
-      i += 1;
-      continue;
-    }
-    if (inSeason) {
-      result.season += s;
-      i += 1;
-      continue;
-    }
-    i += 1;
-  }
-  return result;
-}
-export function is_resolution(s: string) {
-  return /[0-9]{1,}[pPiI]$/.test(s);
-}
-
 export function padding_zero(str: number | string) {
   if (String(str).length === 1) {
     return `0${str}`;
   }
   return String(str);
 }
-export function remove_str(filename: string, index: number = 0, length: number) {
-  return filename.slice(0, index) + filename.slice(index + length);
+export function remove_str(filename: string, index: number = 0, length: number, placeholder: string = "") {
+  return filename.slice(0, index) + placeholder + filename.slice(index + length);
 }
 
-export function normalize_season_number(filename: string) {
-  let name = filename;
-  // if (/[sS][0-9]{1,}[eE][0-9]{1,}/.test(name)) {
-
-  // }
-  return name.replace(/b([sS][0-9]{1,})([eE][0-9]{1,})\b/g, ".$1.$2");
-}
 /**
  * 各种奇怪的集数信息正常化
  * @param filename
@@ -161,6 +72,7 @@ export function generate_new_video_filename(
   }
   return result.join(".");
 }
+
 export function episode_to_num(str: string) {
   const regex = /(\d+)/g;
   let s = str.replace(/[eE]/g, "");
@@ -226,7 +138,13 @@ export function num_to_chinese(num: number) {
 export function chinese_num_to_num(str: string) {
   return nzhcn.decodeS(str);
 }
-
+/**
+ * 更新数组中指定元素
+ * @param arr
+ * @param index
+ * @param nextItem
+ * @returns
+ */
 export function update<T>(arr: T[], index: number, nextItem: T) {
   if (index === -1) {
     return [...arr];
@@ -268,7 +186,6 @@ export function query_stringify(query: Record<string, string | number | undefine
 }
 
 const defaultRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
 /** 返回一条随机作为记录 id 的 15 位字符串 */
 export function r_id() {
   return random_string(15);
@@ -289,50 +206,6 @@ function random_string_with_alphabet(length: number, alphabet: string) {
     b[i] = alphabet[n];
   }
   return b.join("");
-}
-
-export function maybe_same_tv(existing_names: string[], name: string) {}
-
-/**
- * 推断 tv 的改变
- */
-export function detect_change_of_tv(prev_filename: string, cur_filename: string) {
-  const prev_parsed_info = parse_filename_for_video(prev_filename);
-  const cur_parsed_info = parse_filename_for_video(cur_filename);
-  const {
-    name: prev_name,
-    original_name: prev_original_name,
-    season: prev_season,
-    episode: prev_episode,
-  } = prev_parsed_info;
-  const {
-    name: cur_name,
-    original_name: cur_original_name,
-    season: cur_season,
-    episode: cur_episode,
-  } = cur_parsed_info;
-  const diff = [];
-  if (prev_name !== cur_name) {
-    diff.push({
-      name: [prev_name, cur_name],
-    });
-  }
-  if (prev_original_name !== cur_original_name) {
-    diff.push({
-      original_name: [prev_original_name, cur_original_name],
-    });
-  }
-  if (prev_season !== cur_season) {
-    diff.push({
-      season: [prev_season, cur_season],
-    });
-  }
-  if (prev_episode !== cur_episode) {
-    diff.push({
-      episode: [prev_episode, cur_episode],
-    });
-  }
-  return diff;
 }
 
 export function bytes_to_size(bytes: number) {
@@ -356,51 +229,6 @@ export function bytes_to_size(bytes: number) {
     return result;
   }
   return `${remove_zero(size.toFixed(2))}${unit}`;
-}
-
-export function find_resolution_from_paths(full_path: string) {
-  const paths = full_path.split("/");
-  let i = paths.length - 1;
-  while (i > 0) {
-    const p = paths[i];
-    const { resolution } = parse_filename_for_video(p, ["resolution"]);
-    if (resolution) {
-      return resolution;
-    }
-    i -= 1;
-  }
-  return null;
-}
-
-export function find_recommended_pathname(paths: string[]) {
-  const matched = paths.find((name) => {
-    if (name.match(/4[kK]/)) {
-      if (name.match(/去片头/)) {
-        return true;
-      }
-      if (name.match(/纯享版{0,1}/)) {
-        return true;
-      }
-      if (name.match(/[hH]265/)) {
-        return true;
-      }
-      return true;
-    }
-    if (name.match(/去片头/)) {
-      return true;
-    }
-    if (name.match(/纯享版{0,1}/)) {
-      return true;
-    }
-    if (name.match(/[hH]265/)) {
-      return true;
-    }
-    return false;
-  });
-  if (!matched) {
-    return paths[0];
-  }
-  return matched;
 }
 
 /**
@@ -436,24 +264,6 @@ export function relative_time_from_now(time: string) {
   }
   return relativeTimeString;
 }
-
-export function is_japanese(text: string) {
-  const chinese_char = text.match(/[\u4e00-\u9fff]/g) || [];
-  const japanese_char = text.match(/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/g) || [];
-  if (japanese_char.length > chinese_char.length) {
-    return true;
-  }
-  return false;
-}
-export function is_korean(text: string) {
-  const chinese_char = text.match(/[\u4e00-\u9fff]/g) || [];
-  const korean_char = text.match(/[\uac00-\ud7a3]/g) || [];
-  if (korean_char.length > chinese_char.length) {
-    return true;
-  }
-  return false;
-}
-
 export function noop() {}
 export function promise_noop() {
   return Promise.resolve();

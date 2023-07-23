@@ -3,7 +3,7 @@
  */
 require("dotenv").config();
 
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import { FolderWalker } from "@/domains/walker";
 import { folder_client } from "@/store";
 import { store } from "@/store";
@@ -15,7 +15,7 @@ async function main() {
     // file_name: "Season 1",
   };
   const drive_id = drive_folder.id;
-  const prev_folder = new AliyunDriveFolder(drive_folder.file_id, {
+  const prev_folder = new Folder(drive_folder.file_id, {
     // name: drive_folder.file_name,
     client: folder_client({ drive_id }, store),
   });

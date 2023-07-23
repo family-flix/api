@@ -42,13 +42,13 @@ export function normalize_partial_tv(
     parsed_tvs: (ParsedTVRecord & {
       binds: TVBindTaskRecord[];
     })[];
-    episodes: (EpisodeRecord & {
-      profile: EpisodeProfileRecord;
-      parsed_episodes: ParsedEpisodeRecord[];
-      _count: {
-        parsed_episodes: number;
-      };
-    })[];
+    // episodes: (EpisodeRecord & {
+    //   profile: EpisodeProfileRecord;
+    //   parsed_episodes: ParsedEpisodeRecord[];
+    //   _count: {
+    //     parsed_episodes: number;
+    //   };
+    // })[];
     _count: {
       episodes: number;
       seasons: number;
@@ -56,14 +56,7 @@ export function normalize_partial_tv(
     };
   }
 ) {
-  const {
-    id,
-    profile,
-    // seasons,
-    episodes,
-    parsed_tvs,
-    _count,
-  } = tv;
+  const { id, profile, parsed_tvs, _count } = tv;
   const {
     name,
     original_name,
@@ -94,13 +87,13 @@ export function normalize_partial_tv(
       };
     });
   const incomplete = episode_count && episode_count !== _count.episodes;
-  const episode_sources = episodes
-    .map((episode) => {
-      return episode._count.parsed_episodes;
-    })
-    .reduce((total, cur) => {
-      return total + cur;
-    }, 0);
+  // const episode_sources = episodes
+  //   .map((episode) => {
+  //     return episode._count.parsed_episodes;
+  //   })
+  //   .reduce((total, cur) => {
+  //     return total + cur;
+  //   }, 0);
   // const tips: { text: string[] }[] = [];
   const tips: string[] = [];
   // if (binds.length === 0 && incomplete) {
@@ -139,19 +132,19 @@ export function normalize_partial_tv(
   if (!in_production && incomplete) {
     tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
   }
-  const size_count = episodes
-    .map((episode) => {
-      return episode.parsed_episodes
-        .map(({ size }) => {
-          return size || 0;
-        })
-        .reduce((total, cur) => {
-          return total + cur;
-        }, 0);
-    })
-    .reduce((total, cur) => {
-      return total + cur;
-    }, 0);
+  // const size_count = episodes
+  //   .map((episode) => {
+  //     return episode.parsed_episodes
+  //       .map(({ size }) => {
+  //         return size || 0;
+  //       })
+  //       .reduce((total, cur) => {
+  //         return total + cur;
+  //       }, 0);
+  //   })
+  //   .reduce((total, cur) => {
+  //     return total + cur;
+  //   }, 0);
   return {
     id,
     name,
@@ -164,9 +157,8 @@ export function normalize_partial_tv(
     season_count,
     cur_episode_count: _count.episodes,
     cur_season_count: _count.seasons,
-    episode_sources,
-    size_count,
-    size_count_text: bytes_to_size(size_count),
+    binds,
+    valid_bind,
     incomplete,
     need_bind,
     sync_task: incomplete && valid_bind ? valid_bind : null,

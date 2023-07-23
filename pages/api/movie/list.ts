@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const member = t_res.data;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
   const where: NonNullable<Parameters<typeof store.prisma.movie.findMany>[0]>["where"] = {
@@ -45,6 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           ]
         : undefined,
     },
+    parsed_movies: { some: {} },
+    user_id: member.user.id,
   };
   const count = await store.prisma.movie.count({
     where,

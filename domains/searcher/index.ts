@@ -5,7 +5,12 @@ import type { Handler } from "mitt";
 
 import { BaseDomain } from "@/domains/base";
 import { TMDBClient } from "@/domains/tmdb";
-import { MovieProfileFromTMDB, TVProfileFromTMDB } from "@/domains/tmdb/services";
+import {
+  MovieProfileFromTMDB,
+  PartialSeasonFromTMDB,
+  SeasonProfileFromTMDB,
+  TVProfileFromTMDB,
+} from "@/domains/tmdb/services";
 import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { DatabaseStore } from "@/domains/store";
 import { ImageUploader } from "@/domains/uploader";
@@ -160,6 +165,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       where.drive_id = drive_id;
     }
     if (scope && scope.length && scope.length <= 10) {
+      // console.log("[DOMAIN]searcher - process_parsed_tv_list show scope", scope);
       where.OR = scope.map((s) => {
         const { name } = s;
         return {
@@ -464,8 +470,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         });
       }
       return Promise.resolve({
-        poster_path,
-        backdrop_path,
+        poster_path: poster_path ?? null,
+        backdrop_path: backdrop_path ?? null,
       });
     })();
     const body = {
@@ -483,6 +489,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       season_count: number_of_seasons,
       status,
       in_production: Number(in_production),
+      number_of_episodes,
+      number_of_seasons,
     };
     return body;
   }
@@ -666,6 +674,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
 
   async get_season_profile_with_tmdb(body: { parsed_tv: ParsedTVRecord; parsed_season: ParsedSeasonRecord }) {
+    const { upload_image } = this.options;
     const { parsed_tv, parsed_season } = body;
     //     const { token, store } = this.options;
     if (parsed_tv.tv_id === null) {
@@ -702,17 +711,41 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (existing_res.data) {
       return Result.Ok(existing_res.data);
     }
-    const { id, name, overview, air_date } = r.data;
-    const adding_res = await this.store.add_season_profile({
-      tmdb_id: id,
-      name,
-      overview,
-      air_date,
-    });
+    const data = await this.normalize_season_profile(r.data, tv.profile);
+    const adding_res = await this.store.add_season_profile(data);
     if (adding_res.error) {
       return Result.Err(adding_res.error);
     }
     return Result.Ok(adding_res.data);
+  }
+  /**
+   * 处理从 TMDB 搜索到的季，主要是上传图片
+   */
+  async normalize_season_profile(latest_season: PartialSeasonFromTMDB, tv_profile: { tmdb_id: number }) {
+    const { upload_image } = this.options;
+    const { id, name, overview, air_date, season_number, episode_count, poster_path } = latest_season;
+    return {
+      tmdb_id: id,
+      name,
+      overview,
+      episode_count,
+      season_number: latest_season.season_number,
+      air_date,
+      ...(await (async () => {
+        if (upload_image) {
+          const { poster_path: p } = await this.upload_tmdb_images({
+            tmdb_id: `${tv_profile.tmdb_id}-${season_number}`,
+            poster_path,
+          });
+          return {
+            poster_path: p ?? null,
+          };
+        }
+        return Promise.resolve({
+          poster_path,
+        });
+      })()),
+    };
   }
 
   async process_parsed_episode_list(scope: { name: string }[]) {
@@ -937,10 +970,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (tv === null) {
       return Result.Err("没有找到匹配的电视剧");
     }
+    const s_n = season_to_num(season_number);
+    if (typeof s_n === "string") {
+      return Result.Err(`季数 '${season_number}' 不合法`);
+    }
+    const e_n = episode_to_num(episode_number);
+    if (typeof e_n === "string") {
+      return Result.Err(`集数 '${episode_number}' 不合法`);
+    }
     const r = await this.client.fetch_episode_profile({
       tv_id: tv.profile.tmdb_id,
-      season_number: season_to_num(season_number),
-      episode_number: episode_to_num(episode_number),
+      season_number: s_n,
+      episode_number: e_n,
     });
     if (r.error) {
       return Result.Err(r.error);
@@ -1250,7 +1291,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
    * @param tmdb
    * @returns
    */
-  async upload_tmdb_images(tmdb: { tmdb_id: number; poster_path?: string; backdrop_path?: string }) {
+  async upload_tmdb_images(tmdb: { tmdb_id: number | string; poster_path?: string; backdrop_path?: string }) {
     const { tmdb_id, poster_path, backdrop_path } = tmdb;
     // log("[]upload_tmdb_images", tmdb_id, poster_path, backdrop_path);
     const result = {

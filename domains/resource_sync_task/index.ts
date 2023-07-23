@@ -5,7 +5,7 @@ import type { Handler } from "mitt";
 
 import { BaseDomain } from "@/domains/base";
 import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import {
   ArticleCardNode,
@@ -275,11 +275,11 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r1.error);
     }
     const { share_id } = r1.data;
-    const prev_folder = new AliyunDriveFolder(target_folder_id, {
+    const prev_folder = new Folder(target_folder_id, {
       name: target_folder_name,
       client: folder_client({ drive_id }, store),
     });
-    const folder = new AliyunDriveFolder(file_id, {
+    const folder = new Folder(file_id, {
       // 这里本应该用 file_name，但是很可能分享文件的名字改变了，但我还要认为它没变。
       // 比如原先名字是「40集更新中」，等更新完了，就变成「40集已完结」，而我已开始存的名字是「40集更新中」，在存文件的时候，根本找不到「40集已完结」这个名字
       // 所以继续用旧的「40集更新中」
@@ -337,7 +337,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     for (let i = 0; i < effects.length; i += 1) {
       const effect = effects[i];
       const { type: effect_type, payload } = effect;
-      const { file_id: shared_file_id, name, type, parents, prev_folder } = payload;
+      const { id: shared_file_id, name, type, parents, prev_folder } = payload;
       const parent_paths = parents.map((f) => f.name).join("/");
       const prefix = `${parent_paths}/${name}`;
       //       log(`[${prefix}]`, "是", effect_type === DiffTypes.Deleting ? "删除" : "新增");
@@ -411,7 +411,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         const r1 = await client.save_shared_files({
           url,
           file_id: shared_file_id,
-          target_file_id: prev_folder.file_id,
+          target_file_id: prev_folder.id,
         });
         if (r1.error) {
           this.emit(
@@ -419,7 +419,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
             new ArticleLineNode({
               children: [
                 new ArticleTextNode({
-                  text: `转存文件 '${shared_file_id}' 到云盘文件夹 '${prev_folder.file_id}' 失败`,
+                  text: `转存文件 '${shared_file_id}' 到云盘文件夹 '${prev_folder.id}' 失败`,
                 }),
                 new ArticleTextNode({
                   text: r1.error.message,

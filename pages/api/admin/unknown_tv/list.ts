@@ -12,7 +12,12 @@ import { User } from "@/domains/user";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
-  const { page: page_str = "1", page_size: page_size_str = "20" } = query as Partial<{
+  const {
+    name,
+    page: page_str = "1",
+    page_size: page_size_str = "20",
+  } = query as Partial<{
+    name: string;
     page: string;
     page_size: string;
   }>;
@@ -28,6 +33,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     tv_id: null,
     user_id,
   };
+  if (name) {
+    where.OR = [
+      {
+        name: {
+          contains: name,
+        },
+      },
+      {
+        file_name: {
+          contains: name,
+        },
+      },
+    ];
+  }
   const count = await store.prisma.parsed_tv.count({ where });
   const list = await store.prisma.parsed_tv.findMany({
     where,

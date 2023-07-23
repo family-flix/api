@@ -44,18 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       seasons: {
         include: {
           profile: true,
-          parsed_season: true,
-          episodes: {
-            include: {
-              profile: true,
-              parsed_episodes: true,
-            },
-            orderBy: {
-              episode_number: "asc",
-            },
-            skip: 0,
-            take: 20,
-          },
+          // parsed_season: true,
         },
         orderBy: {
           season_number: "asc",
@@ -71,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (tv === null) {
     return e("没有匹配的电视剧记录");
   }
-  const data = (() => {
+  const data = await (async () => {
     const { id, profile, seasons, episodes, parsed_tvs, play_histories, _count } = tv;
     const source_size_count = (() => {
       let size_count = 0;
@@ -80,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }, [] as ParsedEpisodeRecord[]);
       for (let i = 0; i < parsed_episodes.length; i += 1) {
         const parsed_episode = parsed_episodes[i];
-        const { drive_id, size } = parsed_episode;
+        const { size } = parsed_episode;
         size_count += size ?? 0;
       }
       return size_count;
@@ -109,24 +98,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       size_count: source_size_count,
       incomplete,
       seasons: seasons.map((season) => {
-        const { id, season_number, profile, episodes } = season;
+        const { id, season_number, profile } = season;
         const { name, overview } = profile;
         return {
           id,
-          name: name || season_number,
+          name,
+          season_number,
           overview,
-          episodes: episodes.map((episode) => {
-            const { id, profile, episode_number, parsed_episodes } = episode;
-            const { name, overview } = profile;
-            return {
-              id,
-              name: name || episode_number,
-              overview,
-              sources: parsed_episodes,
-            };
-          }),
         };
       }),
+      curSeasonEpisodes: await (async () => {
+        const firstSeason = seasons[0];
+        if (!firstSeason) {
+          return [];
+        }
+        const episodes = await store.prisma.episode.findMany({
+          where: {
+            tv_id: id,
+            season_id: firstSeason.id,
+            user_id,
+          },
+          include: {
+            profile: true,
+            parsed_episodes: true,
+          },
+          orderBy: {
+            episode_number: "asc",
+          },
+          take: 20,
+        });
+        return episodes.map((episode) => {
+          const { id, episode_number, profile, parsed_episodes } = episode;
+          return {
+            id,
+            name: profile.name,
+            overview: profile.overview,
+            episode_number: episode_number,
+            first_air_date: profile.air_date,
+            sources: parsed_episodes,
+          };
+        });
+      })(),
       parsed_tvs,
       play_histories,
     };

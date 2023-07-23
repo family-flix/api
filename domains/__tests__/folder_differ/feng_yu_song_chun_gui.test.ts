@@ -8,20 +8,20 @@ import { fetch_files_factory } from "@/domains/walker/utils";
 import { data, id } from "@/domains/__tests__/mock/feng_yu_song_chun_gui";
 import { data as updated_data } from "@/domains/__tests__/mock/feng_yu_song_chun_gui.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 
 import { simple_folders } from "../utils";
 
 describe("detect a tv dir", () => {
   test("风雨送春归", async () => {
-    const prev_folder = new AliyunDriveFolder(id, {
+    const prev_folder = new Folder(id, {
       client: fetch_files_factory({
         size: 20,
         tree: data,
       }),
     });
     await prev_folder.profile();
-    const folder = new AliyunDriveFolder(id, {
+    const folder = new Folder(id, {
       client: fetch_files_factory({
         size: 20,
         tree: updated_data,
@@ -40,7 +40,7 @@ describe("detect a tv dir", () => {
         differ.effects.map((e) => {
           const {
             type,
-            payload: { file_id, parent_file_id, name },
+            payload: { id: file_id, parent_file_id, name },
           } = e;
           console.log(file_id, parent_file_id, name);
           return {

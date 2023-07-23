@@ -9,7 +9,7 @@ import {
   add_parsed_infos_when_walk,
   adding_file_safely,
 } from "@/domains/walker/utils";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 
 import { test_store as store } from "../../store";
 import { simple_folders } from "../../utils";
@@ -66,7 +66,7 @@ describe("detect a tv dir", () => {
         store
       );
     };
-    const folder = new AliyunDriveFolder("tv", {
+    const folder = new Folder("tv", {
       client: fetch_files_factory({
         tree: data,
       }),

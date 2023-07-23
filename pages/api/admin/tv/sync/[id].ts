@@ -197,12 +197,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         added_files.map((file) => {
           const { name, parent_paths, type } = file;
           return {
-            name: (() => {
-              if (parent_paths) {
-                return `${parent_paths}/${name}`;
-              }
-              return `${name}`;
-            })(),
+            name: [root_folder_name, parent_paths, name].filter(Boolean).join("/"),
             type: type === FileType.File ? "file" : "folder",
           };
         })

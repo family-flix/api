@@ -9,7 +9,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
 
@@ -59,11 +59,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(client_res);
   }
   const client = client_res.data;
-  const folder = new AliyunDriveFolder(file_id, {
+  const folder = new Folder(file_id, {
     name: "tv",
     client,
   });
-  async function walk_folder(f: AliyunDriveFolder, parent: SimpleAliyunDriveFile) {
+  async function walk_folder(f: Folder, parent: SimpleAliyunDriveFile) {
     do {
       const r = await f.next();
       if (r.error) {
@@ -71,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
       for (let i = 0; i < r.data.length; i += 1) {
         const file = r.data[i];
-        const { file_id, name, parent_file_id, type } = file;
+        const { id: file_id, name, parent_file_id, type } = file;
         const ff = {
           file_id,
           name,
@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           parent_file_id: parent_file_id!,
         } as SimpleAliyunDriveFile;
 
-        if (file instanceof AliyunDriveFolder) {
+        if (file instanceof Folder) {
           if (parent.items) {
             ff.items = [];
             parent.items.push(ff);

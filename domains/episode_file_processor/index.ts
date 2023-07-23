@@ -1,3 +1,5 @@
+import { Handler } from "mitt";
+
 import { FileType } from "@/constants";
 import { BaseDomain } from "@/domains/base";
 import { SearchedEpisode } from "@/domains/walker";
@@ -6,8 +8,18 @@ import { Result } from "@/types";
 
 import { is_episode_changed, is_season_changed, is_tv_changed } from "./utils";
 
-enum Events {}
-type TheTypesOfEvents = {};
+enum Events {
+  AddTV,
+  AddSeason,
+  AddEpisode,
+  AddMovie,
+}
+type TheTypesOfEvents = {
+  [Events.AddTV]: SearchedEpisode["tv"];
+  [Events.AddSeason]: SearchedEpisode["season"];
+  [Events.AddEpisode]: SearchedEpisode["episode"] & SearchedEpisode["tv"];
+  [Events.AddMovie]: void;
+};
 type EpisodeFileProcessorProps = {
   episode: SearchedEpisode;
   user_id: string;
@@ -90,11 +102,13 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         // log(`[${prefix}]`, "新增电视剧信息失败", tv_adding_res.error.message);
         return Result.Err(tv_adding_res.error);
       }
+      this.emit(Events.AddTV, data.tv);
       const season_adding_res = await this.add_parsed_season({ parsed_tv_id: tv_adding_res.data.id }, data);
       if (season_adding_res.error) {
         // log(`[${prefix}]`, "新增季信息失败", season_adding_res.error.message);
         return Result.Err(season_adding_res.error);
       }
+      this.emit(Events.AddSeason, data.season);
       const add_episode_res = await store.add_parsed_episode({
         name: tv.name || tv.original_name,
         season_number: season.season,
@@ -114,6 +128,10 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         // log(`[${prefix}]`, "视频文件保存失败", add_episode_res.error.message);
         return add_episode_res;
       }
+      this.emit(Events.AddEpisode, {
+        ...data.episode,
+        ...data.tv,
+      });
       //       log(`[${prefix}]`, "视频文件保存成功");
       return Result.Ok(null);
     }
@@ -150,6 +168,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
           // log(`[${prefix}]`, "新增电视剧信息失败", tv_adding_res.error.message);
           return Result.Err(tv_adding_res.error);
         }
+        this.emit(Events.AddTV, data.tv);
         return Result.Ok(tv_adding_res.data);
       }
       log("已经关联的电视剧", existing_tv.name || existing_tv.original_name);
@@ -176,6 +195,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
           // log(`[${prefix}]`, "新增季信息失败", season_adding_res.error.message);
           return Result.Err(season_adding_res.error);
         }
+        this.emit(Events.AddSeason, data.season);
         return Result.Ok(season_adding_res.data);
       }
       return Result.Ok(existing_season);
@@ -185,7 +205,6 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     }
     const existing_season = existing_season_res.data;
     // log("existing season", existing_season.season_number);
-
     const tv_changed = is_tv_changed(existing_tv, data);
     if (Object.keys(tv_changed).length !== 0) {
       log(`[${prefix}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name, data.tv.name);
@@ -194,6 +213,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         log(`[${prefix}]`, "新增失败", add_tv_res.error.message);
         return Result.Err(add_tv_res.error);
       }
+      this.emit(Events.AddTV, data.tv);
       episode_payload.body.parsed_tv_id = add_tv_res.data.id;
     }
     const season_changed = is_season_changed(existing_season, data);
@@ -216,6 +236,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
       if (add_season_res.error) {
         return Result.Err(add_season_res.error);
       }
+      this.emit(Events.AddSeason, data.season);
       episode_payload.body.season_number = season_changed.season_number || season.season;
       episode_payload.body.parsed_season_id = add_season_res.data.id;
     }
@@ -366,5 +387,15 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     // log("[UTIL]get_tv_id_by_name end", tv.name || tv.original_name);
     //     log(`[${episode.file_name}]`, "为该视频文件新增季", season.season, "成功");
     return Result.Ok(parsed_season_adding_res.data);
+  }
+
+  on_add_tv(handler: Handler<TheTypesOfEvents[Events.AddTV]>) {
+    return this.on(Events.AddTV, handler);
+  }
+  on_add_season(handler: Handler<TheTypesOfEvents[Events.AddSeason]>) {
+    return this.on(Events.AddSeason, handler);
+  }
+  on_add_episode(handler: Handler<TheTypesOfEvents[Events.AddEpisode]>) {
+    return this.on(Events.AddEpisode, handler);
   }
 }

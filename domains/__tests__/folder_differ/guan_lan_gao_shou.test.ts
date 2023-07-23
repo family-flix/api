@@ -8,17 +8,17 @@ import {
 import { data, id } from "@/domains/__tests__/mock/guan_lan_gao_shou";
 import { data as updated_data } from "@/domains/__tests__/mock/guan_lan_gao_shou.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 
 describe("detect a tv dir", () => {
   test("灌篮高手", async () => {
-    const prev_folder = new AliyunDriveFolder(id, {
+    const prev_folder = new Folder(id, {
       client: fetch_files_factory({
         tree: data,
       }),
     });
     await prev_folder.profile();
-    const folder = new AliyunDriveFolder(id, {
+    const folder = new Folder(id, {
       client: fetch_files_factory({
         tree: updated_data,
       }),

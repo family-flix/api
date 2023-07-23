@@ -88,11 +88,15 @@ model tv_profile {
         backdrop_path     String?
         // 首播日期
         first_air_date    String?
-        // 原始语言，可用来区分日剧、国产还是美剧等
+        // 原始语言
         original_language String?
+        // origin_country 产地
+        // HK(港剧)、CN(国产剧)、KR(韩剧)、US(美剧)、IN(印度)、JP(日剧)
+        // genres 标签(区分动画，也是用这个字段来区分)
+        // 
         // 评分
         popularity        Float?  @default(0)
-        // 评分
+        // 评分(应该用这个，是10分制)
         vote_average      Float?  @default(0)
         // 评分
         vote_count        Float?  @default(0)
@@ -125,15 +129,8 @@ model season_profile {
         poster_path   String?
         season_number Int?
         air_date      String?
-        // 总集数
         episode_count Int?    @default(0)
 
-        // tv_profile_id String
-        // tv_profile    tv_profile @relation(fields: [tv_profile_id], references: [id])
-
-        // tv_need_complete incomplete_tv[]
-        // episode_profiles episode_profile[]
-        // episode          episode[]
         season season?
 
         @@map("SeasonProfile")

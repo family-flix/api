@@ -3,11 +3,12 @@
  */
 import type { Handler } from "mitt";
 
-import { AliyunDriveFile, AliyunDriveFolder } from "@/domains/folder";
+import { File, Folder } from "@/domains/folder";
 import { BaseDomain } from "@/domains/base";
 import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { Result } from "@/types";
-import { is_video_file, parse_filename_for_video, noop, promise_noop, sleep } from "@/utils";
+import { is_video_file, noop, promise_noop, sleep } from "@/utils";
+import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 
 export type SearchedEpisode = {
   tv: {
@@ -157,8 +158,8 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   /**
    * 递归遍历给定的文件夹
    */
-  async walk(data: AliyunDriveFolder | AliyunDriveFile, parent: ParentFolder[] = []) {
-    const { file_id, type, name, size, parent_file_id } = data;
+  async walk(data: Folder | File, parent: ParentFolder[] = []) {
+    const { id: file_id, type, name, size, parent_file_id } = data;
     const parent_paths = parent.map((p) => p.file_name).join("/");
     const parent_ids = parent.map((p) => p.file_id).join("/");
     const filepath = (() => {
@@ -216,7 +217,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     });
     if (type === "folder") {
       const parsed_info = parse_filename_for_video(name);
-      const folder = data as AliyunDriveFolder;
+      const folder = data as Folder;
       await (async () => {
         do {
           if (this.delay) {
@@ -282,7 +283,6 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         original_name,
       };
     }
-    // const start_folder_id = this.start_folder_id;
     function create_tasks(d: {
       tv: {
         file_id?: string;
@@ -1164,8 +1164,8 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   /**
    * 开始检测
    */
-  async detect(data: AliyunDriveFolder) {
-    this.start_folder_id = data.file_id;
+  async detect(data: Folder) {
+    this.start_folder_id = data.id;
     await this.walk(data);
     return Result.Ok(this.episodes);
   }

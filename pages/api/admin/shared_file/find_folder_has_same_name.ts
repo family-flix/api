@@ -1,19 +1,16 @@
 /**
- * @file 根据一个名字，返回匹配改名字的所有文件夹
+ * @file 根据一个名字，返回匹配该名字的所有文件夹
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { parse_filename_for_video } from "@/utils";
+import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { name } = req.query as Partial<{ name: string }>;
@@ -26,13 +23,16 @@ export default async function handler(
   }
   const { id: user_id } = t_res.data;
   const { name: parsed_name } = parse_filename_for_video(name, ["name"]);
-  const r = await store.find_files({
-    name: `%${parsed_name}%`,
-    user_id,
+  const r = await store.prisma.file.findFirst({
+    where: {
+      name: {
+        contains: parsed_name,
+      },
+      user_id,
+    },
   });
-  if (r.error) {
-    return e(r);
+  if (!r) {
+    return e(Result.Err("没有找到匹配的记录"));
   }
-  console.log(r.data);
-  res.status(200).json({ code: 0, msg: "", data: r.data });
+  res.status(200).json({ code: 0, msg: "", data: r });
 }

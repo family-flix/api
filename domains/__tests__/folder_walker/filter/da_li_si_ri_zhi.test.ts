@@ -4,7 +4,7 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 
 import { FolderWalker } from "@/domains/walker";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import {
   fetch_files_factory,
   add_parsed_infos_when_walk,
@@ -59,7 +59,7 @@ describe("detect a tv dir", () => {
       await add_parsed_infos_when_walk(task, fake_extra, store);
       return;
     };
-    const folder = new AliyunDriveFolder(id, {
+    const folder = new Folder(id, {
       client: fetch_files_factory({
         tree: data,
       }),

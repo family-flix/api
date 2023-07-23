@@ -12,4 +12,8 @@ export enum TaskTypes {
   SearchMedia,
   /** 电视剧更新 */
   TVSync,
+  /** 刷新电视剧信息 */
+  RefreshTVAndSeasonProfile,
+  /** 转存资源 */
+  Transfer,
 }

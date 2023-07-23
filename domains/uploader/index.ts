@@ -6,7 +6,6 @@ import { join } from "path";
 
 import axios from "@/modules/axios";
 import { Result } from "@/types";
-import { ensure } from "@/utils/back_end";
 
 export class ImageUploader {
   root: string;

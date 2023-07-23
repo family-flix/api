@@ -11,6 +11,7 @@ import {
   parsed_season,
   parsed_tv,
   PrismaClient,
+  season_profile,
   shared_file_in_progress,
   tv,
   tv_profile,
@@ -24,6 +25,7 @@ export type AsyncTaskRecord = async_task;
 export type ParsedSeasonRecord = parsed_season;
 export type ParsedEpisodeRecord = parsed_episode;
 export type TVProfileRecord = tv_profile;
+export type SeasonProfileRecord = season_profile;
 export type TVRecord = tv;
 export type EpisodeRecord = episode;
 export type EpisodeProfileRecord = episode_profile;
@@ -47,3 +49,5 @@ export type ModelKeys = keyof Omit<
   | "$queryRawUnsafe"
   | "$transaction"
 >;
+
+export type ModelQuery<F extends (...args: any[]) => any> = NonNullable<Parameters<F>[number]>;

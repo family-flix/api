@@ -8,7 +8,7 @@ import type { Handler } from "mitt";
 import { BaseDomain } from "@/domains/base";
 import { EpisodeFileProcessor } from "@/domains/episode_file_processor";
 import { MovieFileProcessor } from "@/domains/movie_file_processor";
-import { AliyunDriveFolder } from "@/domains/folder";
+import { Folder } from "@/domains/folder";
 import { MediaSearcher } from "@/domains/searcher";
 import {
   ArticleCardNode,
@@ -90,6 +90,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
 
   need_stop = false;
   episode_count = 0;
+  movie_count = 0;
   extra_scope?: string[];
   tmdb_token: string;
   assets: string;
@@ -226,7 +227,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       // this.emit(
       //   Events.Print,
       //   new ArticleLineNode({
-      //     children: [`[${drive._name}]`, "文件 ", file.name, " 出现错误 ", file._position].map((text) => {
+      //     children: [`[${drive.name}]`, "文件 ", file.name, " 出现错误 ", file._position].map((text) => {
       //       return new ArticleTextNode({ text });
       //     }),
       //   })
@@ -237,42 +238,24 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       // this.emit(
       //   Events.Print,
       //   new ArticleLineNode({
-      //     children: [`[${drive._name}]`, "文件 ", file.name, " 出现提示 ", file._position].map((text) => {
+      //     children: [`[${drive.name}]`, "文件 ", file.name, " 出现警告 ", file._position].map((text) => {
       //       return new ArticleTextNode({ text });
       //     }),
       //   })
       // );
       // log("索引云盘出现警告", file.name, file._position);
-      // console.log("[]walk on warning", file.name);
     };
     walker.on_file = async (file) => {
       const { name, parent_paths } = file;
-      // console.log('[]walker.on_file', name);
+      // const clean_parent_paths = parent_paths.replace(new RegExp(`^${root_folder_name}/`), "");
+      console.log("[]walker.on_file", name, parent_paths);
       await adding_file_safely(file, { user_id: user.id, drive_id: drive.id }, store);
-      const clean_parent_paths = parent_paths.replace(new RegExp(`^${root_folder_name}/`), "");
-      const tmp_file_res = await store.find_tmp_file({
-        name,
-        parent_paths: clean_parent_paths,
-        // drive_id: drive.id,
-        // user_id: user.id,
+      await store.prisma.tmp_file.deleteMany({
+        where: {
+          name: [parent_paths, name].filter(Boolean).join("/"),
+          user_id: this.user.id,
+        },
       });
-      if (tmp_file_res.error) {
-        // console.log("[DOMAIN]analysis/index - after tmp_file_res.error", tmp_file_res.error.message);
-        // console.log("[]walker.on_file - find tmp_file failed", tmp_file_res.error.message);
-        return;
-      }
-      const tmp_file = tmp_file_res.data;
-      if (!tmp_file) {
-        // console.log("[]walker.on_file - find tmp_file failed not found", name, clean_parent_paths);
-        // console.log("[DOMAIN]analysis/index - after !tmp_file");
-        return;
-      }
-      const r2 = await store.delete_tmp_file({
-        id: tmp_file.id,
-      });
-      if (r2.error) {
-        // console.log("[]walker.on_file - delete tmp_file failed", r2.error.message);
-      }
     };
     const added_parsed_tv_list: {
       name: string;
@@ -289,6 +272,26 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       //         return;
       //       }
       const processor = new EpisodeFileProcessor({ episode: parsed, user_id: user.id, drive_id: drive.id, store });
+      processor.on_add_tv((tv) => {
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: ["解析出电视剧", tv.name || tv.original_name].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
+      });
+      processor.on_add_episode((episode) => {
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: ["解析出剧集", episode.name, episode.episode].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
+      });
       this.episode_count += 1;
       added_parsed_tv_list.push(parsed.tv);
       await processor.run();
@@ -302,13 +305,13 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       //   return;
       // }
       const processor = new MovieFileProcessor({ movie: parsed, user_id: user.id, drive_id: drive.id, store });
-      this.episode_count += 1;
+      this.movie_count += 1;
       added_parsed_movie_list.push(parsed);
       await processor.run();
       return;
     };
     // @todo 如果希望仅索引一个文件夹，是否可以这里直接传目标文件夹，而不是每次都从根文件夹开始索引？
-    const folder = new AliyunDriveFolder(drive.profile.root_folder_id!, {
+    const folder = new Folder(drive.profile.root_folder_id!, {
       client,
     });
     // console.log("[DOMAIN]analysis/index - before folder.profile()");
@@ -332,16 +335,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       await walker.detect(folder);
       // console.log("[DOMAIN]analysis/index - after walker.detect");
     }
-    if (this.episode_count === 0) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [`[${drive.name}]`, "遍历云盘没有查找到新增影视剧"].map((text) => {
-            return new ArticleTextNode({ text });
-          }),
-        })
-      );
-    }
+
     this.emit(
       Events.Print,
       new ArticleLineNode({
@@ -350,6 +344,29 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         }),
       })
     );
+    (() => {
+      if (this.episode_count + this.movie_count === 0) {
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [`[${drive.name}]`, "遍历云盘没有查找到新增影视剧"].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
+        return;
+      }
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: [`[${drive.name}]`, "共找到", this.episode_count, "个剧集，", this.movie_count, "个电影"].map(
+            (text) => {
+              return new ArticleTextNode({ text: String(text) });
+            }
+          ),
+        })
+      );
+    })();
     this.emit(
       Events.Print,
       new ArticleSectionNode({
