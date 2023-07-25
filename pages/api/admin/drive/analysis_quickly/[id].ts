@@ -89,13 +89,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(r2);
   }
   const analysis = r2.data;
-  const { root_folder_name } = drive.profile;
   // console.log("[API]admin/drive/analysis_quickly/[id].ts - before await analysis.run", tmp_folders.length);
   analysis.run(
     tmp_folders.map((file) => {
       const { name, parent_paths, type } = file;
       return {
-        name: [root_folder_name, parent_paths, name].filter(Boolean).join("/"),
+        name: [parent_paths, name].filter(Boolean).join("/"),
         type: type === FileType.File ? "file" : "folder",
       };
     })

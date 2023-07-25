@@ -246,13 +246,13 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       // log("索引云盘出现警告", file.name, file._position);
     };
     walker.on_file = async (file) => {
+      // 这里是从云盘索引到的文件，所以 name 就是不包含路径的部分
       const { name, parent_paths } = file;
-      // const clean_parent_paths = parent_paths.replace(new RegExp(`^${root_folder_name}/`), "");
-      console.log("[]walker.on_file", name, parent_paths);
       await adding_file_safely(file, { user_id: user.id, drive_id: drive.id }, store);
       await store.prisma.tmp_file.deleteMany({
         where: {
-          name: [parent_paths, name].filter(Boolean).join("/"),
+          name,
+          parent_paths,
           user_id: this.user.id,
         },
       });

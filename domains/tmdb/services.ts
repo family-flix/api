@@ -18,13 +18,16 @@ function fix_TMDB_image_path({
   backdrop_path,
   poster_path,
 }: Partial<{
-  backdrop_path?: string;
-  poster_path?: string;
+  backdrop_path: null | string;
+  poster_path: string | null;
 }>) {
-  const result: Partial<{
-    backdrop_path: string;
-    poster_path: string;
-  }> = {};
+  const result: {
+    backdrop_path: string | null;
+    poster_path: string | null;
+  } = {
+    backdrop_path: null,
+    poster_path: null,
+  };
   if (backdrop_path) {
     result.backdrop_path = `https://proxy.funzm.com/api/tmdb_site/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
   }
@@ -222,8 +225,8 @@ export async function fetch_tv_profile(
   }
   const endpoint = `/tv/${id}`;
   const { api_key, language } = query;
-  const result = await request.get<{
-    backdrop_path: string;
+  const r = await request.get<{
+    backdrop_path: string | null;
     created_by: {
       id: number;
       credit_id: string;
@@ -254,7 +257,7 @@ export async function fetch_tv_profile(
       vote_average: number;
       vote_count: number;
     };
-    name: string;
+    name: string | null;
     next_episode_to_air: null;
     networks: {
       name: string;
@@ -266,10 +269,10 @@ export async function fetch_tv_profile(
     number_of_seasons: number;
     origin_country: string[];
     original_language: string;
-    original_name: string;
-    overview: string;
+    original_name: string | null;
+    overview: string | null;
     popularity: number;
-    poster_path: string;
+    poster_path: string | null;
     production_companies: {
       id: number;
       logo_path: string;
@@ -305,8 +308,8 @@ export async function fetch_tv_profile(
     api_key,
     language,
   });
-  if (result.error) {
-    return Result.Err(result.error);
+  if (r.error) {
+    return Result.Err(r.error);
   }
   const {
     name,
@@ -323,7 +326,7 @@ export async function fetch_tv_profile(
     number_of_episodes,
     number_of_seasons,
     in_production,
-  } = result.data;
+  } = r.data;
   return Result.Ok({
     id,
     name,
@@ -348,6 +351,8 @@ export async function fetch_tv_profile(
         ...fix_TMDB_image_path({ poster_path }),
       };
     }),
+    genres: r.data.genres,
+    origin_country: r.data.origin_country,
   });
 }
 export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_tv_profile>>>;
@@ -532,7 +537,7 @@ export async function fetch_movie_profile(
   }
   const endpoint = `/movie/${id}`;
   const { api_key, language } = query;
-  const result = await request.get<{
+  const r = await request.get<{
     adult: boolean;
     backdrop_path: string;
     belongs_to_collection: {
@@ -582,8 +587,8 @@ export async function fetch_movie_profile(
     api_key,
     language,
   });
-  if (result.error) {
-    return Result.Err(result.error);
+  if (r.error) {
+    return Result.Err(r.error);
   }
   const {
     overview,
@@ -596,7 +601,7 @@ export async function fetch_movie_profile(
     poster_path,
     backdrop_path,
     popularity,
-  } = result.data;
+  } = r.data;
   return Result.Ok({
     id,
     title,
@@ -610,6 +615,10 @@ export async function fetch_movie_profile(
     status,
     vote_average,
     popularity,
+    genres: r.data.genres,
+    origin_country: r.data.production_countries.map((country) => {
+      return country["iso_3166_1"];
+    }),
     ...fix_TMDB_image_path({
       poster_path,
       backdrop_path,

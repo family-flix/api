@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.finish();
     },
   });
-  refresher.run();
+  refresher.refresh_tv_list();
   res.status(200).json({
     code: 0,
     msg: "开始刷新",

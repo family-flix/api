@@ -93,7 +93,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!target_drive.has_root_folder()) {
     return e(Result.Err("请先设置目标云盘索引目录", 30001));
   }
-  const { root_folder_id: target_drive_root_folder_id } = target_drive.profile;
+  const { root_folder_id: target_drive_root_folder_id, root_folder_name: target_root_folder_name } =
+    target_drive.profile;
   if (!target_drive_root_folder_id) {
     return e(Result.Err("请先设置目标云盘索引目录", 30001));
   }
@@ -274,7 +275,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const { file_name } = created_folders[j];
         await store.add_tmp_file({
           name: file_name,
-          parent_paths: "",
+          parent_paths: target_root_folder_name ?? "",
           type: FileType.Folder,
           user_id,
           drive_id: target_drive_id,

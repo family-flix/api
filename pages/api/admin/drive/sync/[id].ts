@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const differ = new FolderDiffer({
     folder,
     prev_folder,
-    unique_key: "file_id",
+    unique_key: "id",
   });
   await differ.run();
   const { effects } = differ;

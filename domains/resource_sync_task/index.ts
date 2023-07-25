@@ -329,7 +329,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
    */
   async consume_effects_for_shared_file(effects: DifferEffect[]) {
     const { task, store, client } = this;
-    const { id, url, file_id, parsed_tv } = task;
+    const { url } = task;
     const user_id = this.user.id;
     const drive_id = this.drive.id;
     //     log("应用 diff 的结果，共", effects.length, "个");
@@ -436,14 +436,15 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           continue;
         }
         // 这里的「临时文件」之所以没有 file_id，是因为转存到云盘后，才生成了 file_id，上面的 file_id 是分享资源的，不是转存到云盘后的
+        const full_parent_paths = [this.drive.profile.root_folder_name, parent_paths].filter(Boolean).join("/");
         this.emit(Events.File, {
           name,
-          parent_paths,
+          parent_paths: full_parent_paths,
           type: type === "file" ? FileType.File : FileType.Folder,
         });
         const r4 = await store.add_tmp_file({
           name,
-          parent_paths,
+          parent_paths: full_parent_paths,
           type: type === "file" ? FileType.File : FileType.Folder,
           user_id,
           drive_id,

@@ -23,7 +23,7 @@ import {
   TVProfileRecord,
 } from "@/domains/store/types";
 import { Result } from "@/types";
-import { episode_to_num, season_to_num, sleep } from "@/utils";
+import { episode_to_num, r_id, season_to_num, sleep } from "@/utils";
 
 import { extra_searched_tv_field } from "./utils";
 
@@ -443,6 +443,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(r.data);
   }
+  /**
+   * 格式化电视剧详情
+   * 如下载 poster_path 等图片
+   */
   async normalize_tv_profile(info: { tmdb_id: number; original_language?: string }, profile: TVProfileFromTMDB) {
     const { tmdb_id, original_language } = info;
     const { upload_image } = this.options;
@@ -459,6 +463,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       number_of_seasons,
       status,
       in_production,
+      genres,
+      origin_country,
     } = profile;
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
       // console.log("check need upload images", upload_image);
@@ -491,13 +497,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       in_production: Number(in_production),
       number_of_episodes,
       number_of_seasons,
+      genres: genres
+        .map((g) => {
+          return g.name;
+        })
+        .join("|"),
+      origin_country: origin_country.join("|"),
     };
     return body;
   }
   /** 获取 tv_profile，如果没有就创建 */
   async get_tv_profile_with_tmdb_id(info: { tmdb_id: number; original_language?: string }) {
-    const { tmdb_id, original_language } = info;
-    const { upload_image } = this.options;
+    const { tmdb_id } = info;
     const existing_res = await this.store.find_tv_profile({
       tmdb_id,
     });
@@ -510,11 +521,39 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     }
     const profile = profile_res.data;
     const body = await this.normalize_tv_profile(info, profile);
-    const t = await this.store.add_tv_profile(body);
-    if (t.error) {
-      return Result.Err(t.error);
-    }
-    return Result.Ok(t.data);
+    const {
+      name,
+      original_name,
+      original_language,
+      origin_country,
+      overview,
+      poster_path,
+      backdrop_path,
+      genres,
+      popularity,
+      vote_average,
+      episode_count,
+      season_count,
+      status,
+      in_production,
+    } = body;
+    return this.store.add_tv_profile({
+      tmdb_id,
+      name,
+      original_name,
+      original_language,
+      overview,
+      origin_country,
+      poster_path,
+      backdrop_path,
+      genres,
+      popularity,
+      vote_average,
+      episode_count,
+      season_count,
+      status,
+      in_production,
+    });
   }
 
   /** 处理所有解析到的 season */
@@ -673,9 +712,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(r2.data);
   }
 
-  async get_season_profile_with_tmdb(body: { parsed_tv: ParsedTVRecord; parsed_season: ParsedSeasonRecord }) {
+  async get_season_profile_with_tmdb(info: { parsed_tv: ParsedTVRecord; parsed_season: ParsedSeasonRecord }) {
     const { upload_image } = this.options;
-    const { parsed_tv, parsed_season } = body;
+    const { parsed_tv, parsed_season } = info;
     //     const { token, store } = this.options;
     if (parsed_tv.tv_id === null) {
       return Result.Err("电视剧缺少匹配的详情");
@@ -711,12 +750,17 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (existing_res.data) {
       return Result.Ok(existing_res.data);
     }
-    const data = await this.normalize_season_profile(r.data, tv.profile);
-    const adding_res = await this.store.add_season_profile(data);
-    if (adding_res.error) {
-      return Result.Err(adding_res.error);
-    }
-    return Result.Ok(adding_res.data);
+    const body = await this.normalize_season_profile(r.data, tv.profile);
+    const { tmdb_id, name, overview, poster_path, air_date, episode_count } = body;
+    return this.store.add_season_profile({
+      tmdb_id,
+      name,
+      overview,
+      poster_path,
+      season_number: body.season_number,
+      air_date,
+      episode_count,
+    });
   }
   /**
    * 处理从 TMDB 搜索到的季，主要是上传图片
@@ -736,6 +780,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           const { poster_path: p } = await this.upload_tmdb_images({
             tmdb_id: `${tv_profile.tmdb_id}-${season_number}`,
             poster_path,
+            backdrop_path: null,
           });
           return {
             poster_path: p ?? null,
@@ -1235,7 +1280,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   ) {
     const { upload_image } = this.options;
     const { tmdb_id, original_language } = info;
-    const { name, original_name, overview, poster_path, backdrop_path, popularity, vote_average, air_date } = profile;
+    const {
+      name,
+      original_name,
+      overview,
+      poster_path,
+      backdrop_path,
+      popularity,
+      genres,
+      origin_country,
+      vote_average,
+      air_date,
+    } = profile;
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
       if (upload_image) {
         return this.upload_tmdb_images({
@@ -1260,6 +1316,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       air_date,
       popularity,
       vote_average,
+      genres: genres
+        .map((g) => {
+          return g.name;
+        })
+        .join("|"),
+      origin_country: origin_country.join("|"),
     };
     return body;
   }
@@ -1279,11 +1341,31 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     }
     const profile = profile_res.data;
     const body = await this.normalize_movie_profile(info, profile);
-    const t = await this.store.add_movie_profile(body);
-    if (t.error) {
-      return Result.Err(t.error);
-    }
-    return Result.Ok(t.data);
+    const {
+      name,
+      original_name,
+      overview,
+      poster_path,
+      backdrop_path,
+      air_date,
+      popularity,
+      vote_average,
+      origin_country,
+      genres,
+    } = body;
+    return this.store.add_movie_profile({
+      tmdb_id,
+      name,
+      original_name,
+      overview,
+      poster_path,
+      backdrop_path,
+      air_date,
+      popularity,
+      vote_average,
+      origin_country,
+      genres,
+    });
   }
 
   /**
@@ -1291,7 +1373,11 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
    * @param tmdb
    * @returns
    */
-  async upload_tmdb_images(tmdb: { tmdb_id: number | string; poster_path?: string; backdrop_path?: string }) {
+  async upload_tmdb_images(tmdb: {
+    tmdb_id: number | string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  }) {
     const { tmdb_id, poster_path, backdrop_path } = tmdb;
     // log("[]upload_tmdb_images", tmdb_id, poster_path, backdrop_path);
     const result = {

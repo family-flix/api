@@ -5,19 +5,24 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { BaseApiResp, resultify } from "@/types";
+import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { normalize_partial_tv } from "@/domains/tv/utils";
+import { TVProfileWhereInput } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const {
     name,
+    genres,
+    language,
     page: page_str = "1",
     page_size: page_size_str = "20",
   } = req.query as Partial<{
     name: string;
+    genres: string;
+    language: string;
     page: string;
     page_size: string;
   }>;
@@ -29,32 +34,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = t_res.data;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
+  let queries: TVProfileWhereInput[] = [];
+  if (name) {
+    queries = queries.concat({
+      OR: [
+        {
+          name: {
+            contains: name,
+          },
+        },
+        {
+          original_name: {
+            contains: name,
+          },
+        },
+      ],
+    });
+  }
+  if (genres) {
+    queries = queries.concat({
+      OR: genres.split("|").map((g) => {
+        return {
+          genres: {
+            contains: g,
+          },
+        };
+      }),
+    });
+  }
+  if (language) {
+    queries = queries.concat({
+      OR: language.split("|").map((g) => {
+        return {
+          origin_country: {
+            contains: g,
+          },
+        };
+      }),
+    });
+  }
   const where: NonNullable<Parameters<typeof store.prisma.season.findMany>[0]>["where"] = {
     episodes: {
       some: {},
     },
     user_id,
   };
-  if (name) {
+  if (queries.length !== 0) {
     where.tv = {
       profile: {
-        OR: [
-          {
-            name: {
-              contains: name,
-            },
-          },
-          {
-            original_name: {
-              contains: name,
-            },
-          },
-          {
-            overview: {
-              contains: name,
-            },
-          },
-        ],
+        AND: queries,
       },
     };
   }

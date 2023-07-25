@@ -11,7 +11,8 @@
     "schedule": "vite-node scripts/schedule",
     "lint": "next lint",
     "test": "vitest run",
-    "pkg": "node scripts/build && node scripts/pkg"
+    "pkg": "node scripts/build && node scripts/pkg",
+    "zip": "node script/zip"
   },
   "pkg": {
     "assets": [
@@ -61,6 +62,7 @@
     "@types/react": "18.2.8",
     "@types/uuid": "^9.0.1",
     "@vercel/ncc": "^0.36.1",
+    "archiver": "^5.3.1",
     "eslint": "8.32.0",
     "eslint-config-next": "13.1.5",
     "husky": "^8.0.3",

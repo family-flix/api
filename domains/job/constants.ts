@@ -14,6 +14,8 @@ export enum TaskTypes {
   TVSync,
   /** 刷新电视剧信息 */
   RefreshTVAndSeasonProfile,
+  /** 刷新电影信息 */
+  RefreshMovieProfile,
   /** 转存资源 */
   Transfer,
 }

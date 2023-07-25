@@ -67,6 +67,8 @@ export function normalize_partial_tv(
     episode_count,
     season_count,
     in_production,
+    genres,
+    origin_country,
   } = profile;
   const binds = parsed_tvs
     .filter((parsed_tv) => {
@@ -157,6 +159,8 @@ export function normalize_partial_tv(
     season_count,
     cur_episode_count: _count.episodes,
     cur_season_count: _count.seasons,
+    genres,
+    origin_country,
     binds,
     valid_bind,
     incomplete,

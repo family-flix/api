@@ -91,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     await store.add_tmp_file({
       name: file_name,
       type: FileType.Folder,
-      parent_paths: "",
+      parent_paths: drive.profile.root_folder_name ?? "",
       drive_id,
       user_id: user.id,
     });

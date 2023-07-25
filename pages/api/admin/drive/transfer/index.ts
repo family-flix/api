@@ -113,12 +113,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const analysis = r3.data;
   // console.log("[API]admin/drive/transfer/index.ts - before await analysis.run");
-  const r4 = await analysis.run(
-    [{ name: `${target_drive.profile.root_folder_name}/${r.data.file_name}`, type: "folder" }],
-    {
-      force: true,
-    }
-  );
+  const r4 = await analysis.run([{ name: r.data.file_name, type: "folder" }], {
+    force: true,
+  });
   if (r4.error) {
     return e(r4);
   }

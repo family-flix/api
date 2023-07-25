@@ -1,48 +1,41 @@
 /**
- * @file 刷新/绑定电影详情
+ * @file 刷新(从 TMDB 拉取最新)所有电影
  */
+// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { MediaSearcher } from "@/domains/searcher";
-import { ProfileRefresh } from "@/domains/profile_refresh";
 import { Job } from "@/domains/job";
 import { TaskTypes } from "@/domains/job/constants";
+import { ProfileRefresh } from "@/domains/profile_refresh";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
+import { MediaSearcher } from "@/domains/searcher";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { movie_id } = req.query as Partial<{ movie_id: string }>;
-  const { tmdb_id } = req.body as { tmdb_id: string };
-  if (!movie_id) {
-    return e("缺少电影 id");
-  }
+
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const movie = await store.prisma.movie.findFirst({
-    where: {
-      id: movie_id,
-    },
-    include: {
-      profile: true,
-      parsed_movies: true,
-    },
-  });
-  if (movie === null) {
-    return e(Result.Err("没有匹配的电影记录"));
-  }
-  if (!tmdb_id && !movie.profile) {
-    return e(Result.Err("该电影还没有匹配的详情"));
-  }
   if (!user.settings.tmdb_token) {
     return e(Result.Err("缺少 TMDB_TOKEN"));
   }
+  const job_res = await Job.New({
+    desc: "更新电影信息",
+    unique_id: "update_movie",
+    type: TaskTypes.RefreshMovieProfile,
+    user_id: user.id,
+    store,
+  });
+  if (job_res.error) {
+    return e(job_res);
+  }
+  const job = job_res.data;
   const searcher = new MediaSearcher({
     store,
     assets: app.assets,
@@ -53,13 +46,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     searcher,
     store,
     user,
+    on_print(node) {
+      job.output.write(node);
+    },
+    on_finish() {
+      job.finish();
+    },
   });
-  const r = await refresher.refresh_movie_profile(movie, tmdb_id ? { tmdb_id: Number(tmdb_id) } : undefined);
-  if (r.error) {
-    return e(r.error);
-  }
-  if (r.data === null) {
-    return e(Result.Err("没有要更新的内容"));
-  }
-  res.status(200).json({ code: 0, msg: "更新成功", data: r.data });
+  refresher.refresh_movies();
+  res.status(200).json({
+    code: 0,
+    msg: "开始刷新",
+    data: {
+      job_id: job.id,
+    },
+  });
 }

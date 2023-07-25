@@ -1,15 +1,15 @@
-import { TVProfileRecord, SeasonProfileRecord } from "@/domains/store/types";
-import { PartialSeasonFromTMDB, TVProfileFromTMDB } from "@/domains/tmdb/services";
+import { TVProfileRecord, SeasonProfileRecord, MovieProfileRecord } from "@/domains/store/types";
+import { MediaSearcher } from "@/domains/searcher";
+import { Unpacked } from "@/types";
 
 export function check_tv_profile_need_refresh(
   existing_profile: TVProfileRecord,
-  cur: Pick<
-    TVProfileFromTMDB,
-    "name" | "overview" | "poster_path" | "backdrop_path" | "popularity" | "number_of_seasons" | "number_of_episodes"
-  >
+  cur: Unpacked<ReturnType<MediaSearcher["normalize_tv_profile"]>>
 ) {
-  const { name, overview, poster_path, backdrop_path, popularity, number_of_episodes, number_of_seasons } = cur;
+  const { tmdb_id, name, overview, poster_path, backdrop_path, popularity, number_of_episodes, number_of_seasons } =
+    cur;
   const body: Partial<{
+    tmdb_id: number;
     name: string;
     overview: string;
     poster_path: string;
@@ -17,7 +17,12 @@ export function check_tv_profile_need_refresh(
     season_count: number;
     episode_count: number;
     popularity: number;
+    genres: string;
+    origin_country: string;
   }> = {};
+  if (tmdb_id !== existing_profile.tmdb_id) {
+    body.tmdb_id = tmdb_id;
+  }
   if (number_of_episodes !== null && number_of_episodes !== existing_profile.episode_count) {
     body.episode_count = number_of_episodes;
   }
@@ -39,6 +44,12 @@ export function check_tv_profile_need_refresh(
   if (!!backdrop_path && backdrop_path !== existing_profile.backdrop_path) {
     body.backdrop_path = backdrop_path;
   }
+  if (cur.genres && cur.genres !== existing_profile.genres) {
+    body.genres = cur.genres;
+  }
+  if (cur.origin_country && cur.origin_country !== existing_profile.origin_country) {
+    body.origin_country = cur.origin_country;
+  }
   if (Object.keys(body).length === 0) {
     return null;
   }
@@ -47,16 +58,20 @@ export function check_tv_profile_need_refresh(
 
 export function check_season_profile_need_refresh(
   existing_profile: SeasonProfileRecord,
-  latest_profile: Omit<PartialSeasonFromTMDB, "id" | "poster_path"> & { poster_path: string | null }
+  cur: Unpacked<ReturnType<MediaSearcher["normalize_season_profile"]>>
 ) {
-  const { name, overview, poster_path, episode_count, air_date } = latest_profile;
+  const { tmdb_id, name, overview, poster_path, episode_count, air_date } = cur;
   const body: Partial<{
+    tmdb_id: number;
     name: string;
     overview: string;
     poster_path: string;
     air_date: string;
     episode_count: number;
   }> = {};
+  if (tmdb_id !== existing_profile.tmdb_id) {
+    body.tmdb_id = tmdb_id;
+  }
   if (!!name && name !== existing_profile.name) {
     body.name = name;
   }
@@ -71,6 +86,53 @@ export function check_season_profile_need_refresh(
   }
   if (!!air_date && air_date !== existing_profile.air_date) {
     body.air_date = air_date;
+  }
+  if (Object.keys(body).length === 0) {
+    return null;
+  }
+  return body;
+}
+
+export function check_movie_need_refresh(
+  existing_profile: MovieProfileRecord,
+  cur: Unpacked<ReturnType<MediaSearcher["normalize_movie_profile"]>>
+) {
+  const { name, overview, poster_path, backdrop_path, popularity } = cur;
+  const body: Partial<{
+    tmdb_id: number;
+    name: string;
+    overview: string;
+    poster_path: string;
+    backdrop_path: string;
+    season_count: number;
+    episode_count: number;
+    popularity: number;
+    genres: string;
+    origin_country: string;
+  }> = {};
+  if (cur.tmdb_id && cur.tmdb_id !== existing_profile.tmdb_id) {
+    body.tmdb_id = cur.tmdb_id;
+  }
+  if (popularity !== null && popularity !== existing_profile.popularity) {
+    body.popularity = popularity;
+  }
+  if (name !== null && name !== existing_profile.name) {
+    body.name = name;
+  }
+  if (overview !== null && overview !== existing_profile.overview) {
+    body.overview = overview;
+  }
+  if (poster_path !== null && poster_path !== existing_profile.poster_path) {
+    body.poster_path = poster_path;
+  }
+  if (backdrop_path !== null && backdrop_path !== existing_profile.backdrop_path) {
+    body.backdrop_path = backdrop_path;
+  }
+  if (cur.genres && cur.genres !== existing_profile.genres) {
+    body.genres = cur.genres;
+  }
+  if (cur.origin_country && cur.origin_country !== existing_profile.origin_country) {
+    body.origin_country = cur.origin_country;
   }
   if (Object.keys(body).length === 0) {
     return null;

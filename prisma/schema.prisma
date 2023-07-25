@@ -1,5 +1,6 @@
 generator client {
-        provider = "prisma-client-js"
+        provider      = "prisma-client-js"
+        binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
@@ -90,10 +91,10 @@ model tv_profile {
         first_air_date    String?
         // 原始语言
         original_language String?
-        // origin_country 产地
-        // HK(港剧)、CN(国产剧)、KR(韩剧)、US(美剧)、IN(印度)、JP(日剧)
-        // genres 标签(区分动画，也是用这个字段来区分)
-        // 
+        // 产地 HK(港剧)、CN(国产剧)、KR(韩剧)、US(美剧)、IN(印度)、JP(日剧)
+        origin_country    String? @default("")
+        // 标签(区分动画，也是用这个字段来区分)
+        genres            String? @default("")
         // 评分
         popularity        Float?  @default(0)
         // 评分(应该用这个，是10分制)
@@ -167,6 +168,10 @@ model movie_profile {
         popularity        Float?  @default(0)
         vote_average      Float?  @default(0)
         vote_count        Float?  @default(0)
+        // 产地
+        origin_country    String? @default("")
+        // 标签
+        genres            String? @default("")
 
         movie movie?
 }

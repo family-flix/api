@@ -4,8 +4,9 @@ import { store } from "@/store";
 
 async function main() {
   const body = {
-    name: "小谢尔顿S01E04.mp4",
-    parent_paths: "2017.小谢尔顿.1-5季.1080p/小谢尔顿S01",
+    name: "L 莲花楼 [2023][40集持续更新中]",
+    // parent_paths: "2017.小谢尔顿.1-5季.1080p/小谢尔顿S01",
+    parent_paths: "",
   };
   const r = await store.prisma.tmp_file.findFirst({
     where: {
