@@ -115,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     skip: (page - 1) * page_size,
     take: page_size,
   });
-  console.log('movie', movie_list)
+  // console.log('movie', movie_list)
   const tv_no_more = tv_list.length + (page - 1) * page_size >= tv_count;
   const movie_no_more = movie_list.length + (page - 1) * page_size >= movie_count;
   type SearchResult = {

@@ -17,12 +17,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name,
     genres,
     language,
+    invalid = "0",
     page: page_str = "1",
     page_size: page_size_str = "20",
   } = req.query as Partial<{
     name: string;
     genres: string;
     language: string;
+    invalid: string;
     page: string;
     page_size: string;
   }>;
@@ -130,40 +132,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const data = {
     total: count,
-    list: list.map((season) => {
-      const { id, season_number, profile, tv, _count } = season;
-      const { air_date, episode_count } = profile;
-      const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
-      const { name, original_name, overview, poster_path, popularity, need_bind, sync_task, valid_bind, binds } =
-        normalize_partial_tv(tv);
-      const tips: string[] = [];
-      if (binds.length !== 0 && valid_bind === null && tv.profile.in_production) {
-        tips.push("更新已失效");
-      }
-      if (tv.profile.in_production && incomplete && binds.length === 0) {
-        tips.push("未完结但缺少同步任务");
-      }
-      if (!tv.profile.in_production && incomplete) {
-        tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
-      }
-      return {
-        id,
-        tv_id: tv.id,
-        name,
-        original_name,
-        overview,
-        season_number,
-        poster_path: profile.poster_path || poster_path,
-        first_air_date: air_date,
-        popularity,
-        cur_episode_count: _count.episodes,
-        episode_count,
-        incomplete,
-        need_bind,
-        sync_task,
-        tips,
-      };
-    }),
+    list: list
+      .map((season) => {
+        const { id, season_number, profile, tv, _count } = season;
+        const { air_date, episode_count } = profile;
+        const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
+        const { name, original_name, overview, poster_path, popularity, need_bind, sync_task, valid_bind, binds } =
+          normalize_partial_tv(tv);
+        const tips: string[] = [];
+        if (binds.length !== 0 && valid_bind === null && tv.profile.in_production) {
+          tips.push("更新已失效");
+        }
+        if (tv.profile.in_production && incomplete && binds.length === 0) {
+          tips.push("未完结但缺少同步任务");
+        }
+        if (!tv.profile.in_production && incomplete) {
+          tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
+        }
+        return {
+          id,
+          tv_id: tv.id,
+          name,
+          original_name,
+          overview,
+          season_number,
+          poster_path: profile.poster_path || poster_path,
+          first_air_date: air_date,
+          popularity,
+          cur_episode_count: _count.episodes,
+          episode_count,
+          incomplete,
+          need_bind,
+          sync_task,
+          tips,
+        };
+      })
+      .filter((season) => {
+        if (Number(invalid)) {
+          return season.tips.length !== 0;
+        }
+        return true;
+      }),
     page,
     page_size,
     no_more: list.length + (page - 1) * page_size >= count,

@@ -122,44 +122,98 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       );
       return Result.Ok(null);
     }
-    this.emit(
-      Events.Print,
-      new ArticleSectionNode({
-        children: [
-          new ArticleLineNode({
-            children: [name || original_name, "需要更新"].map((text) => {
-              return new ArticleTextNode({ text: text! });
-            }),
-          }),
-          ...Object.keys(diff).map((k) => {
-            // @ts-ignore
-            const prev_text = tv.profile[k];
-            // @ts-ignore
-            const latest_text = diff[k];
-            return new ArticleLineNode({
-              children: [`${k} 从 ${prev_text} 更新为 ${latest_text}`].map((text) => {
-                return new ArticleTextNode({ text });
-              }),
-            });
-          }),
-        ],
-      })
-    );
     await (async () => {
       if (!diff.tmdb_id) {
-        await this.store.prisma.tv_profile.update({
-          where: {
-            id: tv.profile.id,
-          },
-          data: diff,
-        });
+        this.emit(
+          Events.Print,
+          new ArticleSectionNode({
+            children: [
+              new ArticleLineNode({
+                children: [name || original_name, "需要更新"].map((text) => {
+                  return new ArticleTextNode({ text: text! });
+                }),
+              }),
+              ...Object.keys(diff).map((k) => {
+                // @ts-ignore
+                const prev_text = tv.profile[k];
+                // @ts-ignore
+                const latest_text = diff[k];
+                return new ArticleLineNode({
+                  children: [`${k} 从 ${prev_text} 更新为 ${latest_text}`].map((text) => {
+                    return new ArticleTextNode({ text });
+                  }),
+                });
+              }),
+            ],
+          })
+        );
+        const r = await this.store.update_tv_profile(tv.profile.id, diff);
+        if (r.error) {
+          this.emit(
+            Events.Print,
+            new ArticleSectionNode({
+              children: [
+                new ArticleLineNode({
+                  children: ["更新失败，因为 ", r.error.message].map((text) => {
+                    return new ArticleTextNode({ text: text! });
+                  }),
+                }),
+              ],
+            })
+          );
+        }
         return;
       }
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleLineNode({
+              children: [name || original_name, " 更改为另一个详情"].map((text) => {
+                return new ArticleTextNode({ text: text! });
+              }),
+            }),
+            new ArticleLineNode({
+              children: ["新的详情是 ", normalized_profile.name].map((text) => {
+                return new ArticleTextNode({ text: text! });
+              }),
+            }),
+          ],
+        })
+      );
       const created_res = await this.store.add_tv_profile(normalized_profile);
+      if (created_res.error) {
+        this.emit(
+          Events.Print,
+          new ArticleSectionNode({
+            children: [
+              new ArticleLineNode({
+                children: ["新增详情失败", created_res.error.message].map((text) => {
+                  return new ArticleTextNode({ text: text! });
+                }),
+              }),
+            ],
+          })
+        );
+      }
       if (created_res.data) {
-        await this.store.update_tv(tv.id, {
+        const r = await this.store.update_tv(tv.id, {
           profile_id: created_res.data.id,
         });
+        if (r.error) {
+          this.emit(
+            Events.Print,
+            new ArticleSectionNode({
+              children: [
+                new ArticleLineNode({
+                  children: ["更改失败，因为 ", r.error.message].map((text) => {
+                    return new ArticleTextNode({ text: text! });
+                  }),
+                }),
+              ],
+            })
+          );
+        }
       }
     })();
     await this.refresh_season_list(tv, r.data);

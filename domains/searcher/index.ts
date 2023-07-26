@@ -495,8 +495,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       season_count: number_of_seasons,
       status,
       in_production: Number(in_production),
-      number_of_episodes,
-      number_of_seasons,
+      // number_of_episodes,
+      // number_of_seasons,
       genres: genres
         .map((g) => {
           return g.name;

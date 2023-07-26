@@ -81,17 +81,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     list: list.map((season) => {
       const { id, season_number, profile, tv } = season;
       const { air_date } = profile;
-      const { name, original_name, overview, poster_path, popularity } = tv.profile;
+      const { name, overview, poster_path, vote_average, genres, origin_country } = tv.profile;
       return {
         id,
         tv_id: tv.id,
         name,
-        original_name,
         overview,
         season_number,
         poster_path: profile.poster_path || poster_path,
         first_air_date: air_date,
-        popularity,
+        genres,
+        origin_country,
+        popularity: vote_average,
       };
     }),
     page,
