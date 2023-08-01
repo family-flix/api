@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const member = t_res.data;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
-  const tv_where: NonNullable<Parameters<typeof store.prisma.season.findMany>[0]>["where"] = {
+  const season_where: NonNullable<Parameters<typeof store.prisma.season.findMany>[0]>["where"] = {
     episodes: {
       some: {},
     },
@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user_id: member.user.id,
   };
   if (name) {
-    tv_where.tv = {
+    season_where.tv = {
       profile: {
         OR: [
           {
@@ -83,10 +83,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
   }
   const tv_count = await store.prisma.season.count({
-    where: tv_where,
+    where: season_where,
   });
   const tv_list = await store.prisma.season.findMany({
-    where: tv_where,
+    where: season_where,
     include: {
       profile: true,
       tv: {
@@ -132,11 +132,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     total: tv_count + movie_count,
     list: tv_list
       .map((season) => {
-        const { id, season_number, profile, tv } = season;
+        const { id, tv_id, season_number, profile, tv } = season;
         const { air_date } = profile;
         const { name, original_name, overview, poster_path, popularity } = tv.profile;
         const r = {
-          id: tv.id,
+          id,
+          tv_id,
           type: 1,
           season_number,
           name: name || original_name,

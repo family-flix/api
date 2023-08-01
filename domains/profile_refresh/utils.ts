@@ -1,4 +1,4 @@
-import { TVProfileRecord, SeasonProfileRecord, MovieProfileRecord } from "@/domains/store/types";
+import { TVProfileRecord, SeasonProfileRecord, MovieProfileRecord, EpisodeProfileRecord } from "@/domains/store/types";
 import { MediaSearcher } from "@/domains/searcher";
 import { Unpacked } from "@/types";
 
@@ -6,8 +6,7 @@ export function check_tv_profile_need_refresh(
   existing_profile: TVProfileRecord,
   cur: Unpacked<ReturnType<MediaSearcher["normalize_tv_profile"]>>
 ) {
-  const { tmdb_id, name, overview, poster_path, backdrop_path, popularity, number_of_episodes, number_of_seasons } =
-    cur;
+  const { tmdb_id, name, overview, poster_path, backdrop_path, popularity, episode_count, season_count } = cur;
   const body: Partial<{
     tmdb_id: number;
     name: string;
@@ -23,11 +22,11 @@ export function check_tv_profile_need_refresh(
   if (tmdb_id !== existing_profile.tmdb_id) {
     body.tmdb_id = tmdb_id;
   }
-  if (number_of_episodes !== null && number_of_episodes !== existing_profile.episode_count) {
-    body.episode_count = number_of_episodes;
+  if (episode_count !== null && episode_count !== existing_profile.episode_count) {
+    body.episode_count = episode_count;
   }
-  if (number_of_seasons !== null && number_of_seasons !== existing_profile.season_count) {
-    body.season_count = number_of_seasons;
+  if (season_count !== null && season_count !== existing_profile.season_count) {
+    body.season_count = season_count;
   }
   if (popularity !== null && popularity !== existing_profile.popularity) {
     body.popularity = popularity;
@@ -133,6 +132,34 @@ export function check_movie_need_refresh(
   }
   if (cur.origin_country && cur.origin_country !== existing_profile.origin_country) {
     body.origin_country = cur.origin_country;
+  }
+  if (Object.keys(body).length === 0) {
+    return null;
+  }
+  return body;
+}
+
+export function check_episode_profile_need_refresh(
+  existing_profile: EpisodeProfileRecord,
+  cur: Unpacked<ReturnType<MediaSearcher["normalize_episode_profile"]>>
+) {
+  const body: Partial<{
+    tmdb_id: number;
+    name: string;
+    overview: string;
+    air_date: string;
+  }> = {};
+  if (cur.tmdb_id && cur.tmdb_id !== existing_profile.tmdb_id) {
+    body.tmdb_id = cur.tmdb_id;
+  }
+  if (cur.name && cur.name !== existing_profile.name) {
+    body.name = cur.name;
+  }
+  if (cur.overview && cur.overview !== existing_profile.overview) {
+    body.overview = cur.overview;
+  }
+  if (cur.air_date && cur.air_date !== existing_profile.air_date) {
+    body.air_date = cur.air_date;
   }
   if (Object.keys(body).length === 0) {
     return null;

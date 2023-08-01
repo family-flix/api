@@ -208,6 +208,9 @@ export function parse_filename_for_video(
     },
     // 奇怪的冗余信息
     {
+      regexp: /超前点映|超前完结|点映礼/,
+    },
+    {
       regexp:
         /_File|HDJ|RusDub|Mandarin|[0-9]{5,}|百度云盘下载|主演团陪看|又名|超前点播直播现场|\.(?=[A-Z0-9]{1,}[A-Z])(?=[A-Z0-9]{1,}[0-9])[A-Z0-9]{8}\./,
       before() {
@@ -315,6 +318,9 @@ export function parse_filename_for_video(
     },
     {
       regexp: /无水印|三无|[无未]删减/,
+    },
+    {
+      regexp: /[nN][cC]([oO][pP]|[eE][dD])/,
     },
     {
       regexp: /片头(片中){0,1}/,

@@ -17,14 +17,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name,
     genres,
     language,
+    season_number,
     invalid = "0",
+    duplicated = "0",
     page: page_str = "1",
     page_size: page_size_str = "20",
   } = req.query as Partial<{
     name: string;
     genres: string;
     language: string;
+    season_number: string;
     invalid: string;
+    duplicated: string;
     page: string;
     page_size: string;
   }>;
@@ -33,7 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id } = user;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
   let queries: TVProfileWhereInput[] = [];
@@ -75,6 +80,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }),
     });
   }
+  if (Number(duplicated) === 1) {
+    const duplicate_tv_profiles = await store.prisma.tv_profile.groupBy({
+      by: ["tmdb_id"],
+      where: {
+        tv: {
+          user_id: user.id,
+        },
+      },
+      having: {
+        tmdb_id: {
+          _count: {
+            gt: 1,
+          },
+        },
+      },
+    });
+    queries = queries.concat({
+      tmdb_id: {
+        in: duplicate_tv_profiles.map((profile) => {
+          const { tmdb_id } = profile;
+          return tmdb_id;
+        }),
+      },
+    });
+  }
   const where: NonNullable<Parameters<typeof store.prisma.season.findMany>[0]>["where"] = {
     episodes: {
       some: {},
@@ -87,6 +117,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         AND: queries,
       },
     };
+  }
+  if (season_number) {
+    const sn = season_number.match(/[0-9]{1,}/);
+    if (sn) {
+      where.season_number = {
+        contains: parseInt(sn[0]).toString(),
+      };
+    }
   }
   const count = await store.prisma.season.count({
     where,

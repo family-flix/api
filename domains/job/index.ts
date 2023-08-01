@@ -155,13 +155,18 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (output === null) {
       return;
     }
-    content.forEach((c) => {
-      const data = {
-        output_id: this.profile.output_id,
-        content: JSON.stringify(c),
-      };
-      this.store.add_output_line(data);
-    });
+    for (let i = 0; i < content.length; i += 1) {
+      const c = content[i];
+      await this.store.prisma.output_line.create({
+        data: {
+          id: r_id(),
+          output_id: this.profile.output_id,
+          content: JSON.stringify(c),
+          created: dayjs(c.created).toISOString(),
+          updated: dayjs(c.created).toISOString(),
+        },
+      });
+    }
   }, 5000);
   /** check need pause the task */
   check_need_pause = throttle(async () => {
@@ -268,6 +273,15 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   async throw(error: Error) {
+    this.output.write(
+      new ArticleLineNode({
+        children: [
+          new ArticleTextNode({
+            text: error.message,
+          }),
+        ],
+      })
+    );
     const r = await this.store.update_task(this.id, {
       status: TaskStatus.Finished,
       error: error.message,

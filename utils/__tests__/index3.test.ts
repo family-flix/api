@@ -267,4 +267,54 @@ describe("动漫", () => {
       episode: "E04",
     });
   });
+  test("1080P超前完结", () => {
+    const name = "1080P超前完结";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("1080P超前点映", () => {
+    const name = "1080P超前点映";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  // test("Yinian Yong Heng-[1-5]-[041-052]-1080P.mp4", () => {
+  //   const name = "Yinian Yong Heng-[1-5]-[041-052]-1080P.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "",
+  //     original_name: "",
+  //     season: "",
+  //     episode: "",
+  //   });
+  // });
+  // test("月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4", () => {
+  //   const name = "月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "",
+  //     original_name: "",
+  //     season: "",
+  //     episode: "",
+  //   });
+  // });
+  test("妖精森林的小不点 NCED01.mkv", () => {
+    const name = "妖精森林的小不点 NCED01.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "妖精森林的小不点",
+      original_name: "",
+      season: "",
+      episode: "E01",
+    });
+  });
 });

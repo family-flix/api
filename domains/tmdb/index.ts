@@ -57,6 +57,28 @@ export class TMDBClient {
   async fetch_season_profile(body: { tv_id: number; season_number: string | number }) {
     const { tv_id, season_number } = body;
     const { token, language } = this.options;
+    const r = await fetch_season_profile(
+      {
+        tv_id,
+        season_number: Number(season_number),
+      },
+      {
+        api_key: token,
+        language,
+      }
+    );
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    if (!r.data) {
+      return Result.Err("没有匹配的结果");
+    }
+    return Result.Ok(r.data);
+  }
+  /** 获取季详情 */
+  async fetch_partial_season_profile(body: { tv_id: number; season_number: string | number }) {
+    const { tv_id, season_number } = body;
+    const { token, language } = this.options;
     const r = await fetch_tv_profile(tv_id, {
       api_key: token,
       language,

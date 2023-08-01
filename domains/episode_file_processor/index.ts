@@ -102,7 +102,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         // log(`[${prefix}]`, "新增电视剧信息失败", tv_adding_res.error.message);
         return Result.Err(tv_adding_res.error);
       }
-      this.emit(Events.AddTV, data.tv);
+      // this.emit(Events.AddTV, data.tv);
       const season_adding_res = await this.add_parsed_season({ parsed_tv_id: tv_adding_res.data.id }, data);
       if (season_adding_res.error) {
         // log(`[${prefix}]`, "新增季信息失败", season_adding_res.error.message);
@@ -151,7 +151,6 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
       id: existing_episode.id,
       body: {},
     };
-
     const existing_tv_res = await (async () => {
       const res = await store.find_parsed_tv({
         id: existing_episode.parsed_tv_id,

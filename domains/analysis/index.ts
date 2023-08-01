@@ -271,6 +271,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       //         walker.stop = true;
       //         return;
       //       }
+      // console.log(parsed.tv.name, parsed.episode.episode);
       const processor = new EpisodeFileProcessor({ episode: parsed, user_id: user.id, drive_id: drive.id, store });
       processor.on_add_tv((tv) => {
         this.emit(

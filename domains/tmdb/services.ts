@@ -445,12 +445,13 @@ export async function fetch_season_profile(
     overview,
     season_number,
     episodes: episodes.map((e) => {
-      const { id, air_date, episode_number, name } = e;
+      const { id, air_date, overview, episode_number, name } = e;
       return {
         id,
+        name,
+        overview,
         air_date,
         episode_number,
-        name,
       };
     }),
     ...fix_TMDB_image_path({

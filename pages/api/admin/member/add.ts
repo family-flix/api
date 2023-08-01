@@ -20,11 +20,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!remark) {
     return e("缺少成员备注");
   }
-  const t_resp = await User.New(authorization, store);
-  if (t_resp.error) {
-    return e(t_resp);
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const { id: user_id } = t_resp.data;
+  const user = t_res.data;
+  const { id: user_id } = user;
   const existing_res = await store.find_member({ remark, user_id });
   if (existing_res.error) {
     return e(existing_res);

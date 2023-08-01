@@ -2,10 +2,12 @@
  * @file 影视剧搜索
  */
 import type { Handler } from "mitt";
+import uniqueBy from "lodash/fp/uniqBy";
 
 import { BaseDomain } from "@/domains/base";
 import { TMDBClient } from "@/domains/tmdb";
 import {
+  EpisodeProfileFromTMDB,
   MovieProfileFromTMDB,
   PartialSeasonFromTMDB,
   SeasonProfileFromTMDB,
@@ -143,15 +145,26 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   /** 开始搜索 */
   async run(scope: { name: string }[] = []) {
     // console.log("[DOMAIN]MediaSearcher - run", scope);
-    await this.process_parsed_tv_list(scope);
-    await this.process_parsed_season_list(scope);
-    await this.process_parsed_episode_list(scope);
-    await this.process_parsed_movie_list(scope);
+    const files = uniqueBy((obj) => obj.name, scope);
+    const file_groups = split_array_into_chunks(files, 10);
+    for (let i = 0; i < file_groups.length; i += 1) {
+      await this.process_parsed_tv_list(file_groups[i]);
+    }
+    for (let i = 0; i < file_groups.length; i += 1) {
+      await this.process_parsed_season_list(file_groups[i]);
+    }
+    for (let i = 0; i < file_groups.length; i += 1) {
+      await this.process_parsed_episode_list(file_groups[i]);
+    }
+    for (let i = 0; i < file_groups.length; i += 1) {
+      await this.process_parsed_movie_list(file_groups[i]);
+    }
     this.emit(Events.Finish);
     return Result.Ok(null);
   }
   /** 处理所有没有匹配好电视剧详情的电视剧 */
   async process_parsed_tv_list(scope?: { name: string }[]) {
+    console.log("[DOMAIN]searcher/index - process_parsed_tv_list", scope, this.force);
     const { user_id, drive_id } = this.options;
     let page = 1;
     let no_more = false;
@@ -165,7 +178,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       where.drive_id = drive_id;
     }
     if (scope && scope.length && scope.length <= 10) {
-      // console.log("[DOMAIN]searcher - process_parsed_tv_list show scope", scope);
       where.OR = scope.map((s) => {
         const { name } = s;
         return {
@@ -175,6 +187,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         };
       });
     }
+    console.log("[DOMAIN]searcher/index - process_parsed_tv_list where is", JSON.stringify(where, null, 2));
     const count = await store.prisma.parsed_tv.count({
       where,
     });
@@ -414,6 +427,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
   /** 使用名字在 tmdb 搜索 */
   async search_tv_in_tmdb(name: string) {
+    // 这个延迟，是为了避免 add_tv_profile 太快，导致创建了重复的 tv_profile
+    await sleep(800);
     const r1 = await this.client.search_tv(name);
     if (r1.error) {
       return Result.Err(
@@ -558,10 +573,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
 
   /** 处理所有解析到的 season */
   async process_parsed_season_list(scope: { name: string }[]) {
+    // console.log("[DOMAIN]searcher/index - process_parsed_season_list", scope, this.force);
     const { user_id, drive_id } = this.options;
     let page = 1;
     let no_more = false;
-
     const where: NonNullable<Parameters<typeof this.store.prisma.parsed_season.findMany>[number]>["where"] = {
       season_id: null,
       parsed_tv: {
@@ -577,15 +592,27 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       where.drive_id = drive_id;
     }
     if (scope && scope.length && scope.length <= 10) {
-      where.parsed_tv!.OR = scope.map((s) => {
-        const { name } = s;
-        return {
-          name: {
-            contains: name,
+      where.parsed_tv = {
+        AND: [
+          {
+            tv_id: {
+              not: null,
+            },
           },
-        };
-      });
+          {
+            OR: scope.map((s) => {
+              const { name } = s;
+              return {
+                name: {
+                  contains: name,
+                },
+              };
+            }),
+          },
+        ],
+      };
     }
+    // console.log("[DOMAIN]searcher/index - process_parsed_season_list where is", JSON.stringify(where, null, 2));
     const count = await this.store.prisma.parsed_season.count({ where });
     this.emit(
       Events.Print,
@@ -731,7 +758,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("没有找到匹配的电视剧");
     }
     const { season_number } = parsed_season;
-    const r = await this.client.fetch_season_profile({
+    const r = await this.client.fetch_partial_season_profile({
       tv_id: tv.profile.tmdb_id,
       season_number: season_to_num(season_number),
     });
@@ -795,6 +822,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
 
   async process_parsed_episode_list(scope: { name: string }[]) {
     const { user_id, drive_id } = this.options;
+    // console.log("[DOMAIN]searcher/index - process_parsed_episode_list", scope, this.force);
     let page = 1;
     let no_more = false;
 
@@ -818,15 +846,16 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       where.drive_id = drive_id;
     }
     if (scope && scope.length && scope.length <= 10) {
-      where.parsed_tv!.OR = scope.map((s) => {
+      where.OR = scope.map((s) => {
         const { name } = s;
         return {
-          name: {
+          file_name: {
             contains: name,
           },
         };
       });
     }
+    // console.log("[DOMAIN]searcher/index - process_parsed_episode_list where is", JSON.stringify(where, null, 2));
     const count = await this.store.prisma.parsed_episode.count({ where });
     this.emit(
       Events.Print,
@@ -901,6 +930,22 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     );
   }
 
+  normalize_episode_profile(
+    info: {
+      tmdb_id: number;
+    },
+    profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date">
+  ) {
+    const { tmdb_id } = info;
+    const { name, overview, air_date } = profile;
+    const body = {
+      tmdb_id,
+      name: name || null,
+      overview: overview || null,
+      air_date,
+    };
+    return body;
+  }
   async add_episode_from_parsed_episode(body: {
     parsed_tv: ParsedTVRecord;
     parsed_season: ParsedSeasonRecord;
@@ -1057,6 +1102,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
 
   async process_parsed_movie_list(scope: { name: string }[]) {
+    // console.log("[DOMAIN]searcher/index - process_parsed_movie_list", scope, this.force);
     const { user_id, drive_id } = this.options;
     let page = 1;
     let no_more = false;
@@ -1074,12 +1120,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       where.OR = scope.map((s) => {
         const { name } = s;
         return {
-          name: {
+          file_name: {
             contains: name,
           },
         };
       });
     }
+    // console.log("[DOMAIN]searcher/index - process_parsed_movie_list where is", JSON.stringify(where, null, 2));
     const count = await this.store.prisma.parsed_movie.count({ where });
     // console.log('[DOMAIN]Searcher - process_parsed_movie_list');
     this.emit(
@@ -1428,4 +1475,12 @@ function get_prefix_from_parsed_tv(parsed_tv: ParsedTVRecord) {
   const { name, original_name, correct_name } = parsed_tv;
   const prefix = `${correct_name || name || original_name}`;
   return prefix;
+}
+
+function split_array_into_chunks<T extends Record<any, any>>(array: T[], n = 20) {
+  const result = [];
+  for (let i = 0; i < array.length; i += n) {
+    result.push(array.slice(i, i + n));
+  }
+  return result;
 }

@@ -12,7 +12,11 @@ import { User } from "@/domains/user";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { page: page_str = "1", page_size: page_size_str = "20" } = req.query as Partial<{
+  const {
+    name,
+    page: page_str = "1",
+    page_size: page_size_str = "20",
+  } = req.query as Partial<{
     name: string;
     page: string;
     page_size: string;
@@ -26,6 +30,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page_size = Number(page_size_str);
 
   const where: NonNullable<Parameters<typeof store.prisma.member.findMany>[0]>["where"] = {
+    remark: {
+      contains: name,
+    },
     user_id,
     delete: 0,
   };

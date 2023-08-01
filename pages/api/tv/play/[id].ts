@@ -7,11 +7,12 @@ import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { season_to_chinese_num } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
+  const { id, season_id } = req.query as Partial<{ id: string; season_id: string }>;
   if (!id) {
     return e("缺少电视剧 id");
   }
@@ -32,17 +33,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           tv_id: id,
         },
       },
-      // episodes: {
-      //   include: {
-      //     profile: true,
-      //     parsed_episodes: true,
-      //   },
-      //   orderBy: {
-      //     episode_number: "asc",
-      //   },
-      //   skip: 0,
-      //   take: 1,
-      // },
       seasons: {
         include: {
           profile: true,
@@ -50,8 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         orderBy: {
           season_number: "asc",
         },
-        skip: 0,
-        take: 100,
       },
     },
   });
@@ -60,9 +48,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const { profile, play_histories, seasons } = tv;
   if (seasons.length === 0) {
-    return e("该电视剧没有季列表");
+    return e("该电视剧暂无季信息");
   }
-  const min_season = seasons[0];
+  const target_season = (() => {
+    if (season_id) {
+      return {
+        id: season_id,
+      };
+    }
+    return seasons[0];
+  })();
   const play_history =
     play_histories.find((p) => {
       return p.member_id === member_id && p.tv_id === id;
@@ -71,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (play_history === null) {
       const episode = await store.prisma.episode.findFirst({
         where: {
-          season_id: min_season.id,
+          season_id: target_season.id,
         },
         include: {
           profile: true,
@@ -114,18 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
     return r;
   })();
-  // const cur_episode = (() => {
-  //   if (playing_episode !== null) {
-  //     return playing_episode;
-  //   }
-  //   if (episodes.length === 0) {
-  //     return null;
-  //   }
-  //   return {
-  //     ...episodes[0],
-  //     current_time: 0,
-  //   };
-  // })();
+
   const episodes_of_cur_season = await (async () => {
     if (playing_episode === null) {
       return [];
@@ -159,6 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
         overview,
         season_number,
+        season_text: season_to_chinese_num(season_number),
         episode_number,
         season_id,
         sources: parsed_episodes.map((parsed_episode) => {
@@ -193,22 +178,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     seasons: seasons.map((season) => {
       const { id, season_number, profile } = season;
       const { name, overview, air_date } = profile;
+      const season_text = season_to_chinese_num(season_number);
       return {
         id,
-        name: name || season_number,
+        name: name || season_text,
+        season_text,
         overview,
         air_date,
         episodes: cur_season && cur_season.id === id ? episodes_of_cur_season : [],
       };
     }),
+    // cur_episodes: episodes_of_cur_season,
     cur_season: (() => {
       if (cur_season === null) {
         return null;
       }
       const { id, season_number, profile } = cur_season;
+      const season_text = season_to_chinese_num(season_number);
       return {
         id,
         name: profile.name || season_number,
+        season_text,
         overview: profile.overview,
         air_date: profile.air_date,
       };
@@ -225,6 +215,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
         overview,
         season_number,
+        season_text: season_to_chinese_num(season_number),
         episode_number,
         current_time,
         season_id,

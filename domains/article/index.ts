@@ -21,6 +21,7 @@ export class Article extends BaseDomain<TheTypesOfEvents> {
   static async New() {}
 
   lines: (ArticleLineNode | ArticleSectionNode)[] = [];
+
   constructor(options: Partial<{}> & ArticleProps) {
     super();
 
@@ -52,21 +53,27 @@ type ArticleSectionNodeProps = {
   children: ArticleLineNode[];
 };
 export class ArticleSectionNode extends BaseDomain<TheTypesOfEvents> {
-  values: ArticleSectionNodeProps;
+  values: ArticleSectionNodeProps & {
+    created: number;
+  };
   constructor(values: ArticleSectionNodeProps) {
     super();
 
     const { children } = values;
-    this.values = values;
+    this.values = {
+      ...values,
+      created: new Date().valueOf(),
+    };
   }
 
   to_json() {
-    const { children } = this.values;
+    const { children, created } = this.values;
     return {
       type: ArticleNodeType.Section,
       children: children.map((t): object => {
         return t.to_json();
       }),
+      created,
     };
   }
 }
@@ -77,16 +84,20 @@ type ArticleLineNodeProps = {
   children: (ArticleTextNode | ArticleLinkNode | ArticleListNode | ArticleCardNode)[];
 };
 export class ArticleLineNode extends BaseDomain<TheTypesOfEvents> {
-  values: ArticleLineNodeProps;
+  values: ArticleLineNodeProps & { created: number };
+
   constructor(values: ArticleLineNodeProps) {
     super();
 
     const { children, color, value } = values;
-    this.values = values;
+    this.values = {
+      ...values,
+      created: new Date().valueOf(),
+    };
   }
 
   to_json() {
-    const { children, color, value } = this.values;
+    const { children, color, value, created } = this.values;
     return {
       type: ArticleNodeType.Line,
       color,
@@ -94,6 +105,7 @@ export class ArticleLineNode extends BaseDomain<TheTypesOfEvents> {
       children: children.map((t): object => {
         return t.to_json();
       }),
+      created,
     };
   }
 }
@@ -104,21 +116,27 @@ type ArticleHeadNodeProps = {
   color?: string;
 };
 export class ArticleHeadNode extends BaseDomain<TheTypesOfEvents> {
-  values: ArticleHeadNodeProps;
+  values: ArticleHeadNodeProps & {
+    created: number;
+  };
   constructor(values: ArticleHeadNodeProps) {
     super();
 
     const { color } = values;
-    this.values = values;
+    this.values = {
+      ...values,
+      created: new Date().valueOf(),
+    };
   }
 
   to_json() {
-    const { level, color, text } = this.values;
+    const { level, color, text, created } = this.values;
     return {
       type: ArticleNodeType.Head,
       color,
       level,
       text,
+      created,
     };
   }
 }
@@ -128,20 +146,26 @@ type ArticleTextNodeProps = {
   color?: string;
 };
 export class ArticleTextNode extends BaseDomain<TheTypesOfEvents> {
-  values: ArticleTextNodeProps;
+  values: ArticleTextNodeProps & {
+    created: number;
+  };
   constructor(values: ArticleTextNodeProps) {
     super();
 
     const { color } = values;
-    this.values = values;
+    this.values = {
+      ...values,
+      created: new Date().valueOf(),
+    };
   }
 
   to_json() {
-    const { color, text } = this.values;
+    const { color, text, created } = this.values;
     return {
       type: ArticleNodeType.Text,
       color,
       text,
+      created,
     };
   }
 }
@@ -151,19 +175,25 @@ type ArticleLinkNodeProps = {
   href: string;
 };
 export class ArticleLinkNode extends BaseDomain<TheTypesOfEvents> {
-  values: ArticleLinkNodeProps;
+  values: ArticleLinkNodeProps & {
+    created: number;
+  };
   constructor(values: ArticleLinkNodeProps) {
     super();
 
-    this.values = values;
+    this.values = {
+      ...values,
+      created: new Date().valueOf(),
+    };
   }
 
   to_json() {
-    const { href, text } = this.values;
+    const { href, text, created } = this.values;
     return {
       type: ArticleNodeType.Link,
       href,
       text,
+      created,
     };
   }
 }
@@ -172,18 +202,24 @@ type ArticleListNodeProps = {
   children: ArticleListItemNode[];
 };
 export class ArticleListNode extends BaseDomain<TheTypesOfEvents> {
-  values: ArticleListNodeProps;
+  values: ArticleListNodeProps & {
+    created: number;
+  };
   constructor(values: ArticleListNodeProps) {
     super();
 
-    this.values = values;
+    this.values = {
+      ...values,
+      created: new Date().valueOf(),
+    };
   }
 
   to_json() {
-    const { children } = this.values;
+    const { children, created } = this.values;
     return {
       type: ArticleNodeType.List,
       children: children.map((c) => c.to_json()),
+      created,
     };
   }
 }
@@ -192,19 +228,25 @@ type ArticleListItemNodeProps = {
   children: (ArticleTextNode | ArticleLinkNode)[];
 };
 export class ArticleListItemNode extends BaseDomain<TheTypesOfEvents> {
-  values: ArticleListItemNodeProps;
+  values: ArticleListItemNodeProps & {
+    created: number;
+  };
 
   constructor(values: ArticleListItemNodeProps) {
     super();
 
-    this.values = values;
+    this.values = {
+      ...values,
+      created: new Date().valueOf(),
+    };
   }
 
   to_json() {
-    const { children } = this.values;
+    const { children, created } = this.values;
     return {
       type: ArticleNodeType.ListItem,
       children: children.map((c) => c.to_json()),
+      created,
     };
   }
 }
@@ -213,18 +255,24 @@ type ArticleCardNodeProps = {
   value: unknown;
 };
 export class ArticleCardNode extends BaseDomain<TheTypesOfEvents> {
-  values: ArticleCardNodeProps;
+  values: ArticleCardNodeProps & {
+    created: number;
+  };
   constructor(values: ArticleCardNodeProps) {
     super();
 
-    this.values = values;
+    this.values = {
+      ...values,
+      created: new Date().valueOf(),
+    };
   }
 
   to_json() {
-    const { value } = this.values;
+    const { value, created } = this.values;
     return {
       type: ArticleNodeType.Card,
       value,
+      created,
     };
   }
 }

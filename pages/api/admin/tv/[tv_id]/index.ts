@@ -135,7 +135,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             overview: profile.overview,
             episode_number: episode_number,
             first_air_date: profile.air_date,
-            sources: parsed_episodes,
+            sources: parsed_episodes.map((source) => {
+              const { id, file_id, file_name, parent_paths, size } = source;
+              return {
+                id,
+                file_id,
+                file_name,
+                parent_paths,
+                size,
+              };
+            }),
           };
         });
       })(),
