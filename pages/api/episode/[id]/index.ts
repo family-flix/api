@@ -39,14 +39,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (episode === null) {
     return e("没有匹配的影片记录");
   }
+  const play_history = await store.prisma.play_history.findFirst({
+    where: {
+      episode_id: id,
+      member_id,
+    },
+  });
   const { season_number, episode_number, profile, parsed_episodes } = episode;
   const source = (() => {
     if (parsed_episodes.length === 0) {
       return null;
     }
+    if (play_history && play_history.file_id) {
+      const matched = parsed_episodes.find((e) => {
+        return e.file_id === play_history.file_id;
+      });
+      if (matched) {
+        return matched;
+      }
+    }
     const matched = parsed_episodes.find((parsed_episode) => {
-      const { file_name } = parsed_episode;
-      if (file_name.includes("4K") || file_name.includes("超清")) {
+      const { file_name, parent_paths } = parsed_episode;
+      const paths = [parent_paths, file_name].join("/");
+      if (paths.includes("4K") || paths.includes("超清")) {
         return true;
       }
       return false;

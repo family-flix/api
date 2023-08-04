@@ -5,8 +5,8 @@ require("dotenv").config();
 import { describe, test, expect } from "vitest";
 
 import { fetch_files_factory } from "@/domains/walker/utils";
-import { data, id } from "@/domains/__tests__/mock/feng_yu_song_chun_gui";
-import { data as updated_data } from "@/domains/__tests__/mock/feng_yu_song_chun_gui.updated";
+import { data, id } from "@/mock/feng_yu_song_chun_gui";
+import { data as updated_data } from "@/mock/feng_yu_song_chun_gui.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
 

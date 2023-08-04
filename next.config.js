@@ -1,6 +1,37 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: false,
+  headers() {
+    return [
+      {
+        source: "/admin/:path*",
+        headers: [
+          {
+            key: "cache-control",
+            value: "max-age=10368000",
+          },
+        ],
+      },
+      {
+        source: "/pc/:path*",
+        headers: [
+          {
+            key: "cache-control",
+            value: "max-age=10368000",
+          },
+        ],
+      },
+      {
+        source: "/mobile/:path*",
+        headers: [
+          {
+            key: "cache-control",
+            value: "max-age=10368000",
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

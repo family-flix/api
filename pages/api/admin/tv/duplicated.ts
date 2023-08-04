@@ -35,6 +35,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     by: ["tmdb_id"],
     where: {
       tv: {
+        parsed_tvs: {
+          some: {},
+        },
         user_id: user.id,
       },
     },

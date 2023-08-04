@@ -175,7 +175,15 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
             ],
           })
         );
-        const created_res = await this.store.add_tv_profile(normalized_profile);
+        const created_res = await (async () => {
+          const existing_res = await this.store.find_tv_profile({
+            tmdb_id: normalized_profile.tmdb_id,
+          });
+          if (existing_res.data) {
+            return Result.Ok(existing_res.data);
+          }
+          return this.store.add_tv_profile(normalized_profile);
+        })();
         if (created_res.error) {
           this.emit(
             Events.Print,
@@ -312,8 +320,15 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Ok(normalized_profile);
     }
-    const created_res = await this.store.add_season_profile(normalized_profile);
-    console.log("prepare update season", season);
+    const created_res = await (async () => {
+      const existing_res = await this.store.find_season_profile({
+        tmdb_id: normalized_profile.tmdb_id,
+      });
+      if (existing_res.data) {
+        return Result.Ok(existing_res.data);
+      }
+      return this.store.add_season_profile(normalized_profile);
+    })();
     if (created_res.data) {
       await this.store.prisma.season.update({
         where: {
@@ -443,7 +458,15 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Ok(normalized_profile);
     }
-    const created_res = await this.store.add_episode_profile(normalized_profile);
+    const created_res = await (async () => {
+      const existing_res = await this.store.find_episode_profile({
+        tmdb_id: normalized_profile.tmdb_id,
+      });
+      if (existing_res.data) {
+        return Result.Ok(existing_res.data);
+      }
+      return this.store.add_episode_profile(normalized_profile);
+    })();
     if (created_res.data) {
       await this.store.prisma.episode.update({
         where: {
@@ -551,7 +574,13 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Ok(diff);
     }
-    const created_res = await this.store.add_movie_profile(normalized_profile);
+    const created_res = await (async () => {
+      const existing_res = await this.store.find_movie_profile({ tmdb_id: normalized_profile.tmdb_id });
+      if (existing_res.data) {
+        return Result.Ok(existing_res.data);
+      }
+      return this.store.add_movie_profile(normalized_profile);
+    })();
     if (created_res.data) {
       await this.store.update_tv(movie.id, {
         profile_id: created_res.data.id,

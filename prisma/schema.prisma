@@ -367,7 +367,7 @@ model episode {
         tv_id      String
         tv         tv              @relation(fields: [tv_id], references: [id], onDelete: Cascade)
         season_id  String
-        season     season          @relation(fields: [season_id], references: [id])
+        season     season          @relation(fields: [season_id], references: [id], onDelete: Cascade)
         user_id    String
         user       user            @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -454,13 +454,13 @@ model play_history {
         // 当前播放影片对应的源文件id
         file_id      String?
 
-        tv_id      String?  @unique
+        tv_id      String?
         tv         tv?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
         // season_id  String?
         // season     season?  @relation(fields: [season_id], references: [id])
         episode_id String?
         episode    episode? @relation(fields: [episode_id], references: [id])
-        movie_id   String?  @unique
+        movie_id   String?
         movie      movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
 
         member_id String

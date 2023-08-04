@@ -6,48 +6,42 @@ export function check_tv_profile_need_refresh(
   existing_profile: TVProfileRecord,
   cur: Unpacked<ReturnType<MediaSearcher["normalize_tv_profile"]>>
 ) {
-  const { tmdb_id, name, overview, poster_path, backdrop_path, popularity, episode_count, season_count } = cur;
-  const body: Partial<{
-    tmdb_id: number;
-    name: string;
-    overview: string;
-    poster_path: string;
-    backdrop_path: string;
-    season_count: number;
-    episode_count: number;
-    popularity: number;
-    genres: string;
-    origin_country: string;
-  }> = {};
-  if (tmdb_id !== existing_profile.tmdb_id) {
-    body.tmdb_id = tmdb_id;
+  const body: Partial<typeof cur> = {};
+  if (cur.tmdb_id !== existing_profile.tmdb_id) {
+    body.tmdb_id = cur.tmdb_id;
   }
-  if (episode_count !== null && episode_count !== existing_profile.episode_count) {
-    body.episode_count = episode_count;
+  if (cur.in_production !== null && cur.in_production !== existing_profile.in_production) {
+    body.in_production = cur.in_production;
   }
-  if (season_count !== null && season_count !== existing_profile.season_count) {
-    body.season_count = season_count;
+  if (cur.episode_count !== null && cur.episode_count !== existing_profile.episode_count) {
+    body.episode_count = cur.episode_count;
   }
-  if (popularity !== null && popularity !== existing_profile.popularity) {
-    body.popularity = popularity;
+  if (cur.season_count !== null && cur.season_count !== existing_profile.season_count) {
+    body.season_count = cur.season_count;
   }
-  if (!!name && name !== existing_profile.name) {
-    body.name = name;
+  if (cur.popularity !== null && cur.popularity !== existing_profile.popularity) {
+    body.popularity = cur.popularity;
   }
-  if (!!overview && overview !== existing_profile.overview) {
-    body.overview = overview;
+  if (!!cur.name && cur.name !== existing_profile.name) {
+    body.name = cur.name;
   }
-  if (!!poster_path && poster_path !== existing_profile.poster_path) {
-    body.poster_path = poster_path;
+  if (!!cur.overview && cur.overview !== existing_profile.overview) {
+    body.overview = cur.overview;
   }
-  if (!!backdrop_path && backdrop_path !== existing_profile.backdrop_path) {
-    body.backdrop_path = backdrop_path;
+  if (!!cur.poster_path && cur.poster_path !== existing_profile.poster_path) {
+    body.poster_path = cur.poster_path;
+  }
+  if (!!cur.backdrop_path && cur.backdrop_path !== existing_profile.backdrop_path) {
+    body.backdrop_path = cur.backdrop_path;
   }
   if (cur.genres && cur.genres !== existing_profile.genres) {
     body.genres = cur.genres;
   }
   if (cur.origin_country && cur.origin_country !== existing_profile.origin_country) {
     body.origin_country = cur.origin_country;
+  }
+  if (cur.vote_average && cur.vote_average !== existing_profile.vote_average) {
+    body.vote_average = cur.vote_average;
   }
   if (Object.keys(body).length === 0) {
     return null;
@@ -60,14 +54,7 @@ export function check_season_profile_need_refresh(
   cur: Unpacked<ReturnType<MediaSearcher["normalize_season_profile"]>>
 ) {
   const { tmdb_id, name, overview, poster_path, episode_count, air_date } = cur;
-  const body: Partial<{
-    tmdb_id: number;
-    name: string;
-    overview: string;
-    poster_path: string;
-    air_date: string;
-    episode_count: number;
-  }> = {};
+  const body: Partial<typeof cur> = {};
   if (tmdb_id !== existing_profile.tmdb_id) {
     body.tmdb_id = tmdb_id;
   }
@@ -97,18 +84,7 @@ export function check_movie_need_refresh(
   cur: Unpacked<ReturnType<MediaSearcher["normalize_movie_profile"]>>
 ) {
   const { name, overview, poster_path, backdrop_path, popularity } = cur;
-  const body: Partial<{
-    tmdb_id: number;
-    name: string;
-    overview: string;
-    poster_path: string;
-    backdrop_path: string;
-    season_count: number;
-    episode_count: number;
-    popularity: number;
-    genres: string;
-    origin_country: string;
-  }> = {};
+  const body: Partial<typeof cur> = {};
   if (cur.tmdb_id && cur.tmdb_id !== existing_profile.tmdb_id) {
     body.tmdb_id = cur.tmdb_id;
   }
@@ -143,12 +119,7 @@ export function check_episode_profile_need_refresh(
   existing_profile: EpisodeProfileRecord,
   cur: Unpacked<ReturnType<MediaSearcher["normalize_episode_profile"]>>
 ) {
-  const body: Partial<{
-    tmdb_id: number;
-    name: string;
-    overview: string;
-    air_date: string;
-  }> = {};
+  const body: Partial<typeof cur> = {};
   if (cur.tmdb_id && cur.tmdb_id !== existing_profile.tmdb_id) {
     body.tmdb_id = cur.tmdb_id;
   }

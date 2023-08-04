@@ -229,7 +229,7 @@ describe("动漫", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "龙珠GT",
-      original_name: "NCOP2",
+      original_name: "",
       season: "",
       episode: "",
     });
@@ -312,6 +312,16 @@ describe("动漫", () => {
       original_name: "",
       season: "OVA冒険編",
       episode: "E03",
+    });
+  });
+  test("[DBD-Raws][咒术回战][PV4][1080P][BDRip][HEVC-10bit][FLAC].mkv", () => {
+    const name = "[DBD-Raws][咒术回战][PV4][1080P][BDRip][HEVC-10bit][FLAC].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "咒术回战",
+      original_name: "",
+      season: "PV",
+      episode: "E04",
     });
   });
 });

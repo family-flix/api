@@ -49,7 +49,7 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("王蝉动捕演员刘珂君助力凡人修仙")) {
+    if (!filename.includes("10重制版")) {
       return;
     }
     // console.log(...args);
@@ -292,10 +292,10 @@ export function parse_filename_for_video(
       regexp: /高清|超清|超高清/,
     },
     {
-      regexp: /高码|修复版{0,1}|[0-9]{2,4}重置版|多语版/,
+      regexp: /高码|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
     },
     {
-      regexp: /重置版/,
+      regexp: /重置版|修复版|多语版|网络版|劇場版/,
     },
     {
       regexp: /([0-9]{1,}部){0,1}剧场版/,
@@ -304,10 +304,7 @@ export function parse_filename_for_video(
       regexp: /[超高]清/,
     },
     {
-      regexp: /修复版/,
-    },
-    {
-      regexp: /高码|[0-9]{2,4}重置版|多语版|网络版|劇場版/,
+      regexp: /[0-9]{2,4}重置版/,
     },
     {
       regexp: /([0-9]{1,}部){0,1}剧场版/,
@@ -436,12 +433,18 @@ export function parse_filename_for_video(
       key: k("season"),
       desc: "总季数2",
       regexp: /第[1-9]{1,}[季部]/,
+      before() {
+        cur_filename = cur_filename.replace(/(第[1-9]{1,}[季部])([0-9]{1,})/, "$1.E$2");
+      },
     },
     {
       key: k("season"),
       desc: "special season1",
       // 一些日本动漫会有的，和「剧场版」等做区分？
-      regexp: /本篇|完结篇|OVA([^编編篇]{1,}[编編篇]){0,1}|特典映像|番外篇|特辑篇/,
+      regexp: /本篇|完结篇|OVA([^编編篇]{1,}[编編篇]){0,1}|特典映像|番外篇|特辑篇|PV/,
+      before() {
+        cur_filename = cur_filename.replace(/PV([0-9]{1,})/, "PV.E$1");
+      },
     },
     {
       key: k("season"),

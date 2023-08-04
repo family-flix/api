@@ -2,15 +2,11 @@
  * @file 递归地获取指定文件夹所有子文件&子文件夹
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import fs from "fs";
-import path from "path";
-
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { Folder } from "@/domains/folder";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
 import { folder_client } from "@/store";
 
@@ -22,10 +18,7 @@ type SimpleAliyunDriveFile = {
   items?: SimpleAliyunDriveFile[];
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<BaseApiResp<unknown>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
   const {
@@ -54,10 +47,7 @@ export default async function handler(
     client: folder_client({ drive_id }, store),
   });
   await folder.profile();
-  async function walk_folder(
-    f: Folder,
-    parent: SimpleAliyunDriveFile
-  ) {
+  async function walk_folder(f: Folder, parent: SimpleAliyunDriveFile) {
     do {
       const r = await f.next();
       if (r.error) {

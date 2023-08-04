@@ -168,25 +168,6 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       }
       return parent_paths + "/" + name;
     })();
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [
-          new ArticleTextNode({
-            color: "gray",
-            text: parent_paths,
-          }),
-          new ArticleTextNode({
-            color: "magenta",
-            text: "/",
-          }),
-          new ArticleTextNode({
-            color: "magenta",
-            text: name,
-          }),
-        ],
-      })
-    );
     // this.log(
     //   "[](walk)" + chalk.yellowBright("begin"),
     //   chalk.gray(parent_paths) + chalk.magenta("/") + chalk.magenta(name),
@@ -207,6 +188,25 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         return;
       }
     }
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: [
+          new ArticleTextNode({
+            color: "gray",
+            text: parent_paths,
+          }),
+          new ArticleTextNode({
+            color: "magenta",
+            text: "/",
+          }),
+          new ArticleTextNode({
+            color: "magenta",
+            text: name,
+          }),
+        ],
+      })
+    );
     await this.on_file({
       file_id,
       name,

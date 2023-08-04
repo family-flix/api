@@ -9,6 +9,37 @@ const app = next({
   dev: false,
   dir: __dirname,
   conf: {
+    async headers() {
+      return [
+        {
+          source: "/admin/:path*",
+          headers: [
+            {
+              key: "cache-control",
+              value: "max-age=10368000",
+            },
+          ],
+        },
+        {
+          source: "/pc/:path*",
+          headers: [
+            {
+              key: "cache-control",
+              value: "max-age=10368000",
+            },
+          ],
+        },
+        {
+          source: "/mobile/:path*",
+          headers: [
+            {
+              key: "cache-control",
+              value: "max-age=10368000",
+            },
+          ],
+        },
+      ];
+    },
     async rewrites() {
       return [
         {
@@ -49,7 +80,7 @@ export async function start(options: { dev: boolean; port: number; pathname: str
     app.prepare().then(
       () => {
         const server = express();
-        server.use(express.static(assets));
+        server.use(express.static(assets, { maxAge: "365d", immutable: true }));
         server.all("*", (req, res) => {
           return handle(req, res);
         });

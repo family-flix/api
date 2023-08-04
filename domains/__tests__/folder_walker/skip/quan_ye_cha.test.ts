@@ -8,7 +8,7 @@ import {
 } from "@/domains/walker/utils";
 import { FolderWalker } from "@/domains/walker";
 import { Folder } from "@/domains/folder";
-import { data, id } from "@/domains/__tests__/mock/quan_ye_cha";
+import { data, id } from "@/mock/quan_ye_cha";
 
 import { test_store } from "../../store";
 

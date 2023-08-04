@@ -94,37 +94,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // if (thumbnail_res.error) {
     //   return e(thumbnail_res);
     // }
-    const data: Parameters<typeof store.prisma.play_history.create>[0]["data"] = {
-      id: r_id(),
+    const adding_res = await store.add_history({
       tv_id,
       episode_id,
       current_time,
       duration,
       member_id,
       file_id: file_id ?? null,
-      // thumbnail: thumbnail_res.data?.img_path ?? null,
-    };
-    if (updated) {
-      data.updated = updated;
-    }
-    if (created) {
-      data.created = created;
-    }
-    await store.prisma.play_history.create({
-      data,
+      thumbnail: null,
     });
-    // const adding_res = await store.add_history({
-    //   tv_id,
-    //   episode_id,
-    //   current_time,
-    //   duration,
-    //   member_id,
-    //   file_id: file_id ?? null,
-    //   thumbnail: thumbnail_res.data?.img_path ?? null,
-    // });
-    // if (adding_res.error) {
-    //   return e(adding_res);
-    // }
+    if (adding_res.error) {
+      return e(adding_res);
+    }
     return res.status(200).json({
       code: 0,
       msg: "新增记录成功",
@@ -165,32 +146,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     episode_id,
     current_time,
     file_id: file_id ?? null,
-    // thumbnail: thumbnail_res.data?.img_path ?? null,
+    thumbnail: null,
   };
-  if (updated) {
-    data.updated = updated;
-  }
-  if (created) {
-    data.created = created;
-  }
   if (duration) {
     data.duration = duration;
   }
-  await store.prisma.play_history.update({
-    where: {
-      id: existing_history.id,
-    },
-    data,
-  });
-  // const update_res = await store.update_history(existing_history.id, {
-  //   episode_id,
-  //   current_time,
-  //   file_id: file_id ?? null,
-  //   thumbnail: thumbnail_res.data?.img_path ?? null,
-  // });
-  // if (update_res.error) {
-  //   return e(update_res);
-  // }
+  const update_res = await store.update_history(existing_history.id, data);
+  if (update_res.error) {
+    return e(update_res);
+  }
   const { thumbnail: prev_thumbnail } = existing_history;
   if (prev_thumbnail) {
     tv.delete_snapshot(prev_thumbnail);

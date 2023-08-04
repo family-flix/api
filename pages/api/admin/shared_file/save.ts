@@ -59,11 +59,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive_id,
     user_id: user.id,
   });
-  if (existing2_res.error) {
-    return e(existing2_res);
-  }
   if (existing2_res.data) {
     return e(Result.Err("最近转存过同名文件"));
+  }
+  const existing_res = await store.find_file({
+    name: file_name,
+    parent_paths: drive.profile.root_folder_name!,
+    drive_id,
+    user_id: user.id,
+  });
+  if (existing_res.data) {
+    return e(Result.Err("云盘内已有同名文件"));
   }
   const job_res = await Job.New({
     desc: `转存资源 '${file_name}' 到云盘 '${drive.name}'`,

@@ -50,7 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where,
     include: {
       profile: true,
-      parsed_episodes: true,
+      parsed_episodes: {
+        include: {
+          drive: true,
+        },
+      },
     },
     orderBy: {
       episode_number: "asc",
@@ -71,7 +75,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         overview: profile.overview,
         first_air_date: profile.air_date,
         episode_number,
-        sources: parsed_episodes,
+        sources: parsed_episodes.map((parsed_episode) => {
+          const { id, file_id, file_name, parent_paths, size, drive } = parsed_episode;
+          return {
+            id,
+            file_id,
+            file_name,
+            parent_paths,
+            size,
+            drive: {
+              id: drive.id,
+              name: drive.name,
+              avatar: drive.avatar,
+            },
+          };
+        }),
       };
     }),
   };

@@ -1,5 +1,5 @@
 /**
- * @file 删除播放记录
+ * @file 获取文件播放信息
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -13,7 +13,7 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
+  const { file_id: id } = req.query as Partial<{ file_id: string }>;
 
   if (!id) {
     return e(Result.Err("缺少文件 id"));

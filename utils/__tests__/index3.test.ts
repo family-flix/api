@@ -317,4 +317,24 @@ describe("动漫", () => {
       episode: "E01",
     });
   });
+  test("咒术回战第1季02.mp4", () => {
+    const name = "咒术回战第1季02.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "咒术回战",
+      original_name: "",
+      season: "S01",
+      episode: "E02",
+    });
+  });
+  test("10重制版 凡人风起天南10_Tacit0924.mp4", () => {
+    const name = "10重制版 凡人风起天南10_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "凡人风起天南10",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

@@ -10,7 +10,7 @@ import {
   add_parsed_infos_when_walk,
   adding_file_safely,
 } from "@/domains/walker/utils";
-import { data, id } from "@/domains/__tests__/mock/fa_yan_ren";
+import { data, id } from "@/mock/fa_yan_ren";
 
 import { test_store as store } from "../../store";
 import { simple_folders } from "../../utils";

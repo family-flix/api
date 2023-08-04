@@ -221,11 +221,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         season_id,
         thumbnail,
         sources: parsed_episodes.map((parsed_episode) => {
-          const { file_id, file_name } = parsed_episode;
+          const { file_id, file_name, parent_paths } = parsed_episode;
           return {
             id: file_id,
             file_id,
             file_name,
+            parent_paths,
           };
         }),
       };

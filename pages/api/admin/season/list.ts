@@ -17,6 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name,
     genres,
     language,
+    drive_id,
     season_number,
     invalid = "0",
     duplicated = "0",
@@ -26,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name: string;
     genres: string;
     language: string;
+    drive_id: string;
     season_number: string;
     invalid: string;
     duplicated: string;
@@ -81,11 +83,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   }
   if (Number(duplicated) === 1) {
-    const duplicate_tv_profiles = await store.prisma.tv_profile.groupBy({
+    const duplicate_tv_profiles = await store.prisma.season_profile.groupBy({
       by: ["tmdb_id"],
       where: {
-        tv: {
-          user_id: user.id,
+        season: {
+          tv: {
+            user_id: user.id,
+          },
         },
       },
       having: {
@@ -115,6 +119,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where.tv = {
       profile: {
         AND: queries,
+      },
+    };
+  }
+  if (drive_id) {
+    where.tv = where.tv || {};
+    where.tv.parsed_tvs = {
+      every: {
+        drive_id,
       },
     };
   }

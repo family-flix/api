@@ -4,7 +4,7 @@
 
 import { describe, test, expect, vi, beforeEach } from "vitest";
 
-import { data, id } from "@/domains/__tests__/mock/tv2";
+import { data, id } from "@/mock/tv2";
 import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 import { fetch_files_factory } from "@/domains/walker/utils";
 

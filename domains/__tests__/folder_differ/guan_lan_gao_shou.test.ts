@@ -5,8 +5,8 @@ import {
   fetch_files_factory,
   need_skip_the_file_when_walk,
 } from "@/domains/walker/utils";
-import { data, id } from "@/domains/__tests__/mock/guan_lan_gao_shou";
-import { data as updated_data } from "@/domains/__tests__/mock/guan_lan_gao_shou.updated";
+import { data, id } from "@/mock/guan_lan_gao_shou";
+import { data as updated_data } from "@/mock/guan_lan_gao_shou.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
 

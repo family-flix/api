@@ -13,7 +13,7 @@ import {
 import {
   data,
   id,
-} from "@/domains/__tests__/mock/wu_fa_cheng_wei_ye_shou_de_wo_men";
+} from "@/mock/wu_fa_cheng_wei_ye_shou_de_wo_men";
 
 import { test_store as store } from "../../store";
 

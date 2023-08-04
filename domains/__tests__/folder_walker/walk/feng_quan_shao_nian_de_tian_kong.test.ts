@@ -21,7 +21,7 @@ import {
 import {
   data,
   id,
-} from "@/domains/__tests__/mock/feng_quan_shao_nian_de_tian_kong";
+} from "@/mock/feng_quan_shao_nian_de_tian_kong";
 
 import { test_store as store } from "../../store";
 

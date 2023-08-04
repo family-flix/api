@@ -19,7 +19,7 @@ import {
   add_parsed_infos_when_walk,
   adding_file_safely,
 } from "@/domains/walker/utils";
-import { data, id } from "@/domains/__tests__/mock/ji_mao_fei_shang_tian";
+import { data, id } from "@/mock/ji_mao_fei_shang_tian";
 
 import { test_store as store } from "../../store";
 

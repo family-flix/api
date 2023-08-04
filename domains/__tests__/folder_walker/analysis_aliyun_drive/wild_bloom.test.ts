@@ -2,7 +2,7 @@ require("dotenv").config();
 import { describe, test, expect, afterEach, beforeEach } from "vitest";
 
 import { fetch_files_factory } from "@/domains/walker/utils";
-import { data, id } from "@/domains/__tests__/mock/wild_bloom";
+import { data, id } from "@/mock/wild_bloom";
 import { walk_drive } from "@/domains/walker/analysis_aliyun_drive";
 
 import { test_store as store } from "../../store";
