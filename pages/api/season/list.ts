@@ -36,23 +36,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page_size = Number(page_size_str);
   let queries: TVProfileWhereInput[] = [];
   if (name) {
-    queries = queries.concat([
-      {
-        name: {
-          contains: name,
+    queries = queries.concat({
+      OR: [
+        {
+          name: {
+            contains: name,
+          },
         },
-      },
-      {
-        original_name: {
-          contains: name,
+        {
+          original_name: {
+            contains: name,
+          },
         },
-      },
-      {
-        overview: {
-          contains: name,
+        {
+          overview: {
+            contains: name,
+          },
         },
-      },
-    ]);
+      ],
+    });
   }
   if (genres) {
     queries = queries.concat({
