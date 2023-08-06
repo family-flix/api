@@ -9,6 +9,7 @@ import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { season_to_chinese_num } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -86,6 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     original_name,
     overview,
     season_number,
+    season_text: season_to_chinese_num(season_number),
     poster_path: profile.poster_path || poster_path,
     first_air_date: air_date,
     popularity,

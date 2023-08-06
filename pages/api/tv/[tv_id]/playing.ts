@@ -1,6 +1,5 @@
 /**
  * @file 获取 tv 详情加上当前正在播放的剧集信息
- * @deprecated
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -13,7 +12,7 @@ import { season_to_chinese_num } from "@/utils";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id, season_id } = req.query as Partial<{ id: string; season_id: string }>;
+  const { tv_id: id, season_id } = req.query as Partial<{ tv_id: string; season_id: string }>;
   if (!id) {
     return e("缺少电视剧 id");
   }
@@ -112,7 +111,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   })();
   const episodes_of_cur_season = await (async () => {
     if (playing_episode === null) {
-      return [];
+      return {
+        no_more: true,
+        list: [],
+      };
     }
     const { season_id } = playing_episode;
     const season = await store.prisma.season.findFirst({
@@ -120,6 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         id: season_id,
       },
       include: {
+        _count: true,
         episodes: {
           include: {
             profile: true,
@@ -133,9 +136,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     });
     if (season === null) {
-      return [];
+      return {
+        no_more: true,
+        list: [],
+      };
     }
-    return season.episodes.map((episode) => {
+    const list = season.episodes.map((episode) => {
       const { id, season_number, episode_number, profile, parsed_episodes, season_id } = episode;
       const { name, overview } = profile;
       return {
@@ -156,6 +162,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }),
       };
     });
+    return {
+      no_more: season._count.episodes === list.length,
+      list,
+    };
   })();
   const { name, original_name, overview, poster_path, popularity } = profile;
   const cur_season = (() => {
@@ -178,13 +188,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const { id, season_number, profile } = season;
       const { name, overview, air_date } = profile;
       const season_text = season_to_chinese_num(season_number);
+      const { no_more: episode_no_more, list: episodes } =
+        cur_season && cur_season.id === id ? episodes_of_cur_season : { no_more: true, list: [] };
       return {
         id,
         name: name || season_text,
         season_text,
         overview,
         air_date,
-        episodes: cur_season && cur_season.id === id ? episodes_of_cur_season : [],
+        episodes,
+        episode_no_more,
       };
     }),
     // cur_episodes: episodes_of_cur_season,

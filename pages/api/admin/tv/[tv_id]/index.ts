@@ -62,6 +62,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const data = await (async () => {
     const { id, profile, seasons, _count } = tv;
+    const cur_season = (() => {
+      if (season_id) {
+        const matched = seasons.find((s) => s.id === season_id);
+        if (matched) {
+          return matched;
+        }
+      }
+      return seasons[0];
+    })();
+    const poster_path = cur_season.profile.poster_path;
     const source_size_count = 0;
     // const source_size_count = (() => {
     //   let size_count = 0;
@@ -79,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       name,
       original_name,
       overview,
-      poster_path,
+      // poster_path,
       backdrop_path,
       original_language,
       first_air_date,
@@ -87,20 +97,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       tmdb_id,
     } = profile;
     const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
-    const cur_season = (() => {
-      if (season_id) {
-        const matched = seasons.find((s) => s.id === season_id);
-        if (matched) {
-          return matched;
-        }
-      }
-      return seasons[0];
-    })();
     return {
       id,
       name: name || original_name,
       overview,
-      poster_path,
+      poster_path: poster_path,
       backdrop_path,
       original_language,
       first_air_date,

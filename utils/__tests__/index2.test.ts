@@ -3,7 +3,6 @@
  */
 import { describe, expect, test } from "vitest";
 
-import { extra_season_and_episode, is_season } from "../index";
 import { parse_filename_for_video } from "../parse_filename_for_video";
 
 describe("提取视频信息", () => {

@@ -36,8 +36,10 @@ model drive {
         // 网盘用于存放影视剧的目录 file_id
         root_folder_id   String?
 
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user_id    String
+        user       user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        // profile_id String        @unique
+        // profile    drive_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
         drive_token             drive_token?
         parsed_tvs              parsed_tv[]
@@ -51,6 +53,22 @@ model drive {
 
         @@map("Drive")
 }
+
+// model drive_profile {
+//         id      String   @id
+//         created DateTime @default(now())
+//         updated DateTime @default(now())
+
+//         // 阿里云对网盘的唯一标志，每次请求都需要带上该参数
+//         drive_id       Int    @unique
+//         device_id      String
+//         aliyun_user_id String
+//         user_name      String
+//         nick_name      String
+//         app_id         String
+
+//         drive drive?
+// }
 
 // 因为 refresh_token 需要经常更新所以单独拿出来作为表（这样合理吗？）
 model drive_token {

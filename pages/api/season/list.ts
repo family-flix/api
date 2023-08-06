@@ -128,6 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         genres,
         origin_country,
         popularity: vote_average,
+        vote_average,
       };
     }),
     page,

@@ -52,6 +52,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
       episode: {
         include: {
+          season: {
+            include: {
+              profile: true,
+              _count: true,
+              episodes: {
+                take: 1,
+                orderBy: {
+                  created: "desc",
+                },
+              },
+            },
+          },
+          profile: true,
+        },
+      },
+      movie: {
+        include: {
           profile: true,
         },
       },
@@ -71,13 +88,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     data: {
       list: await Promise.all(
         list.map(async (history) => {
-          const { id, tv, episode, current_time, duration, updated, thumbnail, file_id } = history;
+          const { id, tv, episode, movie, current_time, duration, updated, thumbnail, file_id } = history;
           if (tv && episode) {
-            const { name, original_name, poster_path, first_air_date, episode_count } = tv.profile;
+            const { name, original_name } = tv.profile;
+            const { poster_path, air_date, episode_count } = episode.season.profile;
             const profile = episode.profile;
-            const latest_episode = tv.episodes[0];
+            const latest_episode = episode.season.episodes[0];
             const has_update = latest_episode && dayjs(latest_episode.created).isAfter(updated);
-            // await
             return {
               id,
               tv_id: tv.id,
@@ -91,10 +108,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               duration,
               file_id,
               thumbnail,
-              cur_episode_count: tv._count.episodes,
+              cur_episode_count: episode.season._count.episodes,
               episode_count,
               has_update,
-              first_air_date,
+              first_air_date: air_date,
+              updated,
+            };
+          }
+          if (movie) {
+            const { name, poster_path, vote_average, original_name, air_date } = movie.profile;
+            return {
+              id,
+              movie_id: movie.id,
+              name: name || original_name,
+              poster_path,
+              vote_average,
+              current_time,
+              duration,
+              file_id,
+              thumbnail,
+              first_air_date: air_date,
               updated,
             };
           }

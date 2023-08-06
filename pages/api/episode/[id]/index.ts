@@ -112,13 +112,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return play_info_res.data[0];
     }
     let matched_resolution = play_info_res.data.find((r) => {
-      return !r.url.includes("pdsapi");
+      return r.type === type;
     });
     if (matched_resolution) {
       return matched_resolution;
     }
     matched_resolution = play_info_res.data.find((r) => {
-      return r.type === type;
+      return !r.url.includes("pdsapi");
     });
     if (matched_resolution) {
       return matched_resolution;

@@ -45,13 +45,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   await store.delete_sync_task({
     file_id,
   });
-  await store.delete_parsed_tv({
+  await store.delete_parsed_episode({
     file_id,
   });
   await store.delete_parsed_season({
     file_id,
   });
-  await store.delete_parsed_episode({
+  await store.delete_parsed_tv({
     file_id,
   });
   await store.delete_parsed_movie({
