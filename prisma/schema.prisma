@@ -13,16 +13,12 @@ model drive {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        // 网盘名称（备注）
+        unique_id        String    @unique
+        type             Int?      @default(0)
         name             String
+        remark           String?
         avatar           String
-        // 阿里云对网盘的唯一标志，每次请求都需要带上该参数
-        drive_id         Int       @unique
-        device_id        String
-        aliyun_user_id   String
-        // user_name        String
-        // nick_name        String
-        app_id           String
+        profile          String
         // 总大小
         total_size       Float?    @default(0)
         // 已使用
@@ -36,10 +32,8 @@ model drive {
         // 网盘用于存放影视剧的目录 file_id
         root_folder_id   String?
 
-        user_id    String
-        user       user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-        // profile_id String        @unique
-        // profile    drive_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         drive_token             drive_token?
         parsed_tvs              parsed_tv[]
@@ -54,31 +48,14 @@ model drive {
         @@map("Drive")
 }
 
-// model drive_profile {
-//         id      String   @id
-//         created DateTime @default(now())
-//         updated DateTime @default(now())
-
-//         // 阿里云对网盘的唯一标志，每次请求都需要带上该参数
-//         drive_id       Int    @unique
-//         device_id      String
-//         aliyun_user_id String
-//         user_name      String
-//         nick_name      String
-//         app_id         String
-
-//         drive drive?
-// }
-
 // 因为 refresh_token 需要经常更新所以单独拿出来作为表（这样合理吗？）
 model drive_token {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        access_token  String
-        refresh_token String
-        expired_at    Float
+        data       String
+        expired_at Float
 
         // 关联 drive 表
         drive_id String @unique
@@ -164,9 +141,8 @@ model episode_profile {
         name     String?
         overview String?
         air_date String?
+        runtime  Int?    @default(0)
 
-        // season_profile_id String?
-        // season_profile    season_profile? @relation(fields: [season_profile_id], references: [id])
         episode episode?
 }
 
@@ -186,10 +162,9 @@ model movie_profile {
         popularity        Float?  @default(0)
         vote_average      Float?  @default(0)
         vote_count        Float?  @default(0)
-        // 产地
         origin_country    String? @default("")
-        // 标签
         genres            String? @default("")
+        runtime           Int?    @default(0)
 
         movie movie?
 }
@@ -346,6 +321,7 @@ model tv {
         episodes        episode[]
         parsed_tvs      parsed_tv[]
         recommended_tvs recommended_tv[]
+        reports         report[]
 
         @@map("TV")
 }
@@ -367,6 +343,7 @@ model season {
 
         parsed_season parsed_season[]
         episodes      episode[]
+        reports       report[]
 
         @@map("Season")
 }
@@ -391,6 +368,7 @@ model episode {
 
         parsed_episodes parsed_episode[]
         play_histories  play_history[]
+        reports         report[]
 
         @@map("Episode")
 }
@@ -409,6 +387,7 @@ model movie {
 
         play_histories play_history[]
         parsed_movies  parsed_movie[]
+        reports        report[]
 
         @@map("Movie")
 }
@@ -706,6 +685,8 @@ model member {
         member_tokens   member_token[]
         play_histories  play_history[]
         recommended_tvs recommended_tv[]
+        reports         report[]
+        member_setting  member_setting?
 
         @@map("Member")
 }
@@ -729,6 +710,25 @@ model member_token {
         @@map("MemberToken")
 }
 
+// 成员配置
+model member_setting {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        // json
+        data String
+
+        member_id String @unique
+        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+        @@map("MemberSetting")
+}
+
+// model member_permission {
+
+// }
+
 model notification {
         id      String   @id
         created DateTime @default(now())
@@ -741,6 +741,34 @@ model notification {
 
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("Notification")
+}
+
+model report {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type   Int
+        // json
+        data   String
+        answer String
+
+        tv_id      String?
+        tv         tv?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
+        season_id  String?
+        season     season?  @relation(fields: [season_id], references: [id], onDelete: Cascade)
+        episode_id String?
+        episode    episode? @relation(fields: [episode_id], references: [id])
+        movie_id   String?
+        movie      movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
+        member_id  String
+        member     member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        user_id    String
+        user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("Report")
 }
 
 // 三方授权凭证
@@ -837,6 +865,7 @@ model user {
         binds_for_parsed_tv     bind_for_parsed_tv[]
         notifications           notification[]
         outputs                 output[]
+        reports                 report[]
 
         @@map("User")
 }

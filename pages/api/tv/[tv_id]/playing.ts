@@ -70,7 +70,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
         include: {
           profile: true,
-          parsed_episodes: true,
+          parsed_episodes: {
+            include: {
+              drive: true,
+            },
+          },
         },
         orderBy: {
           episode_number: "asc",
@@ -86,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
       return null;
     }
-    const { episode_id, current_time, thumbnail } = play_history;
+    const { episode_id, current_time, thumbnail, file_id } = play_history;
     if (episode_id === null) {
       return null;
     }
@@ -96,7 +100,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
       include: {
         profile: true,
-        parsed_episodes: true,
+        parsed_episodes: {
+          include: { drive: true },
+        },
       },
     });
     if (!episode) {
@@ -127,6 +133,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           include: {
             profile: true,
             parsed_episodes: true,
+            // parsed_episodes: {
+            //   include: {
+            //     drive: true,
+            //   },
+            // },
           },
           orderBy: {
             episode_number: "asc",
@@ -143,7 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     const list = season.episodes.map((episode) => {
       const { id, season_number, episode_number, profile, parsed_episodes, season_id } = episode;
-      const { name, overview } = profile;
+      const { name, overview, runtime } = profile;
       return {
         id,
         name,
@@ -152,6 +163,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         season_text: season_to_chinese_num(season_number),
         episode_number,
         season_id,
+        runtime,
         sources: parsed_episodes.map((parsed_episode) => {
           const { file_id, file_name } = parsed_episode;
           return {
@@ -167,7 +179,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       list,
     };
   })();
-  const { name, original_name, overview, poster_path, popularity } = profile;
+  const { name, original_name, overview, poster_path, vote_average, genres, origin_country } = profile;
   const cur_season = (() => {
     if (playing_episode === null) {
       return null;
@@ -183,7 +195,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name: name || original_name,
     overview,
     poster_path,
-    popularity,
+    genres,
+    origin_country,
+    vote_average,
     seasons: seasons.map((season) => {
       const { id, season_number, profile } = season;
       const { name, overview, air_date } = profile;
@@ -221,7 +235,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
       const { id, season_number, episode_number, profile, parsed_episodes, current_time, season_id, thumbnail } =
         playing_episode;
-      const { name, overview } = profile;
+      const { name, overview, runtime } = profile;
       return {
         id,
         name,
@@ -229,16 +243,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         season_number,
         season_text: season_to_chinese_num(season_number),
         episode_number,
+        runtime,
         current_time,
         season_id,
         thumbnail,
         sources: parsed_episodes.map((parsed_episode) => {
-          const { file_id, file_name, parent_paths } = parsed_episode;
+          const { file_id, file_name, parent_paths, drive } = parsed_episode;
           return {
             id: file_id,
             file_id,
             file_name,
             parent_paths,
+            drive: {
+              id: drive.id,
+              name: drive.name,
+              avatar: drive.name,
+            },
           };
         }),
       };

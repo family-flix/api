@@ -74,6 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name: profile.name,
         overview: profile.overview,
         first_air_date: profile.air_date,
+        runtime: profile.runtime,
         episode_number,
         sources: parsed_episodes.map((parsed_episode) => {
           const { id, file_id, file_name, parent_paths, size, drive } = parsed_episode;

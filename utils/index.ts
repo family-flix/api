@@ -2,6 +2,7 @@ import Nzh from "nzh";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 import relative_time from "dayjs/plugin/relativeTime";
+import { JSONObject, Result } from "@/types";
 
 dayjs.extend(relative_time);
 dayjs.locale("zh-cn");
@@ -299,4 +300,18 @@ export function sleep(delay: number = 1000) {
       resolve(null);
     }, delay);
   });
+}
+
+/** 解析一段 json 字符串 */
+export async function parseJSONStr<T extends JSONObject>(json: string) {
+  try {
+    if (json[0] !== "{") {
+      return Result.Err("不是合法的 json");
+    }
+    const d = JSON.parse(json);
+    return Result.Ok(d as T);
+  } catch (err) {
+    const e = err as Error;
+    return Result.Err(e);
+  }
 }

@@ -47,11 +47,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             contains: name,
           },
         },
-        {
-          overview: {
-            contains: name,
-          },
-        },
+        // {
+        //   overview: {
+        //     contains: name,
+        //   },
+        // },
       ],
     });
   }
@@ -105,13 +105,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     list: list.map((tv) => {
       const { id, profile } = tv;
-      const { name, original_name, overview, poster_path, air_date } = profile;
+      const { name, original_name, overview, poster_path, air_date, genres, origin_country, vote_average, runtime } =
+        profile;
       return {
         id,
         name: name || original_name,
         overview,
         poster_path,
         first_air_date: air_date,
+        genres,
+        origin_country,
+        vote_average,
+        runtime,
       };
     }),
     page,

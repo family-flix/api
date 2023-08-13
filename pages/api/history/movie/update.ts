@@ -9,6 +9,8 @@ import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
+import { parseJSONStr } from "@/utils";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -68,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return e("没有匹配的视频源");
     }
     const { drive_id } = file;
-    const drive_res = await store.find_drive({ id: drive_id });
+    const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
     if (drive_res.error) {
       return e(drive_res);
     }
@@ -78,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     const thumbnail_res = await tv.snapshot_media({
       file_id,
-      drive_id: drive.drive_id,
+      drive_id: drive.profile.drive_id,
       cur_time: current_time,
       store,
     });
@@ -113,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("没有匹配的视频源");
   }
   const { drive_id } = file;
-  const drive_res = await store.find_drive({ id: drive_id });
+  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
   if (drive_res.error) {
     return e(drive_res);
   }
@@ -124,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // console.log("[PAGE]history/update - prepare snapshot_media", file_id, drive.drive_id, current_time);
   const thumbnail_res = await tv.snapshot_media({
     file_id,
-    drive_id: drive.drive_id,
+    drive_id: drive.profile.drive_id,
     cur_time: current_time,
     store,
   });

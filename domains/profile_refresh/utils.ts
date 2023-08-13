@@ -109,6 +109,9 @@ export function check_movie_need_refresh(
   if (cur.origin_country && cur.origin_country !== existing_profile.origin_country) {
     body.origin_country = cur.origin_country;
   }
+  if (cur.runtime && cur.runtime !== existing_profile.runtime) {
+    body.runtime = cur.runtime;
+  }
   if (Object.keys(body).length === 0) {
     return null;
   }
@@ -131,6 +134,9 @@ export function check_episode_profile_need_refresh(
   }
   if (cur.air_date && cur.air_date !== existing_profile.air_date) {
     body.air_date = cur.air_date;
+  }
+  if (cur.runtime && cur.runtime !== existing_profile.runtime) {
+    body.runtime = cur.runtime;
   }
   if (Object.keys(body).length === 0) {
     return null;

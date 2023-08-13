@@ -414,6 +414,7 @@ export async function fetch_season_profile(
       id: number;
       name: string;
       overview: string;
+      runtime: number;
       production_code: string;
       season_number: number;
       still_path: string;
@@ -445,13 +446,14 @@ export async function fetch_season_profile(
     overview,
     season_number,
     episodes: episodes.map((e) => {
-      const { id, air_date, overview, episode_number, name } = e;
+      const { id, air_date, overview, episode_number, name, runtime } = e;
       return {
         id,
         name,
         overview,
         air_date,
         episode_number,
+        runtime,
       };
     }),
     ...fix_TMDB_image_path({
@@ -508,7 +510,7 @@ export async function fetch_episode_profile(
     }
     return Result.Err(result.error);
   }
-  const { id, name, overview, air_date } = result.data;
+  const { id, name, overview, air_date, runtime } = result.data;
   return Result.Ok({
     id,
     name,
@@ -516,6 +518,7 @@ export async function fetch_episode_profile(
     overview,
     season_number,
     episode_number: result.data.episode_number,
+    runtime,
   });
 }
 
@@ -602,6 +605,7 @@ export async function fetch_movie_profile(
     poster_path,
     backdrop_path,
     popularity,
+    runtime,
   } = r.data;
   return Result.Ok({
     id,
@@ -617,6 +621,7 @@ export async function fetch_movie_profile(
     vote_average,
     popularity,
     genres: r.data.genres,
+    runtime,
     origin_country: r.data.production_countries.map((country) => {
       return country["iso_3166_1"];
     }),

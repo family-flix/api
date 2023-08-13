@@ -55,7 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("该影片没有可播放的视频源");
   }
   const { file_id, drive_id } = source;
-  console.log("fetch drive of source", drive_id, file_id);
   const drive_res = await Drive.Get({ id: drive_id, user_id: member.user.id, store });
   if (drive_res.error) {
     return e(drive_res);
@@ -66,7 +65,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (play_info_res.error) {
     return e(play_info_res);
   }
-  if (play_info_res.data.length === 0) {
+  const info = play_info_res.data;
+  if (info.sources.length === 0) {
     return e("该影片暂时不可播放，请等待一段时间后重试");
   }
   const file_profile_res = await client.fetch_file(file_id);
@@ -87,23 +87,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }>;
   const recommend = (() => {
     // 只有一种分辨率，直接返回该分辨率视频
-    if (play_info_res.data.length === 1) {
-      return play_info_res.data[0];
+    if (info.sources.length === 1) {
+      return info.sources[0];
     }
-    const matched_resolution = play_info_res.data.find((r) => {
+    const matched_resolution = info.sources.find((r) => {
       return r.type === type;
     });
     if (matched_resolution) {
       return matched_resolution;
     }
-    return play_info_res.data[0];
+    return info.sources[0];
   })();
   if (recommend.url.includes("x-oss-additional-headers=referer")) {
     return e("视频文件无法播放，请修改 refresh_token");
   }
   (() => {
     const { url, type, width, height } = recommend;
-    const result: MediaFile & { other: MediaFile[] } = {
+    const result: MediaFile & { other: MediaFile[]; subtitles: { language: string; url: string }[] } = {
       id: movie_id,
       name: name || undefined,
       overview: overview || "",
@@ -114,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       width,
       height,
       // 其他分辨率的视频源
-      other: play_info_res.data.map((res) => {
+      other: info.sources.map((res) => {
         const { url, type, width, height } = res;
         return {
           id: file_id,
@@ -126,6 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           height,
         };
       }),
+      subtitles: info.subtitles,
     };
     res.status(200).json({ code: 0, msg: "", data: result });
   })();

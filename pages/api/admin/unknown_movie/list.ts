@@ -48,15 +48,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     ];
   }
+  const count = await store.prisma.parsed_movie.count({ where });
   const list = await store.prisma.parsed_movie.findMany({
     where,
+    include: {
+      drive: true,
+    },
     orderBy: {
       created: "desc",
     },
     take: page_size,
     skip: (page - 1) * page_size,
   });
-  const count = await store.prisma.parsed_movie.count({ where });
   res.status(200).json({
     code: 0,
     msg: "",
@@ -65,13 +68,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page_size,
       total: count,
       no_more: list.length + (page - 1) * page_size >= count,
-      list: list.map((parsed_season) => {
-        const { id, name, original_name, file_name } = parsed_season;
+      list: list.map((parsed_movie) => {
+        const { id, name, original_name, file_id, file_name, parent_paths, drive } = parsed_movie;
         return {
           id,
           name,
           original_name,
+          file_id,
           file_name,
+          parent_paths,
+          drive: {
+            id: drive.id,
+            name: drive.name,
+            avatar: drive.avatar,
+          },
         };
       }),
     },

@@ -49,7 +49,7 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("10重制版")) {
+    if (!filename.includes("有必要的春晚")) {
       return;
     }
     // console.log(...args);
@@ -72,7 +72,11 @@ export function parse_filename_for_video(
     .replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
     .replace(/^\[[^\]]{1,}\](?=\[)/, "")
     .replace(/^【[^】]{1,}】/, "");
-  log("original_name is", original_name);
+  const special_season_with_number_regexp = /(^|[^a-zA-Z])([sS][pP])([0-9]{1,})($|[^a-zA-Z])/;
+  if (original_name.match(special_season_with_number_regexp)) {
+    // name.SP2 改成 name.SP.E2
+    original_name = original_name.replace(special_season_with_number_regexp, "$1.SP.E$3.$4");
+  }
   original_name = original_name
     .replace(/^\./, "")
     .replace(/ - /g, ".")
@@ -95,8 +99,11 @@ export function parse_filename_for_video(
       );
     })
     // 2001三少爷的剑31.mkv 处理成 三少爷的剑.2001.31.mkv
-    .replace(/([0-9]{4})([\u4e00-\u9fa5]{1,})([0-9]{1,})(.{1,})/, "$2.$1.$3.$4")
-    .replace(/(https{0,1}:){0,1}(\/\/){0,1}[0-9a-zA-Z]{1,}\.(com|cn)/, "");
+    .replace(/([1-9][0-9]{3})([\u4e00-\u9fa5]{1,})([0-9]{1,})(.{1,})/, "$2.$1.$3.$4")
+    .replace(/(https{0,1}:){0,1}(\/\/){0,1}[0-9a-zA-Z]{1,}\.(com|cn)/, "")
+    .replace(/(\.){2,}/g, ".");
+  // const special_season_regexp = /(^|[^a-zA-Z])([sS][pP])($|[^a-zA-Z])/;
+  log("original_name is", original_name);
   let cur_filename = original_name;
   log("start name", cur_filename);
   type ExtraRule = {
@@ -118,7 +125,7 @@ export function parse_filename_for_video(
       skip: boolean;
     }>;
     /** 执行该正则完成后调用 */
-    after?: (matched_content: string) => void | Partial<{
+    after?: (matched_content: string | null) => void | Partial<{
       /** 是否不保存提取到的值 */
       skip: boolean;
     }>;
@@ -204,11 +211,14 @@ export function parse_filename_for_video(
       regexp: new RegExp(publishers2),
     },
     {
-      regexp: /[^字]{1,}字幕组\.{0,1}/,
+      regexp: /[^字\.]{1,}字幕组\.{0,1}/,
     },
     // 奇怪的冗余信息
     {
       regexp: /超前点映|超前完结|点映礼/,
+    },
+    {
+      regexp: /（[^）]{1,}）$/,
     },
     {
       regexp:
@@ -237,6 +247,14 @@ export function parse_filename_for_video(
     {
       key: k("type"),
       regexp: video_file_type_regexp,
+      after(matched_content) {
+        if (matched_content === null) {
+          if (cur_filename.match(/^[1-9][0-9]{3}/)) {
+            return undefined;
+          }
+          cur_filename = cur_filename.replace(/^[0-9]{1,}\./, "");
+        }
+      },
     },
     // 一些国产剧影片特有的信息？
     {
@@ -261,17 +279,23 @@ export function parse_filename_for_video(
       regexp: /([0-9]{1,}集){0,1}((持续){0,1}更新中|[已全]\.{0,1}完结)/,
     },
     {
-      regexp: /付费|去除|保留|官方|公众号[:：]{0,1}/,
+      regexp: /默认|付费|去除|保留|官方|公众号[:：]{0,1}/,
+    },
+    {
+      regexp: /[多双粤国英]{1,}[语言音]{1,}[轨频]/,
     },
     {
       regexp:
-        /[国粤日]语(中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日]{1,3}[双三]语|双语源码/,
+        /[国粤日]语(中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三]语|双语源码/,
+    },
+    {
+      regexp: /中字|双字/,
     },
     {
       regexp: /[官繁]中/,
     },
     {
-      regexp: /((默认){0,1}[粤国英]语音[轨频])(合成版){0,1}|亚马逊版|\.Extended/,
+      regexp: /\([0-9]{1,}\)/,
     },
     {
       regexp: /\.{0,1}[0-9]{1,}(end)/,
@@ -295,16 +319,13 @@ export function parse_filename_for_video(
       regexp: /高码|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
     },
     {
-      regexp: /重置版|修复版|多语版|网络版|劇場版/,
+      regexp: /重置版|修复版|多语版|网络版|劇場版|合成版|亚马逊版|\.Extended/,
     },
     {
       regexp: /([0-9]{1,}部){0,1}剧场版/,
     },
     {
       regexp: /[超高]清/,
-    },
-    {
-      regexp: /[0-9]{2,4}重置版/,
     },
     {
       regexp: /([0-9]{1,}部){0,1}剧场版/,
@@ -317,9 +338,6 @@ export function parse_filename_for_video(
       regexp: /无水印|三无|[无未]删减/,
     },
     {
-      regexp: /[nN][cC]([oO][pP]|[eE][dD])/,
-    },
-    {
       regexp: /片头(片中){0,1}/,
     },
     {
@@ -327,6 +345,9 @@ export function parse_filename_for_video(
     },
     {
       regexp: /去{0,1}广告/,
+    },
+    {
+      regexp: /洗码[0-9]{0,}/,
     },
     {
       regexp: /纯享版/,
@@ -362,11 +383,14 @@ export function parse_filename_for_video(
       regexp: /高分(战争|爱情|悬疑)剧/,
     },
     {
-      regexp: /豆瓣[0-9\.]{1,}/,
+      regexp: /豆瓣[0-9\.]{1,}分{0,1}/,
     },
     // 总大小信息
     {
       regexp: /【{0,1}[0-9]{1,}(\.[0-9]{1,}){0,1}([gG]|[mM])[bB]{0,1}】{0,1}/,
+    },
+    {
+      regexp: /[nN][oO]\.[0-9]{1,}｜/,
     },
     { regexp: /GB/ },
     // 分辨率
@@ -376,6 +400,9 @@ export function parse_filename_for_video(
     {
       key: k("resolution"),
       regexp: /(蓝光){0,1}(4[kK])\.{0,}/,
+    },
+    {
+      regexp: /[fF][sS][0-9]{2,3}[pP]/,
     },
     // 剧集的额外信息
     {
@@ -451,11 +478,17 @@ export function parse_filename_for_video(
       desc: "special season2",
       regexp: /[sS][pP]/,
       before() {
-        if (cur_filename.match(/(^|[^a-zA-Z])[sS][pP]($|[^a-zA-Z])/)) {
-          cur_filename = cur_filename.replace(/(^|[^a-zA-Z])([sS][pP])($|[^a-zA-Z])/, "$1.SP.$3");
-          // log("add dot before SP and after SP");
+        const special_season_regexp = /(^|[^a-zA-Z])([sS][pP])($|[^a-zA-Z])/;
+        if (cur_filename.match(special_season_regexp)) {
+          const special_season_with_number_regexp = /(^|[^a-zA-Z])([sS][pP])([0-9]{1,})($|[^a-zA-Z])/;
+          if (cur_filename.match(special_season_with_number_regexp)) {
+            cur_filename = cur_filename.replace(special_season_with_number_regexp, "$1.SP.E$3.$4");
+            return undefined;
+          }
+          cur_filename = cur_filename.replace(special_season_regexp, "$1.SP.$3");
           return undefined;
         }
+        // 如果非 name.SP.episode 这种，而是在名称中包含 sp 的单测，就跳过
         return {
           skip: true,
         };
@@ -470,13 +503,35 @@ export function parse_filename_for_video(
       key: k("season"),
       regexp: /[sS][eE]{0,1}[0-9]{1,}/,
     },
-    // 集数
+    // 提取集数
+    {
+      key: k("episode"),
+      // NCOP 表示片头曲？NCED 表示片尾曲？
+      regexp: /[nN][cC]([oO][pP]|[eE][dD])[0-9]{1,}/,
+    },
+    {
+      key: k("episode"),
+      // CM05 表示广告？
+      regexp: /[cC][mM][0-9]{1,}/,
+    },
     {
       key: k("episode"),
       regexp: /^[0-9]{1,}$/,
       before() {
         cur_filename = cur_filename.replace(/^\.{2,}/, "").replace(/\.{1,}$/, "");
       },
+    },
+    {
+      key: k("episode"),
+      regexp: /第[0-9]{1,}[\.$]/,
+    },
+    {
+      key: k("episode"),
+      regexp: /特别篇[0-9]{1,}/,
+    },
+    {
+      key: k("episode"),
+      regexp: /预告[0-9]{1,}/,
     },
     {
       key: k("episode"),
@@ -545,6 +600,9 @@ export function parse_filename_for_video(
         }
       },
       after(matched_content) {
+        if (!matched_content) {
+          return undefined;
+        }
         const i = original_name.indexOf(matched_content);
         // 如果季数在 name 前面 name 视为无效
         log("[japanese-name]compare season position", original_name.indexOf(result.season), i);
@@ -571,7 +629,8 @@ export function parse_filename_for_video(
       key: k("name"),
       desc: "chinese name",
       // 中文开头，中间可以包含数字，以中文结尾
-      regexp: /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！，：·、■]{0,}[0-9a-zA-Z\u4e00-\u9fa5])\]{0,1}/,
+      regexp:
+        /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！，：·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5）])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
         cur_filename = cur_filename.replace(/^([0-9]{4}\.{1,})([\u4e00-\u9fa5]{1,})/, "$2.$1");
@@ -600,7 +659,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("year"),
-      regexp: /[(（]{0,1}[12]{1}[0-9]{3}[）)]{0,1}年{0,1}/,
+      regexp: /[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}/,
     },
     // 影片来源
     {
@@ -782,12 +841,15 @@ export function parse_filename_for_video(
             }
           },
           after(matched_content) {
-            const original_name_index = original_name.indexOf(matched_content);
-            // 如果季数在 original_name 前面，original_name 视为无效
-            if (original_name_index === 0) {
+            if (!matched_content) {
               return undefined;
             }
-            log("the original_name is", original_name, original_name_index);
+            const original_name_index = original_name.indexOf(matched_content);
+            // 如果季数在 original_name 前面，original_name 视为无效
+            // if (original_name_index === 0) {
+            //   return undefined;
+            // }
+            log("[3.1]the original_name is", original_name, original_name_index);
             if (result.season) {
               const season_index = original_name.indexOf(result.season);
               if (season_index !== -1 && season_index < original_name_index) {
@@ -796,19 +858,25 @@ export function parse_filename_for_video(
                 };
               }
             }
-            log("the original_name is", original_name, original_name_index);
+            log("[3.2]the original_name is", original_name, original_name_index);
             if (result.episode) {
               const a = result.episode.match(/[0-9]{1,}/);
               if (!a) {
                 return undefined;
               }
-              const episode_index = original_name.indexOf(a[0]);
-              log("the result.episode is", result.episode, episode_index);
-              if (episode_index !== -1 && episode_index < original_name_index) {
-                return {
-                  skip: true,
-                };
+              const episode_index = original_name.indexOf(result.episode);
+              log("[3.3]the result.episode is", result.episode, episode_index);
+              if (episode_index !== -1 && episode_index >= original_name_index) {
+                return undefined;
               }
+              const episode_index2 = original_name.indexOf(a[0]);
+              log("[3.4]the result.episode is", result.episode, episode_index2);
+              if (episode_index2 !== -1 && episode_index2 >= original_name_index) {
+                return undefined;
+              }
+              return {
+                skip: true,
+              };
             }
           },
         },
@@ -863,15 +931,22 @@ export function parse_filename_for_video(
     }
     const m = cur_filename.match(regexp);
     log("[3]extra result", m);
-    if (!m) {
-      continue;
-    }
     if (after) {
-      const r = after(m[0]);
+      const r = after(
+        (() => {
+          if (m) {
+            return m[0];
+          }
+          return null;
+        })()
+      );
       log("[3]invoke after fn for", unique, "and result is", r);
       if (r?.skip) {
         continue;
       }
+    }
+    if (!m) {
+      continue;
     }
     // log("[10]matched content and key", key, m[0]);
     let extracted_content = "";
@@ -960,12 +1035,38 @@ export function format_number(n: string, prefix = "S") {
     }
     return number;
   }
+  if (number.match(/[nN][cC]/)) {
+    return number;
+  }
+  if (number.match(/[cC][mM]/)) {
+    return number;
+  }
+  if (number.match(/[sS][pP]/)) {
+    if (!number.match(/[0-9]{1,}/)) {
+      // 如果是季，不应该补1？
+      return "SP01";
+    }
+    return number;
+  }
+  if (number.match(/预告/)) {
+    if (!number.match(/[0-9]{1,}/)) {
+      return "预告01";
+    }
+    return number;
+  }
+  if (number.match(/特别篇/)) {
+    if (!number.match(/[0-9]{1,}/)) {
+      return "特别篇01";
+    }
+    return number;
+  }
   if (number.match(/[pP][rR]/)) {
     if (!number.match(/[0-9]{1,}/)) {
       return "PR01";
     }
     return number;
   }
+
   if (number.match(/[eE][pP][0-9]{1,}/)) {
     return number.replace(/[pP]/, "");
   }

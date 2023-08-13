@@ -85,7 +85,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (play_info_res.error) {
     return e(play_info_res);
   }
-  if (play_info_res.data.length === 0) {
+  const info = play_info_res.data;
+  if (info.sources.length === 0) {
     return e("该影片暂时不可播放，请等待一段时间后重试");
   }
   const file_profile_res = await client.fetch_file(file_id);
@@ -108,22 +109,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }>;
   // 只有一种分辨率，直接返回该分辨率视频
   const recommend = (() => {
-    if (play_info_res.data.length === 1) {
-      return play_info_res.data[0];
+    if (info.sources.length === 1) {
+      return info.sources[0];
     }
-    let matched_resolution = play_info_res.data.find((r) => {
+    let matched_resolution = info.sources.find((r) => {
       return r.type === type;
     });
     if (matched_resolution) {
       return matched_resolution;
     }
-    matched_resolution = play_info_res.data.find((r) => {
+    matched_resolution = info.sources.find((r) => {
       return !r.url.includes("pdsapi");
     });
     if (matched_resolution) {
       return matched_resolution;
     }
-    return play_info_res.data[0];
+    return info.sources[0];
   })();
   if (recommend.url.includes("x-oss-additional-headers=referer")) {
     return e("视频文件无法播放，请修改 refresh_token");
@@ -156,7 +157,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // );
   const { name, overview } = profile;
   const { url, type: t, width, height } = recommend;
-  const result: MediaFile & { other: MediaFile[] } = {
+  const result: MediaFile & { other: MediaFile[]; subtitles: { language: string; url: string }[] } = {
     id,
     name: name || episode_number,
     overview: overview || "",
@@ -169,7 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     width,
     height,
     // 其他分辨率的视频源
-    other: play_info_res.data.map((res) => {
+    other: info.sources.map((res) => {
       const { url, type, width, height } = res;
       return {
         id: file_id,
@@ -181,6 +182,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         height,
       };
     }),
+    subtitles: info.subtitles,
   };
   res.status(200).json({ code: 0, msg: "", data: result });
 }

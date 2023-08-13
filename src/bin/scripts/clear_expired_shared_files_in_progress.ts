@@ -2,6 +2,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { DatabaseStore } from "@/domains/store";
 import { walk_records } from "@/domains/store/utils";
 import { Result } from "@/types";
+import { parseJSONStr } from "@/utils";
 
 export async function clear_expired_shared_files_in_progress(store: DatabaseStore) {
   const drives = await store.prisma.drive.findMany({});
@@ -9,7 +10,11 @@ export async function clear_expired_shared_files_in_progress(store: DatabaseStor
     return;
   }
   const drive = drives[0];
-  const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+  const d_res = await parseJSONStr<{ drive_id: number }>(drive.profile);
+  if (d_res.error) {
+    return;
+  }
+  const client_res = await AliyunDriveClient.Get({ drive_id: d_res.data.drive_id, store });
   if (client_res.error) {
     return;
   }

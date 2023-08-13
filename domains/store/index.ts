@@ -180,6 +180,13 @@ export class DatabaseStore {
   find_tmp_file: ReturnType<typeof first_factory<PrismaClient["tmp_file"]>>;
   find_tmp_files: ReturnType<typeof many_factory<PrismaClient["tmp_file"]>>;
   find_tmp_file_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["tmp_file"]>>;
+  /** 问题反馈 */
+  add_report: ReturnType<typeof add_factory<PrismaClient["report"]>>;
+  update_report: ReturnType<typeof update_factory<PrismaClient["report"]>>;
+  delete_report: ReturnType<typeof delete_factory<PrismaClient["report"]>>;
+  find_report: ReturnType<typeof first_factory<PrismaClient["report"]>>;
+  find_report_list: ReturnType<typeof many_factory<PrismaClient["report"]>>;
+  find_report_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["report"]>>;
   /** 转存记录 */
   add_shared_file_save: ReturnType<typeof add_factory<PrismaClient["shared_file_in_progress"]>>;
   update_shared_file_save: ReturnType<typeof update_factory<PrismaClient["shared_file_in_progress"]>>;
@@ -393,6 +400,13 @@ export class DatabaseStore {
     this.find_tmp_file = first_factory<PrismaClient["tmp_file"]>(prisma.tmp_file);
     this.find_tmp_files = many_factory<PrismaClient["tmp_file"]>(prisma.tmp_file);
     this.find_tmp_file_with_pagination = pagination_factory<PrismaClient["tmp_file"]>(prisma.tmp_file);
+    /** 问题反馈 */
+    this.add_report = add_factory<PrismaClient["report"]>(prisma.report);
+    this.update_report = update_factory<PrismaClient["report"]>(prisma.report);
+    this.delete_report = delete_factory<PrismaClient["report"]>(prisma.report);
+    this.find_report = first_factory<PrismaClient["report"]>(prisma.report);
+    this.find_report_list = many_factory<PrismaClient["report"]>(prisma.report);
+    this.find_report_list_with_pagination = pagination_factory<PrismaClient["report"]>(prisma.report);
     /** 转存记录 */
     this.add_shared_file_save = add_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress);
     this.update_shared_file_save = update_factory<PrismaClient["shared_file_in_progress"]>(

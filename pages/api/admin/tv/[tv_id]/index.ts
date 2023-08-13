@@ -101,7 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       id,
       name: name || original_name,
       overview,
-      poster_path: poster_path,
+      poster_path: poster_path || profile.poster_path,
       backdrop_path,
       original_language,
       first_air_date,
@@ -152,6 +152,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             id,
             name: profile.name,
             overview: profile.overview,
+            runtime: profile.runtime,
             episode_number: episode_number,
             first_air_date: profile.air_date,
             sources: parsed_episodes.map((source) => {

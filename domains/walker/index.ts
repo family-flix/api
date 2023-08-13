@@ -328,19 +328,33 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     }
 
     if (!parsed_info.episode) {
+      const last_parent = parent.slice(-1)[0];
       if (!parsed_info.name && !parsed_info.original_name) {
         const reason = "影片文件未包含集数信息";
-        await this.on_error({
+        if (!last_parent?.name) {
+          await this.on_error({
+            file_id,
+            name,
+            parent_paths,
+            _position: "error1",
+          });
+          /**
+           * 如果一个文件既没有集数，也没有名字，视为无效文件
+           * __root/name1/s01/empty.mp4@@错误影片1
+           */
+          // this.log(chalk.redBright("[ERROR]"), "error1", name, reason);
+          return;
+        }
+        await this.on_movie({
           file_id,
-          name,
+          file_name: name,
+          name: last_parent?.name,
+          original_name: last_parent?.original_name,
           parent_paths,
-          _position: "error1",
+          parent_file_id,
+          size,
+          _position: "movie1",
         });
-        /**
-         * 如果一个文件既没有集数，也没有名字，视为无效文件
-         * __root/name1/s01/empty.mp4@@错误影片1
-         */
-        // this.log(chalk.redBright("[ERROR]"), "error1", name, reason);
         return;
       }
       await this.on_movie({

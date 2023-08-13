@@ -278,7 +278,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         new ArticleSectionNode({
           children: [
             new ArticleLineNode({
-              children: ["季", season.profile.name, "没有变化的内容"].map((text) => {
+              children: ["季", `「${season.profile.name}」`, "没有变化的内容"].map((text) => {
                 return new ArticleTextNode({ text: text! });
               }),
             }),
@@ -287,13 +287,13 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       );
       return Result.Ok(null);
     }
-    const prefix = [name, season_number].join("-");
+    const prefix = [name].join("-");
     this.emit(
       Events.Print,
       new ArticleSectionNode({
         children: [
           new ArticleLineNode({
-            children: [prefix, "需要更新"].map((text) => {
+            children: [`「${prefix}」`, "需要更新"].map((text) => {
               return new ArticleTextNode({ text: text! });
             }),
           }),
@@ -400,7 +400,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     episode: EpisodeRecord & {
       profile: EpisodeProfileRecord;
     },
-    new_profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date">
+    new_profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date" | "runtime">
   ) {
     const { name } = episode.profile;
     const normalized_profile = await this.searcher.normalize_episode_profile(
@@ -416,7 +416,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         new ArticleSectionNode({
           children: [
             new ArticleLineNode({
-              children: ["剧集", episode.profile.name, "没有变化的内容"].map((text) => {
+              children: ["剧集", `「${episode.profile.name}」`, "没有变化的内容"].map((text) => {
                 return new ArticleTextNode({ text: text! });
               }),
             }),
@@ -516,7 +516,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     extra?: { tmdb_id: number }
   ) {
     const { name, original_name, tmdb_id } = movie.profile;
-    const r = await this.client.fetch_movie_profile(tmdb_id ? Number(tmdb_id) : movie.profile.tmdb_id);
+    const r = await this.client.fetch_movie_profile(extra ? extra.tmdb_id : tmdb_id);
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -526,6 +526,8 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       },
       r.data
     );
+    console.log("旧的电影详情", movie.profile);
+    console.log("新的电影详情", normalized_profile);
     const diff = check_movie_need_refresh(movie.profile, normalized_profile);
     if (!diff) {
       this.emit(
@@ -533,7 +535,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         new ArticleSectionNode({
           children: [
             new ArticleLineNode({
-              children: ["电影", movie.profile.name, "没有变化的内容"].map((text) => {
+              children: ["电影", `「${movie.profile.name}」`, "没有变化的内容"].map((text) => {
                 return new ArticleTextNode({ text: text! });
               }),
             }),
@@ -547,7 +549,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       new ArticleSectionNode({
         children: [
           new ArticleLineNode({
-            children: [name || original_name, "需要更新"].map((text) => {
+            children: [`电影「${name || original_name}」`, "需要更新"].map((text) => {
               return new ArticleTextNode({ text: text! });
             }),
           }),
@@ -574,6 +576,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Ok(diff);
     }
+    console.log("更换电影详情");
     const created_res = await (async () => {
       const existing_res = await this.store.find_movie_profile({ tmdb_id: normalized_profile.tmdb_id });
       if (existing_res.data) {
@@ -582,9 +585,13 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       return this.store.add_movie_profile(normalized_profile);
     })();
     if (created_res.data) {
-      await this.store.update_tv(movie.id, {
+      console.log("创建电影详情成功", created_res.data);
+      const r = await this.store.update_movie(movie.id, {
         profile_id: created_res.data.id,
       });
+      if (r.error) {
+        return Result.Err(r.error);
+      }
     }
     return Result.Ok(normalized_profile);
   }

@@ -10,7 +10,8 @@ import { DriveRecord } from "@/domains/store/types";
 import { BaseDomain } from "@/domains/base";
 import { DatabaseStore } from "@/domains/store";
 import { Result, resultify } from "@/types";
-import { r_id } from "@/utils";
+import { parseJSONStr, r_id } from "@/utils";
+import { DriveTypes } from "./constants";
 
 const drivePayloadSchema = Joi.object({
   app_id: Joi.string().required(),
@@ -36,7 +37,7 @@ type TheTypesOfEvents = {
 };
 type DriveProps = {
   id: string;
-  profile: Pick<DriveRecord, "name" | "root_folder_id" | "root_folder_name">;
+  profile: Pick<DriveRecord, "name" | "root_folder_id" | "root_folder_name"> & { drive_id: number };
   client: AliyunDriveClient;
   user_id: string;
   store: DatabaseStore;
@@ -50,20 +51,26 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (drive_res.error) {
       return Result.Err(drive_res.error);
     }
-    const profile = drive_res.data;
-    if (profile === null) {
+    const drive_record = drive_res.data;
+    if (drive_record === null) {
       return Result.Err("没有匹配的云盘记录");
     }
-    const { name, drive_id, root_folder_id, root_folder_name } = profile;
+    const { name, profile, root_folder_id, root_folder_name } = drive_record;
+    const r = await parseJSONStr<{ drive_id: number }>(profile);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { drive_id } = r.data;
     const client_res = await AliyunDriveClient.Get({ drive_id, store });
     if (client_res.error) {
       return Result.Err(client_res);
     }
     const client = client_res.data;
-    const drive = new Drive({
+    const drive_ins = new Drive({
       id,
       profile: {
         name,
+        drive_id,
         root_folder_id,
         root_folder_name,
       },
@@ -71,7 +78,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       user_id,
       store,
     });
-    return Result.Ok(drive);
+    return Result.Ok(drive_ins);
   }
   static async Add(body: { payload: AliyunDrivePayload; user_id: string; store: DatabaseStore }) {
     const { payload, user_id, store } = body;
@@ -97,7 +104,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     // console.log("[DOMAINS]Drive - Add", drive_id);
     const existing_drive = await store.prisma.drive.findUnique({
       where: {
-        drive_id,
+        unique_id: String(drive_id),
       },
     });
     if (existing_drive) {
@@ -126,10 +133,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         id: r_id(),
         name: name || user_name || nick_name,
         avatar,
-        app_id,
-        drive_id,
-        device_id,
-        aliyun_user_id,
+        type: DriveTypes.Aliyun,
+        unique_id: String(drive_id),
+        profile: JSON.stringify({
+          app_id,
+          drive_id,
+          device_id,
+          user_id: aliyun_user_id,
+        }),
         user_id,
         root_folder_id: root_folder_id ?? null,
         used_size: used_size ?? 0,
@@ -137,8 +148,10 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         drive_token: {
           create: {
             id: r_id(),
-            access_token,
-            refresh_token,
+            data: JSON.stringify({
+              access_token,
+              refresh_token,
+            }),
             expired_at: 0,
           },
         },
@@ -149,6 +162,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       id: drive_data.id,
       profile: {
         name: drive_data.name,
+        drive_id,
         root_folder_id: drive_data.root_folder_id,
         root_folder_name: drive_data.root_folder_name,
       },

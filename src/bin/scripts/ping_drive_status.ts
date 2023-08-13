@@ -5,6 +5,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { DatabaseStore } from "@/domains/store";
 import { walk_records } from "@/domains/store/utils";
 import { Result } from "@/types";
+import { parseJSONStr } from "@/utils";
 
 import { notice_error } from "./notice";
 
@@ -13,7 +14,12 @@ export async function ping_drive_status(store: DatabaseStore) {
     if (!drive.id) {
       return;
     }
-    const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+    const d_res = await parseJSONStr<{ drive_id: number }>(drive.profile);
+    if (d_res.error) {
+      return;
+    }
+    const { drive_id } = d_res.data;
+    const client_res = await AliyunDriveClient.Get({ drive_id, store });
     if (client_res.error) {
       return;
     }
@@ -40,7 +46,7 @@ export async function ping_drive_status(store: DatabaseStore) {
       notice_error(tip);
       return;
     }
-    if (preview_res.data.length === 0) {
+    if (preview_res.data.sources.length === 0) {
       notice_error(`[ping]${drive.name} 影片 ${file_res.data.file_name} 没有播放信息`);
       return;
     }

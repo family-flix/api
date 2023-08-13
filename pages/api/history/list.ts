@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               tv_id: tv.id,
               episode_id: episode.id,
               name: name || original_name,
-              poster_path,
+              poster_path: poster_path || tv.profile.poster_path,
               episode_name: profile.name,
               episode_number: episode.episode_number,
               season_number: episode.season_number,

@@ -13,6 +13,7 @@ import { Folder } from "@/domains/folder";
 import { DiffTypes, FolderDiffer } from "@/domains/folder_differ";
 import { is_video_file } from "@/utils";
 import { FileType } from "@/constants";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -26,24 +27,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const drive = await store.prisma.drive.findFirst({
-    where: {
-      id,
-      user_id,
-    },
-  });
-  if (drive === null) {
-    return e("没有匹配的云盘记录");
+  const drive_res = await Drive.Get({ id, user_id, store });
+  if (drive_res.error) {
+    return e(drive_res);
   }
-  const { id: drive_id, root_folder_id, root_folder_name } = drive;
+  const drive = drive_res.data;
+  const { id: drive_id } = drive;
+  const { root_folder_id, root_folder_name } = drive.profile;
   if (root_folder_id === null || root_folder_name === null) {
     return e("请先设置索引目录");
   }
-  const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
-  if (client_res.error) {
-    return e(client_res);
-  }
-  const client = client_res.data;
+  const client = drive.client;
   const prev_folder = new Folder(root_folder_id, {
     name: root_folder_name,
     client: folder_client({ drive_id }, store),

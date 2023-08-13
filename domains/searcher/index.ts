@@ -173,7 +173,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
   /** 处理所有没有匹配好电视剧详情的电视剧 */
   async process_parsed_tv_list(scope?: { name: string }[]) {
-    console.log("[DOMAIN]searcher/index - process_parsed_tv_list", scope, this.force);
+    // console.log("[DOMAIN]searcher/index - process_parsed_tv_list", scope, this.force);
     const { user_id, drive_id } = this.options;
     let page = 1;
     let no_more = false;
@@ -196,7 +196,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         };
       });
     }
-    console.log("[DOMAIN]searcher/index - process_parsed_tv_list where is", JSON.stringify(where, null, 2));
+    // console.log("[DOMAIN]searcher/index - process_parsed_tv_list where is", JSON.stringify(where, null, 2));
     const count = await store.prisma.parsed_tv.count({
       where,
     });
@@ -981,15 +981,16 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     info: {
       tmdb_id: number;
     },
-    profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date">
+    profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date" | "runtime">
   ) {
     const { tmdb_id } = info;
-    const { name, overview, air_date } = profile;
+    const { name, overview, air_date, runtime } = profile;
     const body = {
       tmdb_id,
       name: name || null,
       overview: overview || null,
       air_date,
+      runtime,
     };
     return body;
   }
@@ -1392,6 +1393,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       origin_country,
       vote_average,
       air_date,
+      runtime,
     } = profile;
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
       if (upload_image) {
@@ -1418,6 +1420,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       popularity,
       vote_average,
       vote_count: 0,
+      runtime,
       genres: genres
         .map((g) => {
           return g.name;

@@ -224,22 +224,22 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     }
     // console.log("[DOMAIN]analysis/index - after files.length !== 0", drive.name);
     walker.on_error = (file) => {
-      // this.emit(
-      //   Events.Print,
-      //   new ArticleLineNode({
-      //     children: [`[${drive.name}]`, "文件 ", file.name, " 出现错误 ", file._position].map((text) => {
-      //       return new ArticleTextNode({ text });
-      //     }),
-      //   })
-      // );
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: [`[${drive.name}]`, "文件 「", file.name, "」 出现错误", file._position].map((text) => {
+            return new ArticleTextNode({ text, color: "#f9f8fa" });
+          }),
+        })
+      );
       // log("索引云盘出现错误", file.name, file._position);
     };
     walker.on_warning = (file) => {
       // this.emit(
       //   Events.Print,
       //   new ArticleLineNode({
-      //     children: [`[${drive.name}]`, "文件 ", file.name, " 出现警告 ", file._position].map((text) => {
-      //       return new ArticleTextNode({ text });
+      //     children: [`[${drive.name}]`, "文件 「", file.name, "」 出现警告", file._position].map((text) => {
+      //       return new ArticleTextNode({ text, color: "#f9f8fa" });
       //     }),
       //   })
       // );
@@ -271,13 +271,13 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       //         walker.stop = true;
       //         return;
       //       }
-      // console.log(parsed.tv.name, parsed.episode.episode);
+      // console.log("walker.on_episode", parsed.tv.name, parsed.episode.episode);
       const processor = new EpisodeFileProcessor({ episode: parsed, user_id: user.id, drive_id: drive.id, store });
       processor.on_add_tv((tv) => {
         this.emit(
           Events.Print,
           new ArticleLineNode({
-            children: ["解析出电视剧", tv.name || tv.original_name].map((text) => {
+            children: ["解析出电视剧 ", tv.name || tv.original_name].map((text) => {
               return new ArticleTextNode({ text });
             }),
           })
@@ -287,7 +287,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         this.emit(
           Events.Print,
           new ArticleLineNode({
-            children: ["解析出剧集", episode.name, episode.episode].map((text) => {
+            children: ["解析出剧集 ", episode.name || episode.original_name, " ", episode.episode].map((text) => {
               return new ArticleTextNode({ text });
             }),
           })
@@ -299,13 +299,23 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       return;
     };
     walker.on_movie = async (parsed) => {
-      // const r = await check_need_stop(async_task_id);
-      // if (r && r.data) {
-      //   need_stop = true;
-      //   walker.stop = true;
-      //   return;
-      // }
-      const processor = new MovieFileProcessor({ movie: parsed, user_id: user.id, drive_id: drive.id, store });
+      // console.log("walker.on_movie", parsed.name, parsed.original_name);
+      const processor = new MovieFileProcessor({
+        movie: parsed,
+        user_id: user.id,
+        drive_id: drive.id,
+        store,
+        on_add_movie: (movie) => {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: ["解析出电影 ", movie.name || movie.original_name || ""].map((text) => {
+                return new ArticleTextNode({ text });
+              }),
+            })
+          );
+        },
+      });
       this.movie_count += 1;
       added_parsed_movie_list.push(parsed);
       await processor.run();

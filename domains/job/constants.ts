@@ -18,4 +18,6 @@ export enum TaskTypes {
   RefreshMovieProfile,
   /** 转存资源 */
   Transfer,
+  /** 删除云盘内文件 */
+  DeleteDriveFile,
 }

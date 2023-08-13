@@ -61,7 +61,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(job_res);
   }
   const job = job_res.data;
-  console.log("开始索引");
   const r2 = await DriveAnalysis.New({
     drive,
     store,
@@ -72,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.output.write(v);
     },
     on_finish() {
-      console.log("索引完成");
+      // console.log("索引完成");
       job.output.write(
         new ArticleLineNode({
           children: [

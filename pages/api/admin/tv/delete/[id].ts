@@ -163,7 +163,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       });
       const r = await store.delete_season({ id: season.id });
-      console.log("store.delete_season", r.error);
     }
   } while (no_more === false);
 

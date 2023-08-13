@@ -93,6 +93,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     job.throw(error);
   });
   drive.client.on_transfer_finish(async () => {
+    job.output.write(
+      new ArticleLineNode({
+        children: ["转存完成"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
     job.finish();
     await store.add_tmp_file({
       name: file_name,

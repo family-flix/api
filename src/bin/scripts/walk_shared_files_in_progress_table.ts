@@ -6,6 +6,7 @@ require("dotenv").config();
 import { store } from "@/store";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { walk_records } from "@/domains/store/utils";
+import { parseJSONStr } from "@/utils";
 
 async function run() {
   const drives_res = await store.find_drive_list();
@@ -17,7 +18,12 @@ async function run() {
     return;
   }
   const drive = drives[0];
-  const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+  const d_res = await parseJSONStr<{ drive_id: number }>(drive.profile);
+  if (d_res.error) {
+    return;
+  }
+  const { drive_id } = d_res.data;
+  const client_res = await AliyunDriveClient.Get({ drive_id, store });
   if (client_res.error) {
     return;
   }

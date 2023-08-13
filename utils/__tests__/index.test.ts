@@ -964,7 +964,7 @@ describe("提取视频信息", () => {
       name: "封神榜I",
       original_name: "",
       season: "",
-      episode: "E34",
+      episode: "",
     });
   });
 });

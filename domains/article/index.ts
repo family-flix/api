@@ -50,7 +50,7 @@ export class Article extends BaseDomain<TheTypesOfEvents> {
 }
 
 type ArticleSectionNodeProps = {
-  children: ArticleLineNode[];
+  children: (ArticleLineNode | ArticleListNode)[];
 };
 export class ArticleSectionNode extends BaseDomain<TheTypesOfEvents> {
   values: ArticleSectionNodeProps & {

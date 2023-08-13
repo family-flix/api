@@ -1,5 +1,5 @@
 /**
- * @file 获取未识别的季
+ * @file 获取未识别的剧集
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -42,6 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
         },
       },
+      drive: true,
     },
     orderBy: {
       created: "desc",
@@ -49,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     take: page_size,
     skip: (page - 1) * page_size,
   });
-  const count = await store.prisma.parsed_season.count({ where });
+  const count = await store.prisma.parsed_episode.count({ where });
   res.status(200).json({
     code: 0,
     msg: "",
@@ -58,17 +59,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page_size,
       total: count,
       no_more: list.length + (page - 1) * page_size >= count,
-      list: list.map((parsed_season) => {
-        const { id, season_number, parsed_tv } = parsed_season;
+      list: list.map((parsed_episode) => {
+        const { id, file_id, file_name, parent_paths, season_number, episode_number, parsed_tv, drive } =
+          parsed_episode;
         return {
           id,
-          season_number,
           name: (() => {
             if (parsed_tv?.tv?.profile) {
               return parsed_tv.tv.profile.name || parsed_tv.tv.profile.original_name;
             }
             return parsed_tv.name || parsed_tv.original_name;
           })(),
+          season_number,
+          episode_number,
+          file_id,
+          file_name,
+          parent_paths,
+          drive: {
+            id: drive.id,
+            name: drive.name,
+            avatar: drive.avatar,
+          },
         };
       }),
     },

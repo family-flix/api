@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (play_info_res.error) {
     return e(play_info_res);
   }
-  if (play_info_res.data.length === 0) {
+  if (play_info_res.data.sources.length === 0) {
     return e("该文件暂时不可播放，请等待一段时间后重试");
   }
   const file_profile_res = await client.fetch_file(file_id);
@@ -66,16 +66,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }>;
   // 只有一种分辨率，直接返回该分辨率视频
   const recommend = (() => {
-    if (play_info_res.data.length === 1) {
-      return play_info_res.data[0];
+    if (play_info_res.data.sources.length === 1) {
+      return play_info_res.data.sources[0];
     }
-    const matched_resolution = play_info_res.data.find((r) => {
+    const matched_resolution = play_info_res.data.sources.find((r) => {
       return r.type === type;
     });
     if (matched_resolution) {
       return matched_resolution;
     }
-    return play_info_res.data[0];
+    return play_info_res.data.sources[0];
   })();
   if (recommend.url.includes("x-oss-additional-headers=referer")) {
     return e("视频文件无法播放，请修改 refresh_token");
@@ -91,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       width,
       height,
       // 其他分辨率的视频源
-      other: play_info_res.data.map((res) => {
+      other: play_info_res.data.sources.map((res) => {
         const { url, type, width, height } = res;
         return {
           id: file_id,

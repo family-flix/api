@@ -48,11 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             contains: name,
           },
         },
-        {
-          overview: {
-            contains: name,
-          },
-        },
+        // {
+        //   overview: {
+        //     contains: name,
+        //   },
+        // },
       ],
     });
   }
@@ -97,6 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const list = await store.prisma.season.findMany({
     where,
     include: {
+      _count: true,
       profile: true,
       tv: {
         include: {
@@ -113,8 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const data = {
     total: count,
     list: list.map((season) => {
-      const { id, season_number, profile, tv } = season;
-      const { air_date } = profile;
+      const { id, season_number, profile, tv, _count } = season;
       const { name, overview, poster_path, vote_average, genres, origin_country } = tv.profile;
       return {
         id,
@@ -123,8 +123,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         overview,
         season_number,
         season_text: season_to_chinese_num(season_number),
+        episode_count: profile.episode_count,
+        cur_episode_count: _count.episodes,
         poster_path: profile.poster_path || poster_path,
-        first_air_date: air_date,
+        first_air_date: profile.air_date,
         genres,
         origin_country,
         popularity: vote_average,

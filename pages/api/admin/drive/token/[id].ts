@@ -9,6 +9,7 @@ import { Drive } from "@/domains/drive";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { parseJSONStr } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -41,8 +42,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive_token) {
     return e("该云盘没有 token 记录");
   }
+  const prev_token_res = await parseJSONStr(drive_token.data);
+  if (prev_token_res.error) {
+    return e(prev_token_res);
+  }
   const r2 = await store.update_aliyun_drive_token(drive_token.id, {
-    refresh_token,
+    data: JSON.stringify({
+      ...prev_token_res.data,
+      refresh_token,
+    }),
   });
   if (r2.error) {
     return e(r2);

@@ -8,6 +8,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
+import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -28,29 +29,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = t_resp.data;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
-  const where: NonNullable<Parameters<typeof store.prisma.shared_file_in_progress.findMany>[0]>["where"] = {
-    name: {
-      contains: name,
-    },
+  const where: ModelQuery<typeof store.prisma.shared_file_in_progress.findMany>["where"] = {
     user_id,
   };
+  if (name) {
+    where.name = {
+      contains: name,
+    };
+  }
+  const count = await store.prisma.shared_file_in_progress.count({ where });
   const list = await store.prisma.shared_file_in_progress.findMany({
     where,
+    include: {
+      drive: true,
+    },
     orderBy: {
       created: "desc",
     },
     skip: (page - 1) * page_size,
     take: page_size,
   });
-  const count = await store.prisma.shared_file_in_progress.count({
-    where,
-  });
   res.status(200).json({
     code: 0,
     msg: "",
     data: {
       total: count,
-      list,
+      list: list.map((record) => {
+        const { id, url, name, drive } = record;
+        return {
+          id,
+          url,
+          name,
+          drive: {
+            id: drive.id,
+            name: drive.name,
+            avatar: drive.avatar,
+          },
+        };
+      }),
       page,
       page_size,
       no_more: list.length + (page - 1) * page_size >= count,

@@ -314,7 +314,7 @@ describe("动漫", () => {
       name: "妖精森林的小不点",
       original_name: "",
       season: "",
-      episode: "E01",
+      episode: "NCED01",
     });
   });
   test("咒术回战第1季02.mp4", () => {
@@ -332,6 +332,86 @@ describe("动漫", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "凡人风起天南10",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("少年白马醉春风 第15 以剑为刀.mp4", () => {
+    const name = "少年白马醉春风 第15 以剑为刀.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "少年白马醉春风",
+      original_name: "",
+      season: "",
+      episode: "E15",
+    });
+  });
+  test("斗破苍穹特别篇2[4K].mp4", () => {
+    const name = "斗破苍穹特别篇2[4K].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "斗破苍穹",
+      original_name: "",
+      season: "",
+      episode: "特别篇2",
+    });
+  });
+  test("2013 LegalHigh SP2.mp4", () => {
+    const name = "2013 LegalHigh SP2.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "LegalHigh",
+      season: "SP",
+      episode: "E02",
+    });
+  });
+  test("显微镜下的大明之丝绢案-预告1", () => {
+    const name = "显微镜下的大明之丝绢案-预告1";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "显微镜下的大明之丝绢案",
+      original_name: "",
+      season: "",
+      episode: "预告1",
+    });
+  });
+  test("0731入住日记第9期.mp4", () => {
+    const name = "0731入住日记第9期.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "0731入住日记第9期",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("10.财阀家的小儿子.2022 - 豆瓣7.7分", () => {
+    const name = "10.财阀家的小儿子.2022 - 豆瓣7.7分";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "财阀家的小儿子",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("08.9号秘事1-7季 - 豆瓣9.0分", () => {
+    const name = "08.9号秘事1-7季 - 豆瓣9.0分";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "9号秘事",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("万li 归途 4K.mp4", () => {
+    const name = "万li 归途 4K.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "万li",
       original_name: "",
       season: "",
       episode: "",

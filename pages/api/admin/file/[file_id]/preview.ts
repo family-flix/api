@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(r);
   }
   const info = r.data;
-  if (info.length === 0) {
+  if (info.sources.length === 0) {
     return e(Result.Err("该文件暂时不可播放，请等待一段时间后重试"));
   }
   const file_profile_res = await drive.client.fetch_file(id);
@@ -61,23 +61,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }>;
   const recommend = (() => {
     // 只有一种分辨率，直接返回该分辨率视频
-    if (info.length === 1) {
-      return info[0];
+    if (info.sources.length === 1) {
+      return info.sources[0];
     }
-    return info[0];
+    return info.sources[0];
   })();
   if (recommend.url.includes("x-oss-additional-headers=referer")) {
     return e(Result.Err("视频文件无法播放，请修改 refresh_token"));
   }
   const { url, type, width, height } = recommend;
-  const result: MediaFile & { other: MediaFile[] } = {
+  const result: MediaFile & { other: MediaFile[]; subtitles: { language: string; url: string }[] } = {
     url,
     thumbnail,
     type,
     width,
     height,
     // 其他分辨率的视频源
-    other: info.map((res) => {
+    other: info.sources.map((res) => {
       const { url, type, width, height } = res;
       return {
         id,
@@ -88,6 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         height,
       };
     }),
+    subtitles: info.subtitles,
   };
   res.status(200).json({ code: 0, msg: "", data: result });
 }

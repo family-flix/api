@@ -9,10 +9,10 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { DatabaseStore } from "@/domains/store";
 import { DriveRecord } from "@/domains/store/types";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
+import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { BaseDomain } from "@/domains/base";
-import { query_stringify, sleep } from "@/utils";
-import { Result } from "@/types";
+import { parseJSONStr, query_stringify, sleep } from "@/utils";
+import { Result, Unpacked } from "@/types";
 
 import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo } from "./types";
 
@@ -59,7 +59,7 @@ enum Events {
 type TheTypesOfEvents = {
   [Events.TransferFinish]: void;
   [Events.TransferFailed]: Error;
-  [Events.Print]: ArticleLineNode;
+  [Events.Print]: ArticleLineNode | ArticleSectionNode;
 };
 type AliyunDriveProps = {
   id: string;
@@ -81,7 +81,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("缺少云盘 id");
     }
     const aliyun_drive_res = await store.find_drive({
-      drive_id,
+      unique_id: String(drive_id),
     });
     if (aliyun_drive_res.error) {
       return Result.Err(aliyun_drive_res.error);
@@ -90,7 +90,12 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("没有匹配的云盘记录");
     }
     const profile = aliyun_drive_res.data;
-    const { id, device_id, root_folder_id } = profile;
+    const { id, profile: p, root_folder_id } = profile;
+    const r = await parseJSONStr<{ device_id: string }>(p);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { device_id } = r.data;
     const token_res = await (async () => {
       const aliyun_drive_token_res = await store.find_aliyun_drive_token({
         drive_id: profile.id,
@@ -101,7 +106,18 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       if (!aliyun_drive_token_res.data) {
         return Result.Err("没有匹配的云盘凭证记录");
       }
-      const { id: token_id, refresh_token, access_token } = aliyun_drive_token_res.data;
+      const { id: token_id, data } = aliyun_drive_token_res.data;
+      if (data === null) {
+        return Result.Err("云盘凭证缺少 refresh_token");
+      }
+      const r2 = await parseJSONStr<{
+        refresh_token: string;
+        access_token: string;
+      }>(data);
+      if (r2.error) {
+        return Result.Err(r2.error);
+      }
+      const { refresh_token, access_token } = r2.data;
       if (refresh_token === null) {
         return Result.Err("云盘凭证缺少 refresh_token");
       }
@@ -250,7 +266,15 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       if (!aliyun_drive_token_res.data) {
         return Result.Err("没有匹配的云盘凭证记录");
       }
-      const { id: token_id, refresh_token, access_token, expired_at } = aliyun_drive_token_res.data;
+      const { id: token_id, data, expired_at } = aliyun_drive_token_res.data;
+      const r = await parseJSONStr<{
+        refresh_token: string;
+        access_token: string;
+      }>(data);
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      const { refresh_token, access_token } = r.data;
       if (refresh_token === null) {
         return Result.Err("云盘凭证缺少 refresh_token");
       }
@@ -259,7 +283,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       // 这里赋值是为了下面 refresh_aliyun_access_token 中使用
       this.refresh_token = refresh_token;
       if (!expired_at || dayjs(expired_at * 1000).isBefore(dayjs())) {
-        console.log("access token is expired, refresh it");
+        // console.log("access token is expired, refresh it");
         const refresh_token_res = await this.refresh_aliyun_access_token();
         if (refresh_token_res.error) {
           return Result.Err(refresh_token_res.error);
@@ -502,9 +526,20 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   }
   async fetch_video_preview_info(file_id: string) {
     await this.ensure_initialized();
-    const result = await this.request.post<{
+    const r = await this.request.post<{
       video_preview_play_info: {
+        category: string;
+        meta: {
+          duration: number;
+          width: number;
+          height: number;
+        };
         live_transcoding_task_list: PartialVideo[];
+        live_transcoding_subtitle_task_list: {
+          language: "chi" | "eng" | "jpn";
+          status: string;
+          url: string;
+        }[];
       };
     }>(API_HOST + "/v2/file/get_video_preview_play_info", {
       file_id,
@@ -516,17 +551,27 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       get_subtitle_info: true,
       // with_play_cursor: false,
     });
-    if (result.error) {
-      return result;
+    if (r.error) {
+      return Result.Err(r.error);
     }
-    // console.log(
-    //   "[]fetch_video_preview_info success",
-    //   file_id,
-    //   this.drive_id,
-    //   result.data.video_preview_play_info.live_transcoding_task_list
-    // );
-    const a = format_M3U8_manifest(result.data.video_preview_play_info.live_transcoding_task_list);
-    return Result.Ok(a);
+    const {
+      video_preview_play_info: { live_transcoding_task_list, live_transcoding_subtitle_task_list = [] },
+    } = r.data;
+    const sources = format_M3U8_manifest(live_transcoding_task_list);
+    return Result.Ok({
+      sources,
+      subtitles: live_transcoding_subtitle_task_list
+        .filter((subtitle) => {
+          return subtitle.status === "finished";
+        })
+        .map((subtitle) => {
+          const { url, language } = subtitle;
+          return {
+            url,
+            language,
+          };
+        }),
+    });
   }
   async search_files(name: string, type: "folder" = "folder") {
     await this.ensure_initialized();
@@ -892,29 +937,72 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
           }),
         })
       );
-      const r2 = await this.fetch_multiple_async_task({ async_task_ids: async_task_list });
-      if (r2.error) {
-        const err = new Error("转存状态未知，可尝试重新转存");
-        this.emit(Events.TransferFailed, err);
-        return Result.Err(err);
+      const r = await run(
+        async () => {
+          await sleep(3000);
+          const r2 = await this.fetch_multiple_async_task({ async_task_ids: async_task_list });
+          if (r2.error) {
+            // const err = new Error("转存状态未知，可尝试重新转存");
+            return {
+              error: r2.error,
+              finished: false,
+              data: null,
+            };
+          }
+          const { responses } = r2.data;
+          this.emit(
+            Events.Print,
+            new ArticleSectionNode({
+              children: [
+                new ArticleLineNode({
+                  children: [dayjs().format("HH:mm")].map((text) => new ArticleTextNode({ text })),
+                }),
+              ].concat(
+                responses.map((resp) => {
+                  const { body, id } = resp;
+                  return new ArticleLineNode({
+                    children: [id, body.status].map((text) => new ArticleTextNode({ text })),
+                  });
+                })
+              ),
+            })
+          );
+          const finished = responses.every((resp) => {
+            return ["PartialSucceed", "Succeed"].includes(resp.body.status);
+          });
+          if (finished) {
+            return {
+              finished: true,
+              error: null,
+              data: null,
+            };
+          }
+          return {
+            finished: false,
+            error: null,
+            data: null,
+          };
+        },
+        {
+          timeout: 10 * 60 * 1000,
+        }
+      );
+      if (r.error) {
+        this.emit(Events.TransferFailed, r.error);
+        return Result.Err(r.error);
       }
-      const { responses } = r2.data;
-      const error_body = responses.find((resp) => {
-        // console.log("2", resp);
-        return resp.status !== 200 || !!resp.body.message;
-      });
-      if (error_body) {
-        const err = new Error(
-          `${(() => {
-            if (error_body.index) {
-              return `第 ${error_body.index} 个文件转存失败`;
-            }
-            return "转存文件失败";
-          })()}，因为 ${error_body.body.message}`
-        );
-        this.emit(Events.TransferFailed, err);
-        return Result.Err(err);
-      }
+      // if (error_body) {
+      //   const err = new Error(
+      //     `${(() => {
+      //       if (error_body.index) {
+      //         return `第 ${error_body.index} 个文件转存失败`;
+      //       }
+      //       return "转存文件失败";
+      //     })()}，因为 ${error_body.body.message}`
+      //   );
+      //   this.emit(Events.TransferFailed, err);
+      //   return Result.Err(err);
+      // }
     }
     this.emit(
       Events.Print,
@@ -957,10 +1045,10 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
           code: string;
           message: string;
           total_process: number;
-          state: "PartialSucceed";
+          state: "Running" | "PartialSucceed" | "Succeed";
           async_task_id: string;
           consumed_process: number;
-          status: "PartialSucceed";
+          status: "Running" | "PartialSucceed" | "Succeed";
         };
         id: string;
         status: number;
@@ -1261,8 +1349,10 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     const { refresh_token, access_token, expired_at } = data;
     return this.store.update_aliyun_drive_token(this.token_id, {
-      refresh_token,
-      access_token,
+      data: JSON.stringify({
+        refresh_token,
+        access_token,
+      }),
       expired_at,
     });
   }
@@ -1474,3 +1564,39 @@ function format_M3U8_manifest(videos: PartialVideo[]) {
 //   logo: "LOGO",
 //   postpone: "延期卡",
 // };
+
+function run<T extends (...args: any[]) => Promise<{ error: Error | null; finished: boolean; data: any }>>(
+  fn: T,
+  options: Partial<{
+    timeout: number;
+    times: number;
+  }> = {}
+) {
+  const { timeout, times } = options;
+  let start = new Date().valueOf();
+  function _run<T extends (...args: any[]) => Promise<{ error: Error | null; finished: boolean; data: any }>>(
+    fn: T,
+    resolve: (data: Unpacked<ReturnType<T>>["data"]) => void
+  ) {
+    fn().then((res) => {
+      if (res.error) {
+        resolve(Result.Err(res.error));
+        return;
+      }
+      const now = new Date().valueOf();
+      if (timeout !== undefined && now - start >= timeout) {
+        resolve(Result.Err(new Error("超时未完成")));
+        return;
+      }
+      if (!res.finished) {
+        _run(fn, resolve);
+        return;
+      }
+      resolve(Result.Ok(res.data));
+    });
+  }
+  const p = new Promise((resolve) => {
+    _run(fn, resolve);
+  }) as Promise<Result<Unpacked<ReturnType<T>>["data"]>>;
+  return p;
+}

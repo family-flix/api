@@ -3,6 +3,7 @@ import { Result } from "@/types";
 import { DatabaseStore } from "@/domains/store";
 
 import { notice_push_deer } from "./notice";
+import { parseJSONStr } from "@/utils";
 
 /**
  * 取表里所有「今日未签到」的云盘进行签到
@@ -44,9 +45,14 @@ export async function check_in(store: DatabaseStore) {
   for (let i = 0; i < drives_resp.data.length; i += 1) {
     const drive = drives_resp.data[i];
     // console.log("prepare check in for drive", drive.user_name);
-    const { id, name, user_id } = drive;
+    const { id, name, profile, user_id } = drive;
+    const d_res = await parseJSONStr<{ drive_id: number }>(profile);
+    if (d_res.error) {
+      continue;
+    }
+    const { drive_id } = d_res.data;
     const client_res = await AliyunDriveClient.Get({
-      drive_id: drive.drive_id,
+      drive_id,
       store,
     });
     if (client_res.error) {

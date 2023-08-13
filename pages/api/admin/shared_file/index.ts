@@ -9,6 +9,7 @@ import { User } from "@/domains/user";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
+import { parseJSONStr } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -40,8 +41,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive) {
     return e(Result.Err("请先添加一个云盘", 10002));
   }
-  console.log(drive.name);
-  const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+  const p_res = await parseJSONStr<{ drive_id: number }>(drive.profile);
+  if (p_res.error) {
+    return e(p_res);
+  }
+  const { drive_id } = p_res.data;
+  const client_res = await AliyunDriveClient.Get({ drive_id, store });
   if (client_res.error) {
     return e(client_res);
   }

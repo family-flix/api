@@ -7,6 +7,7 @@ import { AliyunDriveClient } from "@/domains/aliyundrive";
 
 import { FileType } from "@/constants";
 import { DatabaseStore } from "@/domains/store";
+import { parseJSONStr } from "@/utils";
 
 export async function walk_added_files(store: DatabaseStore) {
   const drives_res = await store.find_drive_list();
@@ -51,7 +52,12 @@ export async function walk_added_files(store: DatabaseStore) {
     if (!root_folder_id || !root_folder_name) {
       continue;
     }
-    const client_res = await AliyunDriveClient.Get({ drive_id: drive.drive_id, store });
+    const d_res = await parseJSONStr<{ drive_id: number }>(drive.profile);
+    if (d_res.error) {
+      return;
+    }
+    const { drive_id } = d_res.data;
+    const client_res = await AliyunDriveClient.Get({ drive_id, store });
     if (client_res.error) {
       continue;
     }

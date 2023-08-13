@@ -231,7 +231,7 @@ describe("动漫", () => {
       name: "龙珠GT",
       original_name: "",
       season: "",
-      episode: "",
+      episode: "NCOP2",
     });
   });
   test("[1080P][DBD制作组&离谱Sub][龙珠GT][60][HEVC-10bit][AC3].mkv", () => {
@@ -322,6 +322,26 @@ describe("动漫", () => {
       original_name: "",
       season: "PV",
       episode: "E04",
+    });
+  });
+  test("[VCB-Studio] Ushio to Tora [NCOP03][Ma10p_1080p][x265_flac].mkv", () => {
+    const name = "[VCB-Studio] Ushio to Tora [NCOP03][Ma10p_1080p][x265_flac].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Ushio.to.Tora",
+      season: "",
+      episode: "NCOP03",
+    });
+  });
+  test("[VCB-Studio] Ushio to Tora [CM05][Ma10p_1080p][x265_flac].mkv", () => {
+    const name = "[VCB-Studio] Ushio to Tora [CM05][Ma10p_1080p][x265_flac].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Ushio.to.Tora",
+      season: "",
+      episode: "CM05",
     });
   });
 });

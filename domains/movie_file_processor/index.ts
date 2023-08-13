@@ -1,22 +1,29 @@
 /**
  * @file 电影文件解析
  */
+import { Handler } from "mitt";
+
 import { FileType } from "@/constants";
 import { BaseDomain } from "@/domains/base";
-import { SearchedEpisode, SearchedMovie } from "@/domains/walker";
+import { SearchedMovie } from "@/domains/walker";
 import { DatabaseStore } from "@/domains/store";
 import { Result } from "@/types";
 
 import { is_movie_changed } from "./utils";
 
-enum Events {}
-type TheTypesOfEvents = {};
+enum Events {
+  AddMovie,
+}
+type TheTypesOfEvents = {
+  [Events.AddMovie]: { name: string; original_name: string | null };
+};
 type MovieFileProcessorProps = {
   movie: SearchedMovie;
   user_id: string;
   drive_id: string;
   task_id?: string;
   store: DatabaseStore;
+  on_add_movie?: (movie: { name: string; original_name: string | null }) => void;
 };
 
 export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
@@ -31,7 +38,7 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
   constructor(options: Partial<{} & MovieFileProcessorProps> = {}) {
     super();
 
-    const { movie, user_id, drive_id, task_id, store } = options;
+    const { movie, user_id, drive_id, task_id, store, on_add_movie } = options;
     if (!store) {
       throw new Error("缺少数据库实例");
     }
@@ -51,6 +58,9 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
       drive_id,
       task_id,
     };
+    if (on_add_movie) {
+      this.on_add_movie(on_add_movie);
+    }
   }
 
   /**
@@ -103,6 +113,9 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
         // log(`[${prefix}]`, "视频文件保存失败", add_episode_res.error.message);
         return Result.Err(add_movie_res.error);
       }
+      this.emit(Events.AddMovie, {
+        ...add_movie_res.data,
+      });
       //       log(`[${prefix}]`, "视频文件保存成功");
       return Result.Ok(null);
     }
@@ -141,5 +154,9 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
     }
     // log(`[${prefix}]`, "视频文件没有变更");
     return Result.Ok(null);
+  }
+
+  on_add_movie(handler: Handler<TheTypesOfEvents[Events.AddMovie]>) {
+    return this.on(Events.AddMovie, handler);
   }
 }

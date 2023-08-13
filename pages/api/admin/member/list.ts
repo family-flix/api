@@ -8,6 +8,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
+import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -28,15 +29,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = t_res.data;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
-
-  const where: NonNullable<Parameters<typeof store.prisma.member.findMany>[0]>["where"] = {
-    remark: {
-      contains: name,
-    },
+  const where: ModelQuery<typeof store.prisma.member.findMany>["where"] = {
     user_id,
     delete: 0,
   };
-
+  if (name) {
+    where.remark = {
+      contains: name,
+    };
+  }
+  const count = await store.prisma.member.count({ where });
   const list = await store.prisma.member.findMany({
     where,
     include: {
@@ -47,14 +49,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       },
     },
-    skip: (page - 1) * page_size,
-    take: page_size,
     orderBy: {
       created: "desc",
     },
-  });
-  const count = await store.prisma.member.count({
-    where,
+    skip: (page - 1) * page_size,
+    take: page_size,
   });
   res.status(200).json({
     code: 0,
