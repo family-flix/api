@@ -3362,11 +3362,6 @@ npmlog@^5.0.1:
     gauge "^3.0.0"
     set-blocking "^2.0.0"
 
-nzh@^1.0.8:
-  version "1.0.8"
-  resolved "https://registry.npmmirror.com/nzh/-/nzh-1.0.8.tgz#aa43e38720fa7a625630b65eb20863da3c7d62f9"
-  integrity sha512-fm9qlo0aBJxbi3dt4ix+iqRa95tAWAptwmSNTfUEleCitbTz8D3i7KPu0O2mecnvVn+b/JMb4uJqHOj2yJf3hQ==
-
 object-assign@^4.0.1, object-assign@^4.1.1:
   version "4.1.1"
   resolved "https://registry.npmmirror.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
