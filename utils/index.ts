@@ -1,10 +1,11 @@
 import Nzh from "nzh";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
-import relative_time from "dayjs/plugin/relativeTime";
+// import relative_time from "dayjs/plugin/relativeTime";
+
 import { JSONObject, Result } from "@/types";
 
-dayjs.extend(relative_time);
+// dayjs.extend(relative_time);
 dayjs.locale("zh-cn");
 const nzhcn = Nzh.cn;
 

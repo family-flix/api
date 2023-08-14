@@ -8,10 +8,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm config set registry https://registry.npm.taobao.org
 RUN npm config set disturl https://npm.taobao.org/dist
-RUN npm install
+RUN npm install yarn -g
+RUN yarn
 COPY . .
 RUN node scripts/ncc.js
 RUN npx prisma migrate dev
-RUN npm run build
+RUN yarn build
 EXPOSE 8000
 ENTRYPOINT ["npm", "start"]
