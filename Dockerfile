@@ -1,8 +1,8 @@
 FROM node:16
 
 ENV PORT 8000
-# ENV OUTPUT_PATH /output
-# ENV DATABASE_PATH file:///output/data/family-flix.db?connection_limit=1
+ENV OUTPUT_PATH /output
+ENV DATABASE_PATH file:///output/data/family-flix.db?connection_limit=1
 
 WORKDIR /app
 COPY package*.json ./
