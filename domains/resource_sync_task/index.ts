@@ -18,8 +18,8 @@ import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DatabaseStore } from "@/domains/store";
 import { ParsedTVRecord, FileSyncTaskRecord } from "@/domains/store/types";
+import { folder_client } from "@/domains/store/utils";
 import { Result } from "@/types";
-import { folder_client } from "@/store";
 import { is_video_file } from "@/utils";
 import { FileType } from "@/constants";
 

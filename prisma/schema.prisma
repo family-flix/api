@@ -1,6 +1,6 @@
 generator client {
         provider      = "prisma-client-js"
-        binaryTargets = ["native", "rhel-openssl-1.0.x"]
+        binaryTargets = ["native"]
 }
 
 datasource db {
@@ -18,6 +18,7 @@ model drive {
         name             String
         remark           String?
         avatar           String
+        // json
         profile          String
         // 总大小
         total_size       Float?    @default(0)
@@ -54,6 +55,7 @@ model drive_token {
         created DateTime @default(now())
         updated DateTime @default(now())
 
+        // json
         data       String
         expired_at Float
 

@@ -5,7 +5,7 @@ require("dotenv").config();
 
 import { Folder } from "@/domains/folder";
 import { FolderWalker } from "@/domains/walker";
-import { folder_client } from "@/store";
+import { folder_client } from "@/domains/store/utils";
 import { store } from "@/store";
 
 async function main() {
