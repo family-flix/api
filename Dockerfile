@@ -11,7 +11,7 @@ RUN npm config set disturl https://npm.taobao.org/dist
 RUN npm install
 COPY . .
 RUN node scripts/ncc.js
-RUN npm run build
 RUN npx prisma migrate dev
+RUN npm run build
 EXPOSE 8000
 ENTRYPOINT ["npm", "start"]
