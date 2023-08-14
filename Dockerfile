@@ -10,7 +10,7 @@ RUN yarn config set registry https://registry.npm.taobao.org/
 RUN yarn
 COPY . .
 RUN node scripts/ncc.js
-RUN yarn prisma migrate dev
+RUN yarn prisma migrate deploy
 RUN yarn build
 EXPOSE 8000
 ENTRYPOINT ["yarn", "start"]
