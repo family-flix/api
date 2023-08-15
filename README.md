@@ -30,7 +30,7 @@ docker build -t flix .
 端口为 8000，数据库等文件夹路径为 `/output`
 
 ```bash
-docker run -d -v /local/output:/output -p 8000:8000 -n flix.prod flix
+docker run -d -v /local/output:/output -p 8000:8000 --name flix.prod flix
 ```
 
 ## 运行
