@@ -1,7 +1,11 @@
+/**
+ * @file 测试用例单例
+ */
 import path from "path";
 
-// import { StoreOperation } from "@/store/operations";
-// import { store_factory } from "@/store";
+import { Application } from "@/domains/application";
 
-// export const op = new StoreOperation(path.resolve(__dirname, "./data.db"));
-// export const test_store = store_factory(op);
+export const app = new Application({
+  root_path: path.join(__dirname, "output"),
+});
+export const test_store = app.store;

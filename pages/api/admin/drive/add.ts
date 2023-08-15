@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res.error);
   }
   const { id: user_id } = t_res.data;
-  const r = await Drive.Add({ payload, user_id, store });
+  const r = await Drive.Add({ payload, user_id }, store);
   if (r.error) {
     return e(r);
   }

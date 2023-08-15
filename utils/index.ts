@@ -1,12 +1,15 @@
-import Nzh from "nzh";
+// import Nzh from "nzh";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
-import relative_time from "dayjs/plugin/relativeTime";
+// import relative_time from "dayjs/plugin/relativeTime";
+
 import { JSONObject, Result } from "@/types";
 
-dayjs.extend(relative_time);
+import { cn as nzhcn } from "./nzh/index";
+
+// dayjs.extend(relative_time);
 dayjs.locale("zh-cn");
-const nzhcn = Nzh.cn;
+// const nzhcn = Nzh.cn;
 
 export const video_file_type_regexp = /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$/;
 export type ParsedFilename = {

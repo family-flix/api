@@ -80,8 +80,15 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     });
     return Result.Ok(drive_ins);
   }
-  static async Add(body: { payload: AliyunDrivePayload; user_id: string; store: DatabaseStore }) {
-    const { payload, user_id, store } = body;
+  static async Add(
+    body: { payload: AliyunDrivePayload; user_id: string },
+    store: DatabaseStore,
+    options: Partial<{
+      skip_ping: boolean;
+    }> = {}
+  ) {
+    const { payload, user_id } = body;
+    const { skip_ping = false } = options;
     const r = await resultify(drivePayloadSchema.validateAsync.bind(drivePayloadSchema))(payload);
     if (r.error) {
       return Result.Err(r.error);
@@ -120,13 +127,15 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       root_folder_id,
       store,
     });
-    const status_res = await client.ping();
-    if (status_res.error) {
-      const { message } = status_res.error;
-      if (message.includes("AccessToken is invalid")) {
-        return Result.Err("云盘信息有误");
+    if (!skip_ping) {
+      const status_res = await client.ping();
+      if (status_res.error) {
+        const { message } = status_res.error;
+        if (message.includes("AccessToken is invalid")) {
+          return Result.Err("云盘信息有误");
+        }
+        return Result.Err(status_res.error);
       }
-      return Result.Err(status_res.error);
     }
     const created_drive = await store.prisma.drive.create({
       data: {
@@ -171,6 +180,18 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       store,
     });
     return Result.Ok(drive);
+  }
+  static async Existing(body: { drive_id: number }, store: DatabaseStore) {
+    const { drive_id } = body;
+    const existing_drive = await store.prisma.drive.findUnique({
+      where: {
+        unique_id: String(drive_id),
+      },
+    });
+    if (existing_drive) {
+      return Result.Ok(existing_drive);
+    }
+    return Result.Err("不存在");
   }
 
   /** 云盘 id */

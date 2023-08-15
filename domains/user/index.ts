@@ -169,6 +169,30 @@ export class User {
       token,
     });
   }
+  static async Existing(body: { email: string }, store: DatabaseStore) {
+    const { email } = body;
+    const existing_user = await store.prisma.credential.findUnique({
+      where: { email },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
+    if (existing_user) {
+      const { email } = existing_user;
+      const { id, profile } = existing_user.user;
+      return Result.Ok({
+        id,
+        email,
+        avatar: profile?.avatar,
+        nickname: profile?.nickname,
+      });
+    }
+    return Result.Err("不存在");
+  }
   /** 根据给定的 id 生成一个 token */
   static async Token({ id }: { id: string }) {
     try {
