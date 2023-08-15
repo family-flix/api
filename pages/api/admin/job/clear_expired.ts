@@ -3,12 +3,12 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-
-import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
-import { User } from "@/domains/user";
-import { store } from "@/store";
 import dayjs from "dayjs";
+
+import { User } from "@/domains/user";
+import { BaseApiResp, Result } from "@/types";
+import { response_error_factory } from "@/utils/backend";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -19,26 +19,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
+  if (Number(n) < 3) {
+    return e(Result.Err("不能删除最近三天的"));
+  }
   const today = dayjs();
-  const target_day = today.subtract(Number(n), "day");
-  //   const jobs = await store.prisma.async_task.findMany({
-  //     where: {
-  //       created: {
-  //         lte: target_day.toDate(),
-  //       },
-  //     },
-  //   });
-  await store.prisma.output_line.deleteMany({
+  const target_day = today.subtract(Number(n), "day").toDate();
+  store.prisma.output_line.deleteMany({
     where: {
       output: {
         async_task: {
           created: {
-            lte: target_day.toDate(),
+            lte: target_day,
           },
-          user_id: user.id,
         },
+        user_id: user.id,
       },
     },
   });
-  res.status(200).json({ code: 0, msg: "删除成功", data: null });
+  res.status(200).json({ code: 0, msg: "开始删除", data: null });
 }

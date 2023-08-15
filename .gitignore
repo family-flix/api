@@ -8,6 +8,7 @@
 # testing
 /coverage
 /mock
+domains/__tests__/output
 
 # next.js
 /.next/

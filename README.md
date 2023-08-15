@@ -21,9 +21,29 @@
 
 满足条件后，可看该文档[安装、运行](https://www.yuque.com/u7327/lm76f6)
 
+## Docker 部署
+
+```bash
+docker build -t flix .
+```
+
+端口为 8000，数据库等文件夹路径为 `/output`
+
+```bash
+docker run -d -v /local/output:/output -p 8000:8000 -n flix.prod flix
+```
+
 ## 运行
 
 `clone` 项目后安装依赖，执行 `node scripts/ncc.js`。然后 `yarn dev` 就可以了。
+
+## 单元测试
+
+先生成 `db` 文件
+
+```bash
+DATABASE_PATH=file://$PWD/domains/__tests__/output/data/family-flix.db yarn prisma db push
+```
 
 ## 效果预览
 
