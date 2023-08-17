@@ -171,4 +171,14 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("Top013.放牛班的春天.The.Chorus.2004.Bluray.1080p.x265.AAC(5.1).2Audios.GREENOTEA.mkv", () => {
+    const name = "Top013.放牛班的春天.The.Chorus.2004.Bluray.1080p.x265.AAC(5.1).2Audios.GREENOTEA.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "放牛班的春天",
+      original_name: "The.Chorus",
+      season: "",
+      episode: "",
+    });
+  });
 });

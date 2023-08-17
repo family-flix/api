@@ -68,14 +68,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page,
     page_size,
     list: list.map((episode) => {
-      const { id, episode_number, profile, parsed_episodes } = episode;
+      const { id, episode_text, profile, parsed_episodes } = episode;
       return {
         id,
         name: profile.name,
         overview: profile.overview,
         first_air_date: profile.air_date,
         runtime: profile.runtime,
-        episode_number,
+        episode_number: episode_text,
         sources: parsed_episodes.map((parsed_episode) => {
           const { id, file_id, file_name, parent_paths, size, drive } = parsed_episode;
           return {

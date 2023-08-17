@@ -47,10 +47,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const where: ModelQuery<typeof store.prisma.episode.findMany>["where"] = {
     profile: {
       tmdb_id: {
-        in: duplicate_episode_profiles.map((profile) => {
-          const { tmdb_id } = profile;
-          return tmdb_id;
-        }),
+        in: duplicate_episode_profiles
+          .map((profile) => {
+            const { tmdb_id } = profile;
+            return tmdb_id;
+          })
+          .filter(Boolean) as number[],
       },
     },
     user_id: user.id,
@@ -84,12 +86,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: count,
       no_more: (page - 1) * page_size + list.length >= count,
       list: list.map((episode) => {
-        const { id, episode_number, season_number, profile, tv, parsed_episodes } = episode;
+        const { id, episode_text, season_text, profile, tv, parsed_episodes } = episode;
         return {
           id,
           name: profile.name,
-          episode_number,
-          season_number,
+          episode_number: episode_text,
+          season_number: season_text,
           tmdb_id: profile.tmdb_id,
           tv: {
             name: tv.profile.name,

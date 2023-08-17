@@ -117,13 +117,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // const folder_groups: Record<string, string> = {};
   const { episodes } = tv;
   const parsed_episodes = episodes.reduce((total, cur) => {
-    const { episode_number, season_number } = cur;
+    const { episode_text, season_text } = cur;
     return total.concat(
       cur.parsed_episodes.map((parsed_episode) => {
         return {
           ...parsed_episode,
-          episode_number,
-          season_number,
+          episode_number: episode_text,
+          season_number: season_text,
         };
       })
     );
@@ -204,9 +204,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return {
             ...profile,
             seasons: seasons.map((s) => {
-              const { season_number, profile } = s;
+              const { season_text, profile } = s;
               return {
-                season_number,
+                season_number: season_text,
                 air_date: profile.air_date,
                 episode_count: profile.episode_count ?? 0,
               };
@@ -301,9 +301,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         return {
           ...profile,
           seasons: seasons.map((s) => {
-            const { season_number, profile } = s;
+            const { season_text, profile } = s;
             return {
-              season_number,
+              season_number: season_text,
               air_date: profile.air_date,
               episode_count: profile.episode_count ?? 0,
             };

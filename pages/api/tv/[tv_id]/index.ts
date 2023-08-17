@@ -60,14 +60,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     poster_path,
     popularity,
     episodes: episodes.map((episode) => {
-      const { id, season_number, episode_number, profile } = episode;
+      const { id, season_text, episode_text, profile } = episode;
       const { name, overview, runtime } = profile;
       return {
         id,
         name,
         overview,
-        season_number,
-        episode_number,
+        season_number: season_text,
+        episode_number: episode_text,
         runtime,
       };
     }),

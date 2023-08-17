@@ -1,6 +1,6 @@
 import {
   video_file_type_regexp,
-  normalize_episode_number,
+  normalize_episode_text,
   remove_str,
   chinese_num_to_num,
   padding_zero,
@@ -49,7 +49,7 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("有必要的春晚")) {
+    if (!filename.includes("The.Story.of.HongMao.and")) {
       return;
     }
     // console.log(...args);
@@ -221,6 +221,9 @@ export function parse_filename_for_video(
       regexp: /（[^）]{1,}）$/,
     },
     {
+      regexp: /^[tT][oO][pP][0-9]{1,}\./,
+    },
+    {
       regexp:
         /_File|HDJ|RusDub|Mandarin|[0-9]{5,}|百度云盘下载|主演团陪看|又名|超前点播直播现场|\.(?=[A-Z0-9]{1,}[A-Z])(?=[A-Z0-9]{1,}[0-9])[A-Z0-9]{8}\./,
       before() {
@@ -286,7 +289,7 @@ export function parse_filename_for_video(
     },
     {
       regexp:
-        /[国粤日]语(中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三]语|双语源码/,
+        /[国粤日][语配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三]语|双语源码/,
     },
     {
       regexp: /中字|双字/,
@@ -769,7 +772,7 @@ export function parse_filename_for_video(
         if (/[^sS](?![sS])[eE][pP]{0,1}[0-9]{1,}/.test(cur_filename)) {
           return;
         }
-        cur_filename = normalize_episode_number(cur_filename);
+        cur_filename = normalize_episode_text(cur_filename);
         log("[season]filename after adding E or P char", cur_filename);
       },
     },
@@ -784,6 +787,11 @@ export function parse_filename_for_video(
     {
       key: k("season"),
       regexp: /第[\u4e00-\u9fa5]{1,}[季部]/,
+    },
+    {
+      key: k("season"),
+      // 2nd_season 这种情况
+      regexp: /[1-9]{1,}[nN][dD]\.Season/,
     },
     {
       key: k("season"),
@@ -832,17 +840,17 @@ export function parse_filename_for_video(
           regexp: name_regexp,
           before() {
             remove_multiple_dot();
-            const include_chinese = !!cur_filename.match(/[\u4e00-\u9fa5]/);
+          },
+          after(matched_content) {
+            if (!matched_content) {
+              return undefined;
+            }
+            const include_chinese = !!matched_content.match(/[\u4e00-\u9fa5]/);
             if (include_chinese) {
               // 存在「一」，判断不了是中文还是日文？
               return {
                 skip: true,
               };
-            }
-          },
-          after(matched_content) {
-            if (!matched_content) {
-              return undefined;
             }
             const original_name_index = original_name.indexOf(matched_content);
             // 如果季数在 original_name 前面，original_name 视为无效
@@ -1066,7 +1074,6 @@ export function format_number(n: string, prefix = "S") {
     }
     return number;
   }
-
   if (number.match(/[eE][pP][0-9]{1,}/)) {
     return number.replace(/[pP]/, "");
   }
@@ -1076,14 +1083,18 @@ export function format_number(n: string, prefix = "S") {
   if (number.charAt(0) === "e") {
     return number.replace(/^e/, "E");
   }
+  // console.log("[UTILS]format_number before E01-E02");
   // E01-E02
   if (number.match(/[eE][pP]{0,1}[0-9]{1,}-{0,1}[eE]{0,1}[pP]{0,1}[0-9]{1,}/)) {
     const matched = number.match(/[eE][pP]{0,1}([0-9]{1,})-{0,1}[eE][pP]{0,1}([0-9]{1,})/);
-    if (!matched) {
-      return number;
+    // if (!matched) {
+    //   return number;
+    // }
+    if (matched) {
+      return `E${matched[1]}-${matched[2]}`;
     }
-    return `E${matched[1]}-${matched[2]}`;
   }
+  // console.log("[UTILS]format_number before 第01-02话");
   // 第01-02话
   if (number.match(/第[0-9]{1,}-[0-9]{1,}[话集]/)) {
     const matched = number.match(/第([0-9]{1,})-([0-9]{1,})[集话]/);
@@ -1093,7 +1104,7 @@ export function format_number(n: string, prefix = "S") {
     return `E${matched[1]}-${matched[2]}`;
   }
   // 第01-02话 处理成 E01-E02
-  // log("[](formatSeason)season", season);
+  // console.log("[](formatSeason)season");
   const matched = number.match(/[0-9]{1,}/);
   const extra = number.match(/Extended|Complete/);
   if (!matched) {

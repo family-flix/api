@@ -144,7 +144,7 @@ describe("动漫", () => {
       name: "灌篮高手",
       original_name: "",
       season: "",
-      episode: "E098",
+      episode: "E98",
     });
   });
   test("2001三少爷的剑31.mkv", () => {
@@ -224,7 +224,7 @@ describe("动漫", () => {
       name: "逆水寒",
       original_name: "D13",
       season: "",
-      episode: "E37-38",
+      episode: "E37",
     });
   });
   test("7.mp4", () => {
@@ -412,6 +412,56 @@ describe("动漫", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "万li",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("The.Story.of.HongMao.and.LanTu.S02.E8.再次响起.2008.720p.WEB-DL.AAC.H264-OurTV.mp4", () => {
+    const name = "The.Story.of.HongMao.and.LanTu.S02.E8.再次响起.2008.720p.WEB-DL.AAC.H264-OurTV.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "The.Story.of.HongMao.and.LanTu",
+      season: "S02",
+      episode: "E08",
+    });
+  });
+  test("《孤独的美食家 盛夏的博多 出差SP》第1集_高清 1080P+.mp4 ", () => {
+    const name = "《孤独的美食家 盛夏的博多 出差SP》第1集_高清 1080P+.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "孤独的美食家",
+      original_name: "",
+      season: "SP",
+      episode: "E01",
+    });
+  });
+  test("重启人生番外篇", () => {
+    const name = "重启人生番外篇";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "重启人生",
+      original_name: "",
+      season: "番外篇",
+      episode: "",
+    });
+  });
+  test("斗破苍穹年番 第18话 4K(超高清SDR) _Tacit0924.mp4", () => {
+    const name = "斗破苍穹年番 第18话 4K(超高清SDR) _Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "斗破苍穹年番",
+      original_name: "",
+      season: "",
+      episode: "E18",
+    });
+  });
+  test("F 付岩洞复仇者们付岩洞复仇者们国配", () => {
+    const name = "F 付岩洞复仇者们付岩洞复仇者们国配";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "付岩洞复仇者们付岩洞复仇者们",
       original_name: "",
       season: "",
       episode: "",

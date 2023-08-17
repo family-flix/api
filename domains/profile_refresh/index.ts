@@ -236,7 +236,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     });
     for (let i = 0; i < seasons.length; i += 1) {
       const season = seasons[i];
-      const { season_number: season_text } = season;
+      const { season_text } = season;
       const season_number = season_to_num(season_text);
       await (async () => {
         const new_season_profile = tv_profile_from_tmdb.seasons.find((s) => {
@@ -347,15 +347,15 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         tv_id: tv.id,
         user_id: this.user.id,
       },
-      by: ["season_number"],
+      by: ["season_text"],
     });
     for (let i = 0; i < seasons.length; i += 1) {
       await (async () => {
         const season = seasons[i];
-        const { season_number } = season;
+        const { season_text } = season;
         const r = await this.client.fetch_season_profile({
           tv_id: tv.profile.tmdb_id,
-          season_number: season_to_num(season_number),
+          season_number: season_to_num(season_text),
         });
         if (r.error) {
           return;
@@ -364,7 +364,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         const episodes = await this.store.prisma.episode.findMany({
           where: {
             tv_id: tv.id,
-            season_number,
+            season_text,
             user_id: this.user.id,
           },
           include: {
@@ -374,12 +374,12 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         for (let j = 0; j < episodes.length; j += 1) {
           await (async () => {
             const e = episodes[j];
-            const prev_episode_profile = e.profile;
-            let matched_episode_number = e.episode_number.match(/[0-9]{1,}/);
-            if (!matched_episode_number) {
+            // const prev_episode_profile = e.profile;
+            let matched_episode_text = e.episode_text.match(/[0-9]{1,}/);
+            if (!matched_episode_text) {
               return;
             }
-            const e_number = Number(matched_episode_number[0]);
+            const e_number = Number(matched_episode_text[0]);
             const next_episode_profile = (() => {
               const matched = new_season_profile.episodes.find((e) => {
                 return e.episode_number === e_number;

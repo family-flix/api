@@ -169,6 +169,7 @@ export class Member {
   user: User;
   nickname: string = "unknown";
   remark: string = "unknown";
+  avatar: string | null = null;
   /** JWT token */
   token: string;
 

@@ -67,14 +67,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: count,
       no_more: list.length + (page - 1) * page_size >= count,
       list: list.map((episode) => {
-        const { id, season_number, episode_number, profile, parsed_episodes, season_id } = episode;
+        const { id, season_text, episode_text, profile, parsed_episodes, season_id } = episode;
         const { name, overview } = profile;
         return {
           id,
           name,
           overview,
-          season_number,
-          episode_number,
+          season_number: season_text,
+          episode_number: episode_text,
           season_id,
           sources: parsed_episodes.map((parsed_episode) => {
             const { file_id, file_name } = parsed_episode;

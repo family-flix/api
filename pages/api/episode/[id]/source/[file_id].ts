@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (episode === null) {
     return e("没有匹配的影片记录");
   }
-  const { season_number, episode_number, profile, parsed_episodes } = episode;
+  const { season_text, episode_text, profile, parsed_episodes } = episode;
   const source = (() => {
     if (parsed_episodes.length === 0) {
       return null;
@@ -123,10 +123,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { url, type: t, width, height } = recommend;
   const result: MediaFile & { other: MediaFile[]; subtitles: { language: string; url: string }[] } = {
     id,
-    name: name || episode_number,
+    name: name || episode_text,
     overview: overview || "",
-    season_number,
-    episode_number,
+    season_number: season_text,
+    episode_number: episode_text,
     file_id,
     url,
     thumbnail,

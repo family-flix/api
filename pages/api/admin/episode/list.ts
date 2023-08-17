@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const {
     tv_id,
     season_id,
-    episode_number,
+    episode_number: episode_text,
     season_number,
     page: page_str = "1",
     page_size: page_size_str = "20",
@@ -43,10 +43,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (season_id) {
     where.season_id = season_id;
   }
-  if (episode_number) {
-    const e_n = episode_number.match(/[0-9]{1,}/);
+  if (episode_text) {
+    const e_n = episode_text.match(/[0-9]{1,}/);
     if (e_n) {
-      where.episode_number = {
+      where.episode_text = {
         contains: e_n[0].toString(),
       };
     }
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (season_number) {
     const s_n = season_number.match(/[0-9]{1,}/);
     if (s_n) {
-      where.season_number = {
+      where.season_text = {
         contains: s_n[0].toString(),
       };
     }
@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: count,
       no_more: list.length + (page - 1) * page_size >= count,
       list: list.map((episode) => {
-        const { id, season_number, episode_number, profile, parsed_episodes, season_id, tv, season } = episode;
+        const { id, season_text, episode_text, profile, parsed_episodes, season_id, tv, season } = episode;
         const { name, overview } = profile;
         return {
           id,
@@ -107,8 +107,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             name: season.profile.name,
             season_number: season.season_number,
           },
-          season_number,
-          episode_number,
+          season_number: season_text,
+          episode_number: episode_text,
           season_id,
           sources: parsed_episodes.map((parsed_episode) => {
             const { file_id, file_name } = parsed_episode;

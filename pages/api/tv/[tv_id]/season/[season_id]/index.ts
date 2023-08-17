@@ -55,13 +55,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     poster_path,
     season_number: name || season_number,
     episodes: episodes.map((episode) => {
-      const { id, profile, episode_number } = episode;
+      const { id, profile, episode_text } = episode;
       const { name, overview } = profile;
       return {
         id,
-        name: name || episode_number,
+        name: name || episode_text,
         overview,
-        episode_number,
+        episode_number: episode_text,
       };
     }),
   };

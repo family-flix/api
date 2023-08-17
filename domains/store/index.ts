@@ -187,6 +187,13 @@ export class DatabaseStore {
   find_report: ReturnType<typeof first_factory<PrismaClient["report"]>>;
   find_report_list: ReturnType<typeof many_factory<PrismaClient["report"]>>;
   find_report_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["report"]>>;
+  /** 问题反馈 */
+  add_permission: ReturnType<typeof add_factory<PrismaClient["permission"]>>;
+  update_permission: ReturnType<typeof update_factory<PrismaClient["permission"]>>;
+  delete_permission: ReturnType<typeof delete_factory<PrismaClient["permission"]>>;
+  find_permission: ReturnType<typeof first_factory<PrismaClient["permission"]>>;
+  find_permission_list: ReturnType<typeof many_factory<PrismaClient["permission"]>>;
+  find_permission_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["permission"]>>;
   /** 转存记录 */
   add_shared_file_save: ReturnType<typeof add_factory<PrismaClient["shared_file_in_progress"]>>;
   update_shared_file_save: ReturnType<typeof update_factory<PrismaClient["shared_file_in_progress"]>>;
@@ -407,6 +414,13 @@ export class DatabaseStore {
     this.find_report = first_factory<PrismaClient["report"]>(prisma.report);
     this.find_report_list = many_factory<PrismaClient["report"]>(prisma.report);
     this.find_report_list_with_pagination = pagination_factory<PrismaClient["report"]>(prisma.report);
+    /** 权限 */
+    this.add_permission = add_factory<PrismaClient["permission"]>(prisma.permission);
+    this.update_permission = update_factory<PrismaClient["permission"]>(prisma.permission);
+    this.delete_permission = delete_factory<PrismaClient["permission"]>(prisma.permission);
+    this.find_permission = first_factory<PrismaClient["permission"]>(prisma.permission);
+    this.find_permission_list = many_factory<PrismaClient["permission"]>(prisma.permission);
+    this.find_permission_list_with_pagination = pagination_factory<PrismaClient["permission"]>(prisma.permission);
     /** 转存记录 */
     this.add_shared_file_save = add_factory<PrismaClient["shared_file_in_progress"]>(prisma.shared_file_in_progress);
     this.update_shared_file_save = update_factory<PrismaClient["shared_file_in_progress"]>(

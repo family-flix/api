@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 
-import { bytes_to_size, normalize_episode_number, relative_time_from_now } from "..";
-import { is_japanese } from "../parse_filename_for_video";
+import { bytes_to_size, normalize_episode_text, relative_time_from_now } from "..";
+import { is_japanese, format_number } from "../parse_filename_for_video";
 
 // describe("tv is changed", () => {
 //   test("empty name to has value", () => {
@@ -81,22 +81,22 @@ import { is_japanese } from "../parse_filename_for_video";
 describe("normalize episode number", () => {
   test('".03.', () => {
     const name = ".03.";
-    const result = normalize_episode_number(name);
+    const result = normalize_episode_text(name);
     expect(result).toBe(".E03.");
   });
   test(".40.一天一夜（下）.", () => {
     const name = ".40.一天一夜（下）.";
-    const result = normalize_episode_number(name);
+    const result = normalize_episode_text(name);
     expect(result).toBe(".E40.一天一夜（下）.");
   });
   test(".24.", () => {
     const name = ".24.";
-    const result = normalize_episode_number(name);
+    const result = normalize_episode_text(name);
     expect(result).toBe(".E24.");
   });
   test("15.2.", () => {
     const name = "15.2.";
-    const result = normalize_episode_number(name);
+    const result = normalize_episode_text(name);
     expect(result).toBe(".E15.2.");
   });
 });
@@ -205,5 +205,13 @@ describe("is japanese", () => {
     const name = "龙珠GT";
     const is = is_japanese(name);
     expect(is).toBe(false);
+  });
+});
+
+describe("format_number", () => {
+  test("E003", () => {
+    const episode_text = "E003";
+    const result = format_number(episode_text, 'E');
+    expect(result).toBe("E03");
   });
 });
