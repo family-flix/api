@@ -70,8 +70,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             return {
               name: tv.profile.name,
               poster_path: tv.profile.poster_path,
-              episode_number: episode.episode_number,
-              season_number: episode.season_number,
+              episode_number: episode.episode_text,
+              season_number: episode.season_text,
             };
           }
           if (movie !== null) {

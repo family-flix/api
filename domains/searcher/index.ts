@@ -737,7 +737,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
       //       log(`[${prefix}]`, "新增季详情并关联");
       const adding_res = await this.store.add_season({
-        season_number: parsed_season.season_number,
+        season_text: parsed_season.season_number,
+        season_number: season_to_num(parsed_season.season_number),
         tv_id: parsed_tv.tv_id!,
         profile_id: profile_res.data.id,
         user_id,
@@ -828,7 +829,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   /**
    * 处理从 TMDB 搜索到的季，主要是上传图片
    */
-  async normalize_season_profile(latest_season: PartialSeasonFromTMDB, tv_profile: { tmdb_id: number }) {
+  async normalize_season_profile(latest_season: PartialSeasonFromTMDB, tv_profile: { tmdb_id: null | number }) {
     const { upload_image } = this.options;
     const { id, name, overview, air_date, season_number, episode_count, poster_path } = latest_season;
     return {
@@ -1045,8 +1046,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
       // log(`[${prefix}]`, "新增剧集详情并关联");
       const adding_res = await this.store.add_episode({
-        season_number: parsed_season.season_number,
-        episode_number: parsed_episode.episode_number,
+        episode_text: parsed_episode.episode_number,
+        episode_number: episode_to_num(parsed_episode.episode_number),
+        season_text: parsed_season.season_number,
         tv_id: parsed_tv.tv_id!,
         season_id: parsed_season.season_id!,
         profile_id: profile_res.data.id,
@@ -1109,10 +1111,27 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (tv === null) {
       return Result.Err("没有找到匹配的电视剧");
     }
+    /**
+     * 所有可能的 season_number
+     * SP
+     * 番外篇
+     */
     const s_n = season_to_num(season_number);
     if (typeof s_n === "string") {
       return Result.Err(`季数 '${season_number}' 不合法`);
     }
+    /**
+     * 所有可能的 episode_number
+     * 花絮1
+     * 彩蛋1
+     * 番外1
+     * CM01
+     * NC01
+     * 预告01
+     * PR01
+     * E01-02
+     * E01-E02
+     */
     const e_n = episode_to_num(episode_number);
     if (typeof e_n === "string") {
       return Result.Err(`集数 '${episode_number}' 不合法`);

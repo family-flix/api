@@ -20,10 +20,11 @@ export type ParsedFilename = {
 };
 
 export function padding_zero(str: number | string) {
-  if (String(str).length === 1) {
-    return `0${str}`;
+  const s = String(Number(str));
+  if (s.length === 1) {
+    return `0${s}`;
   }
-  return String(str);
+  return s;
 }
 export function remove_str(filename: string, index: number = 0, length: number, placeholder: string = "") {
   return filename.slice(0, index) + placeholder + filename.slice(index + length);
@@ -34,7 +35,7 @@ export function remove_str(filename: string, index: number = 0, length: number, 
  * @param filename
  * @returns
  */
-export function normalize_episode_number(filename: string) {
+export function normalize_episode_text(filename: string) {
   let name = filename;
   // if there only two number, use as episode number.
   if (/(\.|^)[-_]{0,1}([0-9]{2,3})(\.|$)/.test(name)) {
@@ -82,7 +83,7 @@ export function episode_to_num(str: string) {
   let s = str.replace(/[eE]/g, "");
   const matches = s.match(regex);
   if (!matches) {
-    return str;
+    return 0;
   }
   for (let i = 0; i < matches.length; i++) {
     const num = parseInt(matches[i], 10);
@@ -109,7 +110,7 @@ export function season_to_num(str: string) {
   let s = str.replace(/[sS]/g, "");
   const matches = s.match(regex);
   if (!matches) {
-    return str;
+    return -1;
   }
   for (let i = 0; i < matches.length; i++) {
     const num = parseInt(matches[i], 10);

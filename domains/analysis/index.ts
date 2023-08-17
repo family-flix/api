@@ -386,7 +386,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
             children: [
               new ArticleHeadNode({
                 level: 3,
-                text: "开始搜索电视剧信息",
+                text: "开始搜索影视剧信息",
               }),
             ],
           }),

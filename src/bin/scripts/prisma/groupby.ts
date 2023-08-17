@@ -13,7 +13,7 @@ async function main() {
     where: {
       tv_id: tv.id,
     },
-    by: ["season_id", "season_number"],
+    by: ["season_id", "season_text"],
   });
   console.log(episodes);
 }

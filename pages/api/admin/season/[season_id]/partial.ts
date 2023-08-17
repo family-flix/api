@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (season === null) {
     return e(Result.Err("没有匹配的电视剧记录"));
   }
-  const { id, season_number, profile, tv, _count } = season;
+  const { id, season_text, profile, tv, _count } = season;
   const { air_date, episode_count } = profile;
   const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
   const { name, original_name, overview, poster_path, popularity, need_bind, binds, valid_bind, sync_task } =
@@ -86,8 +86,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name,
     original_name,
     overview,
-    season_number,
-    season_text: season_to_chinese_num(season_number),
+    season_number: season_text,
+    season_text: season_to_chinese_num(season_text),
     poster_path: profile.poster_path || poster_path,
     first_air_date: air_date,
     popularity,

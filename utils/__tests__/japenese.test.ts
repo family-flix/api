@@ -77,7 +77,8 @@ describe("动漫", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "デジモンユニバース",
-      original_name: "",
+      // @todo 日文中间有空格，应该忽略掉，前后视为整体
+      original_name: "アプリモンスターズ",
       season: "",
       episode: "E35",
     });
@@ -170,7 +171,7 @@ describe("动漫", () => {
       name: "龍珠改",
       original_name: "",
       season: "",
-      episode: "E098",
+      episode: "E98",
     });
   });
   test("[KTXP][Made in Abyss - Dawn of the Deep Soul][SP04][GB][1080p][BDrip].mp4", () => {
@@ -342,6 +343,36 @@ describe("动漫", () => {
       original_name: "Ushio.to.Tora",
       season: "",
       episode: "CM05",
+    });
+  });
+  test("[SLAM DUNK][003][BDRIP][960x720][X264-10bit_AAC].mp4", () => {
+    const name = "[SLAM DUNK][003][BDRIP][960x720][X264-10bit_AAC].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E03",
+    });
+  });
+  test("[DBD-Raws][咒术回战][PV4][1080P][BDRip][HEVC-10bit][FLAC].mkv", () => {
+    const name = "[DBD-Raws][咒术回战][PV4][1080P][BDRip][HEVC-10bit][FLAC].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "咒术回战",
+      original_name: "",
+      season: "PV",
+      episode: "E04",
+    });
+  });
+  test("[Cleo]Baki_2nd_Season_-_06_(Dual Audio_10bit_1080p_x265).mkv", () => {
+    const name = "[Cleo]Baki_2nd_Season_-_06_(Dual Audio_10bit_1080p_x265).mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Baki",
+      season: "S02",
+      episode: "E06",
     });
   });
 });

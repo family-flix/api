@@ -13,7 +13,7 @@ model drive {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        unique_id        String    @unique
+        unique_id        String
         type             Int?      @default(0)
         name             String
         remark           String?
@@ -45,7 +45,9 @@ model drive {
         tmp_files               tmp_file[]
         parsed_movies           parsed_movie[]
         shared_file_in_progress shared_file_in_progress[]
+        subtitles               subtitle[]
 
+        @@unique([user_id, unique_id])
         @@map("Drive")
 }
 
@@ -121,7 +123,7 @@ model season_profile {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        tmdb_id       Int
+        tmdb_id       Int?
         name          String?
         overview      String?
         poster_path   String?
@@ -139,7 +141,7 @@ model episode_profile {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        tmdb_id  Int
+        tmdb_id  Int?
         name     String?
         overview String?
         air_date String?
@@ -171,6 +173,24 @@ model movie_profile {
         movie movie?
 }
 
+model subtitle {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        file_id  String
+        language String
+
+        movie_id   String?
+        movie      movie?   @relation(fields: [movie_id], references: [id])
+        episode_id String?
+        episode    episode? @relation(fields: [episode_id], references: [id])
+        drive_id   String
+        drive      drive    @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        user_id    String
+        user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
 // 根据 parsed_episode 创建的电视剧
 model parsed_tv {
         id      String   @id
@@ -191,10 +211,8 @@ model parsed_tv {
 
         tv_id    String?
         tv       tv?     @relation(fields: [tv_id], references: [id])
-        // 关联 drive 表
         drive_id String
         drive    drive   @relation(fields: [drive_id], references: [id], onDelete: Cascade)
-        // 关联 user 表
         user_id  String
         user     user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -313,10 +331,12 @@ model tv {
         // 是否隐藏
         hidden Int? @default(0)
 
-        profile_id String     @unique
-        profile    tv_profile @relation(fields: [profile_id], references: [id])
-        user_id    String
-        user       user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        profile_id    String      @unique
+        profile       tv_profile  @relation(fields: [profile_id], references: [id])
+        collection_id String?
+        collection    collection? @relation(fields: [collection_id], references: [id])
+        user_id       String
+        user          user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         play_histories  play_history[]
         seasons         season[]
@@ -334,14 +354,17 @@ model season {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        season_number String
+        season_text   String
+        season_number Int
 
-        profile_id String         @unique
-        profile    season_profile @relation(fields: [profile_id], references: [id])
-        tv_id      String
-        tv         tv             @relation(fields: [tv_id], references: [id], onDelete: Cascade)
-        user_id    String
-        user       user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        profile_id    String         @unique
+        profile       season_profile @relation(fields: [profile_id], references: [id])
+        collection_id String?
+        collection    collection?    @relation(fields: [collection_id], references: [id])
+        tv_id         String
+        tv            tv             @relation(fields: [tv_id], references: [id], onDelete: Cascade)
+        user_id       String
+        user          user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         parsed_season parsed_season[]
         episodes      episode[]
@@ -356,8 +379,9 @@ model episode {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        episode_number String
-        season_number  String
+        episode_text   String
+        season_text    String
+        episode_number Int
 
         profile_id String          @unique
         profile    episode_profile @relation(fields: [profile_id], references: [id])
@@ -371,6 +395,7 @@ model episode {
         parsed_episodes parsed_episode[]
         play_histories  play_history[]
         reports         report[]
+        subtitle        subtitle[]
 
         @@map("Episode")
 }
@@ -384,14 +409,33 @@ model movie {
         profile    movie_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
         // 关联 user 表
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user_id       String
+        user          user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        collection_id String?
+        collection    collection? @relation(fields: [collection_id], references: [id])
 
         play_histories play_history[]
         parsed_movies  parsed_movie[]
         reports        report[]
+        subtitle       subtitle[]
 
         @@map("Movie")
+}
+
+model collection {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        title String
+        desc  String?
+
+        tvs     tv[]
+        seasons season[]
+        movies  movie[]
+
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model async_task {
@@ -483,6 +527,7 @@ model recommended_tv {
 }
 
 // 用名字将 tv_profile 关联起来，当在 tmdb 搜索时优先在该表中查询，提高搜索性能
+// 已废弃
 model tv_profile_quick {
         id      String   @id
         created DateTime @default(now())
@@ -502,7 +547,7 @@ model shared_file {
         // 分享链接名称
         title   String?
         // 分享链接
-        url     String   @unique
+        url     String
 
         // 关联 user 表
         user_id String
@@ -673,23 +718,29 @@ model member {
         email    String?
         // 成员名字
         name     String?
+        avatar   String?
         // 成员备注
-        remark   String   @unique
+        remark   String
         // 是否禁用
         disabled Int?     @default(0)
         // 软删除
         delete   Int?     @default(0)
 
-        // 关联 user 表
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        inviter_id String?
+        inviter    member? @relation("InviterToInvitees", fields: [inviter_id], references: [id])
+        user_id    String
+        user       user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         member_tokens   member_token[]
         play_histories  play_history[]
         recommended_tvs recommended_tv[]
         reports         report[]
         member_setting  member_setting?
+        permission      permission[]
+        invitees        member[]              @relation("InviterToInvitees")
+        notifications   member_notification[]
 
+        @@unique([user_id, remark])
         @@map("Member")
 }
 
@@ -727,9 +778,34 @@ model member_setting {
         @@map("MemberSetting")
 }
 
-// model member_permission {
+model permission {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
 
-// }
+        desc String
+        code String
+
+        member_id String
+        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+        @@map("Permission")
+}
+
+model member_notification {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        content   String?
+        status    Int     @default(0)
+        is_delete Int     @default(0)
+
+        member_id String
+        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+        @@map("MemberNotification")
+}
 
 model notification {
         id      String   @id
@@ -868,6 +944,8 @@ model user {
         notifications           notification[]
         outputs                 output[]
         reports                 report[]
+        collections             collection[]
+        subtitles               subtitle[]
 
         @@map("User")
 }

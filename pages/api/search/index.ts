@@ -133,14 +133,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     total: tv_count + movie_count,
     list: tv_list
       .map((season) => {
-        const { id, tv_id, season_number, profile, tv } = season;
+        const { id, tv_id, season_text, profile, tv } = season;
         const { air_date } = profile;
         const { name, original_name, overview, poster_path, popularity } = tv.profile;
         const r = {
           id,
           tv_id,
           type: 1,
-          season_number,
+          season_number: season_text,
           name: name || original_name,
           overview,
           poster_path: profile.poster_path || poster_path,

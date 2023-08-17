@@ -15,7 +15,7 @@ function parse_argv(args: string[]) {
 }
 
 async function main() {
-  const app = new Application({ root_path: process.cwd() });
+  const app = new Application({ root_path: process.env.OUTPUT_PATH || process.cwd() });
   const args = parse_argv(process.argv);
   process.env.DATABASE_PATH = `file://${app.database_path}`;
   const r = await setup({ app });

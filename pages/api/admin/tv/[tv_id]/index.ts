@@ -121,7 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       cur_season: {
         id: cur_season.id,
         name: cur_season.profile.name,
-        season_text: season_to_chinese_num(cur_season.season_number),
+        season_text: season_to_chinese_num(cur_season.season_text),
       },
       cur_season_episodes: await (async () => {
         if (!cur_season) {
@@ -147,13 +147,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           take: 20,
         });
         return episodes.map((episode) => {
-          const { id, episode_number, profile, parsed_episodes } = episode;
+          const { id, episode_text, profile, parsed_episodes } = episode;
           return {
             id,
             name: profile.name,
             overview: profile.overview,
             runtime: profile.runtime,
-            episode_number: episode_number,
+            episode_number: episode_text,
             first_air_date: profile.air_date,
             sources: parsed_episodes.map((source) => {
               const { id, file_id, file_name, parent_paths, size, drive } = source;

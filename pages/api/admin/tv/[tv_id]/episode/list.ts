@@ -58,12 +58,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page,
     page_size,
     list: list.map((episode) => {
-      const { id, profile, episode_number } = episode;
+      const { id, profile, episode_text } = episode;
       return {
         id,
         name: profile.name,
         overview: profile.overview,
-        episode_number,
+        episode_number: episode_text,
         first_air_date: profile.air_date,
         tmdb_id: profile.tmdb_id,
       };

@@ -111,7 +111,10 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     // console.log("[DOMAINS]Drive - Add", drive_id);
     const existing_drive = await store.prisma.drive.findUnique({
       where: {
-        unique_id: String(drive_id),
+        user_id_unique_id: {
+          unique_id: String(drive_id),
+          user_id,
+        },
       },
     });
     if (existing_drive) {
@@ -181,11 +184,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     });
     return Result.Ok(drive);
   }
-  static async Existing(body: { drive_id: number }, store: DatabaseStore) {
-    const { drive_id } = body;
+  static async Existing(body: { drive_id: number; user_id: string }, store: DatabaseStore) {
+    const { drive_id, user_id } = body;
     const existing_drive = await store.prisma.drive.findUnique({
       where: {
-        unique_id: String(drive_id),
+        user_id_unique_id: {
+          unique_id: String(drive_id),
+          user_id,
+        },
       },
     });
     if (existing_drive) {
@@ -323,6 +329,33 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         root_folder_id,
         root_folder_name,
       },
+    });
+    return Result.Ok(null);
+  }
+
+  /** 设置云盘名称（所有地方都展示这个名字） */
+  async set_name(values: { name: string; remark?: string }) {
+    const { store } = this;
+    const schema = Joi.object({
+      name: Joi.string().required(),
+      remark: Joi.string(),
+    });
+    const r = await resultify(schema.validateAsync.bind(schema))(values);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { name, remark } = values;
+    const data: { name: string; remark?: string } = {
+      name,
+    };
+    if (remark) {
+      data.remark = remark;
+    }
+    await store.prisma.drive.update({
+      where: {
+        id: this.id,
+      },
+      data,
     });
     return Result.Ok(null);
   }

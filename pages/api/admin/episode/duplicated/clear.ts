@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
       for (let i = 0; i < episodes.length; i += 1) {
         const e = episodes[i];
-        console.log("删除", e.tv.profile.name, e.episode_number, e.profile.name);
+        // console.log("删除", e.tv.profile.name, e.episode_number, e.profile.name);
         await store.prisma.episode.delete({
           where: {
             id: e.id,

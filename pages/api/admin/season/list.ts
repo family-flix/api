@@ -103,10 +103,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     queries = queries.concat({
       tmdb_id: {
-        in: duplicate_tv_profiles.map((profile) => {
-          const { tmdb_id } = profile;
-          return tmdb_id;
-        }),
+        in: duplicate_tv_profiles
+          .map((profile) => {
+            const { tmdb_id } = profile;
+            return tmdb_id;
+          })
+          .filter(Boolean) as number[],
       },
     });
   }
@@ -134,7 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (season_number) {
     const sn = season_number.match(/[0-9]{1,}/);
     if (sn) {
-      where.season_number = {
+      where.season_text = {
         contains: parseInt(sn[0]).toString(),
       };
     }
@@ -185,7 +187,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     total: count,
     list: list
       .map((season) => {
-        const { id, season_number, profile, tv, _count } = season;
+        const { id, season_text, profile, tv, _count } = season;
         const { air_date, episode_count } = profile;
         const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
         const { name, original_name, overview, poster_path, popularity, need_bind, sync_task, valid_bind, binds } =
@@ -206,8 +208,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           name,
           original_name,
           overview,
-          season_number,
-          season_text: season_to_chinese_num(season_number),
+          season_number: season_text,
+          season_text: season_to_chinese_num(season_text),
           poster_path: profile.poster_path || poster_path,
           first_air_date: air_date,
           popularity,
