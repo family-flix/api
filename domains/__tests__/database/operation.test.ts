@@ -21,7 +21,7 @@ describe("删除文件夹及子孙文件夹", async () => {
     }
     const user = user_res.data;
     const drive_res = await (async () => {
-      const existing_res = await Drive.Existing({ drive_id: 3123 }, store);
+      const existing_res = await Drive.Existing({ drive_id: 3123, user_id: user.id }, store);
       if (existing_res.data) {
         return Result.Ok(existing_res.data);
       }

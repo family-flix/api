@@ -109,9 +109,12 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       total_size,
     } = r.data as AliyunDrivePayload;
     // console.log("[DOMAINS]Drive - Add", drive_id);
-    const existing_drive = await store.prisma.drive.findFirst({
+    const existing_drive = await store.prisma.drive.findUnique({
       where: {
-        unique_id: String(drive_id),
+        user_id_unique_id: {
+          unique_id: String(drive_id),
+          user_id,
+        },
       },
     });
     if (existing_drive) {
@@ -181,11 +184,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     });
     return Result.Ok(drive);
   }
-  static async Existing(body: { drive_id: number }, store: DatabaseStore) {
-    const { drive_id } = body;
-    const existing_drive = await store.prisma.drive.findFirst({
+  static async Existing(body: { drive_id: number; user_id: string }, store: DatabaseStore) {
+    const { drive_id, user_id } = body;
+    const existing_drive = await store.prisma.drive.findUnique({
       where: {
-        unique_id: String(drive_id),
+        user_id_unique_id: {
+          unique_id: String(drive_id),
+          user_id,
+        },
       },
     });
     if (existing_drive) {
