@@ -36,7 +36,7 @@ describe("删除文件夹及子孙文件夹", async () => {
             avatar: "",
             refresh_token: "world",
             access_token: "hello",
-            aliyun_user_id: "something",
+            user_id: "something",
             root_folder_id: "",
           },
           user_id: user.id,

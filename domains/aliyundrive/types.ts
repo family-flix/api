@@ -49,7 +49,7 @@ export type AliyunDrivePayload = {
   avatar: string;
   nick_name: string;
   user_name: string;
-  aliyun_user_id: string;
+  user_id: string;
   /** 这个名称是导出云盘凭证时会有的，和 user_name、nick_name 相比优先取这个 */
   name?: string;
   /** 这个是导出云盘凭证时会有的 */
