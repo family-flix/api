@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (p_res.error) {
         return Result.Err(p_res.error);
       }
-      const { app_id, drive_id, device_id, aliyun_user_id } = p_res.data;
+      const { app_id, drive_id, device_id, user_id } = p_res.data;
       const drive_token_res = await store.find_aliyun_drive_token({
         drive_id: drive_record.id,
       });
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         device_id,
         avatar,
         name,
-        aliyun_user_id,
+        user_id,
         root_folder_id,
         total_size,
         used_size,
