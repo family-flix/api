@@ -4,13 +4,13 @@
 import { describe, test, expect } from "vitest";
 
 import { fetch_files_factory } from "@/domains/walker/utils";
-import { data, id } from "@/mock/gong_su";
-import { data as updated_data } from "@/mock/gong_su.updated";
+import { data, id } from "@/mock/da_song_shao_nian_zhi2";
+import { data as updated_data } from "@/mock/da_song_shao_nian_zhi2.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
 
 describe("detect a tv dir", () => {
-  test("公诉", async () => {
+  test("大宋少年志", async () => {
     const prev_folder = new Folder(id, {
       client: fetch_files_factory({
         tree: data,
@@ -29,7 +29,7 @@ describe("detect a tv dir", () => {
       unique_key: "name",
     });
     await differ.run();
-    expect(differ.effects.length).toBe(3);
+    expect(differ.effects.length).toBe(2);
     differ.effects.map((e) => {
       console.log(e.payload.name);
       console.log(e.payload.parents);
