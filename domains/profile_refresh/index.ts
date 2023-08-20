@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { Handler } from "mitt";
 
 import { BaseDomain } from "@/domains/base";
@@ -73,7 +74,25 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const page_size = 20;
     let page = 1;
     let no_more = false;
-    const where: ModelQuery<typeof this.store.prisma.tv.findMany>["where"] = {};
+    const where: ModelQuery<typeof this.store.prisma.tv.findMany>["where"] = {
+      OR: [
+        {
+          profile: {
+            created: {
+              gte: dayjs().subtract(1, "month").toISOString(),
+            },
+            // first_air_date: {
+            //   lt: new Date()
+            // }
+          },
+        },
+        {
+          profile: {
+            first_air_date: null,
+          },
+        },
+      ],
+    };
     const count = await this.store.prisma.tv.count({
       where,
     });
