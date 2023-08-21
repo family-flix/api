@@ -9,7 +9,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { normalize_partial_tv } from "@/domains/tv/utils";
-import { TVProfileWhereInput } from "@/domains/store/types";
+import { ModelQuery, TVProfileWhereInput } from "@/domains/store/types";
 import { season_to_chinese_num } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -19,6 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     genres,
     language,
     drive_id,
+    drive_ids,
     season_number,
     invalid = "0",
     duplicated = "0",
@@ -28,7 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name: string;
     genres: string;
     language: string;
+    /** @deprecated */
     drive_id: string;
+    drive_ids: string;
     season_number: string;
     invalid: string;
     duplicated: string;
@@ -112,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     });
   }
-  const where: NonNullable<Parameters<typeof store.prisma.season.findMany>[0]>["where"] = {
+  const where: ModelQuery<typeof store.prisma.season.findMany>["where"] = {
     episodes: {
       some: {},
     },
@@ -122,6 +125,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where.tv = {
       profile: {
         AND: queries,
+      },
+    };
+  }
+  if (drive_ids) {
+    where.parsed_season = {
+      every: {
+        drive_id: {
+          in: drive_ids.split("|"),
+        },
       },
     };
   }

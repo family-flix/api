@@ -107,7 +107,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     list: list.map((movie) => {
       const { id, profile } = movie;
-      const { name, original_name, overview, vote_average, runtime, air_date, poster_path, popularity } = profile;
+      const {
+        name,
+        original_name,
+        overview,
+        vote_average,
+        runtime,
+        air_date,
+        poster_path,
+        popularity,
+        genres,
+        origin_country,
+      } = profile;
       return {
         id,
         name,
@@ -117,6 +128,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         poster_path,
         popularity,
         vote_average,
+        genres,
+        origin_country,
         runtime,
       };
     }),

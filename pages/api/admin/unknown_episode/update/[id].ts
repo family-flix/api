@@ -1,5 +1,5 @@
 /**
- * @file 更新未识别的季 季数
+ * @file 更新未识别的剧集信息
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -17,14 +17,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { season_number } = req.body as Partial<{ season_number: string }>;
 
   if (!id) {
-    return e("缺少季 id");
+    return e("缺少剧集 id");
   }
-  if (!season_number) {
-    return e("缺少 season_number");
-  }
-  if (!season_number.match(/[sS][0-9]{1,}/)) {
-    return e("season 不满足 [sS][0-9]{1,} 格式");
-  }
+  // if (!season_number.match(/[sS][0-9]{1,}/)) {
+  //   return e("season 不满足 [sS][0-9]{1,} 格式");
+  // }
 
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -32,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
 
-  const parsed_season = await store.prisma.parsed_season.findFirst({
+  const parsed_episode = await store.prisma.parsed_episode.findFirst({
     where: {
       id,
       user_id: user.id,
@@ -41,14 +38,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       parsed_tv: true,
     },
   });
-  if (!parsed_season) {
+  if (!parsed_episode) {
     return e("没有匹配的季");
   }
-
-  const { parsed_tv_id, parsed_tv, drive_id } = parsed_season;
-  if (parsed_season.season_number === season_number) {
-    return e(`季已经是 '${season_number}' 了`);
-  }
+  const { parsed_tv, drive_id } = parsed_episode;
   const searcher_res = await MediaSearcher.New({
     user_id: user.id,
     drive_id,
@@ -59,24 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   if (searcher_res.error) {
     return e(searcher_res);
-  }
-  const searcher = searcher_res.data;
-  const r = await searcher.search_season_profile_then_link_parsed_season({
-    parsed_tv,
-    parsed_season: {
-      ...parsed_season,
-      season_number,
-    },
-  });
-  if (r.error) {
-    return e(r.error);
-  }
-  const r2 = await store.update_parsed_season(parsed_season.id, {
-    season_number,
-    correct_season_number: season_number,
-  });
-  if (r2.error) {
-    return e(r2);
   }
   res.status(200).json({ code: 0, msg: "修改成功", data: null });
 }
