@@ -1,10 +1,4 @@
-import {
-  video_file_type_regexp,
-  normalize_episode_text,
-  remove_str,
-  chinese_num_to_num,
-  padding_zero,
-} from "./index";
+import { video_file_type_regexp, normalize_episode_text, remove_str, chinese_num_to_num, padding_zero } from "./index";
 
 export const VIDEO_KEYS_MAP = {
   name: "",
@@ -49,10 +43,10 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("The.Story.of.HongMao.and")) {
+    if (!filename.includes("大破天幕杀机")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -362,7 +356,7 @@ export function parse_filename_for_video(
       regexp: /完整全集/,
     },
     {
-      regexp: /国漫/,
+      regexp: /国漫|[0-9]{1,}年日剧\.{0,1}/,
     },
     {
       regexp: /[0-9]{1,}集特别版/,
@@ -630,7 +624,21 @@ export function parse_filename_for_video(
     // 因为影片名支持以数字结尾，如「还珠格格3」
     {
       key: k("name"),
-      desc: "chinese name",
+      desc: "chinese name1",
+      // 数字开头的，如 007：大破天幕杀机
+      regexp: /^([0-9]{1,}[：\u4e00-\u9fa5]{1,})\./,
+      pick: [1],
+    },
+    {
+      key: k("name"),
+      desc: "chinese name2",
+      // 只有一个字的影视剧
+      regexp: /^([\u4e00-\u9fa5])\./,
+      pick: [1],
+    },
+    {
+      key: k("name"),
+      desc: "chinese name3",
       // 中文开头，中间可以包含数字，以中文结尾
       regexp:
         /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！，：·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5）])\]{0,1}/,
@@ -743,6 +751,10 @@ export function parse_filename_for_video(
     },
     {
       key: k("voice_encode"),
+      regexp: /DTSHD-MA/,
+    },
+    {
+      key: k("voice_encode"),
       /**
        * 2声道的多为 AAC、M4a
        * 多声道的多为 AC3(DD)、eAC3(DDP、DD+)、TrueHD(MLP)
@@ -769,9 +781,14 @@ export function parse_filename_for_video(
         if (result.episode) {
           return;
         }
+        // xxxxep01 xxxxe01 就跳过
         if (/[^sS](?![sS])[eE][pP]{0,1}[0-9]{1,}/.test(cur_filename)) {
           return;
         }
+        // 007：大破天幕杀机 兼容这种多个数字开头的
+        // if (/^[0-9]{1,}/.test(cur_filename)) {
+        //   return;
+        // }
         cur_filename = normalize_episode_text(cur_filename);
         log("[season]filename after adding E or P char", cur_filename);
       },

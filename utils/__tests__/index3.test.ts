@@ -467,4 +467,24 @@ describe("动漫", () => {
       episode: "",
     });
   });
+  test("【幻月字幕组】【23年日剧】【心灵内科医生 稻生知性】【01】【1080P】【中文字幕】.mp4", () => {
+    const name = "【幻月字幕组】【23年日剧】【心灵内科医生 稻生知性】【01】【1080P】【中文字幕】.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "心灵内科医生",
+      original_name: "",
+      season: "",
+      episode: "E01",
+    });
+  });
+  test("不.中英双字.V1.Nope.2022.HD1080P.X264.AAC.mp4", () => {
+    const name = "不.中英双字.V1.Nope.2022.HD1080P.X264.AAC.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "不",
+      original_name: "V1.Nope",
+      season: "",
+      episode: "",
+    });
+  });
 });

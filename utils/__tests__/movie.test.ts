@@ -181,4 +181,24 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("Top028.十二怒汉(CC标准收藏版).12.Angry.Men.1957.CC.Bluray.1080p.x265.AAC.GREENOTEA.mkv", () => {
+    const name = "Top028.十二怒汉(CC标准收藏版).12.Angry.Men.1957.CC.Bluray.1080p.x265.AAC.GREENOTEA.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "十二怒汉",
+      original_name: "",
+      season: "",
+      // @todo 电视剧和电影合在一起解析，这种就很难避免
+      episode: "E12",
+    });
+  });
+  test("007：大破天幕杀机 (2012) DV 2160p DTSHD-MA.mkv", () => {
+    const result = parse_filename_for_video("007：大破天幕杀机 (2012) DV 2160p DTSHD-MA.mkv");
+    expect(result).toStrictEqual({
+      name: "007：大破天幕杀机",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });
