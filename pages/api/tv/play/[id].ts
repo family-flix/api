@@ -5,9 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { BaseApiResp, Result } from "@/types";
 import { store } from "@/store";
+import { response_error_factory } from "@/utils/backend";
 import { season_to_chinese_num } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { id, season_id } = req.query as Partial<{ id: string; season_id: string }>;
   if (!id) {
-    return e("缺少电视剧 id");
+    return e(Result.Err("缺少电视剧 id"));
   }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
@@ -45,11 +45,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (tv === null) {
-    return e("没有匹配的电视剧记录");
+    return e(Result.Err("没有匹配的电视剧记录"));
   }
   const { profile, play_histories, seasons } = tv;
   if (seasons.length === 0) {
-    return e("该电视剧暂无季信息");
+    return e(Result.Err("该电视剧暂无季信息"));
   }
   const target_season = (() => {
     if (season_id) {
@@ -147,11 +147,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         episode_number: episode_text,
         season_id,
         sources: parsed_episodes.map((parsed_episode) => {
-          const { file_id, file_name } = parsed_episode;
+          const { file_id, file_name, parent_paths } = parsed_episode;
           return {
             id: file_id,
             file_id,
             file_name,
+            parent_paths,
           };
         }),
       };

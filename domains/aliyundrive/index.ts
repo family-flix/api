@@ -1243,6 +1243,54 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok({ file_id, file_name });
   }
+  /**
+   * 上传文件到云盘前，先调用该方法获取到上传地址
+   */
+  async create_with_folder(body: {
+    content_hash: string;
+    content_hash_name: "sha1";
+    name: string;
+    parent_file_id: string;
+    part_info_list: { part_number: number }[];
+    proof_code: string;
+    size: number;
+    type: "file";
+  }) {
+    // await this.ensure_initialized();
+    const url = "/adrive/v2/file/createWithFolders";
+    const b = {
+      ...body,
+      check_name_mode: "overwrite",
+      create_scene: "file_upload",
+      proof_version: "v1",
+      device_name: "",
+      drive_id: String(this.drive_id),
+    };
+    const r = await this.request.post<{
+      parent_file_id: string;
+      part_info_list: {
+        part_number: number;
+        // 用该地址上传
+        upload_url: string;
+        internal_upload_url: string;
+        content_type: string;
+      }[];
+      upload_id: string;
+      rapid_upload: boolean;
+      type: string;
+      file_id: string;
+      revision_id: string;
+      domain_id: string;
+      drive_id: string;
+      file_name: string;
+      encrypt_mode: string;
+      location: string;
+    }>(API_HOST + url, b);
+    if (r.error) {
+      return r;
+    }
+    return Result.Ok(r.data);
+  }
   async ping() {
     // await this.ensure_initialized();
     const r = await this.request.post(API_HOST + "/adrive/v2/user/get", {});
@@ -1600,3 +1648,21 @@ function run<T extends (...args: any[]) => Promise<{ error: Error | null; finish
   }) as Promise<Result<Unpacked<ReturnType<T>>["data"]>>;
   return p;
 }
+
+// curl 'https://api.aliyundrive.com/adrive/v2/file/createWithFolders' \
+//   -H 'authority: api.aliyundrive.com' \
+//   -H 'accept: application/json, text/plain, */*' \
+//   -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8' \
+//   -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTY1MDQ1ZWVmODQ0NDVjYmRlY2U3OTBhZWJlNTRiZCIsImN1c3RvbUpzb24iOiJ7XCJjbGllbnRJZFwiOlwiMjVkelgzdmJZcWt0Vnh5WFwiLFwiZG9tYWluSWRcIjpcImJqMjlcIixcInNjb3BlXCI6W1wiRFJJVkUuQUxMXCIsXCJTSEFSRS5BTExcIixcIkZJTEUuQUxMXCIsXCJVU0VSLkFMTFwiLFwiVklFVy5BTExcIixcIlNUT1JBR0UuQUxMXCIsXCJTVE9SQUdFRklMRS5MSVNUXCIsXCJCQVRDSFwiLFwiT0FVVEguQUxMXCIsXCJJTUFHRS5BTExcIixcIklOVklURS5BTExcIixcIkFDQ09VTlQuQUxMXCIsXCJTWU5DTUFQUElORy5MSVNUXCIsXCJTWU5DTUFQUElORy5ERUxFVEVcIl0sXCJyb2xlXCI6XCJ1c2VyXCIsXCJyZWZcIjpcImh0dHBzOi8vd3d3LmFsaXl1bmRyaXZlLmNvbS9cIixcImRldmljZV9pZFwiOlwiODhmOTgzNGYzZWE5NGY3MjliMTY0ZThlMTU2NGVjYTNcIn0iLCJleHAiOjE2OTI4MTEwMTEsImlhdCI6MTY5MjgwMzc1MX0.lboIbl1kEPcZ9UwFNsUcwHIh7Bj6fTnyzW8vgc-5Iu91ZzkarKM6VPSoxYMaSJikzGoHQTyz3XNwVrOimS03NeC6ppdC4VoQhbsSBeEM1SDvtAi0Z5p4saurjBEJY1XPekIhjW4u_Cy69UArPaYxrChZDqG6Rf6Fy3refx-3Dw0' \
+//   -H 'content-type: application/json' \
+//   -H 'origin: https://www.aliyundrive.com' \
+//   -H 'referer: https://www.aliyundrive.com/' \
+//   -H 'sec-ch-ua: "Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"' \
+//   -H 'sec-ch-ua-mobile: ?0' \
+//   -H 'sec-ch-ua-platform: "macOS"' \
+//   -H 'sec-fetch-dest: empty' \
+//   -H 'sec-fetch-mode: cors' \
+//   -H 'sec-fetch-site: same-site' \
+//   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36' \
+//   --data-raw '{"drive_id":"622310670","part_info_list":[{"part_number":1}],"parent_file_id":"root","name":"example01.png","type":"file","check_name_mode":"overwrite","size":4930,"create_scene":"","device_name":"","content_hash":"455FDA33DA839628F1DE6B7929FE3C5B595A69EE","content_hash_name":"sha1","proof_code":"BTLmRomai1Y=","proof_version":"v1"}' \
+//   --compressed

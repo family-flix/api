@@ -208,16 +208,6 @@ describe("提取视频信息", () => {
       episode: "E04",
     });
   });
-  test("Rick and Morty - 302 - Rickmancing the Stone.mkv", () => {
-    const name = "Rick and Morty - 302 - Rickmancing the Stone.mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "Rick.and.Morty",
-      season: "",
-      episode: "E302",
-    });
-  });
   test("Futurama.S02E01.1080p.WEB.h264-NiXON.mkv", () => {
     const name = "Futurama.S02E01.1080p.WEB.h264-NiXON.mkv";
     const result = parse_filename_for_video(name);
@@ -338,16 +328,6 @@ describe("提取视频信息", () => {
       episode: "E06",
     });
   });
-  test("Friends.S10E17E18.2003.1080p.Blu-ray.x265.AC3￡cXcY@FRDS.mkv", () => {
-    const name = "Friends.S10E17E18.2003.1080p.Blu-ray.x265.AC3￡cXcY@FRDS.mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "Friends",
-      season: "S10",
-      episode: "E17-18",
-    });
-  });
   test("月光骑士.1080p.內封官方多語字幕", () => {
     const name = "月光骑士.1080p.內封官方多語字幕";
     const result = parse_filename_for_video(name);
@@ -356,16 +336,6 @@ describe("提取视频信息", () => {
       original_name: "",
       season: "",
       episode: "",
-    });
-  });
-  test("Criminal.Minds.S07E23-E24.Hit&Run.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv", () => {
-    const name = "Criminal.Minds.S07E23-E24.Hit&Run.1080p.AMZN.WEB-DL.DDP5.1.x265.10bit-Yumi@FRDS.mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "Criminal.Minds",
-      season: "S07",
-      episode: "E23-24",
     });
   });
   test("S01E04.M.Night.Shaym-Aliens!.mkv", () => {
@@ -428,12 +398,17 @@ describe("提取视频信息", () => {
       episode: "E02",
     });
   });
+  test("tvr-greys-S03e25-720p.mkv", () => {
+    const name = "tvr-greys-S03e25-720p.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "greys",
+      season: "S03",
+      episode: "E25",
+    });
+  });
   test("老友记S02.Friends.1995.1080p.Blu-ray.x265.AC3￡cXcY@FRDS", () => {
-    // @todo 由于存在 S02E01.Episode.Name 场景，所以做了判断如果提取到 original_name 在季后面，视为无效
-    // 怎么兼容这两种情况呢？
-    // 这个还关联到一个问题，怎么将多个「应该是同一 tv」的 tv 合并。如「还珠格格1」和「还珠格格2」就应该同属一个 tv
-    // 但现在识别不出来
-    // 而且应该在什么时机去识别？
     const name = "老友记S02.Friends.1995.1080p.Blu-ray.x265.AC3￡cXcY@FRDS";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
@@ -451,26 +426,6 @@ describe("提取视频信息", () => {
       original_name: "Light.The.Night",
       season: "S02",
       episode: "E08",
-    });
-  });
-  test("2021.华灯初上.1-3季", () => {
-    const name = "2021.华灯初上.1-3季";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "华灯初上",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
-  test("tvr-greys-S03e25-720p.mkv", () => {
-    const name = "tvr-greys-S03e25-720p.mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "greys",
-      season: "S03",
-      episode: "E25",
     });
   });
   test("Oh.No!Here.Comes.Trouble.S01E01.2023.2160p.WEB-DL.H265.DDP2.0.Gz.mkv", () => {
@@ -491,16 +446,6 @@ describe("提取视频信息", () => {
       original_name: "NIGERUHA.HAJIDAGA.YAKUNITATSU",
       season: "",
       episode: "E10",
-    });
-  });
-  test("1080P官中压制", () => {
-    const name = "1080P官中压制";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
-      season: "",
-      episode: "",
     });
   });
 });

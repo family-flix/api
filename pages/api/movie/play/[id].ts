@@ -70,7 +70,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     popularity,
     current_time,
     thumbnail,
-    sources: parsed_movies,
+    sources: parsed_movies.map((source) => {
+      const { file_id, file_name, parent_paths } = source;
+      return {
+        file_id,
+        file_name,
+        parent_paths,
+      };
+    }),
     cur_source: (() => {
       const cur = parsed_movies.find((source) => {
         return source.file_id === file_id;

@@ -292,18 +292,18 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const normalized_profile = await this.searcher.normalize_season_profile(new_profile, season.profile);
     const diff = check_season_profile_need_refresh(season.profile, normalized_profile);
     if (!diff) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleLineNode({
-              children: ["季", `「${season.profile.name}」`, "没有变化的内容"].map((text) => {
-                return new ArticleTextNode({ text: text! });
-              }),
-            }),
-          ],
-        })
-      );
+      // this.emit(
+      //   Events.Print,
+      //   new ArticleSectionNode({
+      //     children: [
+      //       new ArticleLineNode({
+      //         children: ["季", `「${season.profile.name}」`, "没有变化的内容"].map((text) => {
+      //           return new ArticleTextNode({ text: text! });
+      //         }),
+      //       }),
+      //     ],
+      //   })
+      // );
       return Result.Ok(null);
     }
     const prefix = [name].join("-");
@@ -430,18 +430,18 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     );
     const diff = check_episode_profile_need_refresh(episode.profile, normalized_profile);
     if (!diff) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleLineNode({
-              children: ["剧集", `「${episode.profile.name}」`, "没有变化的内容"].map((text) => {
-                return new ArticleTextNode({ text: text! });
-              }),
-            }),
-          ],
-        })
-      );
+      //   this.emit(
+      //     Events.Print,
+      //     new ArticleSectionNode({
+      //       children: [
+      //         new ArticleLineNode({
+      //           children: ["剧集", `「${episode.profile.name}」`, "没有变化的内容"].map((text) => {
+      //             return new ArticleTextNode({ text: text! });
+      //           }),
+      //         }),
+      //       ],
+      //     })
+      //   );
       return Result.Ok(null);
     }
     const prefix = [name, episode.episode_number].join("-");
@@ -545,22 +545,20 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       },
       r.data
     );
-    console.log("旧的电影详情", movie.profile);
-    console.log("新的电影详情", normalized_profile);
     const diff = check_movie_need_refresh(movie.profile, normalized_profile);
     if (!diff) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleLineNode({
-              children: ["电影", `「${movie.profile.name}」`, "没有变化的内容"].map((text) => {
-                return new ArticleTextNode({ text: text! });
-              }),
-            }),
-          ],
-        })
-      );
+      // this.emit(
+      //   Events.Print,
+      //   new ArticleSectionNode({
+      //     children: [
+      //       new ArticleLineNode({
+      //         children: ["电影", `「${movie.profile.name}」`, "没有变化的内容"].map((text) => {
+      //           return new ArticleTextNode({ text: text! });
+      //         }),
+      //       }),
+      //     ],
+      //   })
+      // );
       return Result.Ok(null);
     }
     this.emit(

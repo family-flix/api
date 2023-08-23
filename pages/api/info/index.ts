@@ -27,7 +27,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     id: member.id,
     nickname: member.nickname,
     avatar: member.avatar,
-    p: p_res.data,
+    permissions: p_res.data.map((p) => {
+      const { id, code } = p;
+      return {
+        id,
+        code,
+      };
+    }),
   };
   res.status(200).json({ code: 0, msg: "", data });
 }
