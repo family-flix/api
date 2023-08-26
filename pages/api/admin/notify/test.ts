@@ -1,5 +1,5 @@
 /**
- * @file 获取成员的权限
+ * @file 测试发送推送
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -8,35 +8,30 @@ import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { parseJSONStr } from "@/utils";
+import { Notify } from "@/domains/notify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { member_id } = req.body as Partial<{ member_id: string }>;
+  const { text } = req.body as Partial<{ text: string }>;
+  if (!text) {
+    return e(Result.Err("请传入推送内容"));
+  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  if (!member_id) {
-    return e(Result.Err("缺少成员 id"));
+  const notify_res = await Notify.New({ type: 1, store, token: user.settings.tmdb_token });
+  if (notify_res.error) {
+    return e(notify_res);
   }
-  const member_res = await store.find_member({
-    id: member_id,
-    user_id: user.id,
+  const notify = notify_res.data;
+  const r = await notify.send({
+    text,
   });
-  if (member_res.error) {
-    return e(member_res);
-  }
-  const member = member_res.data;
-  if (!member) {
-    return e(Result.Err("没有匹配的记录"));
-  }
-  const { permission } = member;
-  const r = await parseJSONStr(permission);
   if (r.error) {
     return e(r);
   }
-  res.status(200).json({ code: 0, msg: "", data: r.data });
+  res.status(200).json({ code: 0, msg: "推送成功", data: null });
 }

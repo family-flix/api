@@ -1,5 +1,5 @@
 /**
- * @file 获取 tv 详情加上当前正在播放的剧集信息
+ * @file 获取 tv 详情加上该 tv 的历史播放记录
  * @deprecated
  */
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -51,20 +51,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (seasons.length === 0) {
     return e(Result.Err("该电视剧暂无季信息"));
   }
-  const target_season = (() => {
-    if (season_id) {
-      return {
-        id: season_id,
-      };
-    }
-    return seasons[0];
-  })();
   const play_history =
     play_histories.find((p) => {
       return p.member_id === member_id && p.tv_id === id;
     }) ?? null;
   const playing_episode = await (async () => {
+    // 第一次观看
     if (play_history === null) {
+      const target_season = (() => {
+        if (season_id) {
+          return {
+            id: season_id,
+          };
+        }
+        return seasons[0];
+      })();
       const episode = await store.prisma.episode.findFirst({
         where: {
           season_id: target_season.id,

@@ -28,12 +28,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       profile: true,
       parsed_movies: true,
+      subtitles: true,
     },
   });
   if (movie === null) {
     return e("没有匹配的电影记录");
   }
-  const { profile, parsed_movies } = movie;
+  const { profile, parsed_movies, subtitles } = movie;
   const { name, original_name, overview, poster_path, popularity } = profile;
   const source = (() => {
     if (parsed_movies.length === 0) {
@@ -126,7 +127,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           height,
         };
       }),
-      subtitles: info.subtitles,
+      subtitles: (() => {
+        const { subtitles } = info;
+        return subtitles
+          .map((subtitle) => {
+            const { url, language } = subtitle;
+            return {
+              id: url,
+              type: 1,
+              url,
+              language,
+            };
+          })
+          .concat(
+            movie.subtitles.map((subtitle) => {
+              const { id, file_id, language } = subtitle;
+              return {
+                id,
+                type: 2,
+                url: file_id,
+                language,
+              };
+            }) as {
+              id: string;
+              type: 1 | 2;
+              url: string;
+              language: "chi" | "eng" | "jpn";
+            }[]
+          );
+      })(),
     };
     res.status(200).json({ code: 0, msg: "", data: result });
   })();

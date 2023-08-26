@@ -4,6 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { TaskTypes } from "@/domains/job/constants";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DriveAnalysis } from "@/domains/analysis";
@@ -11,9 +12,9 @@ import { Job } from "@/domains/job";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
-import { app, store } from "@/store";
-import { TaskTypes } from "@/domains/job/constants";
 import { FileType } from "@/constants";
+import { app, store } from "@/store";
+import { r_id } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -67,6 +68,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user,
     tmdb_token: settings.tmdb_token,
     assets: app.assets,
+    async on_episode_added(episode) {
+      const { tv_id } = episode;
+      const histories = await store.prisma.play_history.findMany({
+        where: {
+          tv_id,
+        },
+      });
+      for (let i = 0; i < histories.length; i += 1) {
+        await (async () => {
+          const { member_id } = histories[i];
+          const tv = await store.prisma.tv.findFirst({
+            where: {
+              id: tv_id,
+            },
+            include: {
+              profile: true,
+            },
+          });
+          if (!tv) {
+            return;
+          }
+          const id = r_id();
+          await store.prisma.member_notification.create({
+            data: {
+              id,
+              // 个人消息
+              type: 1,
+              content: JSON.stringify({
+                tv_id,
+                name: tv.profile.name,
+                poster_path: tv.profile.poster_path,
+                msg: "你正在看的电视剧更新啦",
+              }),
+              member_id,
+            },
+          });
+        })();
+      }
+    },
     on_print(v) {
       job.output.write(v);
     },
@@ -92,38 +132,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const analysis = r2.data;
   // console.log("[API]admin/drive/analysis/[id].ts - before analysis.run");
-  const the_files_prepare_analysis = await (async () => {
-    if (!target_folders) {
-      return undefined;
-    }
-    if (!Array.isArray(target_folders)) {
-      return undefined;
-    }
-    if (target_folders && target_folders[0] && target_folders[0].parent_paths) {
-      return target_folders.map((f) => {
+  async function run() {
+    const the_files_prepare_analysis = await (async () => {
+      if (!target_folders) {
+        return undefined;
+      }
+      if (!Array.isArray(target_folders)) {
+        return undefined;
+      }
+      if (target_folders && target_folders[0] && target_folders[0].parent_paths) {
+        return target_folders.map((f) => {
+          const { name, parent_paths, type } = f;
+          return {
+            name: [parent_paths, name].filter(Boolean).join("/"),
+            type,
+          };
+        });
+      }
+      const files = await store.prisma.file.findMany({
+        where: {
+          name: {
+            in: target_folders.map((f) => f.name),
+          },
+        },
+      });
+      return files.map((f) => {
         const { name, parent_paths, type } = f;
         return {
           name: [parent_paths, name].filter(Boolean).join("/"),
-          type,
+          type: type === FileType.File ? "file" : "folder",
         };
       });
-    }
-    const files = await store.prisma.file.findMany({
-      where: {
-        name: {
-          in: target_folders.map((f) => f.name),
-        },
-      },
-    });
-    return files.map((f) => {
-      const { name, parent_paths, type } = f;
-      return {
-        name: [parent_paths, name].filter(Boolean).join("/"),
-        type: type === FileType.File ? "file" : "folder",
-      };
-    });
-  })();
-  analysis.run(the_files_prepare_analysis, { force: force === "1" });
+    })();
+    analysis.run(the_files_prepare_analysis, { force: force === "1" });
+  }
+  run();
   res.status(200).json({
     code: 0,
     msg: "开始索引任务",

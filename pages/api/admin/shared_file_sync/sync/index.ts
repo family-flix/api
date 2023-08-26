@@ -10,7 +10,7 @@ import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { User } from "@/domains/user";
-import { store } from "@/store";
+import { app, store } from "@/store";
 import { TaskTypes } from "@/domains/job/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             user,
             store,
             TMDB_TOKEN: settings.tmdb_token,
-            assets: settings.assets,
+            assets: app.assets,
           });
           if (task_res.error) {
             return;

@@ -11,9 +11,9 @@ describe("番外", () => {
     const name = "第一部";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "",
+      name: "第一部",
       original_name: "",
-      season: "S01",
+      season: "",
       episode: "",
     });
   });

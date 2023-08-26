@@ -395,7 +395,7 @@ model episode {
         parsed_episodes parsed_episode[]
         play_histories  play_history[]
         reports         report[]
-        subtitle        subtitle[]
+        subtitles       subtitle[]
 
         @@map("Episode")
 }
@@ -417,7 +417,7 @@ model movie {
         play_histories play_history[]
         parsed_movies  parsed_movie[]
         reports        report[]
-        subtitle       subtitle[]
+        subtitles      subtitle[]
 
         @@map("Movie")
 }
@@ -741,7 +741,7 @@ model member {
         invitees        member[]              @relation("InviterToInvitees")
         notifications   member_notification[]
 
-        @@unique([id, remark])
+        @@unique([user_id, inviter_id, remark])
         @@map("Member")
 }
 
@@ -799,9 +799,11 @@ model member_notification {
         updated DateTime @default(now())
 
         content   String?
+        type      Int     @default(0)
         status    Int     @default(0)
         is_delete Int     @default(0)
 
+        // 接收者
         member_id String
         member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
@@ -901,14 +903,7 @@ model settings {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        qiniu_access_token String?
-        qiniu_secret_token String?
-        qiniu_scope        String?
-        push_deer_token    String?
-        tmdb_token         String?
-        // 静态资源路径前缀
-        assets             String?
-        websites           String?
+        detail String?
 
         user_id String @unique
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)

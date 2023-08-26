@@ -38,10 +38,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   await store.prisma.member.update({
     where: {
       id: member.id,
-      user_id_remark: {
-        user_id: user.id,
-        remark: member.remark,
-      },
+      // user_id_inviter_id_remark: {
+      //   user_id: user.id,
+      //   inviter_id: member.inviter_id,
+      //   remark: member.remark,
+      // },
     },
     data: {
       permission: JSON.stringify(permissions),

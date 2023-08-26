@@ -1,42 +1,48 @@
 /**
- * @file 获取成员的权限
+ * @file 回复问题反馈
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
+import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { parseJSONStr } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { member_id } = req.body as Partial<{ member_id: string }>;
+  const { id } = req.query as Partial<{ id: string }>;
+  const { msg } = req.body as Partial<{ msg: string }>;
+  if (!id) {
+    return e(Result.Err("缺少问题 id"));
+  }
+  if (!msg) {
+    return e(Result.Err("缺少回复内容"));
+  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  if (!member_id) {
-    return e(Result.Err("缺少成员 id"));
-  }
-  const member_res = await store.find_member({
-    id: member_id,
-    user_id: user.id,
+  const report = await store.prisma.report.findFirst({
+    where: {
+      id,
+      user_id: user.id,
+    },
   });
-  if (member_res.error) {
-    return e(member_res);
-  }
-  const member = member_res.data;
-  if (!member) {
+  if (!report) {
     return e(Result.Err("没有匹配的记录"));
   }
-  const { permission } = member;
-  const r = await parseJSONStr(permission);
-  if (r.error) {
-    return e(r);
-  }
-  res.status(200).json({ code: 0, msg: "", data: r.data });
+  await store.prisma.report.update({
+    where: {
+      id: report.id,
+    },
+    data: {
+      updated: dayjs().toISOString(),
+      answer: msg,
+    },
+  });
+  res.status(200).json({ code: 0, msg: "", data: null });
 }

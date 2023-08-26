@@ -2,7 +2,7 @@ import Joi from "joi";
 
 import { DatabaseStore } from "@/domains/store";
 import { Result, resultify } from "@/types";
-import { r_id } from "@/utils";
+import { parseJSONStr, r_id } from "@/utils";
 
 import { Credentials } from "./services";
 import { compare, prepare, parse_token } from "./utils";
@@ -26,8 +26,9 @@ type UserProps = {
     qiniu_secret_token: string | null;
     qiniu_scope: string | null;
     tmdb_token: string | null;
-    assets: string | null;
+    push_deer_token: string | null;
   }> | null;
+  store: DatabaseStore;
 };
 type UserUniqueID = string;
 
@@ -63,20 +64,46 @@ export class User {
       return Result.Err("无效的 token", 900);
     }
     const { settings } = existing;
+    const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } = await (async () => {
+      if (settings === null) {
+        return {};
+      }
+      const { detail } = settings;
+      if (!detail) {
+        return {};
+      }
+      const r = await parseJSONStr<{
+        tmdb_token: string;
+        assets: string;
+        push_deer_token: string;
+        qiniu_access_token: string;
+        qiniu_secret_token: string;
+        qiniu_scope: string;
+      }>(detail);
+      if (r.error) {
+        return {};
+      }
+      const { tmdb_token, push_deer_token, qiniu_access_token, qiniu_secret_token, qiniu_scope } = r.data;
+      return {
+        qiniu_access_token,
+        qiniu_secret_token,
+        qiniu_scope,
+        tmdb_token,
+        push_deer_token,
+      };
+    })();
     // 要不要生成一个新的 token？
     const user = new User({
       id,
       token,
-      settings: (() => {
-        if (settings === null) {
-          return {};
-        }
-        const { tmdb_token, assets, qiniu_access_token, qiniu_secret_token, qiniu_scope } = settings;
-        return {
-          tmdb_token: tmdb_token,
-          assets,
-        };
-      })(),
+      settings: {
+        tmdb_token,
+        push_deer_token,
+        qiniu_access_token,
+        qiniu_secret_token,
+        qiniu_scope,
+      },
+      store,
     });
     return Result.Ok(user);
   }
@@ -105,7 +132,7 @@ export class User {
       return Result.Err(res.error);
     }
     const token = res.data;
-    const user = new User({ id: user_id, token });
+    const user = new User({ id: user_id, token, store });
     return Result.Ok(user);
   }
   static async Add(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
@@ -140,6 +167,7 @@ export class User {
         settings: {
           create: {
             id: r_id(),
+            detail: "{}",
           },
         },
         credential: {
@@ -247,6 +275,47 @@ export class User {
     });
   }
 
+  static async parseSettings(settings: null | { detail: string | null }) {
+    if (!settings) {
+      return {};
+    }
+    const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } = await (async () => {
+      if (settings === null) {
+        return {};
+      }
+      const { detail } = settings;
+      if (!detail) {
+        return {};
+      }
+      const r = await parseJSONStr<{
+        tmdb_token: string;
+        assets: string;
+        push_deer_token: string;
+        qiniu_access_token: string;
+        qiniu_secret_token: string;
+        qiniu_scope: string;
+      }>(detail);
+      if (r.error) {
+        return {};
+      }
+      const { tmdb_token, push_deer_token, qiniu_access_token, qiniu_secret_token, qiniu_scope } = r.data;
+      return {
+        qiniu_access_token,
+        qiniu_secret_token,
+        qiniu_scope,
+        tmdb_token,
+        push_deer_token,
+      };
+    })();
+    return {
+      tmdb_token,
+      push_deer_token,
+      qiniu_access_token,
+      qiniu_secret_token,
+      qiniu_scope,
+    };
+  }
+
   /** 用户 id */
   id: UserUniqueID;
   nickname: string = "unknown";
@@ -257,32 +326,39 @@ export class User {
     qiniu_secret_token?: string;
     qiniu_scope?: string;
     tmdb_token?: string;
-    /** 请使用 app.assets */
-    assets: string;
+    push_deer_token?: string;
   };
+  store: DatabaseStore;
 
   constructor(options: UserProps) {
-    const { id, token, settings } = options;
+    const { id, token, settings, store } = options;
     this.id = id;
     this.token = token;
     this.settings = (() => {
       if (!settings) {
-        return {
-          assets: "./public",
-        };
+        return {};
       }
-      const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, assets } = settings;
+      const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token } = settings;
       return {
         qiniu_access_token: qiniu_access_token ?? undefined,
         qiniu_secret_token: qiniu_secret_token ?? undefined,
         qiniu_scope: qiniu_scope ?? undefined,
         tmdb_token: tmdb_token ?? "c2e5d34999e27f8e0ef18421aa5dec38",
-        assets: assets ?? "./public",
+        push_deer_token: tmdb_token ?? undefined,
       };
     })();
+    this.store = store;
   }
   /** 补全信息 */
   async register(values: Partial<{ email: string; password: string }>) {}
   /** 密码登录 */
   async login_with_password(values: Partial<{ email: string; password: string }>) {}
+  async update_settings(next_settings: Record<string, unknown>) {
+    this.store.prisma.settings.update({
+      where: {
+        user_id: this.id,
+      },
+      data: {},
+    });
+  }
 }

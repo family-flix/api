@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(d_res);
   }
   const json = d_res.data;
-  const r1 = await (() => {
+  const payload = await (() => {
     if (json.tv_id) {
       const d: {
         tv_id: string;
@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
   })();
   const r = await store.add_report({
-    ...r1,
+    ...payload,
     type,
     answer: "",
     member_id: member.id,

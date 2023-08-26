@@ -1,14 +1,6 @@
-require("dotenv").config();
-
-import fs from "fs";
 import crypto from "crypto";
 
-import axios from "axios";
-
-import { Drive } from "@/domains/drive";
-import { Application } from "@/domains/application";
-
-async function prepare_upload_file(
+export async function prepare_upload_file(
   file_buffer: Buffer,
   options: {
     token: string;
@@ -57,39 +49,3 @@ async function prepare_upload_file(
   };
   return body;
 }
-
-async function main() {
-  const app = new Application({
-    root_path: "/Users/litao/Documents/workspaces/family-flix/dev-output",
-  });
-  const store = app.store;
-  const user = await store.prisma.user.findFirst({
-    where: {},
-  });
-  if (!user) {
-    return;
-  }
-  const drive_res = await Drive.Get({
-    id: "O2wsuqkBwNehfXe",
-    user_id: user.id,
-    store,
-  });
-  if (drive_res.error) {
-    return;
-  }
-  const client = drive_res.data.client;
-  const filepath = "/Users/litao/Desktop/example2.png";
-  // const filepath = "/var/folders/jr/kmg6402910d5t40sst1hm1300000gn/T/c8ee0b0436295709ec2febd02";
-  const file_buffer = fs.readFileSync(filepath);
-  const r = await client.upload(file_buffer, {
-    name: "c8ee0b0436295709ec2febd02.png",
-    parent_file_id: "root",
-  });
-  if (r.error) {
-    return;
-  }
-  console.log("before log r2.data");
-  console.log(r.data, typeof r.data);
-}
-
-main();
