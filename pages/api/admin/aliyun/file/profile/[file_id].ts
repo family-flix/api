@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(drive_res);
   }
   const drive = drive_res.data;
-  const { error, data } = await drive.client.fetch_file_profile(file_id as string);
+  const { error, data } = await drive.client.fetch_file_paths(file_id as string);
   if (error) {
     return e(error);
   }

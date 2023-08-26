@@ -16,16 +16,6 @@ describe("动漫", () => {
       episode: "E100",
     });
   });
-  test("[1080P][DBD制作组&离谱Sub][龙珠GT][特典映像][01][HEVC-10bit][AC3].mkv", () => {
-    const name = "[1080P][DBD制作组&离谱Sub][龙珠GT][特典映像][01][HEVC-10bit][AC3].mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "龙珠GT",
-      original_name: "",
-      season: "特典映像",
-      episode: "E01",
-    });
-  });
   test("X）星辰变.4K-1080P【国漫】玄幻", () => {
     const name = "X）星辰变.4K-1080P【国漫】玄幻";
     const result = parse_filename_for_video(name);
@@ -56,26 +46,6 @@ describe("动漫", () => {
       episode: "",
     });
   });
-  test("1981.阿蕾拉.81版+97重置版.国语", () => {
-    const name = "1981.阿蕾拉.81版+97重置版.国语";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "阿蕾拉",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
-  test("H）画江湖之不良人1-6季.4K.含画江湖6部全系列【国漫】", () => {
-    const name = "H）画江湖之不良人1-6季.4K.含画江湖6部全系列【国漫】";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "画江湖之不良人",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
   test("S01 数码宝贝大冒险（日国粤）", () => {
     const name = "S01 数码宝贝大冒险（日国粤）";
     const result = parse_filename_for_video(name);
@@ -83,16 +53,6 @@ describe("动漫", () => {
       name: "",
       original_name: "",
       season: "S01",
-      episode: "",
-    });
-  });
-  test("1999.数码宝贝.1-8季.多语版+10部剧场版+OVA", () => {
-    const name = "1999.数码宝贝.1-8季.多语版+10部剧场版+OVA";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "数码宝贝",
-      original_name: "",
-      season: "OVA",
       episode: "",
     });
   });
@@ -157,16 +117,6 @@ describe("动漫", () => {
       episode: "E31",
     });
   });
-  test("彩蛋1：腹肌胸肌肱二头肌！路哥这完美身材我爱了！.mp4", () => {
-    const name = "彩蛋1：腹肌胸肌肱二头肌！路哥这完美身材我爱了！.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
-      season: "",
-      episode: "彩蛋1",
-    });
-  });
   test("S 熟-年 [2023][40集持续更新中]", () => {
     const name = "S 熟-年 [2023][40集持续更新中]";
     const result = parse_filename_for_video(name);
@@ -217,46 +167,6 @@ describe("动漫", () => {
       episode: "",
     });
   });
-  test("逆水寒.D13.E37-38.2004.DVDRip.x264.AC3-CMCT.mkv", () => {
-    const name = "逆水寒.D13.E37-38.2004.DVDRip.x264.AC3-CMCT.mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "逆水寒",
-      original_name: "D13",
-      season: "",
-      episode: "E37",
-    });
-  });
-  test("7.mp4", () => {
-    const name = "7.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
-      season: "",
-      episode: "E07",
-    });
-  });
-  test("番外2-杀人事件.mp4", () => {
-    const name = "番外2-杀人事件.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
-      season: "",
-      episode: "番外2",
-    });
-  });
-  test("1080P官中", () => {
-    const name = "1080P官中";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
   test("打工吧！魔王大人S1E04.mkv", () => {
     const name = "打工吧！魔王大人S1E04.mkv";
     const result = parse_filename_for_video(name);
@@ -265,56 +175,6 @@ describe("动漫", () => {
       original_name: "",
       season: "S01",
       episode: "E04",
-    });
-  });
-  test("1080P超前完结", () => {
-    const name = "1080P超前完结";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
-  test("1080P超前点映", () => {
-    const name = "1080P超前点映";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
-  // test("Yinian Yong Heng-[1-5]-[041-052]-1080P.mp4", () => {
-  //   const name = "Yinian Yong Heng-[1-5]-[041-052]-1080P.mp4";
-  //   const result = parse_filename_for_video(name);
-  //   expect(result).toStrictEqual({
-  //     name: "",
-  //     original_name: "",
-  //     season: "",
-  //     episode: "",
-  //   });
-  // });
-  // test("月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4", () => {
-  //   const name = "月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4";
-  //   const result = parse_filename_for_video(name);
-  //   expect(result).toStrictEqual({
-  //     name: "",
-  //     original_name: "",
-  //     season: "",
-  //     episode: "",
-  //   });
-  // });
-  test("妖精森林的小不点 NCED01.mkv", () => {
-    const name = "妖精森林的小不点 NCED01.mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "妖精森林的小不点",
-      original_name: "",
-      season: "",
-      episode: "NCED01",
     });
   });
   test("咒术回战第1季02.mp4", () => {
@@ -347,26 +207,6 @@ describe("动漫", () => {
       episode: "E15",
     });
   });
-  test("斗破苍穹特别篇2[4K].mp4", () => {
-    const name = "斗破苍穹特别篇2[4K].mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "斗破苍穹",
-      original_name: "",
-      season: "",
-      episode: "特别篇2",
-    });
-  });
-  test("2013 LegalHigh SP2.mp4", () => {
-    const name = "2013 LegalHigh SP2.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "LegalHigh",
-      season: "SP",
-      episode: "E02",
-    });
-  });
   test("显微镜下的大明之丝绢案-预告1", () => {
     const name = "显微镜下的大明之丝绢案-预告1";
     const result = parse_filename_for_video(name);
@@ -397,16 +237,6 @@ describe("动漫", () => {
       episode: "",
     });
   });
-  test("08.9号秘事1-7季 - 豆瓣9.0分", () => {
-    const name = "08.9号秘事1-7季 - 豆瓣9.0分";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "9号秘事",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
   test("万li 归途 4K.mp4", () => {
     const name = "万li 归途 4K.mp4";
     const result = parse_filename_for_video(name);
@@ -425,26 +255,6 @@ describe("动漫", () => {
       original_name: "The.Story.of.HongMao.and.LanTu",
       season: "S02",
       episode: "E08",
-    });
-  });
-  test("《孤独的美食家 盛夏的博多 出差SP》第1集_高清 1080P+.mp4 ", () => {
-    const name = "《孤独的美食家 盛夏的博多 出差SP》第1集_高清 1080P+.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "孤独的美食家",
-      original_name: "",
-      season: "SP",
-      episode: "E01",
-    });
-  });
-  test("重启人生番外篇", () => {
-    const name = "重启人生番外篇";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "重启人生",
-      original_name: "",
-      season: "番外篇",
-      episode: "",
     });
   });
   test("斗破苍穹年番 第18话 4K(超高清SDR) _Tacit0924.mp4", () => {

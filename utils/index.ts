@@ -1,24 +1,20 @@
-// import Nzh from "nzh";
+/**
+ * @file 平台无关的纯 js 工具函数
+ */
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
-// import relative_time from "dayjs/plugin/relativeTime";
 
 import { JSONObject, Result } from "@/types";
 
 import { cn as nzhcn } from "./nzh/index";
 
-// dayjs.extend(relative_time);
 dayjs.locale("zh-cn");
-// const nzhcn = Nzh.cn;
 
 export const video_file_type_regexp = /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$/;
-export type ParsedFilename = {
-  /** 译名 */
-  name: string;
-  /** 原产地名称 */
-  original_name: string;
-};
 
+/**
+ * 返回一个最短两位的数字字符串
+ */
 export function padding_zero(str: number | string) {
   const s = String(Number(str));
   if (s.length === 1) {
@@ -307,7 +303,10 @@ export function sleep(delay: number = 1000) {
 }
 
 /** 解析一段 json 字符串 */
-export async function parseJSONStr<T extends JSONObject>(json: string) {
+export async function parseJSONStr<T extends JSONObject>(json: string | null) {
+  if (!json) {
+    return Result.Err("不是合法的 json");
+  }
   try {
     if (json[0] !== "{") {
       return Result.Err("不是合法的 json");

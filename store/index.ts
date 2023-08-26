@@ -7,3 +7,4 @@ export const app = new Application({
   root_path: process.env.OUTPUT_PATH || process.cwd(),
 });
 export const store = app.store;
+// export const notify = app.notify;

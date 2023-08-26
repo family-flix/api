@@ -193,9 +193,20 @@ describe("电影", () => {
     });
   });
   test("007：大破天幕杀机 (2012) DV 2160p DTSHD-MA.mkv", () => {
-    const result = parse_filename_for_video("007：大破天幕杀机 (2012) DV 2160p DTSHD-MA.mkv");
+    const name = "007：大破天幕杀机 (2012) DV 2160p DTSHD-MA.mkv";
+    const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "007：大破天幕杀机",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("封神第一部", () => {
+    const name = "封神第一部";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "封神第一部",
       original_name: "",
       season: "",
       episode: "",

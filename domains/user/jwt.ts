@@ -21,7 +21,7 @@ export async function encode_token({ token = {}, secret, maxAge = DEFAULT_MAX_AG
   return await new EncryptJWT(token)
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
     .setIssuedAt()
-    .setExpirationTime(now() + maxAge)
+    // .setExpirationTime(now() + maxAge)
     .setJti(uuid())
     .encrypt(encryptionSecret);
 }

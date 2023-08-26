@@ -1,5 +1,6 @@
 /**
- * @file 获取指定剧集下的源播放信息
+ * @file 获取指定剧集播放信息
+ * @deprecated 没必要，有 api/admin/file/[file_id] 即直接获取源播放地址的方法？
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -42,16 +43,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       profile: true,
       parsed_episodes: true,
+      subtitles: true,
     },
   });
   if (episode === null) {
-    return e("没有匹配的影片记录");
+    return e(Result.Err("没有匹配的影片记录"));
   }
+  // const play_history = await store.prisma.play_history.findFirst({
+  //   where: {
+  //     episode_id: id,
+  //     member_id,
+  //   },
+  // });
   const { season_text, episode_text, profile, parsed_episodes } = episode;
   const source = (() => {
     if (parsed_episodes.length === 0) {
       return null;
     }
+    // if (play_history && play_history.file_id) {
+    //   const matched = parsed_episodes.find((e) => {
+    //     return e.file_id === play_history.file_id;
+    //   });
+    //   if (matched) {
+    //     return matched;
+    //   }
+    // }
     const matched = parsed_episodes.find((parsed_episode) => {
       return parsed_episode.file_id === fid;
     });
@@ -61,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return null;
   })();
   if (source === null) {
-    return e("该视频源不存在");
+    return e(Result.Err("该视频源不存在"));
   }
   const { file_id, drive_id } = source;
   const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
@@ -96,8 +112,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     width: number;
     height: number;
   }>;
-  // 只有一种分辨率，直接返回该分辨率视频
-  const recommend = (() => {
+  const recommend_resolution = (() => {
+    // 只有一种分辨率，直接返回该分辨率视频
     if (info.sources.length === 1) {
       return info.sources[0];
     }
@@ -113,14 +129,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (matched_resolution) {
       return matched_resolution;
     }
-
     return info.sources[0];
   })();
-  if (recommend.url.includes("x-oss-additional-headers=referer")) {
-    return e("视频文件无法播放，请修改 refresh_token");
+  if (recommend_resolution.url.includes("x-oss-additional-headers=referer")) {
+    return e(Result.Err("视频文件无法播放，请修改 refresh_token"));
   }
   const { name, overview } = profile;
-  const { url, type: t, width, height } = recommend;
+  const { url, type: t, width, height } = recommend_resolution;
   const result: MediaFile & { other: MediaFile[]; subtitles: { language: string; url: string }[] } = {
     id,
     name: name || episode_text,
@@ -146,7 +161,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         height,
       };
     }),
-    subtitles: info.subtitles,
+    subtitles: (() => {
+      const { subtitles } = info;
+      return subtitles
+        .map((subtitle) => {
+          const { url, language } = subtitle;
+          return {
+            id: url,
+            type: 1,
+            url,
+            language,
+          };
+        })
+        .concat(
+          episode.subtitles.map((subtitle) => {
+            const { id, file_id, language } = subtitle;
+            return {
+              id,
+              type: 2,
+              url: file_id,
+              language,
+            };
+          }) as {
+            id: string;
+            type: 1 | 2;
+            url: string;
+            language: "chi" | "eng" | "jpn";
+          }[]
+        );
+    })(),
   };
   res.status(200).json({ code: 0, msg: "", data: result });
 }

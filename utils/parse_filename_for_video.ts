@@ -1,23 +1,6 @@
 import { video_file_type_regexp, normalize_episode_text, remove_str, chinese_num_to_num, padding_zero } from "./index";
 
-export const VIDEO_KEYS_MAP = {
-  name: "",
-  original_name: "",
-  season: "",
-  episode: "",
-  resolution: "",
-  year: "",
-  source: "",
-  encode: "",
-  voice_encode: "",
-  episode_name: "",
-  episode_count: "",
-  type: "",
-};
-export type VideoKeys = keyof typeof VIDEO_KEYS_MAP;
-export const VIDEO_ALL_KEYS = Object.keys(VIDEO_KEYS_MAP) as VideoKeys[];
-export type ParsedVideoInfo = Record<VideoKeys, string>;
-export const VIDEO_KEY_NAME_MAP: Record<VideoKeys, string> = {
+export const VIDEO_KEY_NAME_MAP = {
   name: "中文名称",
   original_name: "译名or外文原名",
   season: "季",
@@ -30,8 +13,17 @@ export const VIDEO_KEY_NAME_MAP: Record<VideoKeys, string> = {
   episode_count: "总集数",
   episode_name: "集名称",
   type: "后缀",
+  /**
+   * chi 中文
+   * eng 英文
+   * jpn 日文
+   */
+  subtitle_lang: "字幕语言",
 };
 
+export type VideoKeys = keyof typeof VIDEO_KEY_NAME_MAP;
+export const VIDEO_ALL_KEYS = Object.keys(VIDEO_KEY_NAME_MAP) as VideoKeys[];
+export type ParsedVideoInfo = Record<VideoKeys, string>;
 /**
  * 从一个文件名中解析出影视剧信息
  * @param filename
@@ -46,7 +38,7 @@ export function parse_filename_for_video(
     if (!filename.includes("大破天幕杀机")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -232,9 +224,6 @@ export function parse_filename_for_video(
     {
       regexp: /repack/,
     },
-    {
-      regexp: /CHS/,
-    },
     // 来源平台
     {
       // 亚马逊、奈飞、迪士尼、爱奇艺、湖南TV
@@ -252,6 +241,10 @@ export function parse_filename_for_video(
           cur_filename = cur_filename.replace(/^[0-9]{1,}\./, "");
         }
       },
+    },
+    {
+      key: k("subtitle_lang"),
+      regexp: /zh|CHS|Eng|简英/,
     },
     // 一些国产剧影片特有的信息？
     {
@@ -456,9 +449,9 @@ export function parse_filename_for_video(
       // 重复出现，不要删除，是为了移除和中文名连在一起的「第n季」
       key: k("season"),
       desc: "总季数2",
-      regexp: /第[1-9]{1,}[季部]/,
+      regexp: /第[1-9]{1,}[季]/,
       before() {
-        cur_filename = cur_filename.replace(/(第[1-9]{1,}[季部])([0-9]{1,})/, "$1.E$2");
+        cur_filename = cur_filename.replace(/(第[1-9]{1,}[季])([0-9]{1,})/, "$1.E$2");
       },
     },
     {
@@ -494,7 +487,7 @@ export function parse_filename_for_video(
     {
       // 重复出现，不要删除
       key: k("season"),
-      regexp: /第[\u4e00-\u9fa5]{1,}[季部]/,
+      regexp: /第[\u4e00-\u9fa5]{1,}[季]/,
     },
     {
       key: k("season"),
@@ -701,7 +694,6 @@ export function parse_filename_for_video(
     {
       regexp: /[0-9]{1,}bit/,
     },
-    // 字幕名
     {
       //  Subtitles for the deaf and hard of hearing (SDH)
       regexp: /Eng\.SubEngSDH/,
@@ -795,15 +787,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("season"),
-      regexp: /第[0-9]{1,}[季部]/,
-    },
-    {
-      key: k("season"),
       regexp: /Ⅱ/,
-    },
-    {
-      key: k("season"),
-      regexp: /第[\u4e00-\u9fa5]{1,}[季部]/,
     },
     {
       key: k("season"),
@@ -1015,10 +999,26 @@ export function parse_filename_for_video(
   if (result.episode !== undefined) {
     result.episode = format_number(result.episode, "E");
   }
+  if (result.subtitle_lang !== undefined) {
+    result.subtitle_lang = format_subtitle_lang(result.subtitle_lang);
+  }
   if (result.resolution) {
     result.resolution = result.resolution.replace(/[（\(\)）]/g, "");
   }
   return result;
+}
+
+function format_subtitle_lang(lang: string) {
+  if (lang.match(/zh|CHS/)) {
+    return "chi";
+  }
+  if (lang.match(/Eng/)) {
+    return "eng";
+  }
+  if (lang === "简英") {
+    return "chi&eng";
+  }
+  return "unknown";
 }
 
 /**

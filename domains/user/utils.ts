@@ -442,11 +442,11 @@ export async function parse_token({ token, secret }: { token?: string; secret: s
   if (!token) {
     return Result.Err("缺少 token");
   }
-  const user_res = await resultify(decode_token)({ token, secret });
-  if (user_res.error) {
-    return Result.Err(user_res.error, 900);
+  const r = await resultify(decode_token)({ token, secret });
+  if (r.error) {
+    return Result.Err(r.error, 900);
   }
-  const user = user_res.data;
+  const user = r.data;
   if (user === null) {
     return Result.Err("token 不合法", 900);
   }

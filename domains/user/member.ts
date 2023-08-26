@@ -3,7 +3,7 @@ import Joi from "joi";
 import { User } from "@/domains/user";
 import { DatabaseStore } from "@/domains/store";
 import { Result, resultify } from "@/types";
-import { random_string } from "@/utils";
+import { parseJSONStr, random_string } from "@/utils";
 
 import { Credentials } from "./services";
 import { prepare, parse_token } from "./utils";
@@ -34,7 +34,7 @@ export class Member {
       secret: Member.SECRET,
     });
     if (r.error) {
-      return Result.Err(r.error);
+      return Result.Err(r.error, 900);
     }
     const id = r.data.id as UserUniqueID;
     const member = await store.prisma.member.findUnique({
@@ -48,13 +48,21 @@ export class Member {
       },
     });
     if (member === null) {
-      return Result.Err("无效身份凭证");
+      return Result.Err("无效身份凭证", 900);
     }
-    // const member = existing;
+    const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } =
+      await User.parseSettings(member.user.settings);
     const user = new User({
       id: member.user_id,
-      settings: member.user.settings,
+      settings: {
+        qiniu_access_token,
+        qiniu_secret_token,
+        qiniu_scope,
+        tmdb_token,
+        push_deer_token,
+      },
       token: "",
+      store,
     });
     return Result.Ok(new Member({ id, remark: member.remark, user, token }));
   }
@@ -87,10 +95,19 @@ export class Member {
       return Result.Err("无效身份凭证");
     }
     const { token, member_id } = member_token;
+    const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } =
+      await User.parseSettings(member_token.member.user.settings);
     const user = new User({
       id: member_token.member.user.id,
-      settings: member_token.member.user.settings,
+      settings: {
+        qiniu_access_token,
+        qiniu_secret_token,
+        qiniu_scope,
+        tmdb_token,
+        push_deer_token,
+      },
       token: "",
+      store,
     });
     return Result.Ok(
       new Member({

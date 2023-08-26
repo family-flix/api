@@ -15,6 +15,7 @@ import { parseJSONStr, query_stringify, sleep } from "@/utils";
 import { Result, Unpacked } from "@/types";
 
 import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo } from "./types";
+import { prepare_upload_file } from "./utils";
 
 const API_HOST = "https://api.aliyundrive.com";
 const MEMBER_API_HOST = "https://member.aliyundrive.com";
@@ -438,13 +439,47 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(r.data);
   }
-
-  /** 获取一个文件的详细信息，包括其路径 */
-  async fetch_file_profile(file_id: string) {
+  /** 获取文件下载地址 */
+  async fetch_file_download_url(file_id: string) {
     await this.ensure_initialized();
     const r = await this.fetch_file(file_id);
     if (r.error) {
-      return r;
+      return Result.Err(r.error);
+    }
+    const r2 = await this.request.post<{
+      domain_id: string;
+      drive_id: string;
+      file_id: string;
+      revision_id: string;
+      method: string;
+      url: string;
+      internal_url: string;
+      expiration: string;
+      size: number;
+      crc64_hash: string;
+      content_hash: string;
+      content_hash_name: string;
+      punish_flag: number;
+      meta_name_punish_flag: number;
+      meta_name_investigation_status: number;
+    }>(API_HOST + "/v2/file/get_download_url", {
+      file_id,
+      drive_id: String(this.drive_id),
+    });
+    if (r2.error) {
+      return Result.Err(r2.error);
+    }
+    return Result.Ok({
+      ...r.data,
+      url: r2.data.url,
+    });
+  }
+  /** 获取一个文件的详细信息，包括其路径 */
+  async fetch_file_paths(file_id: string) {
+    await this.ensure_initialized();
+    const r = await this.fetch_file(file_id);
+    if (r.error) {
+      return Result.Err(r.error);
     }
     const r2 = await this.request.post<{
       items: {
@@ -573,10 +608,14 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
         }),
     });
   }
+  /**
+   * 按名字模糊搜索文件/文件夹
+   */
   async search_files(name: string, type: "folder" = "folder") {
     await this.ensure_initialized();
     const result = await this.request.post<{
       items: AliyunDriveFileResp[];
+      next_marker: string;
     }>(API_HOST + "/adrive/v3/file/search", {
       drive_id: String(this.drive_id),
       image_thumbnail_process: "image/resize,w_200/format,jpeg",
@@ -590,6 +629,24 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       return result;
     }
     return Result.Ok(result.data);
+  }
+  /** 根据名称判断一个文件是否已存在 */
+  async existing(parent_file_id: string, file_name: string) {
+    await this.ensure_initialized();
+    const url = "/adrive/v3/file/search";
+    const result = await this.request.post<{
+      items: AliyunDriveFileResp[];
+      next_marker: string;
+    }>(API_HOST + url, {
+      drive_id: String(this.drive_id),
+      limit: 100,
+      order_by: "name ASC",
+      query: `parent_file_id = "${parent_file_id}" and (name = "${file_name}")`,
+    });
+    if (result.error) {
+      return Result.Err(result.error);
+    }
+    return Result.Ok(!!result.data.items.length);
   }
   /** 移动指定文件到指定文件夹 */
   async move_files_to_folder(body: { files: { file_id: string }[]; target_folder_id: string }) {
@@ -1243,6 +1300,95 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok({ file_id, file_name });
   }
+  /**
+   * 上传文件到云盘前，先调用该方法获取到上传地址
+   */
+  async create_with_folder(body: {
+    content_hash: string;
+    name: string;
+    parent_file_id: string;
+    part_info_list: { part_number: number }[];
+    proof_code: string;
+    size: number;
+  }) {
+    await this.ensure_initialized();
+    const url = "/adrive/v2/file/createWithFolders";
+    const b = {
+      ...body,
+      content_hash_name: "sha1",
+      check_name_mode: "overwrite",
+      create_scene: "file_upload",
+      proof_version: "v1",
+      type: "file",
+      device_name: "",
+      drive_id: String(this.drive_id),
+    };
+    const r = await this.request.post<{
+      parent_file_id: string;
+      part_info_list: {
+        part_number: number;
+        // 用该地址上传
+        upload_url: string;
+        internal_upload_url: string;
+        content_type: string;
+      }[];
+      upload_id: string;
+      rapid_upload: boolean;
+      type: string;
+      file_id: string;
+      revision_id: string;
+      domain_id: string;
+      drive_id: string;
+      file_name: string;
+      encrypt_mode: string;
+      location: string;
+    }>(API_HOST + url, b);
+    if (r.error) {
+      return r;
+    }
+    return Result.Ok(r.data);
+  }
+  /**
+   * 上传一个文件到制定文件夹
+   */
+  async upload(file_buffer: Buffer, options: { name: string; parent_file_id: string }) {
+    await this.ensure_initialized();
+    const { name, parent_file_id = "root" } = options;
+    const { content_hash, proof_code, size, part_info_list } = await prepare_upload_file(file_buffer, {
+      token: this.access_token,
+    });
+    const r = await this.create_with_folder({
+      content_hash,
+      proof_code,
+      part_info_list,
+      size,
+      name,
+      parent_file_id,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    if (!r.data.part_info_list?.[0]) {
+      return Result.Err("没有上传地址");
+    }
+    try {
+      await axios.put(r.data.part_info_list[0].upload_url, file_buffer, {
+        headers: {
+          Authorization: this.access_token,
+          "Content-Type": "application/octet-stream",
+        },
+      });
+      return Result.Ok({
+        file_id: r.data.file_id,
+        file_name: r.data.file_name,
+      });
+    } catch (err) {
+      const error = err as AxiosError<{ code: string; message: string }>;
+      const { response, message } = error;
+      console.log("[]upload failed", message, response?.data);
+      return Result.Err(response?.data?.message || message, response?.data?.code);
+    }
+  }
   async ping() {
     // await this.ensure_initialized();
     const r = await this.request.post(API_HOST + "/adrive/v2/user/get", {});
@@ -1600,3 +1746,21 @@ function run<T extends (...args: any[]) => Promise<{ error: Error | null; finish
   }) as Promise<Result<Unpacked<ReturnType<T>>["data"]>>;
   return p;
 }
+
+// curl 'https://api.aliyundrive.com/adrive/v2/file/createWithFolders' \
+//   -H 'authority: api.aliyundrive.com' \
+//   -H 'accept: application/json, text/plain, */*' \
+//   -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8' \
+//   -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTY1MDQ1ZWVmODQ0NDVjYmRlY2U3OTBhZWJlNTRiZCIsImN1c3RvbUpzb24iOiJ7XCJjbGllbnRJZFwiOlwiMjVkelgzdmJZcWt0Vnh5WFwiLFwiZG9tYWluSWRcIjpcImJqMjlcIixcInNjb3BlXCI6W1wiRFJJVkUuQUxMXCIsXCJTSEFSRS5BTExcIixcIkZJTEUuQUxMXCIsXCJVU0VSLkFMTFwiLFwiVklFVy5BTExcIixcIlNUT1JBR0UuQUxMXCIsXCJTVE9SQUdFRklMRS5MSVNUXCIsXCJCQVRDSFwiLFwiT0FVVEguQUxMXCIsXCJJTUFHRS5BTExcIixcIklOVklURS5BTExcIixcIkFDQ09VTlQuQUxMXCIsXCJTWU5DTUFQUElORy5MSVNUXCIsXCJTWU5DTUFQUElORy5ERUxFVEVcIl0sXCJyb2xlXCI6XCJ1c2VyXCIsXCJyZWZcIjpcImh0dHBzOi8vd3d3LmFsaXl1bmRyaXZlLmNvbS9cIixcImRldmljZV9pZFwiOlwiODhmOTgzNGYzZWE5NGY3MjliMTY0ZThlMTU2NGVjYTNcIn0iLCJleHAiOjE2OTI4MTEwMTEsImlhdCI6MTY5MjgwMzc1MX0.lboIbl1kEPcZ9UwFNsUcwHIh7Bj6fTnyzW8vgc-5Iu91ZzkarKM6VPSoxYMaSJikzGoHQTyz3XNwVrOimS03NeC6ppdC4VoQhbsSBeEM1SDvtAi0Z5p4saurjBEJY1XPekIhjW4u_Cy69UArPaYxrChZDqG6Rf6Fy3refx-3Dw0' \
+//   -H 'content-type: application/json' \
+//   -H 'origin: https://www.aliyundrive.com' \
+//   -H 'referer: https://www.aliyundrive.com/' \
+//   -H 'sec-ch-ua: "Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"' \
+//   -H 'sec-ch-ua-mobile: ?0' \
+//   -H 'sec-ch-ua-platform: "macOS"' \
+//   -H 'sec-fetch-dest: empty' \
+//   -H 'sec-fetch-mode: cors' \
+//   -H 'sec-fetch-site: same-site' \
+//   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36' \
+//   --data-raw '{"drive_id":"622310670","part_info_list":[{"part_number":1}],"parent_file_id":"root","name":"example01.png","type":"file","check_name_mode":"overwrite","size":4930,"create_scene":"","device_name":"","content_hash":"455FDA33DA839628F1DE6B7929FE3C5B595A69EE","content_hash_name":"sha1","proof_code":"BTLmRomai1Y=","proof_version":"v1"}' \
+//   --compressed

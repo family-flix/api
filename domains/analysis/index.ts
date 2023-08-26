@@ -10,6 +10,7 @@ import { EpisodeFileProcessor } from "@/domains/episode_file_processor";
 import { MovieFileProcessor } from "@/domains/movie_file_processor";
 import { Folder } from "@/domains/folder";
 import { MediaSearcher } from "@/domains/searcher";
+import { EpisodeRecord, MovieRecord, SeasonRecord, TVRecord } from "@/domains/store/types";
 import {
   ArticleCardNode,
   ArticleHeadNode,
@@ -28,11 +29,19 @@ import { Result } from "@/types";
 import { need_skip_the_file_when_walk, adding_file_safely } from "./utils";
 
 enum Events {
+  AddTV,
+  AddSeason,
+  AddEpisode,
+  AddMovie,
   Print,
   Error,
   Finished,
 }
 type TheTypesOfEvents = {
+  [Events.AddTV]: TVRecord;
+  [Events.AddSeason]: SeasonRecord;
+  [Events.AddEpisode]: EpisodeRecord;
+  [Events.AddMovie]: MovieRecord;
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
   [Events.Error]: Error;
   [Events.Finished]: void;
@@ -45,16 +54,30 @@ type DriveAnalysisProps = {
   store: DatabaseStore;
   assets: string;
   tmdb_token: string;
+  on_season_added?: (season: SeasonRecord) => void;
+  on_episode_added?: (episode: EpisodeRecord) => void;
+  on_movie_added?: (movie: MovieRecord) => void;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
-  /** 索引失败 */
   on_error?: (error: Error) => void;
-  /** 索引成功 */
   on_finish?: () => void;
 };
 
 export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
   static async New(body: Partial<DriveAnalysisProps>) {
-    const { extra_scope, drive, store, user, tmdb_token, assets, on_print, on_finish, on_error } = body;
+    const {
+      extra_scope,
+      drive,
+      store,
+      user,
+      tmdb_token,
+      assets,
+      on_season_added,
+      on_episode_added,
+      on_movie_added,
+      on_print,
+      on_finish,
+      on_error,
+    } = body;
     if (!tmdb_token) {
       return Result.Err("缺少 TMDB_TOKEN");
     }
@@ -77,6 +100,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       user,
       tmdb_token,
       assets,
+      on_season_added,
+      on_episode_added,
+      on_movie_added,
       on_print,
       on_finish,
       on_error,
@@ -98,7 +124,20 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
   constructor(options: Partial<{}> & DriveAnalysisProps) {
     super();
 
-    const { extra_scope, drive, store, user, tmdb_token, assets, on_print, on_finish, on_error } = options;
+    const {
+      extra_scope,
+      drive,
+      store,
+      user,
+      tmdb_token,
+      assets,
+      on_season_added,
+      on_episode_added,
+      on_movie_added,
+      on_print,
+      on_finish,
+      on_error,
+    } = options;
     this.store = store;
     this.drive = drive;
     this.user = user;
@@ -106,6 +145,15 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     this.assets = assets;
     if (extra_scope) {
       this.extra_scope = extra_scope;
+    }
+    if (on_season_added) {
+      this.on_add_season(on_season_added);
+    }
+    if (on_episode_added) {
+      this.on_add_episode(on_episode_added);
+    }
+    if (on_movie_added) {
+      this.on_add_movie(on_movie_added);
     }
     if (on_print) {
       this.on_print(on_print);
@@ -400,6 +448,15 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       tmdb_token: this.tmdb_token,
       store,
       assets: this.assets,
+      on_season_added: (season) => {
+        this.emit(Events.AddSeason, season);
+      },
+      on_episode_added: (episode) => {
+        this.emit(Events.AddEpisode, episode);
+      },
+      on_movie_added: (movie) => {
+        this.emit(Events.AddMovie, movie);
+      },
       on_print: (v) => {
         this.emit(Events.Print, v);
       },
@@ -431,6 +488,18 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
 
+  on_add_tv(handler: Handler<TheTypesOfEvents[Events.AddTV]>) {
+    return this.on(Events.AddTV, handler);
+  }
+  on_add_season(handler: Handler<TheTypesOfEvents[Events.AddSeason]>) {
+    return this.on(Events.AddSeason, handler);
+  }
+  on_add_episode(handler: Handler<TheTypesOfEvents[Events.AddEpisode]>) {
+    return this.on(Events.AddEpisode, handler);
+  }
+  on_add_movie(handler: Handler<TheTypesOfEvents[Events.AddMovie]>) {
+    return this.on(Events.AddMovie, handler);
+  }
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
     return this.on(Events.Print, handler);
   }

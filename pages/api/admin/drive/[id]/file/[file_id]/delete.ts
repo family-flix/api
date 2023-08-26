@@ -50,6 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (running_task_res) {
     return e(Result.Err("该文件所在云盘有进行中的任务"));
   }
+  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  if (drive_res.error) {
+    return e(drive_res.error);
+  }
+  const drive = drive_res.data;
   const file_res = await store.find_file({
     file_id,
   });
@@ -57,13 +62,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(file_res);
   }
   if (!file_res.data) {
-    return e(Result.Err("没有匹配的记录"));
+    const task_res = await Job.New({
+      desc: `直接删除 '${file_id}'`,
+      unique_id: "delete_file",
+      type: TaskTypes.DeleteDriveFile,
+      user_id: user.id,
+      store,
+    });
+    if (task_res.error) {
+      return e(task_res);
+    }
+    const task = task_res.data;
+    const r = await drive.client.delete_file(file_id);
+    if (r.error) {
+      task.throw(r.error);
+      return e(r);
+    }
+    task.finish();
+    res.status(200).json({
+      code: 0,
+      msg: "删除成功",
+      data: {
+        job_id: task.id,
+      },
+    });
+    return;
   }
-  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
-  if (drive_res.error) {
-    return e(drive_res.error);
-  }
-  const drive = drive_res.data;
   const task_res = await Job.New({
     desc: `删除 '${file_res.data.name}'`,
     unique_id: "delete_file",

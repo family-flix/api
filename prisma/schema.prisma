@@ -395,7 +395,7 @@ model episode {
         parsed_episodes parsed_episode[]
         play_histories  play_history[]
         reports         report[]
-        subtitle        subtitle[]
+        subtitles       subtitle[]
 
         @@map("Episode")
 }
@@ -417,7 +417,7 @@ model movie {
         play_histories play_history[]
         parsed_movies  parsed_movie[]
         reports        report[]
-        subtitle       subtitle[]
+        subtitles      subtitle[]
 
         @@map("Movie")
 }
@@ -711,36 +711,37 @@ model log {
 // }
 
 model member {
-        id       String   @id
-        created  DateTime @default(now())
-        updated  DateTime @default(now())
+        id         String   @id
+        created    DateTime @default(now())
+        updated    DateTime @default(now())
         // 成员邮箱
-        email    String?
+        email      String?
         // 成员名字
-        name     String?
-        avatar   String?
+        name       String?
+        avatar     String?
         // 成员备注
-        remark   String
+        remark     String
+        // 权限 json
+        permission String?
         // 是否禁用
-        disabled Int?     @default(0)
+        disabled   Int?     @default(0)
         // 软删除
-        delete   Int?     @default(0)
+        delete     Int?     @default(0)
 
         inviter_id String?
         inviter    member? @relation("InviterToInvitees", fields: [inviter_id], references: [id])
         user_id    String
         user       user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+        member_setting  member_setting?
         member_tokens   member_token[]
         play_histories  play_history[]
         recommended_tvs recommended_tv[]
         reports         report[]
-        member_setting  member_setting?
-        permission      permission[]
         invitees        member[]              @relation("InviterToInvitees")
         notifications   member_notification[]
 
-        @@unique([user_id, remark])
+        @@unique([user_id, inviter_id, remark])
         @@map("Member")
 }
 
@@ -786,8 +787,8 @@ model permission {
         desc String
         code String
 
-        member_id String
-        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("Permission")
 }
@@ -798,9 +799,11 @@ model member_notification {
         updated DateTime @default(now())
 
         content   String?
+        type      Int     @default(0)
         status    Int     @default(0)
         is_delete Int     @default(0)
 
+        // 接收者
         member_id String
         member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
@@ -900,14 +903,7 @@ model settings {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        qiniu_access_token String?
-        qiniu_secret_token String?
-        qiniu_scope        String?
-        push_deer_token    String?
-        tmdb_token         String?
-        // 静态资源路径前缀
-        assets             String?
-        websites           String?
+        detail String?
 
         user_id String @unique
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -946,6 +942,7 @@ model user {
         reports                 report[]
         collections             collection[]
         subtitles               subtitle[]
+        permission              permission[]
 
         @@map("User")
 }

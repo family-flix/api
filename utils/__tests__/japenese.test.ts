@@ -17,7 +17,6 @@ describe("动漫", () => {
       episode: "E166-167",
     });
   });
-
   test("犬夜叉 - OVA.2010-01-29：It’s a Rumic World 犬夜叉～黒い鐵砕牙（黑色的铁碎牙）；1920×1080P.mkv", () => {
     const name = "犬夜叉 - OVA.2010-01-29：It’s a Rumic World 犬夜叉～黒い鐵砕牙（黑色的铁碎牙）；1920×1080P.mkv";
     const result = parse_filename_for_video(name);
@@ -28,7 +27,6 @@ describe("动漫", () => {
       episode: "",
     });
   });
-
   test("犬夜叉 SP", () => {
     const name = "犬夜叉 SP";
     const result = parse_filename_for_video(name);
@@ -39,7 +37,6 @@ describe("动漫", () => {
       episode: "",
     });
   });
-
   test("OVA最後のマジカル大戦 第2集.mp4", () => {
     const name = "OVA最後のマジカル大戦 第2集.mp4";
     const result = parse_filename_for_video(name);
