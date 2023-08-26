@@ -91,8 +91,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       width,
       height,
       // 其他分辨率的视频源
-      other: play_info_res.data.sources.map((res) => {
-        const { url, type, width, height } = res;
+      other: play_info_res.data.sources.map((source) => {
+        const { url, type, width, height } = source;
         return {
           id: file_id,
           file_id,

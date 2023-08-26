@@ -34,7 +34,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       await store.prisma.member_token.updateMany({
         where: {
           member_id: member.id,
-          used: 1,
         },
         data: {
           token,
