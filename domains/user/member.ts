@@ -37,7 +37,7 @@ export class Member {
       return Result.Err(r.error, 900);
     }
     const id = r.data.id as UserUniqueID;
-    const member = await store.prisma.member.findUnique({
+    const member = await store.prisma.member.findFirst({
       where: { id },
       include: {
         user: {
@@ -50,16 +50,16 @@ export class Member {
     if (member === null) {
       return Result.Err("无效身份凭证", 900);
     }
-    const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } =
-      await User.parseSettings(member.user.settings);
+    // const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } =
+    //   await User.parseSettings(member.user.settings);
     const user = new User({
       id: member.user_id,
       settings: {
-        qiniu_access_token,
-        qiniu_secret_token,
-        qiniu_scope,
-        tmdb_token,
-        push_deer_token,
+        qiniu_access_token: "",
+        qiniu_secret_token: "",
+        qiniu_scope: "",
+        tmdb_token: "",
+        push_deer_token: "",
       },
       token: "",
       store,
@@ -95,16 +95,16 @@ export class Member {
       return Result.Err("无效身份凭证");
     }
     const { token, member_id } = member_token;
-    const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } =
-      await User.parseSettings(member_token.member.user.settings);
+    // const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } =
+    //   await User.parseSettings(member_token.member.user.settings);
     const user = new User({
       id: member_token.member.user.id,
       settings: {
-        qiniu_access_token,
-        qiniu_secret_token,
-        qiniu_scope,
-        tmdb_token,
-        push_deer_token,
+        qiniu_access_token: "",
+        qiniu_secret_token: "",
+        qiniu_scope: "",
+        tmdb_token: "",
+        push_deer_token: "",
       },
       token: "",
       store,

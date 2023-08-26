@@ -335,7 +335,10 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         where: {
           id: season.profile.id,
         },
-        data: diff,
+        data: {
+          updated: dayjs().toISOString(),
+          ...diff,
+        },
       });
       return Result.Ok(normalized_profile);
     }
@@ -354,6 +357,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
           id: season.id,
         },
         data: {
+          updated: dayjs().toISOString(),
           profile_id: created_res.data.id,
         },
       });
@@ -473,7 +477,10 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         where: {
           id: episode.profile.id,
         },
-        data: diff,
+        data: {
+          updated: dayjs().toISOString(),
+          ...diff,
+        },
       });
       return Result.Ok(normalized_profile);
     }
@@ -492,6 +499,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
           id: episode.id,
         },
         data: {
+          updated: dayjs().toISOString(),
           profile_id: created_res.data.id,
         },
       });
@@ -589,7 +597,10 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         where: {
           id: movie.profile.id,
         },
-        data: diff,
+        data: {
+          updated: dayjs().toISOString(),
+          ...diff,
+        },
       });
       return Result.Ok(diff);
     }

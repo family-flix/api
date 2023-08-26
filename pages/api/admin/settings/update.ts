@@ -1,6 +1,7 @@
 /**
  * @file 更新用户配置信息
  */
+import dayjs from "dayjs";
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -23,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: user.id,
     },
     data: {
+      updated: dayjs().toISOString(),
       detail: JSON.stringify({
         ...user.settings,
         push_deer_token,

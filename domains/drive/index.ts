@@ -1,6 +1,7 @@
 /**
  * @file 云盘所有逻辑
  */
+import dayjs from "dayjs";
 import Joi from "joi";
 
 import { AliyunDriveClient } from "@/domains/aliyundrive";
@@ -11,6 +12,7 @@ import { BaseDomain } from "@/domains/base";
 import { DatabaseStore } from "@/domains/store";
 import { Result, resultify } from "@/types";
 import { parseJSONStr, r_id } from "@/utils";
+
 import { DriveTypes } from "./constants";
 
 const drivePayloadSchema = Joi.object({
@@ -237,6 +239,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         id: this.id,
       },
       data: {
+        updated: dayjs().toISOString(),
         total_size,
         used_size,
       },
@@ -265,6 +268,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         id: this.id,
       },
       data: {
+        updated: dayjs().toISOString(),
         total_size,
         used_size,
       },
@@ -326,6 +330,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         id: this.id,
       },
       data: {
+        updated: dayjs().toISOString(),
         root_folder_id,
         root_folder_name,
       },
@@ -345,7 +350,8 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r.error);
     }
     const { name, remark } = values;
-    const data: { name: string; remark?: string } = {
+    const data: { updated: string; name: string; remark?: string } = {
+      updated: dayjs().toISOString(),
       name,
     };
     if (remark) {

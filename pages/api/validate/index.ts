@@ -15,6 +15,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!token) {
     return e(Result.Err("缺少 token", 900));
   }
+  // const t = await store.prisma.member_token.findFirst({
+  //   where: {
+  //     id: token,
+  //   },
+  // });
+  // if (!t) {
+  //   return e(Result.Err("该 token 不存在", 900));
+  // }
   const t_res = await Member.Validate(token, store);
   if (t_res.error) {
     return e(t_res);
