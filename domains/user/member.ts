@@ -34,7 +34,7 @@ export class Member {
       secret: Member.SECRET,
     });
     if (r.error) {
-      return Result.Err(r.error);
+      return Result.Err(r.error, 900);
     }
     const id = r.data.id as UserUniqueID;
     const member = await store.prisma.member.findUnique({
@@ -48,7 +48,7 @@ export class Member {
       },
     });
     if (member === null) {
-      return Result.Err("无效身份凭证");
+      return Result.Err("无效身份凭证", 900);
     }
     const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } =
       await User.parseSettings(member.user.settings);
