@@ -13,7 +13,7 @@ import { Notify } from "@/domains/notify";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { text } = req.body as Partial<{ text: string }>;
+  const { text, token } = req.body as Partial<{ text: string; token: string }>;
   if (!text) {
     return e(Result.Err("请传入推送内容"));
   }
@@ -21,8 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const user = t_res.data;
-  const notify_res = await Notify.New({ type: 1, store, token: user.settings.tmdb_token });
+  // const user = t_res.data;
+  const notify_res = await Notify.New({ type: 1, store, token });
   if (notify_res.error) {
     return e(notify_res);
   }

@@ -1,5 +1,5 @@
 /**
- * @file 更新用户配置信息
+ * @file 获取用户配置信息
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -18,16 +18,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  await store.prisma.settings.update({
-    where: {
-      user_id: user.id,
-    },
-    data: {
-      detail: JSON.stringify({
-        ...user.settings,
-        push_deer_token,
-      }),
-    },
-  });
-  res.status(200).json({ code: 0, msg: "", data: null });
+  //   await store.prisma.settings.update({
+  //     where: {
+  //       user_id: user.id,
+  //     },
+  //     data: {
+  //       detail: JSON.stringify({
+  //         push_deer_token,
+  //       }),
+  //     },
+  //   });
+  res.status(200).json({ code: 0, msg: "", data: user.settings });
 }

@@ -42,13 +42,14 @@ export class Notify extends BaseDomain<TheTypesOfEvents> {
   constructor(props: { _name?: string } & NotifyProps) {
     super(props);
 
-    const { store, type, token } = props;
+    const { store, type = 1, token } = props;
     this.store = store;
     this.type = type;
     this.token = token;
   }
 
   send(msg: SendPayload) {
+    console.log("[DOMAIN]notify - send", msg);
     if (this.type === 1) {
       return pushdeer_send(msg, this.token);
     }

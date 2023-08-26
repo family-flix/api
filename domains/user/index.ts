@@ -64,34 +64,8 @@ export class User {
       return Result.Err("无效的 token", 900);
     }
     const { settings } = existing;
-    const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } = await (async () => {
-      if (settings === null) {
-        return {};
-      }
-      const { detail } = settings;
-      if (!detail) {
-        return {};
-      }
-      const r = await parseJSONStr<{
-        tmdb_token: string;
-        assets: string;
-        push_deer_token: string;
-        qiniu_access_token: string;
-        qiniu_secret_token: string;
-        qiniu_scope: string;
-      }>(detail);
-      if (r.error) {
-        return {};
-      }
-      const { tmdb_token, push_deer_token, qiniu_access_token, qiniu_secret_token, qiniu_scope } = r.data;
-      return {
-        qiniu_access_token,
-        qiniu_secret_token,
-        qiniu_scope,
-        tmdb_token,
-        push_deer_token,
-      };
-    })();
+    const { tmdb_token, push_deer_token, qiniu_access_token, qiniu_secret_token, qiniu_scope } =
+      await User.parseSettings(settings);
     // 要不要生成一个新的 token？
     const user = new User({
       id,
@@ -338,13 +312,13 @@ export class User {
       if (!settings) {
         return {};
       }
-      const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token } = settings;
+      const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } = settings;
       return {
         qiniu_access_token: qiniu_access_token ?? undefined,
         qiniu_secret_token: qiniu_secret_token ?? undefined,
         qiniu_scope: qiniu_scope ?? undefined,
         tmdb_token: tmdb_token ?? "c2e5d34999e27f8e0ef18421aa5dec38",
-        push_deer_token: tmdb_token ?? undefined,
+        push_deer_token: push_deer_token ?? undefined,
       };
     })();
     this.store = store;
