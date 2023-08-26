@@ -253,47 +253,38 @@ export class User {
     if (!settings) {
       return {};
     }
-    const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } = await (async () => {
-      if (settings === null) {
-        return {};
-      }
-      const { detail } = settings;
-      if (!detail) {
-        return {};
-      }
-      const r = await parseJSONStr<{
-        tmdb_token: string;
-        assets: string;
-        push_deer_token: string;
-        qiniu_access_token: string;
-        qiniu_secret_token: string;
-        qiniu_scope: string;
-      }>(detail);
-      if (r.error) {
-        return {};
-      }
-      const { tmdb_token, push_deer_token, qiniu_access_token, qiniu_secret_token, qiniu_scope } = r.data;
-      return {
-        qiniu_access_token,
-        qiniu_secret_token,
-        qiniu_scope,
-        tmdb_token,
-        push_deer_token,
-      };
-    })();
+    const { detail } = settings;
+    if (!detail) {
+      return {};
+    }
+    const r = await parseJSONStr<{
+      tmdb_token: string;
+      assets: string;
+      push_deer_token: string;
+      qiniu_access_token: string;
+      qiniu_secret_token: string;
+      qiniu_scope: string;
+    }>(detail);
+    if (r.error) {
+      return {};
+    }
+    const { tmdb_token, push_deer_token, qiniu_access_token, qiniu_secret_token, qiniu_scope } = r.data;
     return {
-      tmdb_token,
-      push_deer_token,
       qiniu_access_token,
       qiniu_secret_token,
       qiniu_scope,
+      tmdb_token,
+      push_deer_token,
     };
   }
 
   /** 用户 id */
   id: UserUniqueID;
   nickname: string = "unknown";
-  /** JWT token */
+  /**
+   * JWT token
+   * @todo 没啥用，就是登录后返回了该值。改成方法获取并返回
+   */
   token: string;
   settings: {
     qiniu_access_token?: string;

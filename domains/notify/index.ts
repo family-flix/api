@@ -49,7 +49,7 @@ export class Notify extends BaseDomain<TheTypesOfEvents> {
   }
 
   send(msg: SendPayload) {
-    console.log("[DOMAIN]notify - send", msg);
+    // console.log("[DOMAIN]notify - send", msg);
     if (this.type === 1) {
       return pushdeer_send(msg, this.token);
     }

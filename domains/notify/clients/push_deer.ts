@@ -10,7 +10,7 @@ import { Result } from "@/types";
 import { SendPayload } from "../types";
 
 export async function pushdeer_send(body: SendPayload, token: string) {
-  console.log('[DOMAIN]notify/clients/push_deer', body, token);
+  // console.log('[DOMAIN]notify/clients/push_deer', body, token);
   const { text, image, title = "通知", markdown } = body;
   if (!token) {
     return Result.Err("缺少 pushkey");
@@ -39,7 +39,7 @@ export async function pushdeer_send(body: SendPayload, token: string) {
     query.type = "markdown";
     return qs.stringify(query);
   })();
-  console.log('[DOMAIN]notify/clients/push_deer', search);
+  // console.log('[DOMAIN]notify/clients/push_deer', search);
   try {
     const r = await axios.get(`${endpoint}?${search}`);
     if (r.data.code !== 0) {
