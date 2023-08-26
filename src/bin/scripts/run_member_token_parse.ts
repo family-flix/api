@@ -2,8 +2,7 @@ import { Member } from "@/domains/user/member";
 import { parse_token } from "@/domains/user/utils";
 
 async function main() {
-  const token =
-    "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..MPzy2Rce4AOKQVRI.BT5tWopHfNvU-sRNTRp-Bt9UuY01VkcvxKEpJ0VdTwEM0C_h55cZFpGwEBxnX_BkJ_kYVPPZy5jP_8nqqHsNFf4lPjtu5EScnsYch3Vv_xhmx5R2bQL4n3y4JXFMPk6-9ufNY3garw.vm7lNXH15Y89ESt9_dcIVw";
+  const token = "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..lCSC11_ZW1uZ8gGT.Lw9K_Bj--np-QaPVtX9Vh1YDEuwclcnfDrsYoOuKl9HKrDix35DAYZSU0XPFCXC8_zquM6_B1OsIgzzqILd45T4V3T95UFUhDpzcxeM_6M2GJThoz3DnS2rj33TLRP2CpPP94JSxow.mSf7IcZcMovKmLz2_9kFeQ";
   const r = await parse_token({
     token,
     secret: Member.SECRET,
