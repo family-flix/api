@@ -49,6 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       profile: true,
       parsed_episodes: true,
+      subtitles: true,
     },
     skip: (page - 1) * page_size,
     take: page_size,
@@ -67,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: count,
       no_more: list.length + (page - 1) * page_size >= count,
       list: list.map((episode) => {
-        const { id, season_text, episode_text, profile, parsed_episodes, season_id } = episode;
+        const { id, season_text, episode_text, profile, parsed_episodes, season_id, subtitles } = episode;
         const { name, overview } = profile;
         return {
           id,
@@ -77,11 +78,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           episode_number: episode_text,
           season_id,
           sources: parsed_episodes.map((parsed_episode) => {
-            const { file_id, file_name } = parsed_episode;
+            const { file_id, file_name, parent_paths } = parsed_episode;
             return {
               id: file_id,
               file_id,
               file_name,
+              parent_paths,
+            };
+          }),
+          subtitles: subtitles.map((subtitle) => {
+            const { id, file_id, name, language } = subtitle;
+            return {
+              type: 2,
+              id,
+              name,
+              url: file_id,
+              lang: language,
             };
           }),
         };

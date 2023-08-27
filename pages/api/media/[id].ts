@@ -82,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   (() => {
     const { url, type, width, height } = recommend;
-    const result: MediaFile & { other: MediaFile[] } = {
+    const result: MediaFile & { other: MediaFile[]; subtitles: { type: number; language: string; url: string }[] } = {
       id,
       file_id,
       url,
@@ -103,6 +103,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           height,
         };
       }),
+      subtitles: (() => {
+        const { subtitles } = play_info_res.data;
+        return subtitles.map((subtitle) => {
+          const { id, name, url, language } = subtitle;
+          return {
+            type: 1,
+            id,
+            name,
+            url,
+            language,
+          };
+        });
+      })(),
     };
     res.status(200).json({ code: 0, msg: "", data: result });
   })();

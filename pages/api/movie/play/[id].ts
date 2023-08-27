@@ -27,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       profile: true,
+      subtitles: true,
       play_histories: {
         where: {
           movie_id: id,
@@ -39,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (movie === null) {
     return e("没有匹配的电影记录");
   }
-  const { profile, play_histories, parsed_movies } = movie;
+  const { profile, play_histories, subtitles, parsed_movies } = movie;
   const play_history =
     play_histories.find((p) => {
       return p.movie_id === id && p.member_id === member_id;
@@ -62,6 +63,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return r;
   })();
   const { name, original_name, overview, poster_path, popularity } = profile;
+  const sources = parsed_movies.map((source) => {
+    const { id, file_id, file_name, parent_paths } = source;
+    return {
+      id,
+      file_id,
+      file_name,
+      parent_paths,
+    };
+  });
   const data = {
     id,
     name: name || original_name,
@@ -70,28 +80,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     popularity,
     current_time,
     thumbnail,
-    sources: parsed_movies.map((source) => {
-      const { file_id, file_name, parent_paths } = source;
+    sources,
+    subtitles: subtitles.map((subtitle) => {
+      const { id, file_id, name, language } = subtitle;
       return {
-        file_id,
-        file_name,
-        parent_paths,
+        type: 2,
+        id,
+        name,
+        url: file_id,
+        lang: language,
       };
     }),
     cur_source: (() => {
-      const cur = parsed_movies.find((source) => {
+      const cur = sources.find((source) => {
         return source.file_id === file_id;
       });
       if (cur) {
         return cur;
       }
-      const high = parsed_movies.find((source) => {
+      const high = sources.find((source) => {
         return source.file_name.match(/(2016[pP])|4[kK]/);
       });
       if (high) {
         return high;
       }
-      return parsed_movies[0] ?? null;
+      return sources[0] ?? null;
     })(),
   };
   res.status(200).json({ code: 0, msg: "", data });

@@ -78,22 +78,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (!drive) {
       return e("没有匹配的云盘记录");
     }
-    const thumbnail_res = await tv.snapshot_media({
-      file_id,
-      drive_id: drive.profile.drive_id,
-      cur_time: current_time,
-      store,
-    });
-    if (thumbnail_res.error) {
-      return e(thumbnail_res);
-    }
+    // const thumbnail_res = await tv.snapshot_media({
+    //   file_id,
+    //   drive_id: drive.profile.drive_id,
+    //   cur_time: current_time,
+    //   store,
+    // });
+    // if (thumbnail_res.error) {
+    //   return e(thumbnail_res);
+    // }
     const adding_res = await store.add_history({
       movie_id,
       current_time,
       duration,
       member_id,
       file_id: file_id ?? null,
-      thumbnail: thumbnail_res.data?.img_path ?? null,
+      // thumbnail: thumbnail_res.data?.img_path ?? null,
     });
     if (adding_res.error) {
       return e(adding_res);
@@ -124,20 +124,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("没有匹配的云盘记录");
   }
   // console.log("[PAGE]history/update - prepare snapshot_media", file_id, drive.drive_id, current_time);
-  const thumbnail_res = await tv.snapshot_media({
-    file_id,
-    drive_id: drive.profile.drive_id,
-    cur_time: current_time,
-    store,
-  });
-  if (thumbnail_res.error) {
-    return e(thumbnail_res);
-  }
+  // const thumbnail_res = await tv.snapshot_media({
+  //   file_id,
+  //   drive_id: drive.profile.drive_id,
+  //   cur_time: current_time,
+  //   store,
+  // });
+  // if (thumbnail_res.error) {
+  //   return e(thumbnail_res);
+  // }
   // console.log("[PAGE]history/update - thumbnail", thumbnail_res.data);
   const update_res = await store.update_history(existing_history.id, {
     current_time,
     file_id: file_id ?? null,
-    thumbnail: thumbnail_res.data?.img_path ?? null,
+    // thumbnail: thumbnail_res.data?.img_path ?? null,
   });
   if (update_res.error) {
     return e(update_res);

@@ -88,7 +88,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         height,
       };
     }),
-    subtitles: info.subtitles,
+    subtitles: info.subtitles.map((subtitle) => {
+      const { id, url, name, language } = subtitle;
+      return {
+        type: 1,
+        id,
+        name,
+        url,
+        language,
+      };
+    }),
   };
   res.status(200).json({ code: 0, msg: "", data: result });
 }

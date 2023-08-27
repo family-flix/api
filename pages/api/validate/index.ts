@@ -27,13 +27,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id, remark, token: real_token } = t_res.data;
+  const { id, token: real_token } = t_res.data;
   res.status(200).json({
     code: 0,
     msg: "",
     data: {
       id,
-      remark,
       token: real_token,
     },
   });
