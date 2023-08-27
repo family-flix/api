@@ -12,11 +12,13 @@ export enum TaskTypes {
   SearchMedia,
   /** 电视剧更新 */
   TVSync,
+  /** 文件夹同步 */
+  FolderSync,
   /** 刷新电视剧信息 */
   RefreshTVAndSeasonProfile,
   /** 刷新电影信息 */
   RefreshMovieProfile,
-  /** 转存资源 */
+  /** 转存/归档资源 */
   Transfer,
   /** 删除云盘内文件 */
   DeleteDriveFile,

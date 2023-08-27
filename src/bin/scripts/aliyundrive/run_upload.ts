@@ -7,6 +7,7 @@ import axios from "axios";
 
 import { Drive } from "@/domains/drive";
 import { Application } from "@/domains/application";
+import path from "path";
 
 async function prepare_upload_file(
   file_buffer: Buffer,
@@ -63,14 +64,18 @@ async function main() {
     root_path: "/Users/litao/Documents/workspaces/family-flix/dev-output",
   });
   const store = app.store;
-  const user = await store.prisma.user.findFirst({
-    where: {},
-  });
-  if (!user) {
-    return;
-  }
+  // const user = await store.prisma.user.findFirst({
+  //   where: {},
+  // });
+  // if (!user) {
+  //   return;
+  // }
+  const user = {
+    id: "c983KOZIgUtKheH",
+  };
+  const drive_id = "WHFIiV9ILBmwaAK";
   const drive_res = await Drive.Get({
-    id: "O2wsuqkBwNehfXe",
+    id: drive_id,
     user_id: user.id,
     store,
   });
@@ -78,18 +83,19 @@ async function main() {
     return;
   }
   const client = drive_res.data.client;
-  const filepath = "/Users/litao/Desktop/example2.png";
-  // const filepath = "/var/folders/jr/kmg6402910d5t40sst1hm1300000gn/T/c8ee0b0436295709ec2febd02";
-  const file_buffer = fs.readFileSync(filepath);
+  const filename = "example03.png";
+  const filepath = "/Users/litao/Downloads";
+  const file_buffer = fs.readFileSync(path.resolve(filepath, filename));
   const r = await client.upload(file_buffer, {
-    name: "c8ee0b0436295709ec2febd02.png",
+    name: filename,
     parent_file_id: "root",
   });
   if (r.error) {
+    console.log(r.error.message);
     return;
   }
-  console.log("before log r2.data");
-  console.log(r.data, typeof r.data);
+  console.log("upload success");
+  console.log(r.data);
 }
 
 main();

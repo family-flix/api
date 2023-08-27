@@ -62,29 +62,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(file_res);
   }
   if (!file_res.data) {
-    const task_res = await Job.New({
-      desc: `直接删除 '${file_id}'`,
-      unique_id: "delete_file",
-      type: TaskTypes.DeleteDriveFile,
-      user_id: user.id,
-      store,
+    await store.prisma.subtitle.deleteMany({
+      where: {
+        file_id,
+      },
     });
-    if (task_res.error) {
-      return e(task_res);
-    }
-    const task = task_res.data;
     const r = await drive.client.delete_file(file_id);
     if (r.error) {
-      task.throw(r.error);
       return e(r);
     }
-    task.finish();
     res.status(200).json({
       code: 0,
       msg: "删除成功",
-      data: {
-        job_id: task.id,
-      },
+      data: null,
     });
     return;
   }
@@ -476,6 +466,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       );
     }
     await store.prisma.parsed_movie.deleteMany({
+      where: {
+        file_id,
+      },
+    });
+    await store.prisma.subtitle.deleteMany({
       where: {
         file_id,
       },

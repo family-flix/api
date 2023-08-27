@@ -158,7 +158,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // );
   const { name, overview } = profile;
   const { url, type: t, width, height } = recommend_resolution;
-  const result: MediaFile & { other: MediaFile[]; subtitles: { language: string; url: string }[] } = {
+  const result: MediaFile & { other: MediaFile[]; subtitles: { type: number; lang: string; url: string }[] } = {
     id,
     name: name || episode_text,
     overview: overview || "",
@@ -187,28 +187,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const { subtitles } = info;
       return subtitles
         .map((subtitle) => {
-          const { url, language } = subtitle;
+          const { id, name, url, language } = subtitle;
           return {
-            id: url,
             type: 1,
+            id,
+            name,
             url,
-            language,
+            lang: language,
           };
         })
         .concat(
           episode.subtitles.map((subtitle) => {
-            const { id, file_id, language } = subtitle;
+            const { id, file_id, name, language } = subtitle;
             return {
-              id,
               type: 2,
+              id,
+              name,
               url: file_id,
-              language,
+              lang: language,
             };
           }) as {
             id: string;
             type: 1 | 2;
             url: string;
-            language: "chi" | "eng" | "jpn";
+            name: string;
+            lang: "chi" | "eng" | "jpn";
           }[]
         );
     })(),

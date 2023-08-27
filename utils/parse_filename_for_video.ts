@@ -35,7 +35,7 @@ export function parse_filename_for_video(
   keys: VideoKeys[] = ["name", "original_name", "season", "episode"]
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("大破天幕杀机")) {
+    if (!filename.includes("BITCH.X.RICH")) {
       return;
     }
     // console.log(...args);
@@ -244,7 +244,13 @@ export function parse_filename_for_video(
     },
     {
       key: k("subtitle_lang"),
-      regexp: /zh|CHS|Eng|简英/,
+      regexp: /([cChHtTsiISeEnNgG]{1,}&[cChHtTsiISeEnNgG]{1,}|简英)\./,
+      pick: [1],
+    },
+    {
+      key: k("subtitle_lang"),
+      regexp: /([zZ][hH]|[cC][hH][iIsStT]|[eE][nN][gG])\./,
+      pick: [1],
     },
     // 一些国产剧影片特有的信息？
     {
@@ -1009,16 +1015,22 @@ export function parse_filename_for_video(
 }
 
 function format_subtitle_lang(lang: string) {
-  if (lang.match(/zh|CHS/)) {
+  if (lang.includes("&")) {
+    return lang;
+  }
+  if (lang.match(/[zZ][hH]|[cC][hH][sS]/)) {
     return "chi";
   }
-  if (lang.match(/Eng/)) {
+  if (lang.match(/[zZ][hH]|[cC][hH][tT]/)) {
+    return "cht";
+  }
+  if (lang.match(/[eE][nN][gG]/)) {
     return "eng";
   }
   if (lang === "简英") {
     return "chi&eng";
   }
-  return "unknown";
+  return lang;
 }
 
 /**

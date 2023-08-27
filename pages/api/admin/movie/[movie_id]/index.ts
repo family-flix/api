@@ -48,7 +48,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       backdrop_path,
       original_language,
       tmdb_id: profile.tmdb_id,
-      sources,
+      sources: sources.map((source) => {
+        const { id, file_id, file_name, parent_paths } = source;
+        return {
+          id,
+          file_id,
+          file_name,
+          parent_paths,
+        };
+      }),
     };
   })();
 

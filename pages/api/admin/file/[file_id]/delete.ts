@@ -19,7 +19,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!file_id) {
     return e(Result.Err("缺少文件 file_id"));
   }
-
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -52,6 +51,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   await store.prisma.parsed_movie.deleteMany({
+    where: {
+      file_id,
+    },
+  });
+  await store.prisma.subtitle.deleteMany({
     where: {
       file_id,
     },

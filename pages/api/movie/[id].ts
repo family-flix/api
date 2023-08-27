@@ -131,26 +131,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const { subtitles } = info;
         return subtitles
           .map((subtitle) => {
-            const { url, language } = subtitle;
+            const { id, name, url, language } = subtitle;
             return {
-              id: url,
               type: 1,
+              id,
+              name,
               url,
               language,
             };
           })
           .concat(
             movie.subtitles.map((subtitle) => {
-              const { id, file_id, language } = subtitle;
+              const { id, file_id, name, language } = subtitle;
               return {
-                id,
                 type: 2,
+                id,
+                name,
                 url: file_id,
                 language,
               };
             }) as {
-              id: string;
               type: 1 | 2;
+              id: string;
+              name: string;
               url: string;
               language: "chi" | "eng" | "jpn";
             }[]

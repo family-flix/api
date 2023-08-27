@@ -179,6 +179,7 @@ model subtitle {
         updated DateTime @default(now())
 
         file_id  String
+        name     String
         language String
 
         movie_id   String?

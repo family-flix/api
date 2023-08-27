@@ -12,7 +12,7 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { r_id } from "@/utils";
-// import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
+import { ModelQuery } from "@/domains/store/types";
 
 export const config = {
   api: {
@@ -22,13 +22,18 @@ export const config = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { episode_id, drive_id, lang } = req.query as Partial<{
-    episode_id: string;
+  const { episode_text, season_text, tv_id, drive_id, lang } = req.query as Partial<{
+    tv_id: string;
+    episode_text: string;
+    season_text: string;
     drive_id: string;
     lang: string;
   }>;
-  if (!episode_id) {
-    return e(Result.Err("缺少剧集 id"));
+  if (!tv_id) {
+    return e(Result.Err("缺少电视剧 id"));
+  }
+  if (!episode_text) {
+    return e(Result.Err("缺少剧集集数"));
   }
   if (!drive_id) {
     return e(Result.Err("请指定存入哪个云盘"));
@@ -41,19 +46,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  const episode_res = await store.find_episode({
-    id: episode_id,
-  });
-  if (episode_res.error) {
-    return e(episode_res);
+  const where: ModelQuery<typeof store.prisma.episode.findFirst>["where"] = {
+    tv_id,
+    episode_text,
+    season_text: "S01",
+  };
+  if (season_text) {
+    where.season_text = season_text;
   }
-  const episode = episode_res.data;
+  const episode = await store.prisma.episode.findFirst({
+    where,
+    include: {
+      tv: {
+        include: {
+          profile: true,
+        },
+      },
+      season: {
+        include: {
+          profile: true,
+        },
+      },
+    },
+  });
   if (!episode) {
     return e(Result.Err("没有匹配的剧集记录"));
   }
   const files = (await new Promise((resolve, reject) => {
     const form = new IncomingForm();
     form.parse(req, (err, fields, files) => {
+      //       console.log("[ENDPOINT]episode/subtitle/add", fields);
       if (err) {
         return reject(err);
       }
@@ -70,17 +92,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     store,
   });
   if (drive_res.error) {
-    return;
+    return e(drive_res);
   }
   const client = drive_res.data.client;
-
   const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
   const file_buffer = fs.readFileSync(filepath);
-  const file_name = filename || tmp_filename;
-  // console.log("upload", filepath, file_name);
+  const correct_filename = filename || tmp_filename;
+  const folder_res = await client.ensure_dir([
+    "_flix_subtitles",
+    [episode.tv.profile.name, episode.tv.profile.original_name, episode.season.season_text].filter(Boolean).join("."),
+    episode.episode_text,
+  ]);
+  if (folder_res.error) {
+    return e(folder_res);
+  }
+  const parent_folder = folder_res.data.pop();
+  if (!parent_folder) {
+    return e(Result.Err("创建字幕文件夹失败"));
+  }
   const r = await client.upload(file_buffer, {
-    name: file_name,
-    parent_file_id: "root",
+    name: correct_filename,
+    parent_file_id: parent_folder.file_id,
   });
   if (r.error) {
     return e(r);
@@ -89,8 +121,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     data: {
       id: r_id(),
       file_id: r.data.file_id,
+      name: correct_filename,
       language: lang,
-      episode_id,
+      episode_id: episode.id,
       drive_id,
       user_id: user.id,
     },

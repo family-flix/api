@@ -1,4 +1,4 @@
-/**
+/*u
  * @file 封装的一些文件操作相关的函数
  */
 import fs from "fs/promises";
@@ -12,20 +12,20 @@ import { accessSync, mkdirSync } from "fs";
  */
 export async function ensure(filepath: string, next: string[] = []) {
   const { ext, dir } = path.parse(filepath);
-  const isFile = ext !== undefined && ext !== "";
-  if (isFile) {
+  const is_file = ext !== undefined && ext !== "";
+  if (is_file) {
     filepath = dir;
   }
   try {
     await fs.access(filepath);
     if (next.length !== 0) {
-      const theDirPrepareCreate = next.pop();
-      await fs.mkdir(theDirPrepareCreate!);
+      const the_dir_prepare_create = next.pop();
+      await fs.mkdir(the_dir_prepare_create!);
       await ensure(filepath, next);
     }
   } catch {
-    const needToCreate = path.dirname(filepath);
-    await ensure(needToCreate, next.concat(filepath));
+    const need_to_create = path.dirname(filepath);
+    await ensure(need_to_create, next.concat(filepath));
   }
 }
 

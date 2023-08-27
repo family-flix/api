@@ -133,11 +133,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           include: {
             profile: true,
             parsed_episodes: true,
-            // parsed_episodes: {
-            //   include: {
-            //     drive: true,
-            //   },
-            // },
           },
           orderBy: {
             episode_number: "asc",
@@ -165,11 +160,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         season_id,
         runtime,
         sources: parsed_episodes.map((parsed_episode) => {
-          const { file_id, file_name } = parsed_episode;
+          const { file_id, file_name, parent_paths } = parsed_episode;
           return {
             id: file_id,
             file_id,
             file_name,
+            parent_paths,
           };
         }),
       };
@@ -248,17 +244,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         season_id,
         thumbnail,
         sources: parsed_episodes.map((parsed_episode) => {
-          const { file_id, file_name, parent_paths, drive } = parsed_episode;
+          const { file_id, file_name, parent_paths } = parsed_episode;
           return {
             id: file_id,
             file_id,
             file_name,
             parent_paths,
-            drive: {
-              id: drive.id,
-              name: drive.name,
-              avatar: drive.name,
-            },
           };
         }),
       };

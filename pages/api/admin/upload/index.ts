@@ -8,7 +8,7 @@ import { File, IncomingForm } from "formidable";
 
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 
@@ -20,6 +20,10 @@ export const config = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
+  const { drive_id } = req.query as Partial<{ drive_id: string }>;
+  if (!drive_id) {
+    return e(Result.Err("请指定上传至哪个云盘"));
+  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -35,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   })) as File[];
   const drive_res = await Drive.Get({
-    id: "O2wsuqkBwNehfXe",
+    id: drive_id,
     user_id: user.id,
     store,
   });
@@ -43,24 +47,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return;
   }
   const client = drive_res.data.client;
-  // const filepath = "/Users/litao/Desktop/example2.png";
-  // const file_buffer = fs.readFileSync(filepath);
-  // const file_name = "example10.png";
-  // await client.upload(file_buffer, {
-  //   name: file_name,
-  //   parent_file_id: "root",
-  // });
-  for (let i = 0; i < files.length; i += 1) {
-    const file = files[i];
-    const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
-    const file_buffer = fs.readFileSync(filepath);
-    const file_name = filename || tmp_filename;
-    // console.log("upload", filepath, file_name);
-    await client.upload(file_buffer, {
-      name: file_name,
-      parent_file_id: "root",
-    });
-    fs.unlinkSync(filepath);
+  const file = files[0];
+  if (!file) {
+    return e(Result.Err("没有文件"));
   }
-  res.status(200).json({ code: 0, msg: "", data: null });
+  const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
+  const file_buffer = fs.readFileSync(filepath);
+  const correct_filename = filename || tmp_filename;
+  // console.log("upload", filepath, file_name);
+  const r = await client.upload(file_buffer, {
+    name: correct_filename,
+    parent_file_id: "root",
+  });
+  if (r.error) {
+    return e(r);
+  }
+  fs.unlinkSync(filepath);
+  res.status(200).json({ code: 0, msg: "上传成功", data: null });
 }

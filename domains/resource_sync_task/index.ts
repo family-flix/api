@@ -190,7 +190,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       })
     );
     const { task, client, store } = this;
-    const { id, url, file_id, parsed_tv, invalid } = task;
+    const { id, url, file_id, invalid, parsed_tv } = task;
     const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
 
     const drive_id = this.drive.id;

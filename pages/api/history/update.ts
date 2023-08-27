@@ -37,6 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!episode_id) {
     return e("缺少影片 id");
   }
+  // const now = new Date().valueOf();
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -57,12 +58,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     },
   });
+  // console.log(1, new Date().valueOf() - now);
   const tv_res = await TV.New({
     assets: app.assets,
   });
   if (tv_res.error) {
     return e(tv_res);
   }
+  // console.log(2, new Date().valueOf() - now);
   const tv = tv_res.data;
   if (!existing_history) {
     const file_res = await store.find_file({
@@ -93,6 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // if (thumbnail_res.error) {
     //   return e(thumbnail_res);
     // }
+    // console.log(3, new Date().valueOf() - now);
     const adding_res = await store.add_history({
       tv_id,
       episode_id,
@@ -105,12 +109,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (adding_res.error) {
       return e(adding_res);
     }
+    // console.log(4, new Date().valueOf() - now);
     return res.status(200).json({
       code: 0,
       msg: "新增记录成功",
       data: null,
     });
   }
+  // console.log(5, new Date().valueOf() - now);
   const file_res = await store.find_file({
     file_id,
   });

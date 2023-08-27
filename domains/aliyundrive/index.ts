@@ -602,6 +602,8 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
         .map((subtitle) => {
           const { url, language } = subtitle;
           return {
+            id: url,
+            name: url,
             url,
             language,
           };
@@ -631,7 +633,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(result.data);
   }
   /** 根据名称判断一个文件是否已存在 */
-  async existing(parent_file_id: string, file_name: string) {
+  async existing(parent_file_id: string, file_name: string): Promise<Result<AliyunDriveFileResp | null>> {
     await this.ensure_initialized();
     const url = "/adrive/v3/file/search";
     const result = await this.request.post<{
@@ -646,7 +648,55 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (result.error) {
       return Result.Err(result.error);
     }
-    return Result.Ok(!!result.data.items.length);
+    if (result.data.items.length === 0) {
+      return Result.Ok(null);
+    }
+    return Result.Ok(result.data.items[0]);
+  }
+  /** 保证一个文件夹必定存在，如果不存在，就创建 */
+  async ensure_dir(
+    paths: string[],
+    parent_file_id: string = "root",
+    files: { file_id: string; name: string }[] = []
+  ): Promise<
+    Result<
+      {
+        file_id: string;
+        name: string;
+      }[]
+    >
+  > {
+    if (paths.length === 0) {
+      return Result.Ok(files);
+    }
+    let [p, ...rest_paths] = paths;
+    const exiting_res = await this.existing(p, parent_file_id);
+    if (exiting_res.error) {
+      return Result.Err(exiting_res.error);
+    }
+    let parent_file = exiting_res.data
+      ? {
+          file_id: exiting_res.data.file_id,
+          name: exiting_res.data.name,
+        }
+      : null;
+    if (!exiting_res.data) {
+      const r = await this.add_folder({
+        name: p,
+        parent_file_id,
+      });
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      parent_file = {
+        file_id: r.data.file_id,
+        name: r.data.file_name,
+      };
+    }
+    if (!parent_file) {
+      return Result.Err("异常");
+    }
+    return this.ensure_dir(rest_paths, parent_file.file_id, files.concat(parent_file));
   }
   /** 移动指定文件到指定文件夹 */
   async move_files_to_folder(body: { files: { file_id: string }[]; target_folder_id: string }) {
@@ -1349,13 +1399,21 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(r.data);
   }
   /**
-   * 上传一个文件到制定文件夹
+   * 上传一个文件到指定文件夹
    */
   async upload(file_buffer: Buffer, options: { name: string; parent_file_id: string }) {
     await this.ensure_initialized();
+    const token = this.access_token;
     const { name, parent_file_id = "root" } = options;
+    const existing_res = await this.existing(parent_file_id, name);
+    if (existing_res.error) {
+      return Result.Err(existing_res.error);
+    }
+    if (existing_res.data) {
+      return Result.Err("文件已存在");
+    }
     const { content_hash, proof_code, size, part_info_list } = await prepare_upload_file(file_buffer, {
-      token: this.access_token,
+      token,
     });
     const r = await this.create_with_folder({
       content_hash,
@@ -1369,13 +1427,30 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r.error);
     }
     if (!r.data.part_info_list?.[0]) {
-      return Result.Err("没有上传地址");
+      return Result.Ok({
+        file_id: r.data.file_id,
+        file_name: r.data.file_name,
+      });
     }
+    const upload_url = r.data.part_info_list[0].upload_url;
+    // console.log("[DOMAIN]aliyundrive/index - before upload", upload_url);
     try {
-      await axios.put(r.data.part_info_list[0].upload_url, file_buffer, {
+      await axios.put(upload_url, file_buffer, {
         headers: {
-          Authorization: this.access_token,
-          "Content-Type": "application/octet-stream",
+          authority: "cn-beijing-data.aliyundrive.net",
+          accept: "*/*",
+          "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+          "content-type": "",
+          origin: "https://www.aliyundrive.com",
+          referer: "https://www.aliyundrive.com/",
+          "sec-ch-ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"macOS"',
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "cross-site",
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
         },
       });
       return Result.Ok({
@@ -1385,9 +1460,21 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     } catch (err) {
       const error = err as AxiosError<{ code: string; message: string }>;
       const { response, message } = error;
-      console.log("[]upload failed", message, response?.data);
-      return Result.Err(response?.data?.message || message, response?.data?.code);
+      // console.log("[]upload failed", message, response?.data);
+      return Result.Err(message || response?.data.message || "unknown", response?.data?.code);
     }
+  }
+  async fetch_upload_url(file_id: string) {
+    const url = "/v2/file/get_upload_url";
+    await this.ensure_initialized();
+    const r = await this.request.post(API_HOST + url, {
+      drive_id: String(this.drive_id),
+      file_id,
+    });
+    if (r.error) {
+      return r;
+    }
+    return Result.Ok(null);
   }
   async ping() {
     // await this.ensure_initialized();
