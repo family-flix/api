@@ -103,11 +103,14 @@ type TheTypesOfEvents = {
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
 };
 type FolderWalkerProps = {
+  filename_rules?: {
+    replace: [string, string];
+  }[];
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
 };
 
 /**
- * 推断一个目录内部的所有文件是否为一个剧集
+ * 遍历指定文件夹、子孙文件夹，并解析遍历到的文件夹、文件名称是否是影视剧
  */
 export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   /**
@@ -129,6 +132,9 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     parent_file_id: string;
     parent_paths: string;
   }) => Promise<boolean>;
+  filename_rules: {
+    replace: [string, string];
+  }[] = [];
   /** 读取到一个文件夹/文件时的回调 */
   on_file: (folder: {
     file_id: string;
@@ -149,7 +155,11 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   constructor(options: FolderWalkerProps) {
     super();
 
-    const { on_print } = options;
+    const { filename_rules, on_print } = options;
+    if (filename_rules) {
+      this.filename_rules = filename_rules;
+    }
+
     if (on_print) {
       this.on_print(on_print);
     }
@@ -216,7 +226,11 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       size,
     });
     if (type === "folder") {
-      const parsed_info = parse_filename_for_video(name);
+      const parsed_info = parse_filename_for_video(
+        name,
+        ["name", "original_name", "season", "episode"],
+        this.filename_rules
+      );
       const folder = data as Folder;
       await (async () => {
         do {
@@ -260,7 +274,11 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       });
       return;
     }
-    const parsed_info = parse_filename_for_video(name);
+    const parsed_info = parse_filename_for_video(
+      name,
+      ["name", "original_name", "season", "episode"],
+      this.filename_rules
+    );
     function generate_episode(profile: { name: string; original_name: string; season?: string; episode?: string }) {
       const { name: n, original_name, season, episode } = profile;
       if (episode) {

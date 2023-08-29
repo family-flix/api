@@ -13,7 +13,10 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { push_deer_token } = req.body as Partial<{ push_deer_token: string }>;
+  const { push_deer_token, extra_filename_rules } = req.body as Partial<{
+    push_deer_token: string;
+    extra_filename_rules: string;
+  }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -28,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       detail: JSON.stringify({
         ...user.settings,
         push_deer_token,
+        extra_filename_rules,
       }),
     },
   });

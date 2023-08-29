@@ -102,7 +102,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             ],
           })
         );
-        job.finish();
       },
       on_error(error) {
         // console.log("[API]tv/sync/[id].ts - ResourceSyncTask on_error", error.message);
@@ -110,6 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     });
     await resourceSyncTask.run();
+    job.finish();
     // console.log("[API]tv/sync/[id].ts - before job.finish");
   }
   run(

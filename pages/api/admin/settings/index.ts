@@ -12,21 +12,10 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { push_deer_token } = req.body as Partial<{ push_deer_token: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  //   await store.prisma.settings.update({
-  //     where: {
-  //       user_id: user.id,
-  //     },
-  //     data: {
-  //       detail: JSON.stringify({
-  //         push_deer_token,
-  //       }),
-  //     },
-  //   });
   res.status(200).json({ code: 0, msg: "", data: user.settings });
 }

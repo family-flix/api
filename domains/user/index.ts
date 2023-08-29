@@ -17,17 +17,18 @@ const credentialsSchema = Joi.object({
     .message("密码必须是6-20个字符，只能包含字母、数字和标点符号（除空格），并且至少包含两种类型的字符")
     .required(),
 });
-
+type UserSettings = {
+  qiniu_access_token?: string;
+  qiniu_secret_token?: string;
+  qiniu_scope?: string;
+  tmdb_token?: string;
+  push_deer_token?: string;
+  extra_filename_rules?: string;
+};
 type UserProps = {
   id: string;
   token: string;
-  settings?: Partial<{
-    qiniu_access_token: string | null;
-    qiniu_secret_token: string | null;
-    qiniu_scope: string | null;
-    tmdb_token: string | null;
-    push_deer_token: string | null;
-  }> | null;
+  settings?: UserSettings | null;
   store: DatabaseStore;
 };
 type UserUniqueID = string;
@@ -63,20 +64,13 @@ export class User {
     if (!existing) {
       return Result.Err("无效的 token", 900);
     }
-    const { settings } = existing;
-    const { tmdb_token, push_deer_token, qiniu_access_token, qiniu_secret_token, qiniu_scope } =
-      await User.parseSettings(settings);
+    const { settings: settings_str } = existing;
+    const settings = await User.parseSettings(settings_str);
     // 要不要生成一个新的 token？
     const user = new User({
       id,
       token,
-      settings: {
-        tmdb_token,
-        push_deer_token,
-        qiniu_access_token,
-        qiniu_secret_token,
-        qiniu_scope,
-      },
+      settings,
       store,
     });
     return Result.Ok(user);
@@ -257,24 +251,19 @@ export class User {
     if (!detail) {
       return {};
     }
-    const r = await parseJSONStr<{
-      tmdb_token: string;
-      assets: string;
-      push_deer_token: string;
-      qiniu_access_token: string;
-      qiniu_secret_token: string;
-      qiniu_scope: string;
-    }>(detail);
+    const r = await parseJSONStr<UserSettings>(detail);
     if (r.error) {
       return {};
     }
-    const { tmdb_token, push_deer_token, qiniu_access_token, qiniu_secret_token, qiniu_scope } = r.data;
+    const { tmdb_token, push_deer_token, extra_filename_rules, qiniu_access_token, qiniu_secret_token, qiniu_scope } =
+      r.data;
     return {
       qiniu_access_token,
       qiniu_secret_token,
       qiniu_scope,
       tmdb_token,
       push_deer_token,
+      extra_filename_rules,
     };
   }
 
@@ -286,13 +275,7 @@ export class User {
    * @todo 没啥用，就是登录后返回了该值。改成方法获取并返回
    */
   token: string;
-  settings: {
-    qiniu_access_token?: string;
-    qiniu_secret_token?: string;
-    qiniu_scope?: string;
-    tmdb_token?: string;
-    push_deer_token?: string;
-  };
+  settings: UserSettings;
   store: DatabaseStore;
 
   constructor(options: UserProps) {
@@ -303,13 +286,15 @@ export class User {
       if (!settings) {
         return {};
       }
-      const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } = settings;
+      const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token, extra_filename_rules } =
+        settings;
       return {
         qiniu_access_token: qiniu_access_token ?? undefined,
         qiniu_secret_token: qiniu_secret_token ?? undefined,
         qiniu_scope: qiniu_scope ?? undefined,
         tmdb_token: tmdb_token ?? "c2e5d34999e27f8e0ef18421aa5dec38",
         push_deer_token: push_deer_token ?? undefined,
+        extra_filename_rules: extra_filename_rules ?? "",
       };
     })();
     this.store = store;

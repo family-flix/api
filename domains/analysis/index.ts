@@ -195,6 +195,38 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     }
     //     const { id: task_id } = add_async_task_res.data;
     const walker = new FolderWalker({
+      filename_rules: (() => {
+        const { extra_filename_rules = "" } = this.user.settings;
+        if (!extra_filename_rules) {
+          return undefined;
+        }
+        const rules = extra_filename_rules.split("\n\n").map((rule) => {
+          const [regexp, placeholder] = rule.split("\n");
+          return {
+            regexp,
+            placeholder,
+          };
+        });
+        const valid_rules = rules
+          .filter((rule) => {
+            const { regexp, placeholder } = rule;
+            if (!regexp || !placeholder) {
+              return false;
+            }
+            try {
+              new RegExp(regexp);
+            } catch (err) {
+              return false;
+            }
+            return true;
+          })
+          .map((rule) => {
+            return {
+              replace: [rule.regexp, rule.placeholder] as [string, string],
+            };
+          });
+        return valid_rules;
+      })(),
       on_print: (v) => {
         this.emit(Events.Print, v);
       },

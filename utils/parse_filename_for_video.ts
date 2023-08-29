@@ -32,13 +32,16 @@ export type ParsedVideoInfo = Record<VideoKeys, string>;
  */
 export function parse_filename_for_video(
   filename: string,
-  keys: VideoKeys[] = ["name", "original_name", "season", "episode"]
+  keys: VideoKeys[] = ["name", "original_name", "season", "episode"],
+  extra_rules: {
+    replace: [string, string];
+  }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("BITCH.X.RICH")) {
+    if (!filename.includes("Angry.Men")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -89,6 +92,21 @@ export function parse_filename_for_video(
     .replace(/(https{0,1}:){0,1}(\/\/){0,1}[0-9a-zA-Z]{1,}\.(com|cn)/, "")
     .replace(/(\.){2,}/g, ".");
   // const special_season_regexp = /(^|[^a-zA-Z])([sS][pP])($|[^a-zA-Z])/;
+  for (let i = 0; i < extra_rules.length; i += 1) {
+    (() => {
+      const rule = extra_rules[i];
+      const { replace } = rule;
+      try {
+        const regexp = new RegExp(replace[0]);
+        if (!original_name.match(regexp)) {
+          return;
+        }
+        original_name = original_name.replace(regexp, replace[1]);
+      } catch (err) {
+        // replace[0] 可能不是合法的正则
+      }
+    })();
+  }
   log("original_name is", original_name);
   let cur_filename = original_name;
   log("start name", cur_filename);
@@ -282,7 +300,7 @@ export function parse_filename_for_video(
     },
     {
       regexp:
-        /[国粤日][语配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三]语|双语源码/,
+        /[国粤日][语配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码/,
     },
     {
       regexp: /中字|双字/,
@@ -306,10 +324,22 @@ export function parse_filename_for_video(
       regexp: /[\u4e00-\u9fa5]{0,}压制组{0,1}/,
     },
     {
+      regexp: /\({0,1}CC标准\){0,1}/,
+    },
+    {
       regexp: /杜比视界/,
     },
     {
       regexp: /高清|超清|超高清/,
+    },
+    {
+      regexp: /[1-9][0-9]{0,}分钟版/,
+    },
+    {
+      regexp: /重[置制]版/,
+    },
+    {
+      regexp: /版本[1-9]{1,}/,
     },
     {
       regexp: /高码|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
@@ -562,6 +592,11 @@ export function parse_filename_for_video(
       regexp: /[eE][pP]{0,1}[0-9]{1,}/,
     },
     {
+      key: k("episode"),
+      regexp: /[\u4e00-\u9fa5]{1,}(0[1-9]{1,2})\./,
+      pick: [1],
+    },
+    {
       key: k("name"),
       // 如「十八年后的告白2.0」
       desc: "number.number 结尾的剧集名",
@@ -569,7 +604,7 @@ export function parse_filename_for_video(
       pick: [1],
     },
     {
-      // 针对国产剧，有一些加在名称后面的数字表示季，如还珠格格2、欢乐颂3_01
+      // 针对国产剧，有一些加在名称后面的数字表示季，如 还珠格格2、欢乐颂3_01
       key: k("season"),
       regexp: /[\u4e00-\u9fa5]{1,}(0{0,1}(?!0)[1-9]{1,2}[:：]{0,1})(\.|$|-)/,
       priority: 1,
@@ -783,6 +818,10 @@ export function parse_filename_for_video(
         if (/[^sS](?![sS])[eE][pP]{0,1}[0-9]{1,}/.test(cur_filename)) {
           return;
         }
+        log("[season]filename before check skip with custom flag", cur_filename);
+        if (/\{\{[^\{]{1,}\}\}/.test(cur_filename)) {
+          return;
+        }
         // 007：大破天幕杀机 兼容这种多个数字开头的
         // if (/^[0-9]{1,}/.test(cur_filename)) {
         //   return;
@@ -839,6 +878,9 @@ export function parse_filename_for_video(
         // log("[6.0]before original_name or episode name", cur_filename);
         // 后面的 ` 符号可以换成任意生僻字符，这个极度重要！！
         cur_filename = cur_filename.replace(/[\.]{2,}/g, "`").replace(/^\.{0,1}/, "");
+        if (/\{\{[^\{]{1,}\}\}/.test(cur_filename)) {
+          cur_filename = cur_filename.replace(/\{\{/, "").replace(/\}\}/, "");
+        }
         // log("[6]after original_name or episode name", cur_filename);
       };
       const name_extra: ExtraRule[] = [
@@ -904,6 +946,8 @@ export function parse_filename_for_video(
       return name_extra;
     })(),
   ];
+  log("\n");
+  log("[0]start apply extra", cur_filename);
   for (let i = 0; i < extra.length; i += 1) {
     const { key, desc, regexp, priority, placeholder, pick = [0], when, before, after } = extra[i];
     if (!cur_filename) {

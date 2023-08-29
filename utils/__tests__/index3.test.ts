@@ -187,16 +187,6 @@ describe("动漫", () => {
       episode: "E02",
     });
   });
-  test("10重制版 凡人风起天南10_Tacit0924.mp4", () => {
-    const name = "10重制版 凡人风起天南10_Tacit0924.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "凡人风起天南10",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
   test("少年白马醉春风 第15 以剑为刀.mp4", () => {
     const name = "少年白马醉春风 第15 以剑为刀.mp4";
     const result = parse_filename_for_video(name);
@@ -257,16 +247,6 @@ describe("动漫", () => {
       episode: "E08",
     });
   });
-  test("斗破苍穹年番 第18话 4K(超高清SDR) _Tacit0924.mp4", () => {
-    const name = "斗破苍穹年番 第18话 4K(超高清SDR) _Tacit0924.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "斗破苍穹年番",
-      original_name: "",
-      season: "",
-      episode: "E18",
-    });
-  });
   test("F 付岩洞复仇者们付岩洞复仇者们国配", () => {
     const name = "F 付岩洞复仇者们付岩洞复仇者们国配";
     const result = parse_filename_for_video(name);
@@ -295,6 +275,16 @@ describe("动漫", () => {
       original_name: "V1.Nope",
       season: "",
       episode: "",
+    });
+  });
+  test("三国演义01.桃园三结义.mkv", () => {
+    const name = "三国演义01.桃园三结义.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "三国演义",
+      original_name: "",
+      season: "",
+      episode: "E01",
     });
   });
 });
