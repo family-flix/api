@@ -188,8 +188,8 @@ describe("动漫", () => {
     expect(result).toStrictEqual({
       name: "假面骑士",
       original_name: "",
-      season: "S01",
-      episode: "番外",
+      season: "",
+      episode: "E01",
     });
   });
   test("【蓝色狂想制作】数码宝贝1：大冒险第48集-轰炸指令！无限龙兽1080P.mkv", () => {

@@ -63,4 +63,15 @@ describe("字幕", () => {
       subtitle_lang: "chi&eng",
     });
   });
+  test("犬夜叉.E01.chi.ass", () => {
+    const name = "犬夜叉.E01.chi.ass";
+    const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "subtitle_lang"]);
+    expect(result).toStrictEqual({
+      name: "犬夜叉",
+      original_name: "",
+      season: "",
+      episode: "E01",
+      subtitle_lang: "chi",
+    });
+  });
 });

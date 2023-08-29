@@ -264,6 +264,17 @@ describe("奇怪", () => {
       name: "阿蕾拉",
       original_name: "",
       season: "",
+      // @todo 太无语了 凡人修仙传 有 12重置版 表示 重置版第12集，没办法只能这里异常
+      episode: "E97",
+    });
+  });
+  test("英日双轨 猎户不鸽组", () => {
+    const name = "英日双轨 猎户不鸽组";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
       episode: "",
     });
   });

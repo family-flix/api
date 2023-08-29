@@ -82,12 +82,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(r);
   }
   async function notify(text: string) {
+    if (typeof text !== "string") {
+      console.log(`推送消息失败，请传入文本消息，传入了 `, text);
+      return;
+    }
     const notify_res = await Notify.New({ type: 1, store, token: member.user.settings.push_deer_token });
+    if (notify_res.error) {
+      console.log(`推送消息 '${text}' 失败`, notify_res.error.message);
+      return;
+    }
     const notify = notify_res.data;
-    if (notify) {
-      notify.send({
-        text,
-      });
+    const r = await notify.send({
+      text,
+    });
+    if (r.error) {
+      console.log("推送失败", r.error.message);
     }
   }
   notify(

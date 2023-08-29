@@ -212,4 +212,34 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("黄海157分钟版 1080P.mkv", () => {
+    const name = "黄海157分钟版 1080P.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "黄海",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("咒.2022.K站版本2.mp4", () => {
+    const name = "咒.2022.K站版本2.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "咒",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("07.夏日重现.2022 - 豆瓣9.1分", () => {
+    const name = "07.夏日重现.2022 - 豆瓣9.1分";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "夏日重现",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

@@ -183,25 +183,113 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   /** 开始搜索 */
   async run(scope: { name: string }[] = []) {
     // console.log("[DOMAIN]MediaSearcher - run", scope);
-    const files = uniqueBy((obj) => obj.name, scope);
-    const file_groups = split_array_into_chunks(
-      files.filter((f) => {
-        return !!f.name;
-      }),
-      10
+    if (scope.length !== 0) {
+      const files = uniqueBy((obj) => obj.name, scope);
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["限定搜索范围", files.length, "个关键字"].map((text) => {
+            return new ArticleTextNode({ text: String(text) });
+          }),
+        })
+      );
+      const file_groups = split_array_into_chunks(
+        files.filter((f) => {
+          return !!f.name;
+        }),
+        10
+      );
+      for (let i = 0; i < file_groups.length; i += 1) {
+        await this.process_parsed_tv_list(file_groups[i]);
+      }
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["所有电视剧搜索完成"].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
+      for (let i = 0; i < file_groups.length; i += 1) {
+        await this.process_parsed_season_list(file_groups[i]);
+      }
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["所有季搜索完成"].map((text) => {
+            return new ArticleTextNode({ text: String(text) });
+          }),
+        })
+      );
+      for (let i = 0; i < file_groups.length; i += 1) {
+        await this.process_parsed_episode_list(file_groups[i]);
+      }
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["所有剧集搜索完成"].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
+      for (let i = 0; i < file_groups.length; i += 1) {
+        await this.process_parsed_movie_list(file_groups[i]);
+      }
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["所有电影搜索完成"].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
+      this.emit(Events.Finish);
+      return Result.Ok(null);
+    }
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["搜索全部未索引内容"].map((text) => {
+          return new ArticleTextNode({ text: String(text) });
+        }),
+      })
     );
-    for (let i = 0; i < file_groups.length; i += 1) {
-      await this.process_parsed_tv_list(file_groups[i]);
-    }
-    for (let i = 0; i < file_groups.length; i += 1) {
-      await this.process_parsed_season_list(file_groups[i]);
-    }
-    for (let i = 0; i < file_groups.length; i += 1) {
-      await this.process_parsed_episode_list(file_groups[i]);
-    }
-    for (let i = 0; i < file_groups.length; i += 1) {
-      await this.process_parsed_movie_list(file_groups[i]);
-    }
+    await this.process_parsed_tv_list();
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["所有电视剧搜索完成"].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
+    await this.process_parsed_season_list();
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["所有季搜索完成"].map((text) => {
+          return new ArticleTextNode({ text: String(text) });
+        }),
+      })
+    );
+    await this.process_parsed_episode_list();
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["所有剧集搜索完成"].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
+    await this.process_parsed_movie_list();
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["所有电影搜索完成"].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
     this.emit(Events.Finish);
     return Result.Ok(null);
   }
@@ -421,6 +509,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         Events.Print,
         new ArticleLineNode({
           children: [`[${prefix}]`, "新增电视剧详情成功"].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: [`[${prefix}]`, JSON.stringify(profile)].map((text) => {
             return new ArticleTextNode({ text });
           }),
         })
@@ -652,7 +748,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
 
   /** 处理所有解析到的 season */
-  async process_parsed_season_list(scope: { name: string }[]) {
+  async process_parsed_season_list(scope?: { name: string }[]) {
     // console.log("[DOMAIN]searcher/index - process_parsed_season_list", scope, this.force);
     const { user_id, drive_id } = this.options;
     let page = 1;
@@ -746,14 +842,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         // log(`[${prefix}/${season_number}]`, "添加季详情成功");
       }
     } while (no_more === false);
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["完成季搜索"].map((text) => {
-          return new ArticleTextNode({ text: String(text) });
-        }),
-      })
-    );
     return Result.Ok(null);
   }
   async search_season_profile_then_link_parsed_season(body: {
@@ -913,7 +1001,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     };
   }
 
-  async process_parsed_episode_list(scope: { name: string }[]) {
+  async process_parsed_episode_list(scope?: { name: string }[]) {
     const { user_id, drive_id } = this.options;
     // console.log("[DOMAIN]searcher/index - process_parsed_episode_list", scope, this.force);
     let page = 1;
@@ -1024,14 +1112,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         // log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情成功");
       }
     } while (no_more === false);
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["所有剧集搜索完成"].map((text) => {
-          return new ArticleTextNode({ text });
-        }),
-      })
-    );
   }
 
   normalize_episode_profile(
@@ -1232,7 +1312,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(this.cached_episode_profiles[tmdb_id]);
   }
 
-  async process_parsed_movie_list(scope: { name: string }[]) {
+  async process_parsed_movie_list(scope?: { name: string }[]) {
     // console.log("[DOMAIN]searcher/index - process_parsed_movie_list", scope, this.force);
     const { user_id, drive_id } = this.options;
     let page = 1;
@@ -1309,14 +1389,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         // log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情成功");
       }
     } while (no_more === false);
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["所有电影搜索完成"].map((text) => {
-          return new ArticleTextNode({ text });
-        }),
-      })
-    );
   }
   /** 根据 parsed_movie 搜索电视剧详情 */
   async get_movie_profile(movie: ParsedMovieRecord) {

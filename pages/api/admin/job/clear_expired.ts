@@ -20,19 +20,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   if (Number(n) < 3) {
-    return e(Result.Err("不能删除最近三天的"));
+    return e(Result.Err("不能删除近三天内的"));
   }
   const today = dayjs();
   const target_day = today.subtract(Number(n), "day").toDate();
-  store.prisma.output_line.deleteMany({
+  // const count = await store.prisma.output_line.count({
+  //   where: {
+  //     created: {
+  //       lte: target_day,
+  //     },
+  //   },
+  // });
+  await store.prisma.output_line.deleteMany({
     where: {
-      output: {
-        async_task: {
-          created: {
-            lte: target_day,
-          },
-        },
-        user_id: user.id,
+      created: {
+        lte: target_day,
       },
     },
   });

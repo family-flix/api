@@ -53,6 +53,6 @@ export class Notify extends BaseDomain<TheTypesOfEvents> {
     if (this.type === 1) {
       return pushdeer_send(msg, this.token);
     }
-    return Result.Err("推送异常");
+    return Promise.resolve(Result.Err("推送异常"));
   }
 }

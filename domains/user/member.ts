@@ -50,17 +50,10 @@ export class Member {
     if (member === null) {
       return Result.Err("无效身份凭证", 900);
     }
-    // const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token } =
-    //   await User.parseSettings(member.user.settings);
+    const settings = await User.parseSettings(member.user.settings);
     const user = new User({
       id: member.user_id,
-      settings: {
-        qiniu_access_token: "",
-        qiniu_secret_token: "",
-        qiniu_scope: "",
-        tmdb_token: "",
-        push_deer_token: "",
-      },
+      settings,
       token: "",
       store,
     });
