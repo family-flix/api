@@ -755,11 +755,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     let no_more = false;
     const where: NonNullable<Parameters<typeof this.store.prisma.parsed_season.findMany>[number]>["where"] = {
       season_id: null,
-      parsed_tv: {
-        tv_id: {
-          not: null,
-        },
-      },
       can_search: this.force ? undefined : 1,
       user_id,
       drive_id,
@@ -1009,16 +1004,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
 
     const where: ModelQuery<typeof this.store.prisma.parsed_episode.findMany>["where"] = {
       episode_id: null,
-      parsed_tv: {
-        tv_id: {
-          not: null,
-        },
-      },
-      parsed_season: {
-        season_id: {
-          not: null,
-        },
-      },
       can_search: this.force ? undefined : 1,
       user_id,
       drive_id,
