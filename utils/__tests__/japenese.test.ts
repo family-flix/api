@@ -372,4 +372,14 @@ describe("动漫", () => {
       episode: "E06",
     });
   });
+  test("[ANi] 勇者赫魯庫（僅限港澳台地區） - 06 [1080P][Bilibili][WEB-DL][AAC AVC][CHT CHS].mp4", () => {
+    const name = "[ANi] 勇者赫魯庫（僅限港澳台地區） - 06 [1080P][Bilibili][WEB-DL][AAC AVC][CHT CHS].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "勇者赫魯庫",
+      original_name: "",
+      season: "",
+      episode: "E06",
+    });
+  });
 });
