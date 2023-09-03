@@ -6,13 +6,13 @@
  * @param v
  * @returns
  */
-export function toNumber(v: any, defaultValue?: number) {
-  if (typeof v !== "string" || typeof v !== "number") {
-    return defaultValue ?? null;
+export function toNumber<R extends any>(v: any, defaultValue: R): number | R {
+  if (typeof v !== "string" && typeof v !== "number") {
+    return defaultValue;
   }
   const n = Number(v);
   if (Number.isNaN(n)) {
-    return defaultValue ?? null;
+    return defaultValue;
   }
   return n;
 }

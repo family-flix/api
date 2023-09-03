@@ -1,9 +1,15 @@
+/**
+ * @file 将解析好的电视剧、剧集、电影等信息，保存至本地数据库
+ * 主要是处理重复添加和更新
+ */
 import { Handler } from "mitt";
 
 import { FileType } from "@/constants";
 import { BaseDomain } from "@/domains/base";
 import { SearchedEpisode } from "@/domains/walker";
 import { DatabaseStore } from "@/domains/store";
+import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 import { Result } from "@/types";
 
 import { is_episode_changed, is_season_changed, is_tv_changed } from "./utils";
@@ -22,13 +28,30 @@ type TheTypesOfEvents = {
 };
 type EpisodeFileProcessorProps = {
   episode: SearchedEpisode;
-  user_id: string;
-  drive_id: string;
+  user: User;
+  drive: Drive;
   task_id?: string;
   store: DatabaseStore;
 };
 
 export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
+  static New(props: EpisodeFileProcessorProps) {
+    const { episode, user, drive, store } = props;
+    if (!store) {
+      return Result.Err("缺少数据库实例");
+    }
+    if (!user) {
+      return Result.Err("缺少用户 id");
+    }
+    if (!drive) {
+      return Result.Err("缺少云盘 id");
+    }
+    if (!episode) {
+      return Result.Err("缺少剧集信息");
+    }
+    return Result.Ok(new EpisodeFileProcessor(props));
+  }
+
   store: DatabaseStore;
   episode: SearchedEpisode;
   options: {
@@ -37,27 +60,15 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     task_id?: string;
   };
 
-  constructor(options: Partial<{} & EpisodeFileProcessorProps> = {}) {
+  constructor(options: Partial<{}> & EpisodeFileProcessorProps) {
     super();
 
-    const { episode, user_id, drive_id, task_id, store } = options;
-    if (!store) {
-      throw new Error("缺少数据库实例");
-    }
-    if (!user_id) {
-      throw new Error("缺少用户 id");
-    }
-    if (!drive_id) {
-      throw new Error("缺少云盘 id");
-    }
-    if (!episode) {
-      throw new Error("缺少剧集信息");
-    }
+    const { episode, user, drive, task_id, store } = options;
     this.episode = episode;
     this.store = store;
     this.options = {
-      user_id,
-      drive_id,
+      user_id: user.id,
+      drive_id: drive.id,
       task_id,
     };
   }

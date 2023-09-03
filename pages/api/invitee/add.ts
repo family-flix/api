@@ -25,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const existing_res = await store.find_member({
     remark,
     inviter_id: member.id,
+    user_id: member.user.id,
   });
   if (existing_res.error) {
     return e(existing_res);
@@ -38,6 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     email: null,
     disabled: 0,
     inviter_id: member.id,
+    user_id: member.user.id,
   });
   if (r.error) {
     return e(r);

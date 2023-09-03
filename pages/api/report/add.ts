@@ -71,6 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       data: json.content as string,
     };
   })();
+  console.log(payload);
   const r = await store.add_report({
     ...payload,
     type,

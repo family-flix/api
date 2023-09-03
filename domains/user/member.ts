@@ -15,7 +15,7 @@ const credentialsSchema = Joi.object({
 });
 
 type UserUniqueID = string;
-type MemberProps = { id: string; remark: string; user: User; token: string };
+type MemberProps = { id: string; remark: string; permissions: string[]; user: User; token: string };
 
 export class Member {
   /** token 秘钥 */
@@ -57,7 +57,12 @@ export class Member {
       token: "",
       store,
     });
-    return Result.Ok(new Member({ id, remark: member.remark, user, token }));
+    let permissions: string[] = [];
+    const json_res = await parseJSONStr(member.permission);
+    if (json_res.data) {
+      permissions = json_res.data as unknown as string[];
+    }
+    return Result.Ok(new Member({ id, remark: member.remark, permissions, user, token }));
   }
   /**
    * User 类工厂函数
@@ -106,6 +111,7 @@ export class Member {
       new Member({
         id: member_id,
         remark: member_token.member.remark,
+        permissions: [],
         user,
         token,
       })
@@ -179,15 +185,17 @@ export class Member {
   user: User;
   nickname: string = "unknown";
   remark: string = "unknown";
+  permissions: string[] = [];
   avatar: string | null = null;
   /** JWT token */
   token: string;
 
   constructor(options: MemberProps) {
-    const { id, user, remark, token } = options;
+    const { id, user, remark, permissions, token } = options;
     this.id = id;
     this.user = user;
     this.remark = remark;
+    this.permissions = permissions;
     this.token = token;
   }
   /** 补全信息 */

@@ -30,14 +30,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page = Number(page_str);
   const page_size = Number(page_size_str);
   const duplicate_episode_profiles = await store.prisma.episode_profile.groupBy({
-    by: ["tmdb_id"],
+    by: ["unique_id"],
     where: {
-      episode: {
-        user_id: user.id,
+      episodes: {
+        every: {
+          user_id: user.id,
+        },
       },
     },
     having: {
-      tmdb_id: {
+      unique_id: {
         _count: {
           gt: 1,
         },
@@ -46,13 +48,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const where: ModelQuery<typeof store.prisma.episode.findMany>["where"] = {
     profile: {
-      tmdb_id: {
+      unique_id: {
         in: duplicate_episode_profiles
           .map((profile) => {
-            const { tmdb_id } = profile;
-            return tmdb_id;
+            const { unique_id } = profile;
+            return unique_id;
           })
-          .filter(Boolean) as number[],
+          .filter(Boolean) as string[],
       },
     },
     user_id: user.id,
@@ -73,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     skip: (page - 1) * page_size,
     orderBy: {
       profile: {
-        tmdb_id: "asc",
+        unique_id: "asc",
       },
     },
   });
@@ -92,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           name: profile.name,
           episode_number: episode_text,
           season_number: season_text,
-          tmdb_id: profile.tmdb_id,
+          tmdb_id: profile.unique_id,
           tv: {
             name: tv.profile.name,
           },

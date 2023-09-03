@@ -48,6 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           token: true,
         },
       },
+      inviter: true,
     },
     orderBy: {
       created: "desc",
@@ -60,10 +61,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     msg: "",
     data: {
       list: list.map((member) => {
-        const { id, remark, member_tokens } = member;
+        const { id, inviter, remark, member_tokens } = member;
         return {
           id,
           remark,
+          inviter: inviter
+            ? {
+                id: inviter.id,
+                remark: inviter.remark,
+              }
+            : null,
           tokens: member_tokens,
         };
       }),

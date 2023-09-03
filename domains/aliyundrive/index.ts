@@ -513,6 +513,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (file_id === undefined) {
       return Result.Err("Please pass folder file id");
     }
+    await this.ensure_initialized();
     const result = await this.request.post<{
       drive_id: string;
       domain_id: string;

@@ -32,17 +32,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page = Number(page_str);
   const page_size = Number(page_size_str);
   const duplicate_tv_profiles = await store.prisma.tv_profile.groupBy({
-    by: ["tmdb_id"],
+    by: ["unique_id"],
     where: {
-      tv: {
-        parsed_tvs: {
-          some: {},
+      tvs: {
+        every: {
+          parsed_tvs: {
+            some: {},
+          },
+          user_id: user.id,
         },
-        user_id: user.id,
       },
     },
     having: {
-      tmdb_id: {
+      unique_id: {
         _count: {
           gt: 1,
         },
@@ -51,10 +53,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const where: ModelQuery<typeof store.prisma.tv.findMany>["where"] = {
     profile: {
-      tmdb_id: {
+      unique_id: {
         in: duplicate_tv_profiles.map((profile) => {
-          const { tmdb_id } = profile;
-          return tmdb_id;
+          const { unique_id } = profile;
+          return unique_id;
         }),
       },
     },
@@ -76,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     skip: (page - 1) * page_size,
     orderBy: {
       profile: {
-        tmdb_id: "asc",
+        unique_id: "asc",
       },
     },
   });

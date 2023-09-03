@@ -79,7 +79,7 @@ describe("detect a tv dir", () => {
       }),
     });
     await folder.profile();
-    const resp = await detector.detect(folder);
+    const resp = await detector.run(folder);
     /** ---------------------- 开始断言 ------------------ */
     expect(resp.error).toBe(null);
     if (resp.error) {

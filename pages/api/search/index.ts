@@ -9,6 +9,7 @@ import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { MediaProfileSourceTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -30,6 +31,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page = Number(page_str);
   const page_size = Number(page_size_str);
   const season_where: NonNullable<Parameters<typeof store.prisma.season.findMany>[0]>["where"] = {
+    profile: {
+      source: {
+        not: MediaProfileSourceTypes.Other,
+      },
+    },
     episodes: {
       some: {},
     },

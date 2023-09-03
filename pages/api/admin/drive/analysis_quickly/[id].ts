@@ -8,12 +8,12 @@ import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DriveAnalysis } from "@/domains/analysis";
 import { Job } from "@/domains/job";
+import { TaskTypes } from "@/domains/job/constants";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
+import { FileType } from "@/constants";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { app, store } from "@/store";
-import { FileType } from "@/constants";
-import { TaskTypes } from "@/domains/job/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -41,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const tmp_folders = await store.prisma.tmp_file.findMany({
     where: {
-      // type: FileType.File,
       drive_id,
       user_id,
     },
@@ -62,10 +61,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job = job_res.data;
   const r2 = await DriveAnalysis.New({
     drive,
-    store,
     user,
     tmdb_token: settings.tmdb_token,
     assets: app.assets,
+    store,
     on_print(v) {
       job.output.write(v);
     },

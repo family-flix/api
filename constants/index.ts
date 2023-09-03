@@ -14,3 +14,9 @@ export enum ReportTypes {
   /** 想看什么剧 */
   Want,
 }
+
+export enum MediaProfileSourceTypes {
+  TMDB = 1,
+  /** 其他（花絮、彩蛋等 */
+  Other = 2,
+}

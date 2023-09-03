@@ -12,13 +12,13 @@ const client = new TMDBClient({ token: process.env.TMDB_TOKEN });
 
 async function run() {
   walk_records(store.prisma.tv_profile, {}, async (searched_tv) => {
-    const { id, name, original_name, first_air_date, popularity, tmdb_id, poster_path, backdrop_path } = searched_tv;
+    const { id, name, original_name, first_air_date, popularity, unique_id, poster_path, backdrop_path } = searched_tv;
     console.log("process", name || original_name);
-    if (!tmdb_id) {
+    if (!unique_id) {
       return;
     }
     if (poster_path && (poster_path.includes("tmdb.org") || poster_path.includes("imgcook"))) {
-      const r = await qiniu_upload_online_file(poster_path, `/poster/${tmdb_id}`);
+      const r = await qiniu_upload_online_file(poster_path, `/poster/${unique_id}`);
       if (r.data?.url) {
         const { url } = r.data;
         console.log("1. upload poster_path", url);
@@ -28,7 +28,7 @@ async function run() {
       }
     }
     if (backdrop_path && (backdrop_path.includes("themoviedb.org") || backdrop_path.includes("imgcook"))) {
-      const r = await qiniu_upload_online_file(backdrop_path, `/backdrop/${tmdb_id}`);
+      const r = await qiniu_upload_online_file(backdrop_path, `/backdrop/${unique_id}`);
       if (r.data?.url) {
         const { url } = r.data;
         console.log("2. upload backdrop_path", url);
@@ -38,7 +38,7 @@ async function run() {
       }
     }
 
-    const tmdb_profile_res = await client.fetch_tv_profile(tmdb_id);
+    const tmdb_profile_res = await client.fetch_tv_profile(Number(unique_id));
     if (tmdb_profile_res.error) {
       return;
     }
@@ -58,7 +58,7 @@ async function run() {
       const tmdb_season = tmdb_seasons[i];
       const { air_date, episode_count, id: season_id, name, overview, poster_path, season_number } = tmdb_season;
       const existing_res = await store.find_season_profile({
-        tmdb_id: season_id,
+        unique_id: String(season_id),
       });
       if (existing_res.error) {
         continue;

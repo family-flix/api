@@ -4,7 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     remark: string;
   }>;
   if (!remark) {
-    return e("缺少成员备注");
+    return e(Result.Err("缺少成员备注"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -26,11 +26,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const { id: user_id } = user;
-  const existing_res = await store.find_member({ remark, user_id });
-  if (existing_res.error) {
-    return e(existing_res);
-  }
-  const existing_member = existing_res.data;
+  const existing_member = await store.prisma.member.findUnique({
+    where: {
+      user_id_inviter_id_remark: {
+        remark,
+        inviter_id: "",
+        user_id,
+      },
+    },
+  });
   if (existing_member) {
     return e("已存在相同备注的成员了");
   }

@@ -30,17 +30,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     /** 文件 id */
     file_id: string;
   }>;
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
+  }
+  const user = t_res.data;
   if (!drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
   if (!file_id) {
     return e(Result.Err("缺少文件 id"));
   }
-  const t_res = await User.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res);
-  }
-  const user = t_res.data;
   const running_task_res = await store.prisma.async_task.findFirst({
     where: {
       unique_id: drive_id,
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     store,
   });
   if (task_res.error) {
-    return;
+    return e(task_res);
   }
   const task = task_res.data;
   task.output.write(
@@ -105,7 +105,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return;
     }
     const files = files_res.data;
-
     task.output.write(
       new ArticleSectionNode({
         children: [
@@ -125,10 +124,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         ],
       })
     );
-    for (let i = 0; i < files_res.data.length; i += 1) {
-      const child = files_res.data[i];
-      const { name, parent_paths } = child;
-      if (child.type === FileType.Folder) {
+    for (let i = 0; i < files.length; i += 1) {
+      const child = files[i];
+      const { type, name, parent_paths } = child;
+      if (type === FileType.Folder) {
         task.output.write(
           new ArticleSectionNode({
             children: [
@@ -215,6 +214,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         })
       );
     }
+    // console.log('delete many parsed_episode', where);
     await store.prisma.parsed_episode.deleteMany({
       where,
     });

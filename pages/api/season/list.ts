@@ -10,6 +10,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { TVProfileWhereInput } from "@/domains/store/types";
 import { season_to_chinese_num } from "@/utils";
+import { MediaProfileSourceTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -79,6 +80,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   }
   const where: NonNullable<Parameters<typeof store.prisma.season.findMany>[0]>["where"] = {
+    profile: {
+      source: {
+        not: MediaProfileSourceTypes.Other,
+      },
+    },
     episodes: {
       some: {},
     },

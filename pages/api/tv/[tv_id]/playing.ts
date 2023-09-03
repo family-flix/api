@@ -4,7 +4,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { season_to_chinese_num } from "@/utils";
@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { tv_id: id, season_id } = req.query as Partial<{ tv_id: string; season_id: string }>;
   if (!id) {
-    return e("缺少电视剧 id");
+    return e(Result.Err("缺少电视剧 id"));
   }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
@@ -44,12 +44,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (tv === null) {
-    return e("没有匹配的电视剧记录");
+    return e(Result.Err("没有匹配的电视剧记录"));
   }
   const { profile, play_histories, seasons } = tv;
   if (seasons.length === 0) {
-    return e("该电视剧暂无季信息");
+    return e(Result.Err("该电视剧暂无季信息"));
   }
+  console.log("[]seasons", seasons);
   const target_season = (() => {
     if (season_id) {
       return {

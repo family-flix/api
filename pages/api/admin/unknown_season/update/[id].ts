@@ -5,10 +5,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
 import { MediaSearcher } from "@/domains/searcher";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -47,11 +48,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   const { parsed_tv_id, parsed_tv, drive_id } = parsed_season;
   if (parsed_season.season_number === season_number) {
-    return e(`季已经是 '${season_number}' 了`);
+    return e(Result.Err(`季已经是 '${season_number}' 了`));
   }
+  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
   const searcher_res = await MediaSearcher.New({
-    user_id: user.id,
-    drive_id,
+    user,
+    drive,
     tmdb_token: user.settings.tmdb_token,
     assets: app.assets,
     force: true,
@@ -61,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(searcher_res);
   }
   const searcher = searcher_res.data;
-  const r = await searcher.search_season_profile_then_link_parsed_season({
+  const r = await searcher.process_parsed_season({
     parsed_tv,
     parsed_season: {
       ...parsed_season,

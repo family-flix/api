@@ -28,7 +28,7 @@ async function main() {
   walker.on_file = async (file) => {
     console.log(file);
   };
-  await walker.detect(prev_folder);
+  await walker.run(prev_folder);
 }
 main();
 

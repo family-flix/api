@@ -54,6 +54,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const list = await store.prisma.member.findMany({
     where,
+    include: {
+      member_tokens: true,
+    },
     orderBy: {
       created: "asc",
     },
@@ -65,7 +68,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page,
     page_size,
     no_more: list.length + (page - 1) * page_size >= count,
-    list,
+    list: list.map((member) => {
+      const { id, remark, member_tokens } = member;
+      return {
+        id,
+        remark,
+        tokens: member_tokens.map((token) => {
+          const { id, used } = token;
+          return {
+            id,
+            token: id,
+            used,
+          };
+        }),
+      };
+    }),
   };
   res.status(200).json({
     code: 0,

@@ -242,4 +242,14 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("奇迹·笨小孩压缩高清版本.mkv", () => {
+    const name = "奇迹·笨小孩压缩高清版本.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "奇迹·笨小孩",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });
