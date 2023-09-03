@@ -139,6 +139,16 @@ describe("番外", () => {
       episode: "E07",
     });
   });
+  test("【04】 .mp4", () => {
+    const name = "【04】 .mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E04",
+    });
+  });
   /** 各种其他信息，语言、分辨率等等 */
   test("外挂字幕", () => {
     const name = "外挂字幕";

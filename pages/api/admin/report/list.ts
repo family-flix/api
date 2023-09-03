@@ -46,12 +46,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           profile: true,
         },
       },
-      episode: {
+      season: {
         include: {
           profile: true,
+          tv: {
+            include: {
+              profile: true,
+            },
+          },
         },
       },
-      season: {
+      episode: {
         include: {
           profile: true,
         },
@@ -63,8 +68,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     },
     orderBy: {
-      created: 'desc'
-    }
+      created: "desc",
+    },
   });
 
   res.status(200).json({
@@ -76,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       no_more: list.length + (page - 1) * page_size >= count,
       total: count,
       list: list.map((report) => {
-        const { id, type, member, tv, season, episode, movie, data, created } = report;
+        const { id, type, answer, member, tv, season, episode, movie, data, created } = report;
         return {
           id,
           type,
@@ -85,6 +90,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             name: member.remark,
           },
           data,
+          tv: (() => {
+            if (tv) {
+              return {
+                id: tv.id,
+                name: tv.profile.name,
+                poster_path: tv.profile.poster_path,
+              };
+            }
+            return null;
+          })(),
+          season: (() => {
+            if (season) {
+              return {
+                id: season.id,
+                name: season.tv.profile.name,
+                poster_path: season.profile.poster_path || season.tv.profile.poster_path,
+                season_text: season.season_text,
+              };
+            }
+            return null;
+          })(),
+          episode: (() => {
+            if (episode) {
+              return {
+                id: episode.id,
+                episode_text: episode.episode_text,
+              };
+            }
+            return null;
+          })(),
+          movie: (() => {
+            if (movie) {
+              return {
+                id: movie.id,
+                name: movie.profile.name,
+                poster_path: movie.profile.poster_path,
+              };
+            }
+            return null;
+          })(),
+          answer,
           created,
         };
       }),

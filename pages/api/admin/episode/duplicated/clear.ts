@@ -19,17 +19,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const duplicate_episode_profiles = await store.prisma.episode_profile.groupBy({
-    by: ["tmdb_id"],
+    by: ["unique_id"],
     where: {
-      episode: {
-        parsed_episodes: {
-          none: {},
+      episodes: {
+        every: {
+          parsed_episodes: {
+            none: {},
+          },
+          user_id: user.id,
         },
-        user_id: user.id,
       },
     },
     having: {
-      tmdb_id: {
+      unique_id: {
         _count: {
           gt: 1,
         },
@@ -37,12 +39,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   for (const profile of duplicate_episode_profiles) {
-    const { tmdb_id } = profile;
+    const { unique_id } = profile;
     await (async () => {
       const episodes = await store.prisma.episode.findMany({
         where: {
           profile: {
-            tmdb_id,
+            unique_id,
           },
           parsed_episodes: {
             none: {},

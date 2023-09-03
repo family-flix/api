@@ -31,10 +31,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const member = t_res.data;
-  const page = toNumber(page_str) ?? 1;
-  const page_size = toNumber(page_size_str) ?? 20;
-  const type = toNumber(type_str) ?? 1;
-  const status = toNumber(status_str) ?? 0;
+  const page = toNumber(page_str, 1);
+  const page_size = toNumber(page_size_str, 20);
+  const type = toNumber(type_str, 1);
+  const status = toNumber(status_str, null);
   let queries: MemberNotifyWhereInput[] = [];
   if (type) {
     queries = queries.concat({
@@ -58,11 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const list = await store.prisma.member_notification.findMany({
     where,
+    skip: (page - 1) * page_size,
+    take: page_size,
     orderBy: {
       created: "desc",
     },
-    skip: (page - 1) * page_size,
-    take: page_size,
   });
   const data = {
     total: count,

@@ -1,3 +1,4 @@
+import { Drive } from "@/domains/drive";
 import { MediaSearcher } from "@/domains/searcher";
 import { User } from "@/domains/user";
 import { app, store } from "@/store";
@@ -10,9 +11,14 @@ async function main(tmdb_id: number) {
     return;
   }
   const user = t_res.data;
+  const drive_res = await Drive.Get({ id: "FxamFUFJ81GTiX7", user_id: user.id, store });
+  if (drive_res.error) {
+    return;
+  }
+  const drive = drive_res.data;
   const searcher_res = await MediaSearcher.New({
-    user_id: user.id,
-    drive_id: "FxamFUFJ81GTiX7",
+    user,
+    drive,
     tmdb_token: user.settings.tmdb_token,
     assets: app.assets,
     store,
@@ -30,10 +36,5 @@ async function main(tmdb_id: number) {
 }
 
 const id = 124364;
-function delete_tv_profile(tmdb_id: number) {
-  store.delete_tv_profile({
-    tmdb_id,
-  });
-}
 main(id);
 // delete_tv_profile(id);

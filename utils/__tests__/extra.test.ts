@@ -23,8 +23,18 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "Transformers.2",
-      season: "",
+      season: "其他",
       episode: "BONUS",
+    });
+  });
+  test("[VCB-Studio] Ushio to Tora [NCOP03][Ma10p_1080p][x265_flac].mkv", () => {
+    const name = "[VCB-Studio] Ushio to Tora [NCOP03][Ma10p_1080p][x265_flac].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Ushio.to.Tora",
+      season: "其他",
+      episode: "NCOP03",
     });
   });
   test("假面骑士圣刃续集", () => {
@@ -33,7 +43,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "假面骑士圣刃",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "续集",
     });
   });
@@ -53,8 +63,38 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "妖精森林的小不点",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "NCED01",
+    });
+  });
+  test("[VCB-Studio] Ushio to Tora [CM05][Ma10p_1080p][x265_flac].mkv", () => {
+    const name = "[VCB-Studio] Ushio to Tora [CM05][Ma10p_1080p][x265_flac].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Ushio.to.Tora",
+      season: "其他",
+      episode: "CM05",
+    });
+  });
+  test("[1080P][DBD制作组&离谱Sub][龙珠GT][NCOP2][HEVC-10bit][AC3].mkv", () => {
+    const name = "[1080P][DBD制作组&离谱Sub][龙珠GT][NCOP2][HEVC-10bit][AC3].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "龙珠GT",
+      original_name: "",
+      season: "其他",
+      episode: "NCOP2",
+    });
+  });
+  test("[DAY][仮面戦隊ゴライダー][PR1][BDrip][1080P][X264 FLAC].mkv", () => {
+    const name = "[DAY][仮面戦隊ゴライダー][PR1][BDrip][1080P][X264 FLAC].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "仮面戦隊ゴライダー",
+      original_name: "",
+      season: "其他",
+      episode: "PR1",
     });
   });
   test("斗破苍穹特别篇2[4K].mp4", () => {
@@ -63,7 +103,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "斗破苍穹",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "特别篇2",
     });
   });
@@ -93,7 +133,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "番外2",
     });
   });
@@ -104,8 +144,18 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "花絮13",
+    });
+  });
+  test("显微镜下的大明之丝绢案-预告1", () => {
+    const name = "显微镜下的大明之丝绢案-预告1";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "显微镜下的大明之丝绢案",
+      original_name: "",
+      season: "其他",
+      episode: "预告1",
     });
   });
   /** 彩蛋 */
@@ -115,7 +165,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "彩蛋1",
     });
   });
@@ -125,7 +175,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "去有风的地方",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "彩蛋",
     });
   });
@@ -135,7 +185,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "今生也是第一次",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "彩蛋",
     });
   });
@@ -145,7 +195,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "彩蛋",
     });
   });
@@ -155,7 +205,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "无间",
       original_name: "",
-      season: "",
+      season: "其他",
       episode: "彩蛋3",
     });
   });

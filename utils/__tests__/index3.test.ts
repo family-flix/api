@@ -197,16 +197,6 @@ describe("动漫", () => {
       episode: "E15",
     });
   });
-  test("显微镜下的大明之丝绢案-预告1", () => {
-    const name = "显微镜下的大明之丝绢案-预告1";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "显微镜下的大明之丝绢案",
-      original_name: "",
-      season: "",
-      episode: "预告1",
-    });
-  });
   test("0731入住日记第9期.mp4", () => {
     const name = "0731入住日记第9期.mp4";
     const result = parse_filename_for_video(name);

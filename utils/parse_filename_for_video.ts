@@ -38,10 +38,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("Angry.Men")) {
+    if (!filename.includes("熟肉")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -60,7 +60,7 @@ export function parse_filename_for_video(
   let original_name = filename
     .replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
     .replace(/^\[[^\]]{1,}\](?=\[)/, "")
-    .replace(/^【[^】]{1,}】/, "");
+    .replace(/^【[^】0-9]{1,}】/, "");
   const special_season_with_number_regexp = /(^|[^a-zA-Z])([sS][pP])([0-9]{1,})($|[^a-zA-Z])/;
   if (original_name.match(special_season_with_number_regexp)) {
     // name.SP2 改成 name.SP.E2
@@ -217,6 +217,9 @@ export function parse_filename_for_video(
     {
       regexp: /[^字\.]{1,}字幕组\.{0,1}/,
     },
+    {
+      regexp: /[生熟]肉/,
+    },
     // 奇怪的冗余信息
     {
       regexp: /超前点映|超前完结|点映礼/,
@@ -340,6 +343,9 @@ export function parse_filename_for_video(
     },
     {
       regexp: /版本[1-9]{1,}/,
+    },
+    {
+      regexp: /压缩版本/,
     },
     {
       regexp: /高码|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
@@ -1037,19 +1043,23 @@ export function parse_filename_for_video(
       result[key] = extracted_content;
     }
   }
-  // @todo 原产地名称不存在，大概率是中文影片，可以用 name 作为 original_name
-  // result.original_name = formatName(latestFilename.trim());
-  if (result.season !== undefined) {
+  if (result.season) {
     result.season = format_number(result.season);
   }
   if (result.episode !== undefined) {
     result.episode = format_number(result.episode, "E");
   }
+  if (!result.season && result.episode) {
+    result.season = maybe_other_season(result.episode);
+  }
   if (result.subtitle_lang !== undefined) {
     result.subtitle_lang = format_subtitle_lang(result.subtitle_lang);
   }
   if (result.resolution) {
-    result.resolution = result.resolution.replace(/[（\(\)）]/g, "");
+    result.resolution = result.resolution
+      .replace(/[（\(\)）]/g, "")
+      .replace(/^\./g, "")
+      .replace(/\.$/g, "");
   }
   return result;
 }
@@ -1195,6 +1205,13 @@ export function format_number(n: string, prefix = "S") {
     return `${e}.${extra}`;
   }
   return e;
+}
+
+export function maybe_other_season(episode: string) {
+  if (!episode.match(/E[0-9]{1,}/)) {
+    return "其他";
+  }
+  return "";
 }
 
 export function has_key_factory(keys: VideoKeys[]) {

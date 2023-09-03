@@ -125,13 +125,6 @@ export class DatabaseStore {
   find_member: ReturnType<typeof first_factory<PrismaClient["member"]>>;
   find_members: ReturnType<typeof many_factory<PrismaClient["member"]>>;
   find_member_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["member"]>>;
-  /** 成员推荐影片 */
-  add_recommended_tv: ReturnType<typeof add_factory<PrismaClient["recommended_tv"]>>;
-  update_recommended_tv: ReturnType<typeof update_factory<PrismaClient["recommended_tv"]>>;
-  delete_recommended_tv: ReturnType<typeof delete_factory<PrismaClient["recommended_tv"]>>;
-  find_recommended_tv: ReturnType<typeof first_factory<PrismaClient["recommended_tv"]>>;
-  find_recommended_tvs: ReturnType<typeof many_factory<PrismaClient["recommended_tv"]>>;
-  find_recommended_tv_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["recommended_tv"]>>;
   /** 索引任务 */
   add_task: ReturnType<typeof add_factory<PrismaClient["async_task"]>>;
   update_task: ReturnType<typeof update_factory<PrismaClient["async_task"]>>;
@@ -337,15 +330,6 @@ export class DatabaseStore {
     this.find_member = first_factory<PrismaClient["member"]>(prisma.member);
     this.find_members = many_factory<PrismaClient["member"]>(prisma.member);
     this.find_member_with_pagination = pagination_factory<PrismaClient["member"]>(prisma.member);
-    /** 成员推荐影片 */
-    this.add_recommended_tv = add_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv);
-    this.update_recommended_tv = update_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv);
-    this.delete_recommended_tv = delete_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv);
-    this.find_recommended_tv = first_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv);
-    this.find_recommended_tvs = many_factory<PrismaClient["recommended_tv"]>(prisma.recommended_tv);
-    this.find_recommended_tv_with_pagination = pagination_factory<PrismaClient["recommended_tv"]>(
-      prisma.recommended_tv
-    );
     /** 异步任务 */
     this.add_task = add_factory<PrismaClient["async_task"]>(prisma.async_task);
     this.update_task = update_factory<PrismaClient["async_task"]>(prisma.async_task);

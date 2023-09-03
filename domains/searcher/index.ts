@@ -1,5 +1,5 @@
 /**
- * @file 影视剧搜索
+ * @file 解析出的影视剧搜索
  */
 import type { Handler } from "mitt";
 import uniqueBy from "lodash/fp/uniqBy";
@@ -10,10 +10,13 @@ import {
   EpisodeProfileFromTMDB,
   MovieProfileFromTMDB,
   PartialSeasonFromTMDB,
+  SeasonProfileFromTMDB,
   TVProfileFromTMDB,
 } from "@/domains/tmdb/services";
 import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { DatabaseStore } from "@/domains/store";
+import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 import { ImageUploader } from "@/domains/uploader";
 import {
   MovieProfileRecord,
@@ -35,21 +38,22 @@ import { Result } from "@/types";
 import { episode_to_num, r_id, season_to_num, sleep } from "@/utils";
 
 import { extra_searched_tv_field } from "./utils";
+import { MediaProfileSourceTypes } from "@/constants";
 
 enum Events {
-  AddTV,
-  AddSeason,
-  AddEpisode,
-  AddMovie,
+  TVAdded,
+  SeasonAdded,
+  EpisodeAdded,
+  MovieAdded,
   Print,
   Finish,
   Error,
 }
 type TheTypesOfEvents = {
-  [Events.AddTV]: TVRecord;
-  [Events.AddSeason]: SeasonRecord;
-  [Events.AddEpisode]: EpisodeRecord;
-  [Events.AddMovie]: MovieRecord;
+  [Events.TVAdded]: TVRecord;
+  [Events.SeasonAdded]: SeasonRecord;
+  [Events.EpisodeAdded]: EpisodeRecord;
+  [Events.MovieAdded]: MovieRecord;
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
   [Events.Finish]: void;
   [Events.Error]: Error;
@@ -61,9 +65,9 @@ type MediaSearcherProps = {
   /** 搜索到的电视剧、季和剧集中如果存在图片，是否要将图片上传到 cdn */
   upload_image?: boolean;
   /** 仅处理该网盘下的所有未匹配电视剧 */
-  drive_id?: string;
+  drive?: Drive;
   /** 仅处理该用户的所有未匹配电视剧 */
-  user_id?: string;
+  user?: User;
   /** 强制索引全部，忽略 can_search 为 0 */
   force?: boolean;
   assets: string;
@@ -81,8 +85,8 @@ const PAGE_SIZE = 20;
 export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   static New(body: Partial<MediaSearcherProps>) {
     const {
-      user_id,
-      drive_id,
+      user,
+      drive,
       tmdb_token,
       assets,
       force,
@@ -104,10 +108,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("缺少静态资源根路径");
     }
     const searcher = new MediaSearcher({
-      user_id,
-      drive_id,
+      user,
+      drive,
       force,
-      tmdb_token: tmdb_token,
+      tmdb_token,
       assets,
       store,
       on_season_added,
@@ -120,7 +124,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(searcher);
   }
 
-  force: boolean;
   store: DatabaseStore;
   client: TMDBClient;
   upload: ImageUploader;
@@ -128,8 +131,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     drive_id?: string;
     user_id?: string;
     upload_image?: boolean;
+    /** 忽略 can_search，强制重新搜索 */
+    force?: boolean;
   }> = {};
-
   /** 是否暂停本次搜索 */
   _stop: boolean = false;
 
@@ -138,11 +142,11 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
 
     const {
       upload_image = true,
-      user_id,
-      drive_id,
+      user,
+      drive,
       force = false,
       assets,
-      tmdb_token: token,
+      tmdb_token,
       store,
       on_season_added,
       on_episode_added,
@@ -152,13 +156,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       on_error,
     } = options;
     this.store = store;
-    this.force = force;
-    this.client = new TMDBClient({ token });
+    this.client = new TMDBClient({ token: tmdb_token });
     this.upload = new ImageUploader({ root: assets });
     this.options = {
-      user_id,
-      drive_id,
+      user_id: user?.id,
+      drive_id: drive?.id,
       upload_image,
+      force,
     };
     if (on_season_added) {
       this.on_add_season(on_season_added);
@@ -293,16 +297,19 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     this.emit(Events.Finish);
     return Result.Ok(null);
   }
-  /** 处理所有没有匹配好电视剧详情的电视剧 */
+  /**
+   * 处理所有没有匹配好电视剧详情的电视剧
+   */
   async process_parsed_tv_list(scope?: { name: string }[]) {
     // console.log("[DOMAIN]searcher/index - process_parsed_tv_list", scope, this.force);
-    const { user_id, drive_id } = this.options;
-    let page = 1;
+    const { user_id, drive_id, force } = this.options;
+    // let page = 1;
+    let next_marker: string | null = null;
     let no_more = false;
-    const store = this.store;
-    const where: ModelQuery<typeof store.prisma.parsed_tv.findMany>["where"] = {
+
+    const where: ModelQuery<typeof this.store.prisma.parsed_tv.findMany>["where"] = {
       tv_id: null,
-      can_search: this.force ? undefined : 1,
+      can_search: force ? undefined : 1,
       user_id,
     };
     if (drive_id) {
@@ -319,7 +326,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       });
     }
     // console.log("[DOMAIN]searcher/index - process_parsed_tv_list where is", JSON.stringify(where, null, 2));
-    const count = await store.prisma.parsed_tv.count({
+    const count = await this.store.prisma.parsed_tv.count({
       where,
     });
     this.emit(
@@ -331,23 +338,36 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       })
     );
     do {
-      const parsed_tv_list = await store.prisma.parsed_tv.findMany({
+      const list = await this.store.prisma.parsed_tv.findMany({
         where,
         include: {
-          parsed_episodes: true,
           parsed_seasons: true,
+          parsed_episodes: true,
         },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
+        take: PAGE_SIZE + 1,
         orderBy: {
           name: "desc",
         },
+        ...(() => {
+          const cursor: { id?: string } = {};
+          if (next_marker) {
+            cursor.id = next_marker;
+            return {
+              cursor,
+            };
+          }
+          return {} as ModelQuery<typeof this.store.prisma.parsed_tv.findMany>["cursor"];
+        })(),
       });
-      //       log("找到", parsed_tv_list.length, "个需要搜索的电视剧");
-      no_more = parsed_tv_list.length + (page - 1) * PAGE_SIZE >= count;
-      page += 1;
-      for (let i = 0; i < parsed_tv_list.length; i += 1) {
-        const parsed_tv = parsed_tv_list[i];
+      no_more = list.length < PAGE_SIZE + 1;
+      next_marker = null;
+      if (list.length === PAGE_SIZE + 1) {
+        const last_record = list[list.length - 1];
+        next_marker = last_record.id;
+      }
+      const correct_list = list.slice(0, PAGE_SIZE);
+      for (let i = 0; i < correct_list.length; i += 1) {
+        const parsed_tv = correct_list[i];
         const prefix = get_prefix_from_parsed_tv(parsed_tv);
         // if (on_stop) {
         //   const r = await on_stop();
@@ -355,21 +375,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         //     return;
         //   }
         // }
-        const r = await this.search_tv_profile_then_link_parsed_tv(parsed_tv);
-        // console.log("after this.search_tv_profile_then_link_parsed_tv");
+        const r = await this.process_parsed_tv({ parsed_tv });
         if (r.error) {
           this.emit(
             Events.Print,
             new ArticleLineNode({
-              children: [`[${prefix}]`, "添加电视剧详情失败", r.error.message].map((text) => {
+              children: [`[${prefix}]`, "添加电视剧详情失败", "  ", r.error.message].map((text) => {
                 return new ArticleTextNode({ text });
               }),
             })
           );
-          //   log(`[${prefix}]`, "添加电视剧详情失败", r.error.message);
           continue;
         }
-        // log(`[${prefix}]`, "添加电视剧详情成功");
         await (async () => {
           // console.log(`[${prefix}]`, "检查能否建立同步任务", r.data.profile.in_production, parsed_tv.file_name);
           if (r.data.profile.in_production && parsed_tv.file_name) {
@@ -443,13 +460,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     } while (no_more === false);
   }
   /**
-   * 根据解析的电视剧信息，搜索是否有对应的电视剧详情
+   * 根据解析的电视剧信息，搜索 TMDB 是否有对应的电视剧详情
    * 如果没有详情，跳过
-   * 如果有详情，查询本地是否已存在该详情，如果已存在，直接关联已存在的详情；否则创建详情记录，并关联
+   * 如果有详情，查询数据库是否已存在该详情，如果已存在，直接关联已存在的详情；否则创建详情记录，并关联
    */
-  async search_tv_profile_then_link_parsed_tv(parsed_tv: ParsedTVRecord) {
+  async process_parsed_tv(body: { parsed_tv: ParsedTVRecord }) {
+    const { parsed_tv } = body;
     const { id } = parsed_tv;
-    const profile_res = await this.get_tv_from_tmdb_with_parsed_tv_name(parsed_tv);
+    const profile_res = await this.search_tv_profile_with_parsed_tv(parsed_tv);
     if (profile_res.error) {
       return Result.Err(profile_res.error);
     }
@@ -460,13 +478,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("没有搜索到电视剧详情");
     }
     const profile = profile_res.data;
-    return this.link_tv_to_parsed_tv({
-      profile,
+    return this.link_tv_profile_to_parsed_tv({
       parsed_tv,
+      profile,
     });
   }
-  /** 将一条 tv 记录关联到 parsed_tv 记录，如果没有 tv 记录，就创建再关联 */
-  async link_tv_to_parsed_tv(body: { parsed_tv: ParsedTVRecord; profile: TVProfileRecord }) {
+  /**
+   * 将一条 tv 记录关联到 parsed_tv 记录，如果没有 tv 记录，就创建再关联
+   */
+  async link_tv_profile_to_parsed_tv(body: { parsed_tv: ParsedTVRecord; profile: TVProfileRecord }) {
     const { profile, parsed_tv } = body;
     const { user_id } = this.options;
     const prefix = get_prefix_from_parsed_tv(parsed_tv);
@@ -479,25 +499,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         return Result.Err(existing_res.error);
       }
       if (existing_res.data) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [`[${prefix}]`, "电视剧详情已存在"].map((text) => {
-              return new ArticleTextNode({ text });
-            }),
-          })
-        );
         return Result.Ok(existing_res.data);
       }
-      // this.emit(
-      //   Events.Print,
-      //   new ArticleLineNode({
-      //     children: [`[${prefix}]`, "新增电视剧"].map((text) => {
-      //       return new ArticleTextNode({ text: String(text) });
-      //     }),
-      //   })
-      // );
-      //       log(`[${prefix}]`, "新增电视剧并关联");
       const adding_res = await this.store.add_tv({
         profile_id: profile.id,
         user_id,
@@ -521,7 +524,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           }),
         })
       );
-      this.emit(Events.AddTV, adding_res.data);
+      this.emit(Events.TVAdded, adding_res.data);
       return Result.Ok(adding_res.data);
     })();
     if (tv_res.error) {
@@ -540,12 +543,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       profile,
     });
   }
-  /** 根据 parsed_tv 搜索电视剧详情 */
-  async get_tv_from_tmdb_with_parsed_tv_name(tv: ParsedTVRecord) {
-    const { name, original_name, correct_name } = tv;
-    const prefix = get_prefix_from_parsed_tv(tv);
+  /**
+   * 根据 parsed_tv 搜索电视剧详情
+   * 返回从三方平台搜索到的详情信息
+   */
+  async search_tv_profile_with_parsed_tv(parsed_tv: ParsedTVRecord) {
+    const { name, original_name, correct_name } = parsed_tv;
+    const prefix = [correct_name, name, original_name].filter(Boolean).join("/");
     // log("[](search_tv_in_tmdb)start search", tv.name || tv.original_name);
-    const tv_profile_res = await (async () => {
+    const tv_profile_in_tmdb_res = await (async () => {
       if (correct_name) {
         // console.log(`[${prefix}]`, "使用", correct_name, "搜索");
         const r = await this.search_tv_in_tmdb(correct_name);
@@ -573,15 +579,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
       return Result.Ok(null);
     })();
-    if (tv_profile_res.error) {
-      return Result.Err(tv_profile_res.error);
+    if (tv_profile_in_tmdb_res.error) {
+      return Result.Err(tv_profile_in_tmdb_res.error);
     }
-    let tv_profile = tv_profile_res.data;
-    if (tv_profile === null) {
+    let tv_profile_in_tmdb = tv_profile_in_tmdb_res.data;
+    if (tv_profile_in_tmdb === null) {
       return Result.Ok(null);
     }
-    console.log(`[${prefix}]`, "搜索到的结果为", tv_profile.name || tv_profile.original_name);
-    return Result.Ok(tv_profile);
+    console.log(`[${prefix}]`, "搜索到的电视剧为", tv_profile_in_tmdb.name || tv_profile_in_tmdb.original_name);
+    return Result.Ok(tv_profile_in_tmdb);
   }
   /** 使用名字在 tmdb 搜索 */
   async search_tv_in_tmdb(name: string) {
@@ -608,7 +614,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     // console.log("search_tv_in_tmdb", tv_item, list, name);
     const r = await this.get_tv_profile_with_tmdb_id({
       tmdb_id: tv_item.tmdb_id,
-      original_language: tv_item.original_language,
     });
     if (r.error) {
       return Result.Err(r.error);
@@ -619,10 +624,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
    * 格式化电视剧详情
    * 如下载 poster_path 等图片
    */
-  async normalize_tv_profile(info: { tmdb_id: number; original_language?: string }, profile: TVProfileFromTMDB) {
-    const { tmdb_id, original_language } = info;
+  async normalize_tv_profile(profile: TVProfileFromTMDB) {
     const { upload_image } = this.options;
     const {
+      id,
       name,
       original_name,
       first_air_date,
@@ -642,7 +647,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       // console.log("check need upload images", upload_image);
       if (upload_image) {
         return this.upload_tmdb_images({
-          tmdb_id,
+          tmdb_id: id,
           poster_path,
           backdrop_path,
         });
@@ -653,14 +658,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       });
     })();
     const body = {
-      tmdb_id,
+      unique_id: String(id),
       name: name || null,
       original_name: original_name || null,
       overview: overview || null,
       poster_path: uploaded_poster_path || null,
       backdrop_path: uploaded_backdrop_path || null,
       first_air_date,
-      original_language: original_language || null,
+      original_language: null,
       popularity,
       vote_average,
       vote_count: 0,
@@ -679,20 +684,21 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     };
     return body;
   }
-  cached_tv_profile: Record<number, TVProfileRecord> = {};
+  cached_tv_profile: Record<string, TVProfileRecord> = {};
   /**
    * 获取 tv_profile，如果没有就创建
    */
-  async get_tv_profile_with_tmdb_id(info: { tmdb_id: number; original_language?: string }) {
+  async get_tv_profile_with_tmdb_id(info: { tmdb_id: number }) {
     const { tmdb_id } = info;
-    if (this.cached_tv_profile[tmdb_id]) {
-      return Result.Ok(this.cached_tv_profile[tmdb_id]);
+    const unique_id = String(tmdb_id);
+    if (this.cached_tv_profile[unique_id]) {
+      return Result.Ok(this.cached_tv_profile[unique_id]);
     }
     const existing_res = await this.store.find_tv_profile({
-      tmdb_id,
+      unique_id,
     });
     if (existing_res.data) {
-      this.cached_tv_profile[tmdb_id] = existing_res.data;
+      this.cached_tv_profile[unique_id] = existing_res.data;
       return Result.Ok(existing_res.data);
     }
     const profile_res = await this.client.fetch_tv_profile(tmdb_id);
@@ -700,62 +706,35 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(profile_res.error);
     }
     const profile = profile_res.data;
-    const body = await this.normalize_tv_profile(info, profile);
-    const {
-      name,
-      original_name,
-      original_language,
-      origin_country,
-      overview,
-      poster_path,
-      backdrop_path,
-      genres,
-      popularity,
-      vote_average,
-      episode_count,
-      season_count,
-      status,
-      in_production,
-    } = body;
+    const body = await this.normalize_tv_profile(profile);
     const id = r_id();
-    this.cached_tv_profile[tmdb_id] = {
+    this.cached_tv_profile[unique_id] = {
       ...body,
       id,
       created: new Date(),
       updated: new Date(),
+      unique_id,
+      source: 1,
+      sources: JSON.stringify({ tmdb_id }),
     };
     await this.store.prisma.tv_profile.create({
-      data: {
-        id,
-        tmdb_id,
-        name,
-        original_name,
-        original_language,
-        overview,
-        origin_country,
-        poster_path,
-        backdrop_path,
-        genres,
-        popularity,
-        vote_average,
-        episode_count,
-        season_count,
-        status,
-        in_production,
-      },
+      data: this.cached_tv_profile[unique_id],
     });
-    return Result.Ok(this.cached_tv_profile[tmdb_id]);
+    return Result.Ok(this.cached_tv_profile[unique_id]);
   }
 
-  /** 处理所有解析到的 season */
+  /**
+   * 处理所有解析到的 season
+   */
   async process_parsed_season_list(scope?: { name: string }[]) {
     // console.log("[DOMAIN]searcher/index - process_parsed_season_list", scope, this.force);
-    const { user_id, drive_id } = this.options;
-    let page = 1;
+    const { user_id, drive_id, force } = this.options;
+    // let page = 1;
+    let next_marker: string | null = null;
     let no_more = false;
-    const where: NonNullable<Parameters<typeof this.store.prisma.parsed_season.findMany>[number]>["where"] = {
+    const where: ModelQuery<typeof this.store.prisma.parsed_season.findMany>["where"] = {
       season_id: null,
-      can_search: this.force ? undefined : 1,
+      can_search: force ? undefined : 1,
       user_id,
       drive_id,
     };
@@ -798,27 +777,41 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       })
     );
     do {
-      const parsed_season_list = await this.store.prisma.parsed_season.findMany({
+      const list = await this.store.prisma.parsed_season.findMany({
         where,
         include: {
           parsed_tv: true,
         },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
+        take: PAGE_SIZE + 1,
         orderBy: {
           parsed_tv: {
             name: "desc",
           },
         },
+        ...(() => {
+          const cursor: { id?: string } = {};
+          if (next_marker) {
+            cursor.id = next_marker;
+            return {
+              cursor,
+            };
+          }
+          return {} as ModelQuery<typeof this.store.prisma.parsed_season.findMany>["cursor"];
+        })(),
       });
       // console.log("找到", parsed_season_list.length, "个需要处理的季", where);
-      no_more = parsed_season_list.length + (page - 1) * PAGE_SIZE >= count;
-      page += 1;
-      for (let j = 0; j < parsed_season_list.length; j += 1) {
-        const parsed_season = parsed_season_list[j];
+      no_more = list.length < PAGE_SIZE + 1;
+      next_marker = null;
+      if (list.length === PAGE_SIZE + 1) {
+        const last_record = list[list.length - 1];
+        next_marker = last_record.id;
+      }
+      const correct_list = list.slice(0, PAGE_SIZE);
+      for (let i = 0; i < correct_list.length; i += 1) {
+        const parsed_season = correct_list[i];
         const { parsed_tv, season_number } = parsed_season;
         const prefix = get_prefix_from_parsed_tv(parsed_tv);
-        const r = await this.search_season_profile_then_link_parsed_season({
+        const r = await this.process_parsed_season({
           parsed_tv,
           parsed_season,
         });
@@ -831,23 +824,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               }),
             })
           );
-          //   log(`[${prefix}/${season_number}]`, "添加季详情失败", r.error.message);
           continue;
         }
-        // log(`[${prefix}/${season_number}]`, "添加季详情成功");
       }
     } while (no_more === false);
     return Result.Ok(null);
   }
-  async search_season_profile_then_link_parsed_season(body: {
-    parsed_tv: ParsedTVRecord;
-    parsed_season: ParsedSeasonRecord;
-  }) {
+  /**
+   * 处理解析出的 季 结果
+   */
+  async process_parsed_season(body: { parsed_tv: ParsedTVRecord; parsed_season: ParsedSeasonRecord }) {
     const { parsed_tv, parsed_season } = body;
-    //     const { name, original_name, correct_name } = parsed_tv;
-    const { id, season_number } = parsed_season;
-    const { user_id } = this.options;
-    const prefix = get_prefix_from_parsed_tv(parsed_tv) + `/${season_number}`;
+    const { id } = parsed_season;
     const profile_res = await this.get_season_profile_with_tmdb({
       parsed_tv,
       parsed_season,
@@ -861,24 +849,44 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Err("没有搜索到季详情");
     }
+    const profile = profile_res.data;
+    return this.link_season_profile_to_parsed_season({ parsed_season, parsed_tv, profile });
+  }
+  /**
+   * 将从三方获取到的详情，和解析到的 season 做关联
+   * 先根据三方详情创建 season，如果已存在就不创建，关联已存在的 season 和 parsed_season。否则直接关联 season 和 parsed_season
+   */
+  async link_season_profile_to_parsed_season(body: {
+    profile: SeasonProfileRecord;
+    parsed_tv: ParsedTVRecord;
+    parsed_season: ParsedSeasonRecord;
+  }) {
+    const { user_id } = this.options;
+    const { profile, parsed_tv, parsed_season } = body;
+    const { season_number } = parsed_season;
+    const prefix = get_prefix_from_parsed_tv(parsed_tv) + `/${season_number}`;
     const season_res = await (async () => {
       const existing_res = await this.store.find_season({
-        profile_id: profile_res.data.id,
+        profile_id: profile.id,
+        user_id,
       });
       if (existing_res.error) {
         return Result.Err(existing_res.error);
       }
-      const existing = existing_res.data;
-      if (existing) {
-        // log(`[${prefix}]`, "已存在季详情，直接关联");
-        return Result.Ok(existing);
+      if (existing_res.data) {
+        return Result.Ok(existing_res.data);
       }
-      //       log(`[${prefix}]`, "新增季详情并关联");
       const adding_res = await this.store.add_season({
         season_text: parsed_season.season_number,
-        season_number: season_to_num(parsed_season.season_number),
+        season_number: (() => {
+          const r = season_to_num(parsed_season.season_number);
+          if (typeof r === "string") {
+            return 0;
+          }
+          return r;
+        })(),
         tv_id: parsed_tv.tv_id!,
-        profile_id: profile_res.data.id,
+        profile_id: profile.id,
         user_id,
       });
       if (adding_res.error) {
@@ -892,13 +900,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           }),
         })
       );
-      this.emit(Events.AddSeason, adding_res.data);
+      this.emit(Events.SeasonAdded, adding_res.data);
       return Result.Ok(adding_res.data);
     })();
     if (season_res.error) {
       return Result.Err(season_res.error);
     }
-    const r2 = await this.store.update_parsed_season(id, {
+    const r2 = await this.store.update_parsed_season(parsed_season.id, {
       season_id: season_res.data.id,
       can_search: 0,
     });
@@ -909,9 +917,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
   cached_season_profiles: Record<string, SeasonProfileRecord> = {};
   async get_season_profile_with_tmdb(info: { parsed_tv: ParsedTVRecord; parsed_season: ParsedSeasonRecord }) {
-    const { upload_image } = this.options;
     const { parsed_tv, parsed_season } = info;
-    //     const { token, store } = this.options;
     if (parsed_tv.tv_id === null) {
       return Result.Err("电视剧缺少匹配的详情");
     }
@@ -924,55 +930,99 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       },
     });
     if (tv === null) {
-      return Result.Err("没有找到匹配的电视剧");
+      return Result.Err("没有匹配的电视剧");
     }
     const { season_number } = parsed_season;
-    const r = await this.client.fetch_partial_season_profile({
-      tv_id: tv.profile.tmdb_id,
-      season_number: season_to_num(season_number),
-    });
-    if (r.error) {
-      return Result.Err(r.error);
+    const s_n = season_to_num(season_number);
+    if (typeof s_n === "number") {
+      const r = await this.client.fetch_partial_season_profile({
+        tv_id: Number(tv.profile.unique_id),
+        season_number: s_n,
+      });
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      if (r.data === null) {
+        return Result.Ok(null);
+      }
+      const season_profile = r.data;
+      const tmdb_id = season_profile.id;
+      const unique_id = String(tmdb_id);
+      if (this.cached_season_profiles[unique_id]) {
+        return Result.Ok(this.cached_season_profiles[unique_id]);
+      }
+      const existing_res = await this.store.find_season_profile({
+        unique_id,
+      });
+      if (existing_res.error) {
+        return Result.Err(existing_res.error);
+      }
+      if (existing_res.data) {
+        this.cached_season_profiles[unique_id] = existing_res.data;
+        return Result.Ok(existing_res.data);
+      }
+      const body = await this.normalize_season_profile(season_profile);
+      this.cached_season_profiles[unique_id] = {
+        ...body,
+        id: r_id(),
+        created: new Date(),
+        updated: new Date(),
+        unique_id: String(tmdb_id),
+        source: 1,
+        sources: JSON.stringify({ tmdb_id }),
+      };
+      await this.store.prisma.season_profile.create({
+        data: this.cached_season_profiles[unique_id],
+      });
+      return Result.Ok(this.cached_season_profiles[unique_id]);
     }
-    if (r.data === null) {
-      return Result.Ok(null);
+    if (s_n === "其他") {
+      const unique_id = [tv.profile.id, s_n].join("/");
+      if (this.cached_season_profiles[unique_id]) {
+        return Result.Ok(this.cached_season_profiles[unique_id]);
+      }
+      const existing_res = await this.store.find_season_profile({
+        unique_id,
+      });
+      if (existing_res.error) {
+        return Result.Err(existing_res.error);
+      }
+      if (existing_res.data) {
+        this.cached_season_profiles[unique_id] = existing_res.data;
+        return Result.Ok(existing_res.data);
+      }
+      const body = {
+        unique_id,
+        source: MediaProfileSourceTypes.Other,
+        sources: "",
+        name: s_n,
+        overview: null,
+        poster_path: null,
+        season_number: 9999,
+        air_date: null,
+        episode_count: 0,
+      };
+      this.cached_season_profiles[unique_id] = {
+        ...body,
+        id: r_id(),
+        created: new Date(),
+        updated: new Date(),
+      };
+      await this.store.prisma.season_profile.create({
+        data: this.cached_season_profiles[unique_id],
+      });
+      return Result.Ok(this.cached_season_profiles[unique_id]);
     }
-    const tmdb_id = r.data.id;
-
-    if (this.cached_season_profiles[tmdb_id]) {
-      return Result.Ok(this.cached_season_profiles[tmdb_id]);
-    }
-    const existing_res = await this.store.find_season_profile({
-      tmdb_id,
-    });
-    if (existing_res.error) {
-      return Result.Err(existing_res.error);
-    }
-    if (existing_res.data) {
-      this.cached_season_profiles[tmdb_id] = existing_res.data;
-      return Result.Ok(existing_res.data);
-    }
-    const body = await this.normalize_season_profile(r.data, tv.profile);
-    const { name, overview, poster_path, air_date, episode_count } = body;
-    this.cached_season_profiles[tmdb_id] = {
-      ...body,
-      id: r_id(),
-      created: new Date(),
-      updated: new Date(),
-    };
-    await this.store.prisma.season_profile.create({
-      data: this.cached_season_profiles[tmdb_id],
-    });
-    return Result.Ok(this.cached_season_profiles[tmdb_id]);
+    return Result.Err("季信息异常，无法识别");
   }
   /**
    * 处理从 TMDB 搜索到的季，主要是上传图片
    */
-  async normalize_season_profile(latest_season: PartialSeasonFromTMDB, tv_profile: { tmdb_id: null | number }) {
+  async normalize_season_profile(latest_season: PartialSeasonFromTMDB) {
     const { upload_image } = this.options;
     const { id, name, overview, air_date, season_number, episode_count, poster_path } = latest_season;
     return {
-      tmdb_id: id,
+      unique_id: String(id),
       name,
       overview,
       episode_count,
@@ -981,7 +1031,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       ...(await (async () => {
         if (upload_image) {
           const { poster_path: p } = await this.upload_tmdb_images({
-            tmdb_id: `${tv_profile.tmdb_id}-${season_number}`,
+            tmdb_id: `${id}-${season_number}`,
             poster_path,
             backdrop_path: null,
           });
@@ -997,14 +1047,16 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
 
   async process_parsed_episode_list(scope?: { name: string }[]) {
-    const { user_id, drive_id } = this.options;
+    const { user_id, drive_id, force } = this.options;
     // console.log("[DOMAIN]searcher/index - process_parsed_episode_list", scope, this.force);
-    let page = 1;
+
+    // let page = 1;
+    let next_marker: null | string = null;
     let no_more = false;
 
     const where: ModelQuery<typeof this.store.prisma.parsed_episode.findMany>["where"] = {
       episode_id: null,
-      can_search: this.force ? undefined : 1,
+      can_search: force ? undefined : 1,
       user_id,
       drive_id,
     };
@@ -1044,25 +1096,39 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     );
     // console.log("[DOMAIN]Searcher - process_parsed_episode_list", JSON.stringify(where), count);
     do {
-      const parsed_episode_list = await this.store.prisma.parsed_episode.findMany({
+      const list = await this.store.prisma.parsed_episode.findMany({
         where,
         include: {
           parsed_tv: true,
           parsed_season: true,
         },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
+        take: PAGE_SIZE + 1,
         orderBy: {
           parsed_tv: {
             name: "desc",
           },
         },
+        ...(() => {
+          const cursor: { id?: string } = {};
+          if (next_marker) {
+            cursor.id = next_marker;
+            return {
+              cursor,
+            };
+          }
+          return {} as ModelQuery<typeof this.store.prisma.parsed_episode.findMany>["cursor"];
+        })(),
       });
       // console.log("找到", parsed_episode_list.length, "个需要添加的剧集", where);
-      no_more = parsed_episode_list.length + (page - 1) * PAGE_SIZE >= count;
-      page += 1;
-      for (let i = 0; i < parsed_episode_list.length; i += 1) {
-        const parsed_episode = parsed_episode_list[i];
+      no_more = list.length < PAGE_SIZE + 1;
+      next_marker = null;
+      if (list.length === PAGE_SIZE + 1) {
+        const last_record = list[list.length - 1];
+        next_marker = last_record.id;
+      }
+      const correct_list = list.slice(0, PAGE_SIZE);
+      for (let i = 0; i < correct_list.length; i += 1) {
+        const parsed_episode = correct_list[i];
         const { parsed_tv, parsed_season, season_number, episode_number } = parsed_episode;
         // console.log(parsed_episode);
         const { name, original_name, correct_name } = parsed_tv;
@@ -1075,8 +1141,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         //     }),
         //   })
         // );
-        // console.log(`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息", parsed_tv);
-        const r = await this.add_episode_from_parsed_episode({
+        // console.log(`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息");
+        const r = await this.process_parsed_episode({
           parsed_tv,
           parsed_season,
           parsed_episode,
@@ -1092,23 +1158,16 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               ),
             })
           );
-          //   log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情失败", r.error.message);
         }
-        // log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情成功");
       }
     } while (no_more === false);
   }
-
   normalize_episode_profile(
-    info: {
-      tmdb_id: number;
-    },
     profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date" | "runtime">
   ) {
-    const { tmdb_id } = info;
-    const { name, overview, air_date, runtime } = profile;
+    const { id, name, overview, air_date, runtime } = profile;
     const body = {
-      tmdb_id,
+      unique_id: String(id),
       name: name || null,
       overview: overview || null,
       air_date,
@@ -1116,18 +1175,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     };
     return body;
   }
-  async add_episode_from_parsed_episode(body: {
+  async process_parsed_episode(body: {
     parsed_tv: ParsedTVRecord;
     parsed_season: ParsedSeasonRecord;
     parsed_episode: ParsedEpisodeRecord;
   }) {
     const { parsed_tv, parsed_season, parsed_episode } = body;
-    //     const { name, original_name, correct_name } = parsed_tv;
     const { id, episode_number, season_number } = parsed_episode;
-    const { user_id } = this.options;
-
-    const prefix = get_prefix_from_parsed_tv(parsed_tv) + `/${season_number}/${episode_number}`;
-
     if (!parsed_tv) {
       return Result.Err("缺少关联电视剧");
     }
@@ -1154,25 +1208,46 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Err("没有搜索到剧集详情");
     }
+    return this.link_episode_profile_to_parsed_episode({
+      profile: profile_res.data,
+      parsed_tv,
+      parsed_season,
+      parsed_episode,
+    });
+  }
+  async link_episode_profile_to_parsed_episode(body: {
+    profile: EpisodeProfileRecord;
+    parsed_tv: ParsedTVRecord;
+    parsed_season: ParsedSeasonRecord;
+    parsed_episode: ParsedEpisodeRecord;
+  }) {
+    const { user_id } = this.options;
+    const { profile, parsed_tv, parsed_season, parsed_episode } = body;
+    const { season_number, episode_number } = parsed_episode;
+    const prefix = get_prefix_from_parsed_tv(parsed_tv) + `/${season_number}/${episode_number}`;
     const episode_res = await (async () => {
       const existing_res = await this.store.find_episode({
-        profile_id: profile_res.data.id,
+        profile_id: profile.id,
       });
       if (existing_res.error) {
         return Result.Err(existing_res.error);
       }
       if (existing_res.data) {
-        // log(`[${prefix}]`, "已存在该剧集详情，直接关联");
         return Result.Ok(existing_res.data);
       }
-      // log(`[${prefix}]`, "新增剧集详情并关联");
       const adding_res = await this.store.add_episode({
         episode_text: parsed_episode.episode_number,
-        episode_number: episode_to_num(parsed_episode.episode_number),
+        episode_number: (() => {
+          const r = episode_to_num(parsed_episode.episode_number);
+          if (typeof r === "string") {
+            return 0;
+          }
+          return r;
+        })(),
         season_text: parsed_season.season_number,
         tv_id: parsed_tv.tv_id!,
         season_id: parsed_season.season_id!,
-        profile_id: profile_res.data.id,
+        profile_id: profile.id,
         user_id,
       });
       if (adding_res.error) {
@@ -1186,13 +1261,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           }),
         })
       );
-      this.emit(Events.AddEpisode, adding_res.data);
+      this.emit(Events.EpisodeAdded, adding_res.data);
       return Result.Ok(adding_res.data);
     })();
     if (episode_res.error) {
       return Result.Err(episode_res.error);
     }
-    // await sleep(500);
     const r2 = await this.store.update_parsed_episode(parsed_episode.id, {
       episode_id: episode_res.data.id,
       can_search: 0,
@@ -1200,18 +1274,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (r2.error) {
       return Result.Err(r2.error, "10003");
     }
-    // this.emit(
-    //   Events.Print,
-    //   new ArticleLineNode({
-    //     children: [`[${prefix}]`, "关联剧集详情成功"].map((text) => {
-    //       return new ArticleTextNode({ text });
-    //     }),
-    //   })
-    // );
     return Result.Ok(r2.data);
   }
-
-  cached_episode_profiles: Record<number, EpisodeProfileRecord> = {};
+  cached_episode_profiles: Record<string, EpisodeProfileRecord> = {};
   async get_episode_profile_with_tmdb(body: {
     parsed_tv: ParsedTVRecord;
     parsed_season: ParsedSeasonRecord;
@@ -1233,12 +1298,90 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (tv === null) {
       return Result.Err("没有找到匹配的电视剧");
     }
+    const s_n = season_to_num(season_number);
+    const e_n = episode_to_num(episode_number);
+    if (typeof s_n === "number" && typeof e_n === "number") {
+      /** 在 TMDB 上搜索剧集详情并新增到本地数据库 */
+      const r = await this.client.fetch_episode_profile({
+        tv_id: Number(tv.profile.unique_id),
+        season_number: s_n,
+        episode_number: e_n,
+      });
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+      if (r.data === null) {
+        return Result.Ok(null);
+      }
+      const tmdb_id = r.data.id;
+      const unique_id = String(tmdb_id);
+      if (this.cached_episode_profiles[unique_id]) {
+        return Result.Ok(this.cached_episode_profiles[unique_id]);
+      }
+      const existing_res = await this.store.find_episode_profile({
+        unique_id,
+      });
+      if (existing_res.error) {
+        return Result.Err(existing_res.error);
+      }
+      if (existing_res.data) {
+        this.cached_episode_profiles[unique_id] = existing_res.data;
+        return Result.Ok(existing_res.data);
+      }
+      const payload = this.normalize_episode_profile(r.data);
+      this.cached_episode_profiles[unique_id] = {
+        ...payload,
+        id: r_id(),
+        created: new Date(),
+        updated: new Date(),
+        source: 1,
+        sources: JSON.stringify({ tmdb_id }),
+      };
+      await this.store.prisma.episode_profile.create({
+        data: this.cached_episode_profiles[unique_id],
+      });
+      return Result.Ok(this.cached_episode_profiles[unique_id]);
+    }
+    if (season_number === "其他") {
+      const unique_id = [parsed_tv.tv_id, season_number, e_n].join("/");
+      if (this.cached_episode_profiles[unique_id]) {
+        return Result.Ok(this.cached_episode_profiles[unique_id]);
+      }
+      const existing_res = await this.store.find_episode_profile({
+        unique_id,
+      });
+      if (existing_res.error) {
+        return Result.Err(existing_res.error);
+      }
+      if (existing_res.data) {
+        this.cached_episode_profiles[unique_id] = existing_res.data;
+        return Result.Ok(existing_res.data);
+      }
+      const payload = {
+        unique_id,
+        source: MediaProfileSourceTypes.Other,
+        sources: null,
+        name: episode_number,
+        overview: null,
+        air_date: null,
+        runtime: 0,
+      };
+      this.cached_episode_profiles[unique_id] = {
+        ...payload,
+        id: r_id(),
+        created: new Date(),
+        updated: new Date(),
+      };
+      await this.store.prisma.episode_profile.create({
+        data: this.cached_episode_profiles[unique_id],
+      });
+      return Result.Ok(this.cached_episode_profiles[unique_id]);
+    }
     /**
      * 所有可能的 season_number
      * SP
      * 番外篇
      */
-    const s_n = season_to_num(season_number);
     if (typeof s_n === "string") {
       return Result.Err(`季数 '${season_number}' 不合法`);
     }
@@ -1254,58 +1397,22 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
      * E01-02
      * E01-E02
      */
-    const e_n = episode_to_num(episode_number);
     if (typeof e_n === "string") {
       return Result.Err(`集数 '${episode_number}' 不合法`);
     }
-    const r = await this.client.fetch_episode_profile({
-      tv_id: tv.profile.tmdb_id,
-      season_number: s_n,
-      episode_number: e_n,
-    });
-    if (r.error) {
-      return Result.Err(r.error);
-    }
-    if (r.data === null) {
-      return Result.Ok(null);
-    }
-    const tmdb_id = r.data.id;
-    if (this.cached_episode_profiles[tmdb_id]) {
-      return Result.Ok(this.cached_episode_profiles[tmdb_id]);
-    }
-    const existing_res = await this.store.find_episode_profile({
-      tmdb_id,
-    });
-    if (existing_res.error) {
-      return Result.Err(existing_res.error);
-    }
-    if (existing_res.data) {
-      this.cached_episode_profiles[tmdb_id] = existing_res.data;
-      return Result.Ok(existing_res.data);
-    }
-    const { id, name, overview, air_date } = r.data;
-    const payload = this.normalize_episode_profile({ tmdb_id }, r.data);
-    this.cached_episode_profiles[tmdb_id] = {
-      ...payload,
-      id: r_id(),
-      created: new Date(),
-      updated: new Date(),
-    };
-    await this.store.prisma.episode_profile.create({
-      data: this.cached_episode_profiles[tmdb_id],
-    });
-    return Result.Ok(this.cached_episode_profiles[tmdb_id]);
+    return Result.Err("季或者剧集信息异常");
   }
 
   async process_parsed_movie_list(scope?: { name: string }[]) {
     // console.log("[DOMAIN]searcher/index - process_parsed_movie_list", scope, this.force);
-    const { user_id, drive_id } = this.options;
-    let page = 1;
+    const { user_id, drive_id, force } = this.options;
+    // let page = 1;
+    let next_marker: null | string = null;
     let no_more = false;
 
     const where: NonNullable<Parameters<typeof this.store.prisma.parsed_movie.findMany>[number]>["where"] = {
       movie_id: null,
-      can_search: this.force ? undefined : 1,
+      can_search: force ? undefined : 1,
       user_id,
       drive_id,
     };
@@ -1334,16 +1441,30 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       })
     );
     do {
-      const parsed_movie_list = await this.store.prisma.parsed_movie.findMany({
+      const list = await this.store.prisma.parsed_movie.findMany({
         where,
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
+        take: PAGE_SIZE + 1,
+        ...(() => {
+          const cursor: { id?: string } = {};
+          if (next_marker) {
+            cursor.id = next_marker;
+            return {
+              cursor,
+            };
+          }
+          return {} as ModelQuery<typeof this.store.prisma.parsed_movie.findMany>["cursor"];
+        })(),
       });
       // console.log("找到", parsed_episode_list.length, "个需要添加的剧集", where);
-      no_more = parsed_movie_list.length + (page - 1) * PAGE_SIZE >= count;
-      page += 1;
-      for (let i = 0; i < parsed_movie_list.length; i += 1) {
-        const parsed_movie = parsed_movie_list[i];
+      no_more = list.length < PAGE_SIZE + 1;
+      next_marker = null;
+      if (list.length === PAGE_SIZE + 1) {
+        const last_record = list[list.length - 1];
+        next_marker = last_record.id;
+      }
+      const correct_list = list.slice(0, PAGE_SIZE);
+      for (let i = 0; i < correct_list.length; i += 1) {
+        const parsed_movie = correct_list[i];
         const { name, original_name, correct_name, parent_paths, file_name } = parsed_movie;
         const prefix = correct_name || name || original_name;
         if (prefix === null) {
@@ -1357,9 +1478,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           );
           continue;
         }
-        const r = await this.add_movie_from_parsed_movie({
-          parsed_movie,
-        });
+        const r = await this.process_parsed_movie({ parsed_movie });
         if (r.error) {
           this.emit(
             Events.Print,
@@ -1369,17 +1488,17 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               }),
             })
           );
-          //   log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情失败", r.error.message);
         }
-        // log(`[${name}/${season_number}/${episode_number}]`, "添加剧集详情成功");
       }
     } while (no_more === false);
   }
-  /** 根据 parsed_movie 搜索电视剧详情 */
-  async get_movie_profile(movie: ParsedMovieRecord) {
+  /**
+   * 根据 parsed_movie 搜索电视剧详情
+   */
+  async search_movie_profile_with_parsed_movie(movie: ParsedMovieRecord) {
     const { name, original_name, correct_name } = movie;
-    // log("[](search_tv_in_tmdb)start search", tv.name || tv.original_name);
-    const movie_profile_res = await (async () => {
+    const prefix = [correct_name, name, original_name].filter(Boolean).join("/");
+    const movie_profile_in_tmdb_res = await (async () => {
       if (correct_name) {
         //       log(`[${prefix}]`, "使用", correct_name, "搜索");
         const r = await this.search_movie_in_tmdb(correct_name);
@@ -1397,7 +1516,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         return Result.Ok(r.data);
       }
       if (original_name) {
-        //       log(`[${prefix}]`, "使用", original_name, "搜索");
         const processed_original_name = original_name.split(".").join(" ");
         const r = await this.search_movie_in_tmdb(processed_original_name);
         if (r.error) {
@@ -1407,25 +1525,25 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
       return Result.Ok(null);
     })();
-    if (movie_profile_res.error) {
-      return Result.Err(movie_profile_res.error);
+    if (movie_profile_in_tmdb_res.error) {
+      return Result.Err(movie_profile_in_tmdb_res.error);
     }
-    const movie_profile = movie_profile_res.data;
-    if (movie_profile === null) {
+    const movie_profile_in_tmdb = movie_profile_in_tmdb_res.data;
+    if (movie_profile_in_tmdb === null) {
       return Result.Ok(null);
     }
-    //     log(`[${prefix}]`, "使用", original_name, "搜索到的结果为", tv_profile.name || tv_profile.original_name);
-    return Result.Ok(movie_profile);
+    console.log(`[${prefix}]`, "搜索到的电影为", movie_profile_in_tmdb.name || movie_profile_in_tmdb.original_name);
+    return Result.Ok(movie_profile_in_tmdb);
   }
-  /** 新增电影和电影详情 */
-  async add_movie_from_parsed_movie(body: { parsed_movie: ParsedMovieRecord }) {
+  /**
+   * 新增电影和电影详情
+   */
+  async process_parsed_movie(body: { parsed_movie: ParsedMovieRecord }) {
     const { parsed_movie } = body;
-    const { id, name, original_name, correct_name } = parsed_movie;
-    const { user_id } = this.options;
-    const prefix = `${correct_name || name || original_name}`;
-    const profile_res = await this.get_movie_profile(parsed_movie);
+    const { id } = parsed_movie;
+    const profile_res = await this.search_movie_profile_with_parsed_movie(parsed_movie);
     if (profile_res.error) {
-      return Result.Err(profile_res.error, "10001");
+      return Result.Err(profile_res.error);
     }
     if (profile_res.data === null) {
       this.store.update_parsed_episode(id, {
@@ -1433,16 +1551,21 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Err("没有搜索到电影详情");
     }
-    const r = await this.link_movie_profile({
+    const profile = profile_res.data;
+    return this.link_movie_profile_to_parsed_movie({
       parsed_movie,
-      profile: profile_res.data,
+      profile,
     });
-    return r;
   }
-  async link_movie_profile(body: { parsed_movie: ParsedMovieRecord; profile: MovieProfileRecord }) {
+  /**
+   * 将 从三方平台搜索到的详情信息，和索引文件夹解析出的 parsed_movie 进行关联
+   * 首先根据 从三方平台搜索到的详情信息 创建 tv 记录，如果没有 tv 记录，就创建再关联
+   * 如果有，就直接关联
+   */
+  async link_movie_profile_to_parsed_movie(body: { parsed_movie: ParsedMovieRecord; profile: MovieProfileRecord }) {
     const { user_id } = this.options;
     const { parsed_movie, profile } = body;
-    const { id, name, original_name, correct_name } = parsed_movie;
+    const { name, original_name, correct_name } = parsed_movie;
     const prefix = `${correct_name || name || original_name}`;
     const movie_res = await (async () => {
       const existing_res = await this.store.find_movie({
@@ -1469,7 +1592,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           }),
         })
       );
-      this.emit(Events.AddMovie, adding_res.data);
+      this.emit(Events.MovieAdded, adding_res.data);
       return Result.Ok(adding_res.data);
     })();
     if (movie_res.error) {
@@ -1513,16 +1636,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(r.data);
   }
-  async normalize_movie_profile(
-    info: {
-      tmdb_id: number;
-      original_language?: string;
-    },
-    profile: MovieProfileFromTMDB
-  ) {
+  /**
+   * 格式化从 TMDB 搜索到的详情数据
+   * 包括图片处理都是在这里做的
+   */
+  async normalize_movie_profile(profile: MovieProfileFromTMDB) {
     const { upload_image } = this.options;
-    const { tmdb_id, original_language } = info;
     const {
+      id,
       name,
       original_name,
       overview,
@@ -1538,7 +1659,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
       if (upload_image) {
         return this.upload_tmdb_images({
-          tmdb_id,
+          tmdb_id: id,
           poster_path,
           backdrop_path,
         });
@@ -1549,13 +1670,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       });
     })();
     const body = {
-      tmdb_id,
+      unique_id: String(id),
       name: name || null,
       original_name: original_name || null,
       overview: overview || null,
       poster_path: uploaded_poster_path || null,
       backdrop_path: uploaded_backdrop_path || null,
-      original_language: original_language || null,
+      original_language: null,
       air_date,
       popularity,
       vote_average,
@@ -1570,19 +1691,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     };
     return body;
   }
-  cached_movie_profiles: Record<number, MovieProfileRecord> = {};
+  cached_movie_profiles: Record<string, MovieProfileRecord> = {};
   async get_movie_profile_with_tmdb_id(info: { tmdb_id: number; original_language?: string }) {
-    const { tmdb_id, original_language } = info;
-    const { upload_image } = this.options;
-
-    if (this.cached_movie_profiles[tmdb_id]) {
-      return Result.Ok(this.cached_movie_profiles[tmdb_id]);
+    const { tmdb_id } = info;
+    const unique_id = String(tmdb_id);
+    if (this.cached_movie_profiles[unique_id]) {
+      return Result.Ok(this.cached_movie_profiles[unique_id]);
     }
     const existing_res = await this.store.find_movie_profile({
-      tmdb_id,
+      unique_id,
     });
     if (existing_res.data) {
-      this.cached_movie_profiles[tmdb_id] = existing_res.data;
+      this.cached_movie_profiles[unique_id] = existing_res.data;
       return Result.Ok(existing_res.data);
     }
     const profile_res = await this.client.fetch_movie_profile(tmdb_id);
@@ -1590,29 +1710,19 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(profile_res.error);
     }
     const profile = profile_res.data;
-    const body = await this.normalize_movie_profile(info, profile);
-    const {
-      name,
-      original_name,
-      overview,
-      poster_path,
-      backdrop_path,
-      air_date,
-      popularity,
-      vote_average,
-      origin_country,
-      genres,
-    } = body;
-    this.cached_movie_profiles[tmdb_id] = {
+    const body = await this.normalize_movie_profile(profile);
+    this.cached_movie_profiles[unique_id] = {
       ...body,
       id: r_id(),
       created: new Date(),
       updated: new Date(),
+      source: 1,
+      sources: JSON.stringify({ tmdb_id }),
     };
     await this.store.prisma.movie_profile.create({
-      data: this.cached_movie_profiles[tmdb_id],
+      data: this.cached_movie_profiles[unique_id],
     });
-    return Result.Ok(this.cached_movie_profiles[tmdb_id]);
+    return Result.Ok(this.cached_movie_profiles[unique_id]);
   }
 
   /**
@@ -1660,17 +1770,17 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     this._stop = true;
   }
 
-  on_add_tv(handler: Handler<TheTypesOfEvents[Events.AddTV]>) {
-    return this.on(Events.AddTV, handler);
+  on_add_tv(handler: Handler<TheTypesOfEvents[Events.TVAdded]>) {
+    return this.on(Events.TVAdded, handler);
   }
-  on_add_season(handler: Handler<TheTypesOfEvents[Events.AddSeason]>) {
-    return this.on(Events.AddSeason, handler);
+  on_add_season(handler: Handler<TheTypesOfEvents[Events.SeasonAdded]>) {
+    return this.on(Events.SeasonAdded, handler);
   }
-  on_add_episode(handler: Handler<TheTypesOfEvents[Events.AddEpisode]>) {
-    return this.on(Events.AddEpisode, handler);
+  on_add_episode(handler: Handler<TheTypesOfEvents[Events.EpisodeAdded]>) {
+    return this.on(Events.EpisodeAdded, handler);
   }
-  on_add_movie(handler: Handler<TheTypesOfEvents[Events.AddMovie]>) {
-    return this.on(Events.AddMovie, handler);
+  on_add_movie(handler: Handler<TheTypesOfEvents[Events.MovieAdded]>) {
+    return this.on(Events.MovieAdded, handler);
   }
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
     return this.on(Events.Print, handler);
@@ -1688,7 +1798,6 @@ function get_prefix_from_parsed_tv(parsed_tv: ParsedTVRecord) {
   const prefix = `${correct_name || name || original_name}`;
   return prefix;
 }
-
 function split_array_into_chunks<T extends Record<any, any>>(array: T[], n = 20) {
   const result = [];
   for (let i = 0; i < array.length; i += n) {

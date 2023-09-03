@@ -65,7 +65,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         overview: profile.overview,
         episode_number: episode_text,
         first_air_date: profile.air_date,
-        tmdb_id: profile.tmdb_id,
+        tmdb_id: profile.unique_id,
+        platform: profile.source,
       };
     }),
   };

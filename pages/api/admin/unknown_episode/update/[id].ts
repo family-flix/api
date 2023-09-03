@@ -5,10 +5,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
 import { MediaSearcher } from "@/domains/searcher";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -39,12 +40,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (!parsed_episode) {
-    return e("没有匹配的季");
+    return e(Result.Err("没有匹配的季"));
   }
   const { parsed_tv, drive_id } = parsed_episode;
+  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
   const searcher_res = await MediaSearcher.New({
-    user_id: user.id,
-    drive_id,
+    user,
+    drive,
     tmdb_token: user.settings.tmdb_token,
     assets: app.assets,
     force: true,

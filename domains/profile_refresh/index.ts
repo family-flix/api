@@ -28,6 +28,7 @@ import {
   check_season_profile_need_refresh,
   check_tv_profile_need_refresh,
 } from "./utils";
+import { MediaProfileSourceTypes } from "@/constants";
 
 enum Events {
   Print,
@@ -116,27 +117,20 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   }
   /**
    * 根据数据库中的「电视剧详情」记录，刷新。如果存在新的 tmdb_id，使用该 tmdb 记录替换已存在的
-   * @param tv
-   * @param extra
-   * @returns
    */
   async refresh_tv_profile(tv: TVRecord & { profile: TVProfileRecord }, extra?: { tmdb_id: number }) {
-    const { name, original_name, tmdb_id } = tv.profile;
-    const r = await this.client.fetch_tv_profile(extra?.tmdb_id ? extra.tmdb_id : tmdb_id);
+    const { name, original_name, unique_id } = tv.profile;
+    const correct_tmdb_id = extra ? extra.tmdb_id : Number(unique_id);
+    const r = await this.client.fetch_tv_profile(correct_tmdb_id);
     if (r.error) {
       // console.log(tv.profile, extra);
       return Result.Err(r.error);
     }
-    const normalized_profile = await this.searcher.normalize_tv_profile(
-      {
-        tmdb_id: extra?.tmdb_id ? extra.tmdb_id : tmdb_id,
-      },
-      r.data
-    );
+    const normalized_profile = await this.searcher.normalize_tv_profile(r.data);
     const diff = check_tv_profile_need_refresh(tv.profile, normalized_profile);
     if (diff) {
       await (async () => {
-        if (!diff.tmdb_id) {
+        if (!diff.unique_id) {
           this.emit(
             Events.Print,
             new ArticleSectionNode({
@@ -196,12 +190,16 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         );
         const created_res = await (async () => {
           const existing_res = await this.store.find_tv_profile({
-            tmdb_id: normalized_profile.tmdb_id,
+            unique_id: normalized_profile.unique_id,
           });
           if (existing_res.data) {
             return Result.Ok(existing_res.data);
           }
-          return this.store.add_tv_profile(normalized_profile);
+          return this.store.add_tv_profile({
+            ...normalized_profile,
+            source: 1,
+            sources: JSON.stringify({ tmdb_id: correct_tmdb_id }),
+          });
         })();
         if (created_res.error) {
           this.emit(
@@ -235,7 +233,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
               })
             );
           }
-          tv.profile.tmdb_id = created_res.data.tmdb_id;
+          tv.profile.unique_id = created_res.data.unique_id;
         }
       })();
     }
@@ -246,6 +244,11 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   async refresh_season_list(tv: TVRecord, tv_profile_from_tmdb: TVProfileFromTMDB) {
     const seasons = await this.store.prisma.season.findMany({
       where: {
+        profile: {
+          source: {
+            not: MediaProfileSourceTypes.Other,
+          },
+        },
         tv_id: tv.id,
         user_id: this.user.id,
       },
@@ -288,22 +291,10 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     new_profile: PartialSeasonFromTMDB,
     extra?: { tmdb_id: number }
   ) {
-    const { name, season_number } = season.profile;
-    const normalized_profile = await this.searcher.normalize_season_profile(new_profile, season.profile);
+    const { name } = season.profile;
+    const normalized_profile = await this.searcher.normalize_season_profile(new_profile);
     const diff = check_season_profile_need_refresh(season.profile, normalized_profile);
     if (!diff) {
-      // this.emit(
-      //   Events.Print,
-      //   new ArticleSectionNode({
-      //     children: [
-      //       new ArticleLineNode({
-      //         children: ["季", `「${season.profile.name}」`, "没有变化的内容"].map((text) => {
-      //           return new ArticleTextNode({ text: text! });
-      //         }),
-      //       }),
-      //     ],
-      //   })
-      // );
       return Result.Ok(null);
     }
     const prefix = [name].join("-");
@@ -330,7 +321,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         ],
       })
     );
-    if (!diff.tmdb_id) {
+    if (!diff.unique_id) {
       await this.store.prisma.season_profile.update({
         where: {
           id: season.profile.id,
@@ -344,7 +335,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     }
     const created_res = await (async () => {
       const existing_res = await this.store.find_season_profile({
-        tmdb_id: normalized_profile.tmdb_id,
+        unique_id: normalized_profile.unique_id,
       });
       if (existing_res.data) {
         return Result.Ok(existing_res.data);
@@ -376,9 +367,13 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       await (async () => {
         const season = seasons[i];
         const { season_text } = season;
+        const s_n = season_to_num(season_text);
+        if (typeof s_n === "string") {
+          return;
+        }
         const r = await this.client.fetch_season_profile({
-          tv_id: tv.profile.tmdb_id,
-          season_number: season_to_num(season_text),
+          tv_id: Number(tv.profile.unique_id),
+          season_number: s_n,
         });
         if (r.error) {
           return;
@@ -426,26 +421,10 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     new_profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date" | "runtime">
   ) {
     const { name } = episode.profile;
-    const normalized_profile = await this.searcher.normalize_episode_profile(
-      {
-        tmdb_id: new_profile.id,
-      },
-      new_profile
-    );
+    const correct_tmdb_id = new_profile.id;
+    const normalized_profile = await this.searcher.normalize_episode_profile(new_profile);
     const diff = check_episode_profile_need_refresh(episode.profile, normalized_profile);
     if (!diff) {
-      //   this.emit(
-      //     Events.Print,
-      //     new ArticleSectionNode({
-      //       children: [
-      //         new ArticleLineNode({
-      //           children: ["剧集", `「${episode.profile.name}」`, "没有变化的内容"].map((text) => {
-      //             return new ArticleTextNode({ text: text! });
-      //           }),
-      //         }),
-      //       ],
-      //     })
-      //   );
       return Result.Ok(null);
     }
     const prefix = [name, episode.episode_number].join("-");
@@ -472,7 +451,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         ],
       })
     );
-    if (!diff.tmdb_id) {
+    if (!diff.unique_id) {
       await this.store.prisma.episode_profile.update({
         where: {
           id: episode.profile.id,
@@ -486,12 +465,16 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     }
     const created_res = await (async () => {
       const existing_res = await this.store.find_episode_profile({
-        tmdb_id: normalized_profile.tmdb_id,
+        unique_id: normalized_profile.unique_id,
       });
       if (existing_res.data) {
         return Result.Ok(existing_res.data);
       }
-      return this.store.add_episode_profile(normalized_profile);
+      return this.store.add_episode_profile({
+        ...normalized_profile,
+        source: 1,
+        sources: JSON.stringify({ tmdb_id: correct_tmdb_id }),
+      });
     })();
     if (created_res.data) {
       await this.store.prisma.episode.update({
@@ -542,31 +525,15 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     },
     extra?: { tmdb_id: number }
   ) {
-    const { name, original_name, tmdb_id } = movie.profile;
-    const r = await this.client.fetch_movie_profile(extra ? extra.tmdb_id : tmdb_id);
+    const { name, original_name, unique_id } = movie.profile;
+    const correct_tmdb_id = extra ? extra.tmdb_id : Number(unique_id);
+    const r = await this.client.fetch_movie_profile(correct_tmdb_id);
     if (r.error) {
       return Result.Err(r.error);
     }
-    const normalized_profile = await this.searcher.normalize_movie_profile(
-      {
-        tmdb_id: extra ? extra.tmdb_id : tmdb_id,
-      },
-      r.data
-    );
+    const normalized_profile = await this.searcher.normalize_movie_profile(r.data);
     const diff = check_movie_need_refresh(movie.profile, normalized_profile);
     if (!diff) {
-      // this.emit(
-      //   Events.Print,
-      //   new ArticleSectionNode({
-      //     children: [
-      //       new ArticleLineNode({
-      //         children: ["电影", `「${movie.profile.name}」`, "没有变化的内容"].map((text) => {
-      //           return new ArticleTextNode({ text: text! });
-      //         }),
-      //       }),
-      //     ],
-      //   })
-      // );
       return Result.Ok(null);
     }
     this.emit(
@@ -592,7 +559,8 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         ],
       })
     );
-    if (!diff.tmdb_id) {
+    if (!diff.unique_id) {
+      // 仅更新数据
       await this.store.prisma.movie_profile.update({
         where: {
           id: movie.profile.id,
@@ -604,16 +572,20 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Ok(diff);
     }
-    console.log("更换电影详情");
+    // 更换电影详情
     const created_res = await (async () => {
-      const existing_res = await this.store.find_movie_profile({ tmdb_id: normalized_profile.tmdb_id });
+      const existing_res = await this.store.find_movie_profile({ unique_id: normalized_profile.unique_id });
       if (existing_res.data) {
         return Result.Ok(existing_res.data);
       }
-      return this.store.add_movie_profile(normalized_profile);
+      return this.store.add_movie_profile({
+        ...normalized_profile,
+        source: 1,
+        sources: JSON.stringify({ tmdb_id: correct_tmdb_id }),
+      });
     })();
     if (created_res.data) {
-      console.log("创建电影详情成功", created_res.data);
+      // console.log("创建电影详情成功", created_res.data);
       const r = await this.store.update_movie(movie.id, {
         profile_id: created_res.data.id,
       });

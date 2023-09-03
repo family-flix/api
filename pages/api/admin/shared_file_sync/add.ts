@@ -73,12 +73,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (tv === null) {
-    return e("没有匹配的电视剧记录");
+    return e(Result.Err("没有匹配的电视剧记录"));
   }
   const { parsed_tvs, profile } = tv;
-  // if (parsed_tvs.length === 0) {
-  //   return e("该电视剧没有可以关联的文件夹");
-  // }
+  if (parsed_tvs.length === 0) {
+    return e(Result.Err("该电视剧没有可以关联的文件夹"));
+  }
   const random_drive_id = parsed_tvs[0].drive_id;
   const drive_res = await Drive.Get({ id: random_drive_id, user_id, store });
   if (drive_res.error) {

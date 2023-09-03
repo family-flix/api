@@ -11,6 +11,7 @@ import { MediaSearcher } from "@/domains/searcher";
 import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp } from "@/types";
+import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -24,7 +25,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id, settings } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id, settings } = user;
   if (!settings.tmdb_token) {
     return e("缺少 TMDB_TOKEN");
   }
@@ -40,9 +42,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: tmdb_id, name } = body as TVProfileItemInTMDB & {
     id?: string;
   };
+  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  if (drive_res.error) {
+    return e(drive_res);
+  }
+  const drive = drive_res.data;
   const search = new MediaSearcher({
-    user_id,
-    drive_id,
+    user,
+    drive,
     tmdb_token: settings.tmdb_token,
     assets: app.assets,
     store,
@@ -52,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(profile_res);
   }
   const profile = profile_res.data;
-  const r2 = await search.link_tv_to_parsed_tv({
+  const r2 = await search.link_tv_profile_to_parsed_tv({
     parsed_tv,
     profile,
   });

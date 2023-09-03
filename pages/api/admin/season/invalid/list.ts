@@ -85,16 +85,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   if (Number(duplicated) === 1) {
     const duplicate_tv_profiles = await store.prisma.season_profile.groupBy({
-      by: ["tmdb_id"],
+      by: ["unique_id"],
       where: {
-        season: {
-          tv: {
-            user_id: user.id,
+        seasons: {
+          every: {
+            tv: {
+              user_id: user.id,
+            },
           },
         },
       },
       having: {
-        tmdb_id: {
+        unique_id: {
           _count: {
             gt: 1,
           },
@@ -102,13 +104,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     });
     queries = queries.concat({
-      tmdb_id: {
+      unique_id: {
         in: duplicate_tv_profiles
           .map((profile) => {
-            const { tmdb_id } = profile;
-            return tmdb_id;
+            const { unique_id } = profile;
+            return unique_id;
           })
-          .filter(Boolean) as number[],
+          .filter(Boolean) as string[],
       },
     });
   }

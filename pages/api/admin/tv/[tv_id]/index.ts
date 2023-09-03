@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { season_to_chinese_num } from "@/utils";
 import { store } from "@/store";
@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { tv_id: id, season_id } = req.query as Partial<{ tv_id: string; season_id: string }>;
   if (!id || id === "undefined") {
-    return e("缺少电视剧 id");
+    return e(Result.Err("缺少电视剧 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -58,19 +58,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (tv === null) {
-    return e("没有匹配的电视剧记录");
+    return e(Result.Err("没有匹配的电视剧记录"));
+  }
+  const { profile, seasons, _count } = tv;
+  const cur_season = (() => {
+    if (season_id) {
+      const matched = seasons.find((s) => s.id === season_id);
+      if (matched) {
+        return matched;
+      }
+    }
+    return seasons[0];
+  })();
+  if (!cur_season) {
+    return e(Result.Err("没有匹配的季"));
   }
   const data = await (async () => {
-    const { id, profile, seasons, _count } = tv;
-    const cur_season = (() => {
-      if (season_id) {
-        const matched = seasons.find((s) => s.id === season_id);
-        if (matched) {
-          return matched;
-        }
-      }
-      return seasons[0];
-    })();
     const poster_path = cur_season.profile.poster_path;
     const source_size_count = 0;
     // const source_size_count = (() => {
@@ -94,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       original_language,
       first_air_date,
       episode_count,
-      tmdb_id,
+      unique_id,
     } = profile;
     const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
     return {
@@ -105,7 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       backdrop_path,
       original_language,
       first_air_date,
-      tmdb_id,
+      tmdb_id: unique_id,
       size_count: source_size_count,
       incomplete,
       seasons: seasons.map((season) => {

@@ -52,8 +52,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const job = job_res.data;
   const r2 = await MediaSearcher.New({
-    drive_id: drive.id,
-    user_id: user.id,
+    drive,
+    user,
     store,
     tmdb_token: settings.tmdb_token,
     force: true,

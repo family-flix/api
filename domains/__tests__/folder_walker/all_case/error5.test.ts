@@ -73,7 +73,7 @@ describe("detect a tv dir", () => {
       }),
     });
     await folder.profile();
-    const r1 = await detector.detect(folder);
+    const r1 = await detector.run(folder);
     expect(r1.error).toBe(null);
     if (r1.error) {
       return;
@@ -210,7 +210,7 @@ describe("detect a tv dir", () => {
       }),
     });
     await folder.profile();
-    const r1 = await detector.detect(folder);
+    const r1 = await detector.run(folder);
     expect(r1.error).toBe(null);
     if (r1.error) {
       return;

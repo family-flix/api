@@ -68,45 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user,
     tmdb_token: settings.tmdb_token,
     assets: app.assets,
-    async on_episode_added(episode) {
-      const { tv_id } = episode;
-      const histories = await store.prisma.play_history.findMany({
-        where: {
-          tv_id,
-        },
-      });
-      for (let i = 0; i < histories.length; i += 1) {
-        await (async () => {
-          const { member_id } = histories[i];
-          const tv = await store.prisma.tv.findFirst({
-            where: {
-              id: tv_id,
-            },
-            include: {
-              profile: true,
-            },
-          });
-          if (!tv) {
-            return;
-          }
-          const id = r_id();
-          await store.prisma.member_notification.create({
-            data: {
-              id,
-              // 个人消息
-              type: 1,
-              content: JSON.stringify({
-                tv_id,
-                name: tv.profile.name,
-                poster_path: tv.profile.poster_path,
-                msg: "你正在看的电视剧更新啦",
-              }),
-              member_id,
-            },
-          });
-        })();
-      }
-    },
+    async on_episode_added(episode) {},
     on_print(v) {
       job.output.write(v);
     },
@@ -164,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         };
       });
     })();
-    analysis.run(the_files_prepare_analysis, { force: force === "1" });
+    await analysis.run(the_files_prepare_analysis, { force: force === "1" });
   }
   run();
   res.status(200).json({

@@ -4,17 +4,17 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
+import { User } from "@/domains/user";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { User } from "@/domains/user";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { movie_id } = req.query as Partial<{ movie_id: string }>;
   if (!movie_id || movie_id === "undefined") {
-    return e("缺少电影 id");
+    return e(Result.Err("缺少电影 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -28,7 +28,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       profile: true,
-      parsed_movies: true,
+      parsed_movies: {
+        include: {
+          drive: true,
+        },
+      },
     },
   });
   if (tv === null) {
@@ -47,14 +51,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       poster_path,
       backdrop_path,
       original_language,
-      tmdb_id: profile.tmdb_id,
+      tmdb_id: profile.unique_id,
+      platform: profile.source,
+      profile_platforms: profile.sources,
       sources: sources.map((source) => {
-        const { id, file_id, file_name, parent_paths } = source;
+        const { id, file_id, file_name, parent_paths, drive } = source;
         return {
           id,
           file_id,
           file_name,
           parent_paths,
+          drive: {
+            id: drive.id,
+            name: drive.name,
+            avatar: drive.avatar,
+          },
         };
       }),
     };

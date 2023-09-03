@@ -169,10 +169,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
   async run(files?: { name: string; type: string }[], options: Partial<{ force: boolean }> = {}) {
     const { drive, user, store } = this;
     const { force = false } = options;
-    const {
-      client,
-      profile: { root_folder_name },
-    } = drive;
+    const { client } = drive;
     if (!drive.has_root_folder()) {
       this.emit(
         Events.Print,
@@ -181,9 +178,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
             new ArticleCardNode({
               value: {
                 type: "set_root_folder",
-                text: "未设置索引目录，请点击设置索引目录",
-                drive_id: this.drive.id,
+                text: "未设置索引目录，请先设置索引目录",
                 name: this.drive.name,
+                drive_id: this.drive.id,
               },
             }),
           ],
@@ -233,24 +230,22 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     });
     let direct_search = false;
     // console.log("[DOMAIN]analysis/index - before files.length === 0");
-    if (files !== undefined && Array.isArray(files)) {
+    if (Array.isArray(files)) {
       if (files.length === 0) {
         direct_search = true;
-        if (!this.extra_scope) {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: "没有要索引的文件，完成索引",
-                }),
-              ],
-            })
-          );
-          // console.log("[DOMAIN]analysis/index - after files.length === 0", drive.name);
-          this.emit(Events.Finished);
-          return Result.Ok(null);
-        }
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: "没有要索引的文件，完成索引",
+              }),
+            ],
+          })
+        );
+        // console.log("[DOMAIN]analysis/index - after files.length === 0", drive.name);
+        this.emit(Events.Finished);
+        return Result.Ok(null);
       }
       // ${files.length ? " - 仅" + files.map((f) => f.name).join("、") : ""
       this.emit(
@@ -337,14 +332,22 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         },
       });
     };
-    const added_parsed_tv_list: {
-      name: string;
-    }[] = [];
-    const added_parsed_movie_list: {
-      name: string;
-    }[] = [];
-    //     let count = 0;
+    const added_parsed_tv_list: Record<
+      string,
+      {
+        name: string;
+        original_name: string;
+      }
+    > = {};
+    const added_parsed_movie_list: Record<
+      string,
+      {
+        name: string;
+        original_name: string;
+      }
+    > = {};
     walker.on_episode = async (parsed) => {
+      const { tv, episode } = parsed;
       //       const r = await check_need_stop(task_id);
       //       if (r && r.data) {
       //         need_stop = true;
@@ -352,52 +355,53 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       //         return;
       //       }
       // console.log("walker.on_episode", parsed.tv.name, parsed.episode.episode);
-      const processor = new EpisodeFileProcessor({ episode: parsed, user_id: user.id, drive_id: drive.id, store });
-      processor.on_add_tv((tv) => {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: ["解析出电视剧 ", tv.name || tv.original_name].map((text) => {
-              return new ArticleTextNode({ text });
-            }),
-          })
-        );
-      });
-      processor.on_add_episode((episode) => {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: ["解析出剧集 ", episode.name || episode.original_name, " ", episode.episode].map((text) => {
-              return new ArticleTextNode({ text });
-            }),
-          })
-        );
-      });
+      const processor = new EpisodeFileProcessor({ episode: parsed, user, drive, store });
       this.episode_count += 1;
-      added_parsed_tv_list.push(parsed.tv);
+      const k = [parsed.tv.name, parsed.tv.original_name].join("/");
+      if (!added_parsed_tv_list[k]) {
+        added_parsed_tv_list[k] = parsed.tv;
+        // this.emit(
+        //   Events.Print,
+        //   new ArticleLineNode({
+        //     children: ["解析出电视剧 ", tv.name || tv.original_name].map((text) => {
+        //       return new ArticleTextNode({ text });
+        //     }),
+        //   })
+        // );
+      }
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["解析出剧集 ", tv.name || tv.original_name, " ", episode.episode].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
       await processor.run();
       return;
     };
     walker.on_movie = async (parsed) => {
+      const movie = parsed;
       // console.log("walker.on_movie", parsed.name, parsed.original_name);
       const processor = new MovieFileProcessor({
         movie: parsed,
         user_id: user.id,
         drive_id: drive.id,
         store,
-        on_add_movie: (movie) => {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: ["解析出电影 ", movie.name || movie.original_name || ""].map((text) => {
-                return new ArticleTextNode({ text });
-              }),
-            })
-          );
-        },
       });
       this.movie_count += 1;
-      added_parsed_movie_list.push(parsed);
+      const k = [parsed.name, parsed.original_name].join("/");
+      if (!added_parsed_movie_list[k]) {
+        added_parsed_movie_list[k] = parsed;
+      }
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["解析出电影 ", movie.name || movie.original_name || ""].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
       await processor.run();
       return;
     };
@@ -423,10 +427,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       }
       // console.log("[DOMAIN]analysis/index - before walker.detect");
       // @todo 如果 detect 由于内部调用 folder.next() 报错，这里没有处理会导致一直 pending
-      await walker.detect(folder);
+      await walker.run(folder);
       // console.log("[DOMAIN]analysis/index - after walker.detect");
     }
-
     this.emit(
       Events.Print,
       new ArticleLineNode({
@@ -474,12 +477,12 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       })
     );
     const r2 = await MediaSearcher.New({
-      user_id: user.id,
-      drive_id: drive.id,
+      user,
+      drive,
       force,
+      assets: this.assets,
       tmdb_token: this.tmdb_token,
       store,
-      assets: this.assets,
       on_season_added: (season) => {
         this.emit(Events.AddSeason, season);
       },
@@ -506,13 +509,17 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r2.error);
     }
     const searcher = r2.data;
-    const files_prepare_search = added_parsed_movie_list.concat(added_parsed_tv_list).concat(
-      this.extra_scope
+    const files_prepare_search = (() => {
+      const names = Object.values(added_parsed_movie_list)
+        .concat(Object.values(added_parsed_tv_list))
+        .map(({ name }) => ({ name }));
+      const extra_names = this.extra_scope
         ? this.extra_scope.map((n) => {
             return { name: n };
           })
-        : []
-    );
+        : [];
+      return names.concat(extra_names);
+    })();
     // console.log("[DOMAIN]analysis/index - before searcher.run", files_prepare_search);
     await searcher.run(files_prepare_search);
     // console.log("[DOMAIN]analysis/index - after searcher.run");

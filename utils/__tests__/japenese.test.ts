@@ -222,16 +222,6 @@ describe("动漫", () => {
       episode: "E03",
     });
   });
-  test("[1080P][DBD制作组&离谱Sub][龙珠GT][NCOP2][HEVC-10bit][AC3].mkv", () => {
-    const name = "[1080P][DBD制作组&离谱Sub][龙珠GT][NCOP2][HEVC-10bit][AC3].mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "龙珠GT",
-      original_name: "",
-      season: "",
-      episode: "NCOP2",
-    });
-  });
   test("[1080P][DBD制作组&离谱Sub][龙珠GT][60][HEVC-10bit][AC3].mkv", () => {
     const name = "[1080P][DBD制作组&离谱Sub][龙珠GT][60][HEVC-10bit][AC3].mkv";
     const result = parse_filename_for_video(name);
@@ -282,16 +272,6 @@ describe("动漫", () => {
       episode: "",
     });
   });
-  test("[DAY][仮面戦隊ゴライダー][PR1][BDrip][1080P][X264 FLAC].mkv", () => {
-    const name = "[DAY][仮面戦隊ゴライダー][PR1][BDrip][1080P][X264 FLAC].mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "仮面戦隊ゴライダー",
-      original_name: "",
-      season: "",
-      episode: "PR1",
-    });
-  });
   test("Numbers：大厦森林的监视者们 [2023][12集持续更新中]", () => {
     const name = "Numbers：大厦森林的监视者们 [2023][12集持续更新中]";
     const result = parse_filename_for_video(name);
@@ -320,26 +300,6 @@ describe("动漫", () => {
       original_name: "",
       season: "PV",
       episode: "E04",
-    });
-  });
-  test("[VCB-Studio] Ushio to Tora [NCOP03][Ma10p_1080p][x265_flac].mkv", () => {
-    const name = "[VCB-Studio] Ushio to Tora [NCOP03][Ma10p_1080p][x265_flac].mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "Ushio.to.Tora",
-      season: "",
-      episode: "NCOP03",
-    });
-  });
-  test("[VCB-Studio] Ushio to Tora [CM05][Ma10p_1080p][x265_flac].mkv", () => {
-    const name = "[VCB-Studio] Ushio to Tora [CM05][Ma10p_1080p][x265_flac].mkv";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "Ushio.to.Tora",
-      season: "",
-      episode: "CM05",
     });
   });
   test("[SLAM DUNK][003][BDRIP][960x720][X264-10bit_AAC].mp4", () => {

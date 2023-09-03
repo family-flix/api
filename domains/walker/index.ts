@@ -103,6 +103,9 @@ type TheTypesOfEvents = {
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
 };
 type FolderWalkerProps = {
+  /**
+   * 用户自定义文件名解析规则
+   */
   filename_rules?: {
     replace: [string, string];
   }[];
@@ -1194,9 +1197,9 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     return;
   }
   /**
-   * 开始检测
+   * 开始遍历云盘
    */
-  async detect(data: Folder) {
+  async run(data: Folder) {
     this.start_folder_id = data.id;
     await this.walk(data);
     return Result.Ok(this.episodes);

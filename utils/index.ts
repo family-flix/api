@@ -12,6 +12,12 @@ dayjs.locale("zh-cn");
 
 export const video_file_type_regexp = /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$/;
 
+export function add_zeros(n: number, m: number) {
+  let str = n.toString();
+  const zeros_to_add = Math.max(0, m - str.length);
+  const result = "0".repeat(zeros_to_add) + str;
+  return result;
+}
 /**
  * 返回一个最短两位的数字字符串
  */
@@ -79,7 +85,7 @@ export function episode_to_num(str: string) {
   let s = str.replace(/[eE]/g, "");
   const matches = s.match(regex);
   if (!matches) {
-    return 0;
+    return str;
   }
   for (let i = 0; i < matches.length; i++) {
     const num = parseInt(matches[i], 10);
@@ -106,7 +112,7 @@ export function season_to_num(str: string) {
   let s = str.replace(/[sS]/g, "");
   const matches = s.match(regex);
   if (!matches) {
-    return -1;
+    return str;
   }
   for (let i = 0; i < matches.length; i++) {
     const num = parseInt(matches[i], 10);
@@ -308,7 +314,7 @@ export async function parseJSONStr<T extends JSONObject>(json: string | null) {
     return Result.Err("不是合法的 json");
   }
   try {
-    if (json[0] !== "{") {
+    if (json[0] !== "{" && json[0] !== "[") {
       return Result.Err("不是合法的 json");
     }
     const d = JSON.parse(json);
