@@ -3,7 +3,6 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import pinyin from "pinyin";
 import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
@@ -23,6 +22,7 @@ import { store } from "@/store";
 import { FileType } from "@/constants";
 import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { TaskTypes } from "@/domains/job/constants";
+import { get_first_letter } from "@/utils/pinyin";
 
 type TheFilePrepareTransfer = {
   id: string;
@@ -441,19 +441,7 @@ async function archive_files(body: {
       });
       continue;
     }
-    const r = pinyin(name, {
-      style: "initials",
-      heteronym: true,
-    });
-    const first_char_pin_yin = (() => {
-      if (!r[0]) {
-        return undefined;
-      }
-      if (!r[0][0]) {
-        return undefined;
-      }
-      return r[0][0].toUpperCase();
-    })();
+    const first_char_pin_yin = get_first_letter(name);
     const { resolution, source, encode, voice_encode, type } = parse_filename_for_video(file_name, [
       "resolution",
       "source",

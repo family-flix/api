@@ -496,7 +496,7 @@ export function parse_filename_for_video(
       key: k("season"),
       desc: "special season1",
       // 一些日本动漫会有的，和「剧场版」等做区分？
-      regexp: /本篇|完结篇|OVA([^编編篇]{1,}[编編篇]){0,1}|特典映像|番外篇|特辑篇|PV/,
+      regexp: /本篇|完结篇|OVA([^编編篇]{1,}[编編篇]){0,1}|特典映像|番外篇|特辑篇|PV|泡面番/,
       before() {
         cur_filename = cur_filename.replace(/PV([0-9]{1,})/, "PV.E$1");
       },

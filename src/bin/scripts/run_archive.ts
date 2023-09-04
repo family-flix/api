@@ -1,11 +1,8 @@
-import pinyin from "pinyin";
+import { get_first_letter } from "@/utils/pinyin";
 
 function main() {
   const name = "为";
-  const r = pinyin(name, {
-    style: "first_letter",
-//     heteronym: true,
-  });
+  const r = get_first_letter(name);
   console.log(r);
 }
 

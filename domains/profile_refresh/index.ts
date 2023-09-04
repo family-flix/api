@@ -418,7 +418,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     episode: EpisodeRecord & {
       profile: EpisodeProfileRecord;
     },
-    new_profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date" | "runtime">
+    new_profile: EpisodeProfileFromTMDB
   ) {
     const { name } = episode.profile;
     const correct_tmdb_id = new_profile.id;

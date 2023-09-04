@@ -1162,16 +1162,16 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
     } while (no_more === false);
   }
-  normalize_episode_profile(
-    profile: Pick<EpisodeProfileFromTMDB, "id" | "name" | "overview" | "air_date" | "runtime">
-  ) {
-    const { id, name, overview, air_date, runtime } = profile;
+  normalize_episode_profile(profile: EpisodeProfileFromTMDB) {
+    const { id, name, overview, air_date, runtime, episode_number, season_number } = profile;
     const body = {
       unique_id: String(id),
       name: name || null,
       overview: overview || null,
       air_date,
       runtime,
+      episode_number,
+      season_number,
     };
     return body;
   }
@@ -1365,6 +1365,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         overview: null,
         air_date: null,
         runtime: 0,
+        episode_number: 0,
+        season_number: 9999,
       };
       this.cached_episode_profiles[unique_id] = {
         ...payload,

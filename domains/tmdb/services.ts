@@ -446,13 +446,14 @@ export async function fetch_season_profile(
     overview,
     season_number,
     episodes: episodes.map((e) => {
-      const { id, air_date, overview, episode_number, name, runtime } = e;
+      const { id, air_date, overview, episode_number, season_number, name, runtime } = e;
       return {
         id,
         name,
         overview,
         air_date,
         episode_number,
+        season_number,
         runtime,
       };
     }),
@@ -510,14 +511,14 @@ export async function fetch_episode_profile(
     }
     return Result.Err(result.error);
   }
-  const { id, name, overview, air_date, runtime } = result.data;
+  const { id, name, overview, air_date, runtime, episode_number: e_n, season_number: s_n } = result.data;
   return Result.Ok({
     id,
     name,
     air_date,
     overview,
-    season_number,
-    episode_number: result.data.episode_number,
+    season_number: s_n,
+    episode_number: e_n,
     runtime,
   });
 }
