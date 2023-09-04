@@ -27,6 +27,16 @@ describe("番外", () => {
       episode: "BONUS",
     });
   });
+  test("一人之下手游泡面番 第4话 编剧的宠爱 720P(准高清).mp4", () => {
+    const name = "一人之下手游泡面番 第4话 编剧的宠爱 720P(准高清).mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "一人之下手游",
+      original_name: "",
+      season: "泡面番",
+      episode: "E04",
+    });
+  });
   test("[VCB-Studio] Ushio to Tora [NCOP03][Ma10p_1080p][x265_flac].mkv", () => {
     const name = "[VCB-Studio] Ushio to Tora [NCOP03][Ma10p_1080p][x265_flac].mkv";
     const result = parse_filename_for_video(name);

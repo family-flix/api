@@ -142,13 +142,15 @@ model episode_profile {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        unique_id String
-        source    Int?    @default(0)
-        sources   String? @default("")
-        name      String?
-        overview  String?
-        air_date  String?
-        runtime   Int?    @default(0)
+        unique_id      String
+        source         Int?    @default(0)
+        sources        String? @default("")
+        name           String?
+        overview       String?
+        air_date       String?
+        runtime        Int?    @default(0)
+        episode_number Int?
+        season_number  Int?
 
         episodes episode[]
 }
@@ -372,10 +374,10 @@ model season {
         user_id       String
         user          user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        parsed_season  parsed_season[]
+        parsed_season parsed_season[]
         // play_histories play_history[]
-        episodes       episode[]
-        reports        report[]
+        episodes      episode[]
+        reports       report[]
 
         @@unique([user_id, profile_id])
         @@map("Season")
