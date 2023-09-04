@@ -5,6 +5,8 @@ import { PrismaClient } from "@prisma/client";
 
 import { DatabaseStore } from "@/domains/store";
 
+let cached: null | DatabaseStore = null;
+
 /**
  * 确保某个路径必然存在
  * @param filepath
@@ -53,15 +55,22 @@ export class Application {
     ensure(path.join(this.assets, "poster"));
     ensure(path.join(this.assets, "thumbnail"));
     ensure(path.join(this.assets, "backdrop"));
-
-    this.store = new DatabaseStore(
-      new PrismaClient({
-        datasources: {
-          db: {
-            url: `file://${this.database_path}`,
+    (() => {
+      if (cached) {
+        this.store = cached;
+        return;
+      }
+      console.log("__new prisma client");
+      this.store = new DatabaseStore(
+        new PrismaClient({
+          datasources: {
+            db: {
+              url: `file://${this.database_path}`,
+            },
           },
-        },
-      })
-    );
+        })
+      );
+      cached = this.store;
+    })();
   }
 }
