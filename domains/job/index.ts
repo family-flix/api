@@ -10,6 +10,8 @@ import { r_id } from "@/utils";
 
 import { TaskStatus, TaskTypes } from "./constants";
 
+export * from "./constants";
+
 enum Events {}
 type TheTypesOfEvents = {};
 type JobNewProps = {

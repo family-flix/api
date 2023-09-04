@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 
 import { store } from "@/store";
 import { walk_records } from "@/domains/store/utils";
-import { TaskStatus } from "@/domains/job/constants";
+import { TaskStatus } from "@/domains/job";
 
 async function run() {
   walk_records(store.prisma.async_task, {}, async (task) => {

@@ -6,8 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
-import { Job } from "@/domains/job";
-import { TaskStatus, TaskTypes } from "@/domains/job/constants";
+import { Job, TaskStatus, TaskTypes } from "@/domains/job";
 import {
   ArticleLineNode,
   ArticleListItemNode,

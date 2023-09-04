@@ -1,4 +1,5 @@
 import { video_file_type_regexp, normalize_episode_text, remove_str, chinese_num_to_num, padding_zero } from "./index";
+import { get_first_letter } from "./pinyin";
 
 export const VIDEO_KEY_NAME_MAP = {
   name: "中文名称",
@@ -1238,4 +1239,24 @@ export function is_korean(text: string) {
     return true;
   }
   return false;
+}
+
+/**
+ * 构建一个带有首字母的电视剧名称
+ */
+export function build_tv_name(values: { name: string; original_name: string | null }) {
+  const { name, original_name } = values;
+  const first_char_pin_yin = get_first_letter(name);
+  const n = [first_char_pin_yin, name].filter(Boolean).join(" ");
+  const original_n = (() => {
+    if (name && name === original_name) {
+      return "";
+    }
+    if (!original_name) {
+      return "";
+    }
+    return original_name;
+  })().replace(/ /, "");
+  const name_with_pin_yin = [n, original_n].filter(Boolean).join(".");
+  return name_with_pin_yin;
 }
