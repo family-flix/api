@@ -29,6 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive_id: string;
     lang: string;
   }>;
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
+  }
+  const user = t_res.data;
   if (!tv_id) {
     return e(Result.Err("缺少电视剧 id"));
   }
@@ -41,11 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!lang) {
     return e(Result.Err("请传入字幕语言"));
   }
-  const t_res = await User.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res);
-  }
-  const user = t_res.data;
   const where: ModelQuery<typeof store.prisma.episode.findFirst>["where"] = {
     tv_id,
     episode_text,

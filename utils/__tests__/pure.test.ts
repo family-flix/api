@@ -149,6 +149,16 @@ describe("番外", () => {
       episode: "E04",
     });
   });
+  test("08-4K.mp4", () => {
+    const name = "08-4K.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E08",
+    });
+  });
   /** 各种其他信息，语言、分辨率等等 */
   test("外挂字幕", () => {
     const name = "外挂字幕";
@@ -212,6 +222,16 @@ describe("番外", () => {
   });
   test("1080P超前点映", () => {
     const name = "1080P超前点映";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("连续剧版", () => {
+    const name = "连续剧版";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",

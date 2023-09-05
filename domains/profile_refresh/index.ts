@@ -496,7 +496,9 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const page_size = 20;
     let page = 1;
     let no_more = false;
-    const where: ModelQuery<typeof this.store.prisma.movie.findMany>["where"] = {};
+    const where: ModelQuery<typeof this.store.prisma.movie.findMany>["where"] = {
+      user_id: this.user.id,
+    };
     const count = await this.store.prisma.movie.count({
       where,
     });
@@ -527,6 +529,18 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   ) {
     const { name, original_name, unique_id } = movie.profile;
     const correct_tmdb_id = extra ? extra.tmdb_id : Number(unique_id);
+    this.emit(
+      Events.Print,
+      new ArticleSectionNode({
+        children: [
+          new ArticleLineNode({
+            children: [`处理电影「${name || original_name}」`].map((text) => {
+              return new ArticleTextNode({ text: text! });
+            }),
+          }),
+        ],
+      })
+    );
     const r = await this.client.fetch_movie_profile(correct_tmdb_id);
     if (r.error) {
       return Result.Err(r.error);

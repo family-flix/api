@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { TV } from "@/domains/tv";
 import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
 import { parseJSONStr } from "@/utils";
@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     const file = file_res.data;
     if (!file) {
-      return e("没有匹配的视频源");
+      return e(Result.Err("没有匹配的视频源"));
     }
     const { drive_id } = file;
     const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
@@ -76,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     const drive = drive_res.data;
     if (!drive) {
-      return e("没有匹配的云盘记录");
+      return e(Result.Err("没有匹配的云盘记录"));
     }
     // const thumbnail_res = await tv.snapshot_media({
     //   file_id,

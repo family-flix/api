@@ -39,7 +39,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("熟肉")) {
+    if (!filename.includes("法比安")) {
       return;
     }
     // console.log(...args);
@@ -266,7 +266,11 @@ export function parse_filename_for_video(
     },
     {
       key: k("subtitle_lang"),
-      regexp: /([cChHtTsiISeEnNgG]{1,}&[cChHtTsiISeEnNgG]{1,}|简英)\./,
+      regexp: /2[ch]{2,}/,
+    },
+    {
+      key: k("subtitle_lang"),
+      regexp: /([cChHtTsiISeEnNgG]{2,}&[cChHtTsiISeEnNgG]{2,}|简英)\./,
       pick: [1],
     },
     {
@@ -334,7 +338,7 @@ export function parse_filename_for_video(
       regexp: /杜比视界/,
     },
     {
-      regexp: /高清|超清|超高清/,
+      regexp: /高清|超清|超高清|原码率\.{0,1}|小体积\.{0,1}/,
     },
     {
       regexp: /[1-9][0-9]{0,}分钟版/,
@@ -352,7 +356,7 @@ export function parse_filename_for_video(
       regexp: /高码|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
     },
     {
-      regexp: /多语版|网络版|劇場版|合成版|亚马逊版|\.Extended/,
+      regexp: /多语版|网络版|劇場版|合成版|连续剧版|亚马逊版|\.Extended/,
     },
     {
       regexp: /([0-9]{1,}部){0,1}剧场版/,
@@ -545,7 +549,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
-      regexp: /^[0-9]{1,}$/,
+      regexp: /^[0-9]{1,}(-|$)/,
       before() {
         cur_filename = cur_filename.replace(/^\.{2,}/, "").replace(/\.{1,}$/, "");
       },
@@ -1068,6 +1072,9 @@ export function parse_filename_for_video(
 function format_subtitle_lang(lang: string) {
   if (lang.includes("&")) {
     return lang;
+  }
+  if (lang.match(/2[cChH]{2,}/)) {
+    return "chi";
   }
   if (lang.match(/[zZ][hH]|[cC][hH][sS]/)) {
     return "chi";

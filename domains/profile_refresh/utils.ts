@@ -86,25 +86,27 @@ export function check_movie_need_refresh(
   existing_profile: MovieProfileRecord,
   cur: Unpacked<ReturnType<MediaSearcher["normalize_movie_profile"]>>
 ) {
-  const { name, overview, poster_path, backdrop_path, popularity } = cur;
   const body: Partial<typeof cur> = {};
   if (cur.unique_id && cur.unique_id !== existing_profile.unique_id) {
     body.unique_id = cur.unique_id;
   }
-  if (popularity !== null && popularity !== existing_profile.popularity) {
-    body.popularity = popularity;
+  if (cur.vote_average && cur.vote_average !== existing_profile.vote_average) {
+    body.vote_average = cur.vote_average;
   }
-  if (name !== null && name !== existing_profile.name) {
-    body.name = name;
+  if (cur.popularity !== null && cur.popularity !== existing_profile.popularity) {
+    body.popularity = cur.popularity;
   }
-  if (overview !== null && overview !== existing_profile.overview) {
-    body.overview = overview;
+  if (cur.name !== null && cur.name !== existing_profile.name) {
+    body.name = cur.name;
   }
-  if (poster_path !== null && poster_path !== existing_profile.poster_path) {
-    body.poster_path = poster_path;
+  if (cur.overview !== null && cur.overview !== existing_profile.overview) {
+    body.overview = cur.overview;
   }
-  if (backdrop_path !== null && backdrop_path !== existing_profile.backdrop_path) {
-    body.backdrop_path = backdrop_path;
+  if (cur.poster_path !== null && cur.poster_path !== existing_profile.poster_path) {
+    body.poster_path = cur.poster_path;
+  }
+  if (cur.backdrop_path !== null && cur.backdrop_path !== existing_profile.backdrop_path) {
+    body.backdrop_path = cur.backdrop_path;
   }
   if (cur.genres && cur.genres !== existing_profile.genres) {
     body.genres = cur.genres;

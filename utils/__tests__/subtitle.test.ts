@@ -74,4 +74,15 @@ describe("字幕", () => {
       subtitle_lang: "chi",
     });
   });
+  test("Friends.S01E01.The.One.Where.Monica.Gets.A.New.Roommate.DVDRip.AC3.3.2ch.JOG.srt", () => {
+    const name = "Friends.S01E01.The.One.Where.Monica.Gets.A.New.Roommate.DVDRip.AC3.3.2ch.JOG.srt";
+    const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "subtitle_lang"]);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Friends",
+      season: "S01",
+      episode: "E01",
+      subtitle_lang: "chi",
+    });
+  });
 });
