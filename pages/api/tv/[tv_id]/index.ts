@@ -4,7 +4,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 
@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
   if (!id) {
-    return e("缺少电视剧 id");
+    return e(Result.Err("缺少电视剧 id"));
   }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {

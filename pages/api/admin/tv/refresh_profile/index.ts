@@ -7,16 +7,15 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { Job } from "@/domains/job";
 import { TaskTypes } from "@/domains/job/constants";
+import { MediaSearcher } from "@/domains/searcher";
 import { ProfileRefresh } from "@/domains/profile_refresh";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
-import { MediaSearcher } from "@/domains/searcher";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -53,11 +52,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     on_print(node) {
       job.output.write(node);
     },
-    on_finish() {
-      job.finish();
-    },
   });
-  refresher.refresh_tv_list();
+  async function run() {
+    await refresher.refresh_tv_list();
+    job.finish();
+  }
+  run();
   res.status(200).json({
     code: 0,
     msg: "开始刷新",

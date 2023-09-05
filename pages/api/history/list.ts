@@ -27,14 +27,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page = Number(page_str);
   const page_size = Number(page_size_str);
   const where: NonNullable<Parameters<typeof store.prisma.play_history.findMany>[0]>["where"] = {
-    tv_id: {
-      not: null,
-    },
-    episode_id: {
-      not: null,
-    },
+    OR: [
+      {
+        AND: [
+          {
+            tv_id: {
+              not: null,
+            },
+          },
+          {
+            episode_id: {
+              not: null,
+            },
+          },
+        ],
+      },
+      {
+        movie_id: {
+          not: null,
+        },
+      },
+    ],
+
     member_id,
   };
+  const count = await store.prisma.play_history.count({
+    where,
+  });
   const list = await store.prisma.play_history.findMany({
     where,
     include: {
@@ -78,9 +97,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     skip: (page - 1) * page_size,
     take: page_size,
-  });
-  const count = await store.prisma.play_history.count({
-    where,
   });
   res.status(200).json({
     code: 0,

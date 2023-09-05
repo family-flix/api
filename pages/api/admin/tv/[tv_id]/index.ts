@@ -112,19 +112,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       size_count: source_size_count,
       incomplete,
       seasons: seasons.map((season) => {
-        const { id, season_number, profile } = season;
+        const { id, season_number, season_text, profile } = season;
         const { name, overview } = profile;
         return {
           id,
           name,
           season_number,
+          season_text,
           overview,
         };
       }),
       cur_season: {
         id: cur_season.id,
         name: cur_season.profile.name,
-        season_text: season_to_chinese_num(cur_season.season_text),
+        season_number: cur_season.season_number,
+        season_text: cur_season.season_text,
       },
       cur_season_episodes: await (async () => {
         if (!cur_season) {

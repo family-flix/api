@@ -214,10 +214,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           normalize_partial_tv(tv);
         const tips: string[] = [];
         if (binds.length !== 0 && valid_bind === null && tv.profile.in_production) {
-          tips.push("更新已失效");
+          tips.push("更新任务已失效");
         }
         if (tv.profile.in_production && incomplete && binds.length === 0) {
-          tips.push("未完结但缺少同步任务");
+          tips.push("未完结但缺少更新任务");
         }
         if (!tv.profile.in_production && incomplete) {
           tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);

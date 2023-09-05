@@ -252,4 +252,14 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("[原码率] 法比安.Fabian.oder.Der.Gang.vor.die.Hunde.2021.German.1080p.BluRay.x264-DETAiLS.chs.mp4", () => {
+    const name = "[原码率] 法比安.Fabian.oder.Der.Gang.vor.die.Hunde.2021.German.1080p.BluRay.x264-DETAiLS.chs.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "法比安",
+      original_name: "Fabian.oder.Der.Gang.vor.die.Hunde",
+      season: "",
+      episode: "",
+    });
+  });
 });

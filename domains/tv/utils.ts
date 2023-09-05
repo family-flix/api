@@ -165,7 +165,7 @@ export function normalize_partial_tv(
     valid_bind,
     incomplete,
     need_bind,
-    sync_task: incomplete && valid_bind ? valid_bind : null,
+    sync_task: valid_bind,
     tips,
   };
 }
