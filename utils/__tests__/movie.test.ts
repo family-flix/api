@@ -262,4 +262,14 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("乡村里的中国 H.264.mov", () => {
+    const name = "乡村里的中国 H.264.mov";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "乡村里的中国",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

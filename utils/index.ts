@@ -10,7 +10,8 @@ import { cn as nzhcn } from "./nzh/index";
 
 dayjs.locale("zh-cn");
 
-export const video_file_type_regexp = /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$/;
+export const video_file_type_regexp =
+  /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$|\.[mM][oO][vV]$/;
 
 export function add_zeros(n: number, m: number) {
   let str = n.toString();
@@ -94,18 +95,17 @@ export function episode_to_num(str: string) {
   return Number(s);
 }
 export function episode_to_chinese_num(str: string) {
-  const regex = /(\d+)/g;
-  let s = str.replace(/[eE]/g, "");
-  const matches = s.match(regex);
-  if (!matches) {
+  const num = str.match(/[0-9]{1,}/);
+  if (!num) {
     return str;
   }
-  for (let i = 0; i < matches.length; i++) {
-    const num = parseInt(matches[i], 10);
-    const chinese_num = num_to_chinese(num);
-    s = s.replace(matches[i], `第${chinese_num}集`);
+  const value = parseInt(num[0]);
+  const chinese_num = num_to_chinese(value);
+  const correct = chinese_num.match(/^一(十.{0,1})/);
+  if (correct) {
+    return `第${correct[1]}集`;
   }
-  return s;
+  return `第${chinese_num}集`;
 }
 export function season_to_num(str: string) {
   const regex = /(\d+)/g;
@@ -121,18 +121,17 @@ export function season_to_num(str: string) {
   return Number(s);
 }
 export function season_to_chinese_num(str: string) {
-  const regex = /(\d+)/g;
-  let s = str.replace(/[sS]/g, "");
-  const matches = s.match(regex);
-  if (!matches) {
+  const num = str.match(/[0-9]{1,}/);
+  if (!num) {
     return str;
   }
-  for (let i = 0; i < matches.length; i++) {
-    const num = parseInt(matches[i], 10);
-    const chinese_num = num_to_chinese(num);
-    s = s.replace(matches[i], `第${chinese_num}季`);
+  const value = parseInt(num[0]);
+  const chinese_num = num_to_chinese(value);
+  const correct = chinese_num.match(/^一(十.{0,1})/);
+  if (correct) {
+    return `第${correct[1]}季`;
   }
-  return s;
+  return `第${chinese_num}季`;
 }
 /**
  * 阿拉伯数字转中文数字

@@ -121,6 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const where: ModelQuery<typeof store.prisma.season.findMany>["where"] = {
     profile: {
       source: {
+        // 不是「其他」季
         not: MediaProfileSourceTypes.Other,
       },
     },

@@ -600,12 +600,14 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     })();
     if (created_res.data) {
       // console.log("创建电影详情成功", created_res.data);
-      const r = await this.store.update_movie(movie.id, {
-        profile_id: created_res.data.id,
+      await this.store.prisma.movie.update({
+        where: {
+          id: movie.id,
+        },
+        data: {
+          profile_id: created_res.data.id,
+        },
       });
-      if (r.error) {
-        return Result.Err(r.error);
-      }
     }
     return Result.Ok(normalized_profile);
   }

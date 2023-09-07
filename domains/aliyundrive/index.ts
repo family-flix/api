@@ -18,7 +18,9 @@ import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo } from "./types";
 import { prepare_upload_file } from "./utils";
 
 const API_HOST = "https://api.aliyundrive.com";
+const API_V2_HOST = "https://api.alipan.com";
 const MEMBER_API_HOST = "https://member.aliyundrive.com";
+const MEMBER_API_V2_HOST = "https://member.alipan.com";
 const PUBLIC_KEY =
   "04d9d2319e0480c840efeeb75751b86d0db0c5b9e72c6260a1d846958adceaf9dee789cab7472741d23aafc1a9c591f72e7ee77578656e6c8588098dea1488ac2a";
 const SIGNATURE =
@@ -1354,14 +1356,17 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   /**
    * 上传文件到云盘前，先调用该方法获取到上传地址
    */
-  async create_with_folder(body: {
-    content_hash: string;
-    name: string;
-    parent_file_id: string;
-    part_info_list: { part_number: number }[];
-    proof_code: string;
-    size: number;
-  }) {
+  async create_with_folder(
+    body: {
+      content_hash: string;
+      name: string;
+      parent_file_id: string;
+      part_info_list: { part_number: number }[];
+      proof_code: string;
+      size: number;
+    },
+    override?: { drive_id: string }
+  ) {
     await this.ensure_initialized();
     const url = "/adrive/v2/file/createWithFolders";
     const b = {
@@ -1372,7 +1377,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       proof_version: "v1",
       type: "file",
       device_name: "",
-      drive_id: String(this.drive_id),
+      drive_id: override ? override.drive_id : String(this.drive_id),
     };
     const r = await this.request.post<{
       parent_file_id: string;
@@ -1402,10 +1407,10 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   /**
    * 上传一个文件到指定文件夹
    */
-  async upload(file_buffer: Buffer, options: { name: string; parent_file_id: string }) {
+  async upload(file_buffer: Buffer, options: { name: string; parent_file_id: string; drive_id?: string }) {
     await this.ensure_initialized();
     const token = this.access_token;
-    const { name, parent_file_id = "root" } = options;
+    const { name, parent_file_id = "root", drive_id } = options;
     const existing_res = await this.existing(parent_file_id, name);
     if (existing_res.error) {
       return Result.Err(existing_res.error);
@@ -1416,14 +1421,17 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     const { content_hash, proof_code, size, part_info_list } = await prepare_upload_file(file_buffer, {
       token,
     });
-    const r = await this.create_with_folder({
-      content_hash,
-      proof_code,
-      part_info_list,
-      size,
-      name,
-      parent_file_id,
-    });
+    const r = await this.create_with_folder(
+      {
+        content_hash,
+        proof_code,
+        part_info_list,
+        size,
+        name,
+        parent_file_id,
+      },
+      { drive_id: drive_id || String(this.drive_id) }
+    );
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -1590,6 +1598,602 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       expired_at,
     });
   }
+  /**
+   * 获取相册基本信息
+   */
+  async fetch_album_summary() {
+    await this.ensure_initialized();
+    const r1 = await this.fetch_system_folders();
+    if (r1.error) {
+      return Result.Err(r1.error.message);
+    }
+    const album_drive = r1.data.items.find((folder) => {
+      return folder.type === "album";
+    });
+    if (!album_drive) {
+      return Result.Err("没有找到相册文件夹");
+    }
+    const album_drive_id = album_drive.driveId;
+    const url = "/adrive/v1/albumHome/summary";
+    const r = await this.request.post<{
+      photos: {
+        order: number;
+        items: {
+          name: string;
+          type: string;
+          total_count: number;
+          file_list: {
+            name: string;
+            thumbnail: string;
+            type: string;
+            category: string;
+            hidden: boolean;
+            status: string;
+            url: string;
+            size: number;
+            starred: boolean;
+            user_tags: {
+              channel: string;
+              client: string;
+              device_id: string;
+              device_name: string;
+              version: string;
+            };
+            mime_type: string;
+            parent_file_id: string;
+            drive_id: string;
+            file_id: string;
+            file_extension: string;
+            revision_id: string;
+            content_hash: string;
+            content_hash_name: string;
+            encrypt_mode: string;
+            domain_id: string;
+            download_url: string;
+            user_meta: string;
+            content_type: string;
+            created_at: string;
+            updated_at: string;
+            trashed_at: null;
+            punish_flag: number;
+            image_media_metadata: {
+              faces: string;
+              height: number;
+              image_quality: {
+                overall_score: number;
+              };
+              width: number;
+              exif: string;
+            };
+          }[];
+          album_id: string;
+        }[];
+      };
+      faces: {
+        order: number;
+        items: unknown[];
+      };
+      locations: {
+        order: number;
+        items: unknown[];
+      };
+      memories: {
+        order: number;
+        items: unknown[];
+      };
+      tags: {
+        order: number;
+        items: unknown[];
+      };
+      highlights: {
+        order: number;
+        items: unknown[];
+      };
+      more: {
+        order: number;
+        items: {
+          type: string;
+          total_count: number;
+        }[];
+      };
+      sharedAlbum: {
+        order: number;
+        driveId: string;
+        usedSize: number;
+        totalSize: number;
+        totalCount: number;
+        createdCount: number;
+        joinedCount: number;
+        showRedDot: boolean;
+        items: unknown[];
+      };
+      aiAlbum: {};
+      quick_access: {
+        order: number;
+        items: {
+          type: string;
+          name: string;
+          total_count: number;
+        }[];
+      };
+    }>(API_V2_HOST + url, {
+      album_drive_id,
+      drive_id: String(this.drive_id),
+    });
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    return Result.Ok(r.data);
+  }
+  async fetch_images_in_folders() {
+    await this.ensure_initialized();
+    const url = "/adrive/v1/sfiia/list_folder";
+    const r = await this.request.post<{
+      items: {
+        path: {
+          name: string;
+          drive_id: string;
+          file_id: string;
+        }[];
+        drive_id: string;
+        file_id: string;
+        created_at: string;
+        domain_id: string;
+        encrypt_mode: string;
+        hidden: boolean;
+        name: string;
+        parent_file_id: string;
+        starred: boolean;
+        status: string;
+        type: string;
+        updated_at: string;
+        sync_flag: boolean;
+        image_count: number;
+        latest_images: {
+          drive_id: string;
+          file_id: string;
+          category: string;
+          content_hash: string;
+          content_hash_name: string;
+          content_type: string;
+          crc64_hash: string;
+          created_at: string;
+          domain_id: string;
+          download_url: string;
+          encrypt_mode: string;
+          file_extension: string;
+          hidden: boolean;
+          image_media_metadata: {
+            exif: string;
+            height: number;
+            image_quality: {
+              overall_score: number;
+            };
+            image_tags: {
+              confidence: number;
+              name: string;
+              parent_name: string;
+              tag_level: number;
+            }[];
+            width: number;
+          };
+          labels: string[];
+          mime_type: string;
+          name: string;
+          parent_file_id: string;
+          punish_flag: number;
+          size: number;
+          starred: boolean;
+          status: string;
+          thumbnail: string;
+          type: string;
+          updated_at: string;
+          url: string;
+          sync_flag: boolean;
+        }[];
+      }[];
+      next_marker: string;
+    }>(API_V2_HOST + url, {
+      limit: 15,
+      drive_id_list: [String(this.drive_id)],
+      hidden: false,
+      order_direction: "DESC",
+      order_by: "created_at",
+    });
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    return Result.Ok({
+      items: r.data.items
+        .map((folder) => {
+          return folder.latest_images;
+        })
+        .reduce((total, cur) => {
+          return total.concat(cur);
+        }, []),
+      next_marker: r.data.next_marker,
+    });
+  }
+  async fetch_drives() {
+    await this.ensure_initialized();
+    const url = "/v2/drive/list_my_drives";
+    return this.request.post(API_V2_HOST + url, {
+      limit: 100,
+    });
+  }
+  /** 系统文件夹 */
+  async fetch_system_folders() {
+    await this.ensure_initialized();
+    const url = "/adrive/v1/file/getTopFolders";
+    return this.request.post<{
+      items: {
+        order: number;
+        // 相册、密码箱
+        type: "album" | "sbox";
+        driveId: string;
+        url: string;
+        redirectUrl: string;
+        id: string;
+        needPassword: boolean;
+        thumbnail: string;
+        name: string;
+      }[];
+    }>(API_V2_HOST + url, {});
+  }
+  /**
+   * 获取相册列表
+   */
+  async fetch_album_list() {
+    await this.ensure_initialized();
+    const r = await this.fetch_album_summary();
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    const {
+      photos: { items },
+    } = r.data;
+    const result = items
+      .filter((album) => {
+        const { type } = album;
+        if (type === "manual") {
+          return true;
+        }
+        return false;
+      })
+      .map((album) => {
+        const { name, type, total_count, album_id } = album;
+        return {
+          name,
+          type,
+          total_count,
+          album_id,
+        };
+      });
+    return Result.Ok(result);
+  }
+  /**
+   * 获取相册内文件列表
+   */
+  async fetch_album_file_list() {
+    await this.ensure_initialized();
+    const r = await this.fetch_album_summary();
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    const {
+      photos: { items },
+    } = r.data;
+    const result = items.find((album) => {
+      const { type } = album;
+      if (type === "default") {
+        return true;
+      }
+      return false;
+    });
+    if (!result) {
+      return Result.Err("异常2");
+    }
+    return Result.Ok(result.file_list);
+  }
+  async fetch_album_drive() {
+    const r1 = await this.fetch_system_folders();
+    if (r1.error) {
+      return Result.Err(r1.error.message);
+    }
+    const album_drive = r1.data.items.find((folder) => {
+      return folder.type === "album";
+    });
+    if (!album_drive) {
+      return Result.Err("没有找到相册盘");
+    }
+    const album_drive_id = album_drive.driveId;
+    return Result.Ok({
+      drive_id: album_drive_id,
+    });
+  }
+  /**
+   * 获取相册列表
+   */
+  async fetch_files_of_album_drive() {
+    await this.ensure_initialized();
+    const album_drive_res = await this.fetch_album_drive();
+    if (album_drive_res.error) {
+      return Result.Err(album_drive_res);
+    }
+    const { drive_id } = album_drive_res.data;
+    const url = "/adrive/v1/albumHome/summary";
+    const r = await this.request.post<{
+      photos: {
+        order: number;
+        items: {
+          name: string;
+          type: string;
+          total_count: number;
+          file_list: {
+            name: string;
+            thumbnail: string;
+            type: string;
+            category: string;
+            hidden: boolean;
+            status: string;
+            url: string;
+            size: number;
+            starred: boolean;
+            user_tags: {
+              channel: string;
+              client: string;
+              device_id: string;
+              device_name: string;
+              version: string;
+            };
+            mime_type: string;
+            parent_file_id: string;
+            drive_id: string;
+            file_id: string;
+            file_extension: string;
+            revision_id: string;
+            content_hash: string;
+            content_hash_name: string;
+            encrypt_mode: string;
+            domain_id: string;
+            download_url: string;
+            user_meta: string;
+            content_type: string;
+            created_at: string;
+            updated_at: string;
+            trashed_at: null;
+            punish_flag: number;
+            image_media_metadata: {
+              faces: string;
+              height: number;
+              image_quality: {
+                overall_score: number;
+              };
+              width: number;
+              exif: string;
+            };
+          }[];
+          album_id: string;
+        }[];
+      };
+      faces: {
+        order: number;
+        items: unknown[];
+      };
+      locations: {
+        order: number;
+        items: unknown[];
+      };
+      memories: {
+        order: number;
+        items: unknown[];
+      };
+      tags: {
+        order: number;
+        items: unknown[];
+      };
+      highlights: {
+        order: number;
+        items: unknown[];
+      };
+      more: {
+        order: number;
+        items: {
+          type: string;
+          total_count: number;
+        }[];
+      };
+      sharedAlbum: {
+        order: number;
+        driveId: string;
+        usedSize: number;
+        totalSize: number;
+        totalCount: number;
+        createdCount: number;
+        joinedCount: number;
+        showRedDot: boolean;
+        items: unknown[];
+      };
+      aiAlbum: {};
+      quick_access: {
+        order: number;
+        items: {
+          type: string;
+          name: string;
+          total_count: number;
+        }[];
+      };
+    }>(API_V2_HOST + url, {
+      album_drive_id: drive_id,
+      drive_id: String(this.drive_id),
+    });
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    const {
+      photos: { items },
+    } = r.data;
+    const d = items.find((album) => {
+      const { type } = album;
+      if (type === "default") {
+        return true;
+      }
+      return false;
+    });
+    if (!d) {
+      return Result.Err("异常1");
+    }
+    return Result.Ok(
+      d.file_list.map((file) => {
+        const { name, file_id } = file;
+        return {
+          name,
+          file_id,
+        };
+      })
+    );
+  }
+  /**
+   * 创建一个相册
+   */
+  async create_album(values: { name: string }) {
+    const { name } = values;
+    await this.ensure_initialized();
+    const url = "/adrive/v1/album/create";
+    return this.request.post<{
+      owner: string;
+      name: string;
+      description: string;
+      album_id: string;
+      file_count: number;
+      image_count: number;
+      video_count: number;
+      created_at: number;
+      updated_at: number;
+    }>(API_V2_HOST + url, {
+      name,
+    });
+  }
+  async delete_album(values: { album_id: string }) {
+    const { album_id } = values;
+    await this.ensure_initialized();
+    const url = "/adrive/v1/album/delete";
+    return this.request.post<{}>(API_V2_HOST + url, {
+      album_id,
+    });
+  }
+  async upload_files_to_album() {}
+  async find_album(name: string, parent_file_id: string = "root") {
+    const album_list_res = await this.fetch_album_list();
+    if (album_list_res.error) {
+      return Result.Err(album_list_res);
+    }
+    const matched = album_list_res.data.find((album) => {
+      return album.name === name;
+    });
+    if (!matched) {
+      return Result.Err("没有匹配的记录");
+    }
+    return Result.Ok(matched);
+  }
+  /**
+   * 选择云盘内文件到相册
+   */
+  async save_files_to_album(values: { file_id: string; drive_id: string; album_id: string }) {
+    const { file_id, album_id, drive_id } = values;
+    await this.ensure_initialized();
+    const url = "/adrive/v1/album/add_files";
+    const body = {
+      drive_file_list: [
+        {
+          filedsMeta__: {
+            1: {
+              fieldId: 1,
+              clazz: "NSString",
+              name: "drive_id",
+              typeEnum: 0,
+            },
+            2: {
+              fieldId: 2,
+              clazz: "NSString",
+              name: "drive_id",
+              typeEnum: 0,
+            },
+          },
+          drive_id,
+          file_id,
+        },
+      ],
+      album_id,
+    };
+    return this.request.post<{}>(API_V2_HOST + url, body);
+  }
+  /**
+   * 获取相册详情
+   */
+  async fetch_album(values: { album_id: string }) {
+    await this.ensure_initialized();
+    const url = "/adrive/v1/album/get";
+    return this.request.post<{
+      owner: string;
+      name: string;
+      description: string;
+      cover: {
+        list: {
+          trashed: boolean;
+          drive_id: string;
+          file_id: string;
+          category: string;
+          content_hash: string;
+          content_hash_name: string;
+          content_type: string;
+          crc64_hash: string;
+          created_at: string;
+          domain_id: string;
+          download_url: string;
+          encrypt_mode: string;
+          file_extension: string;
+          hidden: boolean;
+          image_media_metadata: {
+            exif: string;
+            faces: string;
+            height: number;
+            image_quality: {
+              overall_score: number;
+            };
+            image_tags: {
+              confidence: number;
+              name: string;
+              parent_name: string;
+              tag_level: number;
+            }[];
+            width: number;
+          };
+          labels: string[];
+          mime_type: string;
+          name: string;
+          parent_file_id: string;
+          punish_flag: number;
+          size: number;
+          starred: boolean;
+          status: string;
+          thumbnail: string;
+          type: string;
+          updated_at: string;
+          upload_id: string;
+          url: string;
+          user_meta: string;
+          ex_fields_info: {};
+        }[];
+      };
+      album_id: string;
+      file_count: number;
+      image_count: number;
+      video_count: number;
+      created_at: number;
+      updated_at: number;
+    }>(API_V2_HOST + url, values);
+  }
   /** 签到 */
   async checked_in() {
     const r = await this.ensure_initialized();
@@ -1744,6 +2348,112 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       },
       {
         Host: "member.aliyundrive.com",
+      }
+    );
+    if (error) {
+      return Result.Err(error);
+    }
+    const { success, message } = data;
+    if (!success) {
+      return Result.Err(message as string);
+    }
+    const { result } = data;
+    return Result.Ok(result);
+  }
+  /** 获取当天签到任务/奖励列表 */
+  async fetch_rewards_v2() {
+    const r = await this.ensure_initialized();
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { error, data } = await this.request.post<{
+      success: boolean;
+      code: string;
+      message: string;
+      totalCount: null;
+      nextToken: null;
+      maxResults: null;
+      result: {
+        isSignIn: boolean;
+        month: string;
+        day: string;
+        signInDay: number;
+        blessing: string;
+        subtitle: string;
+        themeIcon: string;
+        theme: string;
+        action: string;
+        rewards: {
+          name: string;
+          nameIcon: string;
+          type: string;
+          actionText: null;
+          action: null;
+          status: "unfinished" | "finished";
+          // 如果任务完成了就是使用说明。没完成就是任务说明
+          remind: string;
+          remindIcon: string;
+          expire: null;
+          position: number;
+        }[];
+      };
+      arguments: null;
+    }>(
+      MEMBER_API_V2_HOST + "/v2/activity/sign_in_info",
+      {},
+      {
+        Host: "member.alipan.com",
+      }
+    );
+    if (error) {
+      return Result.Err(error);
+    }
+    const { success, message } = data;
+    if (!success) {
+      return Result.Err(message as string);
+    }
+    const {
+      result: { month, day, rewards },
+    } = data;
+    return Result.Ok({
+      month,
+      day,
+      rewards,
+    });
+  }
+  /** 领取奖励 */
+  async receive_reward_v2(day: number) {
+    const r = await this.ensure_initialized();
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { error, data } = await this.request.post<{
+      success: boolean;
+      code: null;
+      message: string | null;
+      totalCount: null;
+      nextToken: null;
+      maxResults: null;
+      result: {
+        goodsId: number;
+        name: string;
+        description: string;
+        background: string;
+        color: string;
+        action: string;
+        detailAction: string;
+        notice: string;
+        bottleId: null;
+        bottleName: null;
+      };
+      arguments: null;
+    }>(
+      MEMBER_API_HOST + "/v2/activity/sign_in_task_reward",
+      {
+        signInDay: day,
+      },
+      {
+        Host: "member.alipan.com",
       }
     );
     if (error) {

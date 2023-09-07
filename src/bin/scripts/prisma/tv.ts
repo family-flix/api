@@ -1,8 +1,10 @@
+require("dotenv").config();
+
 import { store } from "@/store";
 
 async function main() {
   const tv = {
-    name: "外婆D新世界",
+    name: "因为你",
     original_name: "",
   };
   // await store.prisma.tV.update({
@@ -13,33 +15,39 @@ async function main() {
   //     original_name: null,
   //   },
   // });
-  // const res = await store.prisma.tV.findFirst({
-  //   where: {
-  //     OR: [
-  //       {
-  //         name: {
-  //           not: null,
-  //           equals: tv.name,
-  //         },
-  //       },
-  //       {
-  //         original_name: {
-  //           not: null,
-  //           equals: tv.original_name,
-  //         },
-  //       },
-  //     ],
-  //   },
-  // });
-  const res = await store.prisma.episode.update({
+  const res = await store.prisma.tv.findFirst({
     where: {
-      id: "kh5TtHbRSMTeogQ",
+      profile: {
+        OR: [
+          {
+            name: {
+              // not: null,
+              contains: tv.name,
+            },
+          },
+          {
+            original_name: {
+              // not: null,
+              contains: tv.original_name,
+            },
+          },
+        ],
+      },
     },
-    data: {
-      tv_id: "6MISmavsGBaFEtK",
+    include: {
+      profile: true,
     },
   });
   console.log(res);
+  // const res = await store.prisma.episode.update({
+  //   where: {
+  //     id: "kh5TtHbRSMTeogQ",
+  //   },
+  //   data: {
+  //     tv_id: "6MISmavsGBaFEtK",
+  //   },
+  // });
+  // console.log(res);
 }
 
 main();
