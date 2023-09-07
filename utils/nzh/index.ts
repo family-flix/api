@@ -30,7 +30,7 @@ function cl(
 ) {
   const result = utils.getNumbResult(num);
   if (!result) {
-    return num;
+    return String(num);
   }
   const { ch = "", ch_u = "", ch_f = "", ch_d = "." } = options;
   // 零
@@ -43,11 +43,7 @@ function cl(
   var decimal = "";
   var minus = _minus ? ch_f : ""; //符号位
 
-  const encodeInt = function encodeInt(
-    _int: string,
-    _m?: unknown,
-    _dg?: unknown
-  ) {
+  const encodeInt = function encodeInt(_int: string, _m?: unknown, _dg?: unknown) {
     _int = utils.getNumbResult(_int)!.int;
     var int = "";
     var tenm = arguments.length > 1 ? arguments[1] : options.tenMin;
@@ -60,8 +56,7 @@ function cl(
       // 四位及以下
       for (var i = 0, n = _length; n--; ) {
         var _num = +_int.charAt(i);
-        int +=
-          tenm && _length == 2 && i == 0 && _num == 1 ? "" : ch.charAt(_num);
+        int += tenm && _length == 2 && i == 0 && _num == 1 ? "" : ch.charAt(_num);
         int += _num && n ? ch_u.charAt(n) : "";
         i++;
       }
@@ -105,9 +100,7 @@ function cl(
       dw_y = ch_u.charAt(5);
     var lasty = int.lastIndexOf(dw_y);
     if (~lasty) {
-      int =
-        int.substring(0, lasty).replace(new RegExp(dw_y, "g"), dw_w + dw_w) +
-        int.substring(lasty);
+      int = int.substring(0, lasty).replace(new RegExp(dw_y, "g"), dw_w + dw_w) + int.substring(lasty);
     }
   }
 

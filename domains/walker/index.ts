@@ -158,10 +158,8 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   constructor(options: FolderWalkerProps) {
     super();
 
-    const { filename_rules, on_print } = options;
-    if (filename_rules) {
-      this.filename_rules = filename_rules;
-    }
+    const { filename_rules = [], on_print } = options;
+    this.filename_rules = filename_rules;
 
     if (on_print) {
       this.on_print(on_print);

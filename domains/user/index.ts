@@ -311,4 +311,36 @@ export class User {
       data: {},
     });
   }
+  get_filename_rules() {
+    const { extra_filename_rules = "" } = this.settings;
+    if (!extra_filename_rules) {
+      return [];
+    }
+    const rules = extra_filename_rules.split("\n\n").map((rule) => {
+      const [regexp, placeholder] = rule.split("\n");
+      return {
+        regexp,
+        placeholder,
+      };
+    });
+    const valid_rules = rules
+      .filter((rule) => {
+        const { regexp, placeholder } = rule;
+        if (!regexp || !placeholder) {
+          return false;
+        }
+        try {
+          new RegExp(regexp);
+        } catch (err) {
+          return false;
+        }
+        return true;
+      })
+      .map((rule) => {
+        return {
+          replace: [rule.regexp, rule.placeholder] as [string, string],
+        };
+      });
+    return valid_rules;
+  }
 }

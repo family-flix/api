@@ -1251,7 +1251,7 @@ export function is_korean(text: string) {
 /**
  * 构建一个带有首字母的电视剧名称
  */
-export function build_tv_name(values: { name: string; original_name: string | null }) {
+export function build_tv_name(values: { name: string | null; original_name: string | null }) {
   const { name, original_name } = values;
   const first_char_pin_yin = get_first_letter(name);
   const n = [first_char_pin_yin, name].filter(Boolean).join(" ");

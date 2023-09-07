@@ -17,17 +17,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { movie_id } = req.query as Partial<{ movie_id: string }>;
   const { tmdb_id } = req.body as { tmdb_id: string };
-  if (!movie_id) {
-    return e("缺少电影 id");
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
+  }
+  if (!movie_id) {
+    return e(Result.Err("缺少电影 id"));
   }
   const user = t_res.data;
   const movie = await store.prisma.movie.findFirst({
     where: {
       id: movie_id,
+      user_id: user.id,
     },
     include: {
       profile: true,

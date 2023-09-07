@@ -85,4 +85,26 @@ describe("字幕", () => {
       subtitle_lang: "chi",
     });
   });
+  test("Friends.S01E21.The.One.With.The.Fake.Monica.DVDRip.AC3.3.2ch.JOG.srt", () => {
+    const name = "Friends.S01E21.The.One.With.The.Fake.Monica.DVDRip.AC3.3.2ch.JOG.srt";
+    const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "subtitle_lang"]);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Friends",
+      season: "S01",
+      episode: "E21",
+      subtitle_lang: "chi",
+    });
+  });
+  test("Friends.S01E02.1994.BluRay.1080p.x265.10bit.MNHD-FRDS.ass", () => {
+    const name = "Friends.S01E02.1994.BluRay.1080p.x265.10bit.MNHD-FRDS.ass";
+    const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "subtitle_lang"]);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Friends",
+      season: "S01",
+      episode: "E02",
+      subtitle_lang: "",
+    });
+  });
 });
