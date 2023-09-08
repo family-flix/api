@@ -71,6 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const list = await store.prisma.season.findMany({
     where,
     include: {
+      profile: true,
       tv: {
         include: {
           profile: true,
@@ -106,7 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         id,
         tv_id,
         name: profile.name,
-        poster_path: profile.poster_path,
+        poster_path: season.profile.poster_path || profile.poster_path,
         episodes: episodes.map((episode) => {
           const { id, episode_text, subtitles } = episode;
           return {

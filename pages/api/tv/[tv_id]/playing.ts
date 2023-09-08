@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (seasons.length === 0) {
     return e(Result.Err("该电视剧暂无季信息"));
   }
-  console.log("[]seasons", seasons);
+  // console.log("[]seasons", seasons);
   const target_season = (() => {
     if (season_id) {
       return {

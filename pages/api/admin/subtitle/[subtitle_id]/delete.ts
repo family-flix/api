@@ -39,13 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(drive_res);
   }
   const drive = drive_res.data;
-  const r = await drive.client.delete_file(subtitle.file_id);
-  if (r.error) {
-    return e(r);
-  }
-  await store.prisma.subtitle.deleteMany({
+  await drive.client.delete_file(subtitle.file_id);
+  await store.prisma.subtitle.delete({
     where: {
-      file_id: subtitle.file_id,
+      id: subtitle.id,
     },
   });
   await store.prisma.file.deleteMany({

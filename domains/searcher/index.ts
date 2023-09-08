@@ -511,7 +511,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       this.emit(
         Events.Print,
         new ArticleLineNode({
-          children: [`[${prefix}]`, "新增电视剧详情成功"].map((text) => {
+          children: [`[${prefix}]`, "新增电视剧详情成功，匹配的电视剧是", ` [${profile.name}]`].map((text) => {
             return new ArticleTextNode({ text });
           }),
         })
@@ -1589,7 +1589,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       this.emit(
         Events.Print,
         new ArticleLineNode({
-          children: [`[${prefix}]`, "新增电影详情成功"].map((text) => {
+          children: [`[${prefix}]`, "新增电影详情成功，匹配的电影是", ` [${profile.name}]`].map((text) => {
             return new ArticleTextNode({ text });
           }),
         })
