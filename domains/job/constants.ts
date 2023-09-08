@@ -22,4 +22,6 @@ export enum TaskTypes {
   Transfer,
   /** 删除云盘内文件 */
   DeleteDriveFile,
+  /** 上传字幕 */
+  UploadSubtitle,
 }

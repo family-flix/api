@@ -107,4 +107,15 @@ describe("字幕", () => {
       subtitle_lang: "",
     });
   });
+  test("Friends.S02E01.1995.BluRay.1080p.x265.10bit.MNHD-FRDS.ass", () => {
+    const name = "Friends.S02E01.1995.BluRay.1080p.x265.10bit.MNHD-FRDS.ass";
+    const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "subtitle_lang"]);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Friends",
+      season: "S02",
+      episode: "E01",
+      subtitle_lang: "",
+    });
+  });
 });

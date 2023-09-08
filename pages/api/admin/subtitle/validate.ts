@@ -12,6 +12,7 @@ import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import {
   EpisodeRecord,
   ParsedEpisodeRecord,
+  SeasonProfileRecord,
   SeasonRecord,
   TVProfileRecord,
   TVProfileWhereInput,
@@ -33,35 +34,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (filenames.length === 0) {
     return e(Result.Err("缺少字幕文件名"));
   }
-  // if (!tv_id) {
-  //   return e(Result.Err("缺少电视剧 id"));
-  // }
-  // const tv = await store.prisma.tv.findFirst({
-  //   where: {
-  //     id: tv_id,
-  //     user_id: user.id,
-  //   },
-  //   include: {
-  //     seasons: {
-  //       include: {
-  //         profile: true,
-  //       },
-  //     },
-  //     episodes: {
-  //       include: {
-  //         profile: true,
-  //         parsed_episodes: {
-  //           include: {
-  //             drive: true,
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // });
-  // if (!tv) {
-  //   return e(Result.Err("没有匹配的电视剧记录"));
-  // }
   const result: {
     filename: string;
     season_text?: string;
@@ -73,6 +45,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     episode: null | {
       id: string;
       name: string;
+      season: null | {
+        id: string;
+        name: string;
+      };
     };
     language?: string;
   }[] = [];
@@ -84,7 +60,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       name: string | null;
       original_name: string | null;
       poster_path: string | null;
-      seasons: SeasonRecord[];
+      seasons: (SeasonRecord & {
+        profile: SeasonProfileRecord;
+      })[];
       episodes: (EpisodeRecord & { parsed_episodes: ParsedEpisodeRecord[] })[];
     }
   > = {};
@@ -153,7 +131,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             ],
           });
         }
-        const r = await store.prisma.tv.findMany({
+        const r = await store.prisma.tv.findFirst({
           where: {
             profile: {
               OR: queries,
@@ -162,7 +140,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
           include: {
             profile: true,
-            seasons: true,
+            seasons: {
+              include: {
+                profile: true,
+              },
+            },
             episodes: {
               include: {
                 parsed_episodes: true,
@@ -170,10 +152,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             },
           },
         });
-        if (r.length === 0) {
+        if (!r) {
           return null;
         }
-        const t = r[0];
+        // const t = r[0];
+        const t = r;
         return {
           id: t.id,
           name: t.profile.name,
@@ -186,31 +169,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (!tv) {
         return;
       }
-      tvs[k] = tv;
+      tvs[k] = {
+        ...tv,
+      };
       const matched_season = tv.seasons.find((season) => {
         if (season_text && season.season_text === season_text) {
           return true;
         }
-        const a = season.season_text.match(/[0-9]{1,}/);
-        const b = season_text.match(/[0-9]{1,}/);
-        if (!a || !b) {
+        const season_number1 = season.season_text.match(/[0-9]{1,}/);
+        const season_number2 = season_text.match(/[0-9]{1,}/);
+        if (!season_number1 || !season_number2) {
           return false;
         }
-        if (parseInt(a[0]) === parseInt(b[0])) {
+        if (parseInt(season_number1[0]) === parseInt(season_number2[0])) {
           return true;
         }
         return false;
       });
+      if (matched_season && matched_season.profile.poster_path) {
+        tvs[k] = {
+          ...tvs[k],
+          poster_path: matched_season.profile.poster_path,
+        };
+      }
       const matched_episode = tv.episodes.find((episode) => {
-        if (episode.episode_text === episode_text) {
+        if (episode.episode_text === episode_text && episode.season_text === season_text) {
           return true;
         }
-        const a = episode.episode_text.match(/[0-9]{1,}/);
-        const b = episode_text.match(/[0-9]{1,}/);
-        if (!a || !b) {
+        const episode_number1 = episode.episode_text.match(/[0-9]{1,}/);
+        const episode_number2 = episode_text.match(/[0-9]{1,}/);
+        const season_number1 = episode.season_text.match(/[0-9]{1,}/);
+        const season_number2 = season_text.match(/[0-9]{1,}/);
+        if (!episode_number1 || !episode_number2 || !season_number1 || !season_number2) {
           return false;
         }
-        if (parseInt(a[0]) === parseInt(b[0])) {
+        if (
+          parseInt(episode_number1[0]) === parseInt(episode_number2[0]) &&
+          parseInt(season_number1[0]) === parseInt(season_number2[0])
+        ) {
           return true;
         }
         return false;
@@ -254,6 +250,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           ? {
               id: matched_episode.id,
               name: matched_episode.episode_text,
+              season: {
+                id: matched_episode.season_id,
+                name: matched_episode.season_text,
+              },
             }
           : null,
         episode_text,

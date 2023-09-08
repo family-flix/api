@@ -14,13 +14,16 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { r_id } from "@/utils";
 import { build_tv_name } from "@/utils/parse_filename_for_video";
+import { TVProfileRecord, TVRecord } from "@/domains/store/types";
+import { Job, TaskTypes } from "@/domains/job";
+import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-const formidableConfig = {
+const formidable_config = {
   keepExtensions: true,
   maxFileSize: 10_000_000,
   maxFieldsSize: 10_000_000,
@@ -28,65 +31,30 @@ const formidableConfig = {
   allowEmptyFiles: false,
   multiples: true,
 };
-function formidablePromise(
+function formidable_promise(
   req: NextApiRequest,
   opts?: Parameters<typeof formidable>[0]
 ): Promise<{ fields: formidable.Fields; files: formidable.Files }> {
-  return new Promise((accept, reject) => {
+  return new Promise((resolve, reject) => {
     const form = formidable(opts);
-    // form.addListener("file", (name, file) => {
-    //   console.log("file in listen", name, file);
-    // });
     form.parse(req, (err, fields, files) => {
       if (err) {
         return reject(err);
       }
-      return accept({ fields, files });
+      return resolve({ fields, files });
     });
   });
 }
-const fileConsumer = <T = unknown>(acc: T[]) => {
-  const writable = new Writable({
-    write: (chunk, _enc, next) => {
-      acc.push(chunk);
-      next();
-    },
-  });
 
-  return writable;
-};
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
+  const { tv_id, drive_id } = req.query as Partial<{ tv_id: string; drive_id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  // const chunks: never[] = [];
-  const { fields, files: files_form } = await formidablePromise(req, {
-    ...formidableConfig,
-    // consume this, otherwise formidable tries to save the file to disk
-    // fileWriteStreamHandler: () => {
-    //   return fileConsumer(chunks);
-    // },
-  });
-  const tv_id = fields.tv[0];
-  const payloads = fields.payloads.map((p) => {
-    return JSON.parse(p);
-  }) as {
-    filename: string;
-    season_id: string;
-    episode_id: string;
-    language: string;
-  }[];
-  const drive_id = fields.drive[0];
-  // console.log(tv_id, drive_id);
-  // console.log(payloads);
-  const files = payloads.map((p) => {
-    return files_form[p.episode_id][0];
-  });
-  // console.log(files);
   if (!tv_id) {
     return e(Result.Err("缺少电视剧 id"));
   }
@@ -113,69 +81,169 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (drive_res.error) {
     return e(drive_res);
   }
-  const client = drive_res.data.client;
-  for (let i = 0; i < files.length; i += 1) {
-    await (async () => {
-      const file = files[i];
-      const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
-      const payload = payloads.find((p) => {
-        return p.filename === filename;
-      });
-      if (!payload) {
-        return;
-      }
-      const { season_id, episode_id, language } = payload;
-      const season_res = await store.find_season({ id: season_id });
-      if (season_res.error) {
-        return;
-      }
-      const season = season_res.data;
-      if (!season) {
-        return;
-      }
-      const episode_res = await store.find_episode({ id: episode_id });
-      if (episode_res.error) {
-        return;
-      }
-      const episode = episode_res.data;
-      if (!episode) {
-        return;
-      }
-      const file_buffer = fs.readFileSync(filepath);
-      const correct_filename = filename || tmp_filename;
-      const name_and_original_name = build_tv_name(tv.profile);
-      const folder_res = await client.ensure_dir([
-        "_flix_subtitles",
-        [name_and_original_name, season.season_text].filter(Boolean).join("."),
-        episode.episode_text,
-      ]);
-      if (folder_res.error) {
-        return e(folder_res);
-      }
-      const parent_folder = folder_res.data.pop();
-      if (!parent_folder) {
-        return e(Result.Err("创建字幕文件夹失败"));
-      }
-      const r = await client.upload(file_buffer, {
-        name: correct_filename,
-        parent_file_id: parent_folder.file_id,
-      });
-      if (r.error) {
-        return e(r);
-      }
-      await store.prisma.subtitle.create({
-        data: {
-          id: r_id(),
-          file_id: r.data.file_id,
-          name: correct_filename,
-          language,
-          episode_id: episode.id,
-          drive_id,
-          user_id: user.id,
-        },
-      });
-      fs.unlinkSync(filepath);
-    })();
+  const task_res = await Job.New({
+    type: TaskTypes.UploadSubtitle,
+    desc: `为 ${tv.profile.name} 上传字幕`,
+    unique_id: tv_id,
+    user_id: user.id,
+    store,
+  });
+  if (task_res.error) {
+    return e(task_res);
   }
-  res.status(200).json({ code: 0, msg: "上传成功", data: null });
+  const task = task_res.data;
+  const client = drive_res.data.client;
+  const { fields, files: files_form } = await formidable_promise(req, formidable_config);
+  const payloads = fields.payloads.map((p) => {
+    return JSON.parse(p);
+  }) as {
+    filename: string;
+    season_id: string;
+    episode_id: string;
+    language: string;
+  }[];
+  const files = payloads.map((p) => {
+    return files_form[p.episode_id][0];
+  });
+  async function run(tv: TVRecord & { profile: TVProfileRecord }, drive_id: string) {
+    for (let i = 0; i < files.length; i += 1) {
+      await (async () => {
+        const file = files[i];
+        const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
+        const prefix = [filename].join(".");
+        const payload = payloads.find((p) => {
+          return p.filename === filename;
+        });
+        task.output.write(
+          new ArticleLineNode({
+            children: [""].map((text) => new ArticleTextNode({ text })),
+          })
+        );
+        task.output.write(
+          new ArticleLineNode({
+            children: [prefix].map((text) => new ArticleTextNode({ text })),
+          })
+        );
+        if (!payload) {
+          task.output.write(
+            new ArticleLineNode({
+              children: ["没有字幕信息"].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+          return;
+        }
+        const { season_id, episode_id, language } = payload;
+        const season_res = await store.find_season({ id: season_id });
+        if (season_res.error) {
+          new ArticleLineNode({
+            children: ["获取季失败"].map((text) => new ArticleTextNode({ text })),
+          });
+          return;
+        }
+        const season = season_res.data;
+        if (!season) {
+          task.output.write(
+            new ArticleLineNode({
+              children: ["没有匹配的季"].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+          return;
+        }
+        const episode_res = await store.find_episode({ id: episode_id });
+        if (episode_res.error) {
+          task.output.write(
+            new ArticleLineNode({
+              children: ["获取集失败"].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+          return;
+        }
+        const episode = episode_res.data;
+        if (!episode) {
+          task.output.write(
+            new ArticleLineNode({
+              children: ["没有匹配的集"].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+          return;
+        }
+        const correct_filename = filename || tmp_filename;
+        const existing = await store.prisma.subtitle.findFirst({
+          where: {
+            name: correct_filename,
+            episode_id: episode.id,
+            language,
+            drive_id,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          task.output.write(
+            new ArticleLineNode({
+              children: ["存在同名字幕文件"].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+          return;
+        }
+        const file_buffer = fs.readFileSync(filepath);
+        const name_and_original_name = build_tv_name(tv.profile);
+        const dir = [
+          "_flix_subtitles",
+          [name_and_original_name, season.season_text].filter(Boolean).join("."),
+          episode.episode_text,
+        ];
+        const folder_res = await client.ensure_dir(dir);
+        if (folder_res.error) {
+          task.output.write(
+            new ArticleLineNode({
+              children: ["创建字幕文件夹", dir.join("/"), "失败"].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+          return;
+        }
+        const parent_folder = folder_res.data.pop();
+        if (!parent_folder) {
+          task.output.write(
+            new ArticleLineNode({
+              children: ["创建字幕文件夹", dir.join("/"), "失败"].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+          return;
+        }
+        const r = await client.upload(file_buffer, {
+          name: correct_filename,
+          parent_file_id: parent_folder.file_id,
+        });
+        if (r.error) {
+          return e(r);
+        }
+        await store.prisma.subtitle.create({
+          data: {
+            id: r_id(),
+            file_id: r.data.file_id,
+            name: correct_filename,
+            language,
+            episode_id: episode.id,
+            drive_id,
+            user_id: user.id,
+          },
+        });
+        task.output.write(
+          new ArticleLineNode({
+            children: ["上传成功"].map((text) => new ArticleTextNode({ text })),
+          })
+        );
+        fs.unlinkSync(filepath);
+      })();
+    }
+    task.finish();
+  }
+  run(tv, drive_id);
+  res.status(200).json({
+    code: 0,
+    msg: "开始上传",
+    data: {
+      job_id: task.id,
+    },
+  });
 }
