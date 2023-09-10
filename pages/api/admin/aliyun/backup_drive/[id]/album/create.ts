@@ -1,5 +1,5 @@
 /**
- * @file 获取阿里云盘 相册列表
+ * @file 创建阿里云盘相册
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -14,6 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
+  const { name } = req.body as Partial<{ name: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -22,12 +23,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e(Result.Err("缺少云盘 id"));
   }
-  const drive_res = await Drive.Get({ id, user_id: user.id, store });
+  if (!name) {
+    return e(Result.Err("缺少相册名称"));
+  }
+  const drive_res = await Drive.Get({ id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }
   const drive = drive_res.data;
-  const data_res = await drive.client.fetch_album_list();
+  const data_res = await drive.client.create_album({ name });
   if (data_res.error) {
     return e(data_res);
   }

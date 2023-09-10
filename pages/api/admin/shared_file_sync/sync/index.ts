@@ -120,7 +120,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       for (let i = 0; i < drives.length; i += 1) {
         await (async () => {
           const { id, name } = drives[i];
-          const drive_res = await Drive.Get({ id, user_id: user.id, store });
+          const drive_res = await Drive.Get({ id, user, store });
           if (drive_res.error) {
             return;
           }

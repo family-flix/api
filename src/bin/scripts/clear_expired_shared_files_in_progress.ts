@@ -1,4 +1,4 @@
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { DatabaseStore } from "@/domains/store";
 import { walk_records } from "@/domains/store/utils";
 import { Result } from "@/types";
@@ -10,11 +10,11 @@ export async function clear_expired_shared_files_in_progress(store: DatabaseStor
     return;
   }
   const drive = drives[0];
-  const d_res = await parseJSONStr<{ drive_id: number }>(drive.profile);
+  const d_res = parseJSONStr<{ drive_id: number }>(drive.profile);
   if (d_res.error) {
     return;
   }
-  const client_res = await AliyunDriveClient.Get({ drive_id: d_res.data.drive_id, store });
+  const client_res = await AliyunBackupDriveClient.Get({ drive_id: String(d_res.data.drive_id), store });
   if (client_res.error) {
     return;
   }

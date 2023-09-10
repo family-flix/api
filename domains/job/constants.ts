@@ -8,6 +8,10 @@ export enum TaskTypes {
   DriveAnalysis = 0,
   /** 电视剧转存 */
   TVTransfer,
+  /** 电影转存 */
+  MovieTransfer,
+  /** 移动电影/电视剧到阿里云资源盘 */
+  MoveToResourceDrive,
   /** 搜索影视剧详情 */
   SearchMedia,
   /** 电视剧更新 */

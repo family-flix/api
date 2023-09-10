@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("该影片没有可播放的视频源");
   }
   const { file_id, drive_id } = source;
-  const drive_res = await Drive.Get({ id: drive_id, user_id: member.user.id, store });
+  const drive_res = await Drive.Get({ id: drive_id, user: member.user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

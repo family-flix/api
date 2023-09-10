@@ -28,11 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  const drive_res = await Drive.Get({
-    id: "O2wsuqkBwNehfXe",
-    user_id: user.id,
-    store,
-  });
+  const drive_res = await Drive.Get({ id: "O2wsuqkBwNehfXe", user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

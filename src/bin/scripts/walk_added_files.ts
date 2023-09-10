@@ -3,7 +3,7 @@
  */
 import dayjs from "dayjs";
 
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 
 import { FileType } from "@/constants";
 import { DatabaseStore } from "@/domains/store";
@@ -52,12 +52,12 @@ export async function walk_added_files(store: DatabaseStore) {
     if (!root_folder_id || !root_folder_name) {
       continue;
     }
-    const d_res = await parseJSONStr<{ drive_id: number }>(drive.profile);
+    const d_res = parseJSONStr<{ drive_id: number }>(drive.profile);
     if (d_res.error) {
       return;
     }
     const { drive_id } = d_res.data;
-    const client_res = await AliyunDriveClient.Get({ drive_id, store });
+    const client_res = await AliyunBackupDriveClient.Get({ drive_id: String(drive_id), store });
     if (client_res.error) {
       continue;
     }

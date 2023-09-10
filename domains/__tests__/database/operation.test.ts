@@ -39,7 +39,7 @@ describe("删除文件夹及子孙文件夹", async () => {
             user_id: "something",
             root_folder_id: "",
           },
-          user_id: user.id,
+          user: user.id,
         },
         store,
         {

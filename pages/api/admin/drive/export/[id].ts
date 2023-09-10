@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
   if (!id) {
-    return e("缺少云盘 id");
+    return e(Result.Err("缺少云盘 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -27,22 +27,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (drive_res.error) {
     return e(drive_res);
   }
-
   const drive_record = drive_res.data;
   if (!drive_record) {
-    return e("没有匹配的云盘记录");
+    return e(Result.Err("没有匹配的云盘记录"));
   }
   const { type, profile, avatar, name, root_folder_id, total_size, used_size } = drive_record;
 
   const data_res = await (async () => {
-    if (type === DriveTypes.Aliyun) {
-      const p_res = await parseJSONStr(profile);
+    if (type === DriveTypes.AliyunBackupDrive) {
+      const p_res = parseJSONStr(profile);
       if (p_res.error) {
         return Result.Err(p_res.error);
       }
       const { app_id, drive_id, device_id, user_id } = p_res.data;
       const drive_token_res = await store.find_aliyun_drive_token({
-        drive_id: drive_record.id,
+        id: drive_record.drive_token_id,
       });
       if (drive_token_res.error) {
         return Result.Err(drive_token_res.error);
@@ -51,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         return Result.Err("没有匹配的云盘凭证记录");
       }
       const { data } = drive_token_res.data;
-      const d_res = await parseJSONStr(data);
+      const d_res = parseJSONStr(data);
       if (d_res.error) {
         return Result.Err(d_res.error);
       }

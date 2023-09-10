@@ -1,5 +1,6 @@
 /**
  * @file 管理后台/电视剧详情
+ * @deprecated
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -85,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (tv === null) {
     return e(Result.Err("没有匹配的电视剧记录"));
   }
-  const target_drive_res = await Drive.Get({ id: target_drive_id, user_id, store });
+  const target_drive_res = await Drive.Get({ id: target_drive_id, user, store });
   if (target_drive_res.error) {
     return e(target_drive_res);
   }
@@ -169,7 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (source_drive_id === target_drive_id) {
         continue;
       }
-      const source_drive_res = await Drive.Get({ id: source_drive_id, user_id, store });
+      const source_drive_res = await Drive.Get({ id: source_drive_id, user, store });
       if (source_drive_res.error) {
         job.finish();
         continue;

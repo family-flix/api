@@ -30,8 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id, settings } = user;
-  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }
@@ -42,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const tmp_folders = await store.prisma.tmp_file.findMany({
     where: {
       drive_id,
-      user_id,
+      user_id: user.id,
     },
   });
   if (tmp_folders.length === 0) {
@@ -52,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `快速索引云盘 '${drive.name}'`,
     type: TaskTypes.DriveAnalysis,
     unique_id: drive.id,
-    user_id,
+    user_id: user.id,
     store,
   });
   if (job_res.error) {
@@ -62,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const r2 = await DriveAnalysis.New({
     drive,
     user,
-    tmdb_token: settings.tmdb_token,
+    tmdb_token: user.settings.tmdb_token,
     assets: app.assets,
     store,
     on_print(v) {

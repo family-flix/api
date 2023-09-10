@@ -58,7 +58,7 @@ export class Member {
       store,
     });
     let permissions: string[] = [];
-    const json_res = await parseJSONStr(member.permission);
+    const json_res = parseJSONStr(member.permission);
     if (json_res.data) {
       permissions = json_res.data as unknown as string[];
     }

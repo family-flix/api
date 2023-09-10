@@ -4,26 +4,28 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { Drive } from "@/domains/drive";
+import { User } from "@/domains/user";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const { file_id, user_id, drive_id } = req.query as Partial<{
+  const { authorization } = req.headers;
+  const { file_id, drive_id } = req.query as Partial<{
     file_id: string;
-    user_id: string;
     drive_id: string;
   }>;
   if (!drive_id) {
-    return e("缺少云盘 id");
+    return e(Result.Err("缺少云盘 id"));
   }
-  if (!user_id) {
-    return e("缺少云盘 id");
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
   }
-  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  const user = t_res.data;
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

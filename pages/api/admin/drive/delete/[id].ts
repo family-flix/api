@@ -21,8 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t.error) {
     return e(t);
   }
-  const { id: user_id } = t.data;
-  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  const user = t.data;
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

@@ -107,6 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         id,
         tv_id,
         name: profile.name,
+        season_text: season.season_text,
         poster_path: season.profile.poster_path || profile.poster_path,
         episodes: episodes.map((episode) => {
           const { id, episode_text, subtitles } = episode;

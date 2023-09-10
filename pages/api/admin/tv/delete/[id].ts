@@ -25,7 +25,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id } = user;
   const tv_res = await store.find_tv({
     id,
     user_id,
@@ -66,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       for (let j = 0; j < parsed_episodes.length; j += 1) {
         const parsed_episode = parsed_episodes[j];
         const { drive_id, file_id } = parsed_episode;
-        const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+        const drive_res = await Drive.Get({ id: drive_id, user, store });
         if (drive_res.error) {
           continue;
         }
@@ -123,7 +124,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const parsed_season = parsed_seasons[j];
         const { drive_id, file_id } = parsed_season;
         if (file_id) {
-          const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+          const drive_res = await Drive.Get({ id: drive_id, user, store });
           if (drive_res.error) {
             continue;
           }
@@ -191,7 +192,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const parsed_tv = list[i];
       const { drive_id, file_id } = parsed_tv;
       if (file_id) {
-        const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+        const drive_res = await Drive.Get({ id: drive_id, user, store });
         if (drive_res.error) {
           continue;
         }

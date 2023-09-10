@@ -14,11 +14,13 @@ import { BaseDomain } from "@/domains/base";
 import { parseJSONStr, query_stringify, sleep } from "@/utils";
 import { Result, Unpacked } from "@/types";
 
-import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo } from "./types";
+import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo, AliyunDriveProfile, AliyunDriveClient } from "./types";
 import { prepare_upload_file } from "./utils";
+import { AliyunResourceClient } from "./resource";
 
 const API_HOST = "https://api.aliyundrive.com";
 const API_V2_HOST = "https://api.alipan.com";
+const USER_API_HOST = "https://user.aliyundrive.com";
 const MEMBER_API_HOST = "https://member.aliyundrive.com";
 const MEMBER_API_V2_HOST = "https://member.alipan.com";
 const PUBLIC_KEY =
@@ -26,15 +28,15 @@ const PUBLIC_KEY =
 const SIGNATURE =
   "f4b7bed5d8524a04051bd2da876dd79afe922b8205226d65855d02b267422adb1e0d8a816b021eaf5c36d101892180f79df655c5712b348c2a540ca136e6b22001";
 const COMMENT_HEADERS = {
-  authority: "api.aliyundrive.com",
-  Host: "api.aliyundrive.com",
+  // authority: "api.aliyundrive.com",
+  // Host: "api.aliyundrive.com",
   Cookie:
     "_nk_=t-2213376065375-52; _tb_token_=5edd38eb839fa; cookie2=125d9fb93ba60bae5e04cf3a4f1844ce; csg=7be2d6ea; munb=2213376065375; t=cc514082229d35fa6e4cb77f9607a31a; isg=BPv7iSICHO8ckiBhqmD_qx8rgNtlUA9S5UNxz-241_oRTBsudSCfohmeYGIC92dK; l=Al1dbs-eO-pLLQIH1VDqMyQKbSJXe5HM; cna=XiFcHCbGiCMCAX14pqXhM/U9",
   "content-type": "application/json; charset=UTF-8",
   accept: "*/*",
   "x-umt": "xD8BoI9LPBwSmhKGWfJem6nHQ7xstNFA",
   "x-sign": "izK9q4002xAAJGGHrNSHxqaOJAfmJGGEYjdc0ltNpMTdx5GeaXDSRaCtwKwEG0Rt2xgVv6dPLJBixqXoMb0l07OzsyxxtGGEYbRhhG",
-  "x-canary": "client=iOS,app=adrive,version=v4.1.3",
+  "x-canary": "client=web,app=adrive,version=v4.9.0",
   "x-sgext":
     "JAdnylkEyyzme4p+deZ0j8pS+lbpVvxQ/FXpVvhV6UT7Uf1R/Fb7X/5V6Vf6V/xX+lf6V/pX+lf6V/pE+kT6RPpX6Vf6V/pE+kT6RPpE+kT6RPpE+kT6RPpX+lf6",
   "accept-language": "en-US,en;q=0.9",
@@ -66,7 +68,9 @@ type TheTypesOfEvents = {
 };
 type AliyunDriveProps = {
   id: string;
-  drive_id: number;
+  drive_id: string;
+  token_id?: string;
+  resource_drive_id?: string;
   device_id: string;
   root_folder_id: string | null;
   access_token: string;
@@ -74,8 +78,8 @@ type AliyunDriveProps = {
   store: DatabaseStore;
 };
 
-export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
-  static async Get(options: Partial<{ drive_id: number; store: DatabaseStore }>) {
+export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
+  static async Get(options: Partial<{ drive_id: string; store: DatabaseStore }>) {
     const { drive_id, store } = options;
     if (!store) {
       return Result.Err("缺少数据库实例");
@@ -83,37 +87,32 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (!drive_id) {
       return Result.Err("缺少云盘 id");
     }
-    const aliyun_drive_res = await store.find_drive({
-      unique_id: String(drive_id),
+    const drive = await store.prisma.drive.findFirst({
+      where: {
+        unique_id: String(drive_id),
+      },
+      include: {
+        drive_token: true,
+      },
     });
-    if (aliyun_drive_res.error) {
-      return Result.Err(aliyun_drive_res.error);
-    }
-    if (!aliyun_drive_res.data) {
+    if (!drive) {
       return Result.Err("没有匹配的云盘记录");
     }
-    const profile = aliyun_drive_res.data;
-    const { id, profile: p, root_folder_id } = profile;
-    const r = await parseJSONStr<{ device_id: string }>(p);
+    const { id, profile: p, root_folder_id, drive_token_id } = drive;
+    const r = parseJSONStr<AliyunDriveProfile>(p);
     if (r.error) {
       return Result.Err(r.error);
     }
-    const { device_id } = r.data;
+    const { device_id, resource_drive_id } = r.data;
     const token_res = await (async () => {
-      const aliyun_drive_token_res = await store.find_aliyun_drive_token({
-        drive_id: profile.id,
-      });
-      if (aliyun_drive_token_res.error) {
-        return Result.Err(aliyun_drive_token_res.error);
-      }
-      if (!aliyun_drive_token_res.data) {
+      if (!drive.drive_token) {
         return Result.Err("没有匹配的云盘凭证记录");
       }
-      const { id: token_id, data } = aliyun_drive_token_res.data;
+      const { id: token_id, data } = drive.drive_token;
       if (data === null) {
         return Result.Err("云盘凭证缺少 refresh_token");
       }
-      const r2 = await parseJSONStr<{
+      const r2 = parseJSONStr<{
         refresh_token: string;
         access_token: string;
       }>(data);
@@ -133,17 +132,20 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (token_res.error) {
       return Result.Err(token_res.error);
     }
-    const { access_token, refresh_token } = token_res.data;
-    const drive = new AliyunDriveClient({
-      id,
-      drive_id,
-      device_id,
-      root_folder_id,
-      access_token,
-      refresh_token,
-      store,
-    });
-    return Result.Ok(drive);
+    const { id: token_id, access_token, refresh_token } = token_res.data;
+    return Result.Ok(
+      new AliyunBackupDriveClient({
+        id,
+        drive_id,
+        device_id,
+        token_id,
+        resource_drive_id,
+        root_folder_id,
+        access_token,
+        refresh_token,
+        store,
+      })
+    );
   }
 
   /** 数据库云盘id */
@@ -151,7 +153,8 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   /** 数据库凭证 id */
   token_id: string | null = null;
   /** 阿里云盘 id */
-  drive_id: number;
+  drive_id: string;
+  resource_drive_id?: string;
   /** 设备id */
   device_id: string;
   root_folder_id: string | null;
@@ -179,9 +182,14 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   constructor(options: AliyunDriveProps) {
     super();
 
-    const { id, drive_id, device_id, root_folder_id, access_token, refresh_token, store } = options;
+    const { id, drive_id, resource_drive_id, token_id, device_id, root_folder_id, access_token, refresh_token, store } =
+      options;
     this.id = id;
     this.drive_id = drive_id;
+    if (token_id) {
+      this.token_id = token_id;
+    }
+    this.resource_drive_id = resource_drive_id;
     this.device_id = device_id;
     this.root_folder_id = root_folder_id;
     this.access_token = access_token;
@@ -196,7 +204,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
         const headers = {
           ...COMMENT_HEADERS,
           authorization: this.access_token,
-          "x-device-id": this.device_id,
+          "X-Device-Id": this.device_id,
           "x-signature": SIGNATURE,
         };
         try {
@@ -259,9 +267,13 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   }
   /** 初始化所有信息 */
   async init() {
+    // console.log("[DOMAIN]aliyundrive - init", this.token_id);
     const token_res = await (async () => {
+      if (!this.token_id) {
+        return Result.Err("缺少 token_id");
+      }
       const aliyun_drive_token_res = await this.store.find_aliyun_drive_token({
-        drive_id: this.id,
+        id: this.token_id,
       });
       if (aliyun_drive_token_res.error) {
         return Result.Err(aliyun_drive_token_res.error);
@@ -270,7 +282,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
         return Result.Err("没有匹配的云盘凭证记录");
       }
       const { id: token_id, data, expired_at } = aliyun_drive_token_res.data;
-      const r = await parseJSONStr<{
+      const r = parseJSONStr<{
         refresh_token: string;
         access_token: string;
       }>(data);
@@ -302,8 +314,20 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
         refresh_token,
       });
     })();
+    // console.log("[DOMAIN]aliyundrive - init", token_res.data);
     if (token_res.error) {
-      return Result.Err(token_res.error);
+      return Result.Err(token_res.error.message);
+    }
+    if (!this.resource_drive_id) {
+      const r3 = await this.ping();
+      // console.log("[DOMAIN]AliyunResourceDrive - init", r3.data, this.resource_drive_id);
+      if (r3.error) {
+        return Result.Err(r3.error.message);
+      }
+      await this.update_profile({
+        resource_drive_id: r3.data.resource_drive_id,
+      });
+      this.resource_drive_id = r3.data.resource_drive_id;
     }
     const { access_token, refresh_token } = token_res.data;
     this.access_token = access_token;
@@ -322,7 +346,10 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   async refresh_profile() {
-    await this.ensure_initialized();
+    const a = await this.ensure_initialized();
+    if (a.error) {
+      return Result.Err(a.error);
+    }
     const r = await this.request.post<{
       drive_used_size: number;
       drive_total_size: number;
@@ -336,13 +363,8 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r.error);
     }
     const { drive_total_size, drive_used_size } = r.data;
-    // await this.store.update_aliyun_drive(this.id, {
-    //   total_size: drive_total_size,
-    //   used_size: drive_used_size,
-    // });
     this.used_size = drive_used_size;
     this.total_size = drive_total_size;
-
     return Result.Ok({
       id: this.id,
       used_size: this.used_size,
@@ -1485,13 +1507,213 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(null);
   }
-  async ping() {
-    // await this.ensure_initialized();
-    const r = await this.request.post(API_HOST + "/adrive/v2/user/get", {});
+  async move_file_to_resource_drive(values: { file_ids: string[] }) {
+    const { file_ids } = values;
+    await this.ensure_initialized();
+    if (!this.resource_drive_id) {
+      return Result.Err("请先初始化资源盘信息");
+    }
+    const resource_client_res = await AliyunResourceClient.Get({ drive_id: this.resource_drive_id, store: this.store });
+    if (resource_client_res.error) {
+      return Result.Err(resource_client_res.error.message);
+    }
+    const resource_client = resource_client_res.data;
+    if (!resource_client.root_folder_id) {
+      return Result.Err("请先设置资源索引根目录");
+    }
+    console.log(
+      "[DOMAIN]aliyundriv/index",
+      resource_client.root_folder_id,
+      this.resource_drive_id,
+      file_ids,
+      this.drive_id
+    );
+    const url = "/adrive/v2/file/crossDriveCopy";
+    const r = await this.request.post<{
+      items: {
+        drive_id: string;
+        file_id: string;
+        source_drive_id: string;
+        source_file_id: string;
+        status: number;
+        async_task_id: string;
+      }[];
+    }>(API_HOST + url, {
+      from_drive_id: String(this.drive_id),
+      from_file_ids: file_ids,
+      to_parent_fileId: resource_client.root_folder_id,
+      to_drive_id: this.resource_drive_id,
+    });
     if (r.error) {
       return Result.Err(r.error);
     }
+    console.log("[DOMAIN]aliyundriv/index - before v2/batch", r.data.items);
+    const r2 = await this.request.post<{
+      responses: {
+        body: {
+          code: string;
+          message: string;
+          async_task_id?: string;
+          file_id: string;
+          domain_id: string;
+        };
+        // 其实是 index
+        id: string;
+        status: number;
+      }[];
+    }>(API_HOST + "/adrive/v2/batch", {
+      requests: r.data.items
+        .filter((task) => {
+          return !!task.async_task_id;
+        })
+        .map((task) => {
+          const { async_task_id } = task;
+          return {
+            id: async_task_id,
+            method: "POST",
+            url: "/async_task/get",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: {
+              async_task_id,
+            },
+          };
+        }),
+      resource: "file",
+    });
+    if (r2.error) {
+      this.emit(Events.TransferFailed, r2.error);
+      return Result.Err(r2.error);
+    }
+    const responses = r2.data.responses.map((resp) => {
+      // console.log("1", resp);
+      const { id, status, body } = resp;
+      return {
+        id,
+        index: Number(id) + 1,
+        status,
+        body,
+      };
+    });
+    const async_task_list = responses
+      .map((resp) => {
+        return resp.body.async_task_id;
+      })
+      .filter((id) => {
+        if (!id) {
+          return false;
+        }
+        return true;
+      }) as string[];
+    if (async_task_list.length !== 0) {
+      await sleep(1000);
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["获取任务状态"].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
+      const r = await run(
+        async () => {
+          await sleep(3000);
+          const r2 = await this.fetch_multiple_async_task({ async_task_ids: async_task_list });
+          if (r2.error) {
+            // const err = new Error("转存状态未知，可尝试重新转存");
+            return {
+              error: r2.error,
+              finished: false,
+              data: null,
+            };
+          }
+          const { responses } = r2.data;
+          this.emit(
+            Events.Print,
+            new ArticleSectionNode({
+              children: [
+                new ArticleLineNode({
+                  children: [dayjs().format("HH:mm")].map((text) => new ArticleTextNode({ text })),
+                }),
+              ].concat(
+                responses.map((resp) => {
+                  const { body, id } = resp;
+                  return new ArticleLineNode({
+                    children: [id, body.status].map((text) => new ArticleTextNode({ text })),
+                  });
+                })
+              ),
+            })
+          );
+          const finished = responses.every((resp) => {
+            return ["PartialSucceed", "Succeed"].includes(resp.body.status);
+          });
+          if (finished) {
+            return {
+              finished: true,
+              error: null,
+              data: null,
+            };
+          }
+          return {
+            finished: false,
+            error: null,
+            data: null,
+          };
+        },
+        {
+          timeout: 10 * 60 * 1000,
+        }
+      );
+      if (r.error) {
+        return Result.Err(r.error);
+      }
+    }
     return Result.Ok(null);
+  }
+  async ping() {
+    // await this.ensure_initialized();
+    const r = await this.request.post<{
+      avatar: string;
+      email: string;
+      phone: string;
+      role: string;
+      status: string;
+      description: string;
+      punishments: null;
+      creator: string;
+      backup_drive_id: string;
+      resource_drive_id: string;
+      user_id: string;
+      domain_id: string;
+      user_name: string;
+      nick_name: string;
+      default_drive_id: string;
+      sbox_drive_id: null;
+      created_at: number;
+      updated_at: number;
+      user_data: {};
+      punish_flag: null;
+      default_location: string;
+      deny_change_password_by_self: boolean;
+      expire_at: null;
+      last_login_time: number;
+      need_change_password_next_login: boolean;
+      phone_region: string;
+      vip_identity: string;
+      creator_level: null;
+    }>(USER_API_HOST + "/v2/user/get", {});
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    if (!this.resource_drive_id) {
+      await this.update_profile({
+        resource_drive_id: r.data.resource_drive_id,
+      });
+      this.resource_drive_id = r.data.resource_drive_id;
+    }
+    return Result.Ok(r.data);
   }
   /** 文件移入回收站 */
   async to_trash(file_id: string) {
@@ -1598,11 +1820,61 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       expired_at,
     });
   }
-  /**
-   * 获取相册基本信息
-   */
+
+  async update_profile(values: Partial<AliyunDriveProfile>) {
+    const drive_res = await this.store.find_drive({
+      id: this.id,
+    });
+    if (drive_res.error) {
+      return Result.Err(drive_res.error.message);
+    }
+    const drive = drive_res.data;
+    if (!drive) {
+      return Result.Err("没有匹配的云盘");
+    }
+    const { profile: p } = drive;
+    const r2 = parseJSONStr<AliyunDriveProfile>(p);
+    if (r2.error) {
+      return Result.Err(r2.error);
+    }
+    const prev_profile = r2.data;
+    const next_profile = {
+      ...prev_profile,
+      ...values,
+    };
+    const r = await this.store.update_drive(this.id, {
+      profile: JSON.stringify(next_profile),
+    });
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    return Result.Ok(next_profile);
+  }
+  /** 系统文件夹/系统盘 */
+  async fetch_system_folders() {
+    await this.ensure_initialized();
+    const url = "/adrive/v1/file/getTopFolders";
+    return this.request.post<{
+      items: {
+        order: number;
+        // 相册、密码箱
+        type: "album" | "sbox";
+        driveId: string;
+        url: string;
+        redirectUrl: string;
+        id: string;
+        needPassword: boolean;
+        thumbnail: string;
+        name: string;
+      }[];
+    }>(API_V2_HOST + url, {});
+  }
+  /** 获取相册盘基本信息 */
   async fetch_album_summary() {
     await this.ensure_initialized();
+    // 获取相册盘 id
+    // https://api.aliyundrive.com/adrive/v1/user/albums_info
+    // driveId : "229110670" driveName : "alibum"
     const r1 = await this.fetch_system_folders();
     if (r1.error) {
       return Result.Err(r1.error.message);
@@ -1814,6 +2086,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       next_marker: r.data.next_marker,
     });
   }
+  /** 不知道干嘛 */
   async fetch_drives() {
     await this.ensure_initialized();
     const url = "/v2/drive/list_my_drives";
@@ -1821,28 +2094,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       limit: 100,
     });
   }
-  /** 系统文件夹 */
-  async fetch_system_folders() {
-    await this.ensure_initialized();
-    const url = "/adrive/v1/file/getTopFolders";
-    return this.request.post<{
-      items: {
-        order: number;
-        // 相册、密码箱
-        type: "album" | "sbox";
-        driveId: string;
-        url: string;
-        redirectUrl: string;
-        id: string;
-        needPassword: boolean;
-        thumbnail: string;
-        name: string;
-      }[];
-    }>(API_V2_HOST + url, {});
-  }
-  /**
-   * 获取相册列表
-   */
+  /** 获取相册列表 */
   async fetch_album_list() {
     await this.ensure_initialized();
     const r = await this.fetch_album_summary();
@@ -1871,9 +2123,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       });
     return Result.Ok(result);
   }
-  /**
-   * 获取相册内文件列表
-   */
+  /** 获取相册盘内文件列表 */
   async fetch_album_file_list() {
     await this.ensure_initialized();
     const r = await this.fetch_album_summary();
@@ -1895,6 +2145,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(result.file_list);
   }
+  /** 获取相册盘 */
   async fetch_album_drive() {
     const r1 = await this.fetch_system_folders();
     if (r1.error) {
@@ -1911,151 +2162,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       drive_id: album_drive_id,
     });
   }
-  /**
-   * 获取相册列表
-   */
-  async fetch_files_of_album_drive() {
-    await this.ensure_initialized();
-    const album_drive_res = await this.fetch_album_drive();
-    if (album_drive_res.error) {
-      return Result.Err(album_drive_res);
-    }
-    const { drive_id } = album_drive_res.data;
-    const url = "/adrive/v1/albumHome/summary";
-    const r = await this.request.post<{
-      photos: {
-        order: number;
-        items: {
-          name: string;
-          type: string;
-          total_count: number;
-          file_list: {
-            name: string;
-            thumbnail: string;
-            type: string;
-            category: string;
-            hidden: boolean;
-            status: string;
-            url: string;
-            size: number;
-            starred: boolean;
-            user_tags: {
-              channel: string;
-              client: string;
-              device_id: string;
-              device_name: string;
-              version: string;
-            };
-            mime_type: string;
-            parent_file_id: string;
-            drive_id: string;
-            file_id: string;
-            file_extension: string;
-            revision_id: string;
-            content_hash: string;
-            content_hash_name: string;
-            encrypt_mode: string;
-            domain_id: string;
-            download_url: string;
-            user_meta: string;
-            content_type: string;
-            created_at: string;
-            updated_at: string;
-            trashed_at: null;
-            punish_flag: number;
-            image_media_metadata: {
-              faces: string;
-              height: number;
-              image_quality: {
-                overall_score: number;
-              };
-              width: number;
-              exif: string;
-            };
-          }[];
-          album_id: string;
-        }[];
-      };
-      faces: {
-        order: number;
-        items: unknown[];
-      };
-      locations: {
-        order: number;
-        items: unknown[];
-      };
-      memories: {
-        order: number;
-        items: unknown[];
-      };
-      tags: {
-        order: number;
-        items: unknown[];
-      };
-      highlights: {
-        order: number;
-        items: unknown[];
-      };
-      more: {
-        order: number;
-        items: {
-          type: string;
-          total_count: number;
-        }[];
-      };
-      sharedAlbum: {
-        order: number;
-        driveId: string;
-        usedSize: number;
-        totalSize: number;
-        totalCount: number;
-        createdCount: number;
-        joinedCount: number;
-        showRedDot: boolean;
-        items: unknown[];
-      };
-      aiAlbum: {};
-      quick_access: {
-        order: number;
-        items: {
-          type: string;
-          name: string;
-          total_count: number;
-        }[];
-      };
-    }>(API_V2_HOST + url, {
-      album_drive_id: drive_id,
-      drive_id: String(this.drive_id),
-    });
-    if (r.error) {
-      return Result.Err(r.error.message);
-    }
-    const {
-      photos: { items },
-    } = r.data;
-    const d = items.find((album) => {
-      const { type } = album;
-      if (type === "default") {
-        return true;
-      }
-      return false;
-    });
-    if (!d) {
-      return Result.Err("异常1");
-    }
-    return Result.Ok(
-      d.file_list.map((file) => {
-        const { name, file_id } = file;
-        return {
-          name,
-          file_id,
-        };
-      })
-    );
-  }
-  /**
-   * 创建一个相册
-   */
+  /** 创建一个相册 */
   async create_album(values: { name: string }) {
     const { name } = values;
     await this.ensure_initialized();
@@ -2074,6 +2181,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       name,
     });
   }
+  /** 删除指定相册 */
   async delete_album(values: { album_id: string }) {
     const { album_id } = values;
     await this.ensure_initialized();
@@ -2083,6 +2191,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     });
   }
   async upload_files_to_album() {}
+  /** 根据名称查找相册 */
   async find_album(name: string, parent_file_id: string = "root") {
     const album_list_res = await this.fetch_album_list();
     if (album_list_res.error) {
@@ -2126,7 +2235,52 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       ],
       album_id,
     };
-    return this.request.post<{}>(API_V2_HOST + url, body);
+    return this.request.post<{
+      file_list: {
+        trashed: boolean;
+        drive_id: string;
+        file_id: string;
+        category: string;
+        content_hash: string;
+        content_hash_name: string;
+        content_type: string;
+        crc64_hash: string;
+        created_at: string;
+        domain_id: string;
+        download_url: string;
+        encrypt_mode: string;
+        file_extension: string;
+        hidden: boolean;
+        image_media_metadata: {
+          exif: string;
+          height: number;
+          image_quality: {
+            overall_score: number;
+          };
+          image_tags: {
+            confidence: number;
+            name: string;
+            parent_name: string;
+            tag_level: number;
+          }[];
+          width: number;
+        };
+        labels: string[];
+        mime_type: string;
+        name: string;
+        parent_file_id: string;
+        punish_flag: number;
+        size: number;
+        starred: boolean;
+        status: string;
+        thumbnail: string;
+        type: string;
+        updated_at: string;
+        url: string;
+        sync_flag: boolean;
+        ex_fields_info: {};
+      }[];
+    }>(API_V2_HOST + url, body);
   }
   /**
    * 获取相册详情
@@ -2466,6 +2620,34 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     const { result } = data;
     return Result.Ok(result);
   }
+  async receive_awards_form_code(code: string) {
+    await this.ensure_initialized();
+    const { error, data } = await this.request.post<{
+      success: boolean;
+      code: null;
+      message: string | null;
+      totalCount: null;
+      nextToken: null;
+      maxResults: null;
+      result: {};
+      arguments: null;
+    }>(
+      MEMBER_API_V2_HOST + "/v1/users/rewards",
+      {
+        code,
+      },
+      {
+        Host: "member.alipan.com",
+      }
+    );
+    if (error) {
+      return Result.Err(error.message);
+    }
+    if (!data.success) {
+      return Result.Err(data.message || "领取失败");
+    }
+    return Result.Ok(data);
+  }
 
   on_transfer_failed(handler: Handler<TheTypesOfEvents[Events.TransferFailed]>) {
     return this.on(Events.TransferFailed, handler);
@@ -2544,21 +2726,3 @@ function run<T extends (...args: any[]) => Promise<{ error: Error | null; finish
   }) as Promise<Result<Unpacked<ReturnType<T>>["data"]>>;
   return p;
 }
-
-// curl 'https://api.aliyundrive.com/adrive/v2/file/createWithFolders' \
-//   -H 'authority: api.aliyundrive.com' \
-//   -H 'accept: application/json, text/plain, */*' \
-//   -H 'accept-language: zh-CN,zh;q=0.9,en;q=0.8' \
-//   -H 'authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTY1MDQ1ZWVmODQ0NDVjYmRlY2U3OTBhZWJlNTRiZCIsImN1c3RvbUpzb24iOiJ7XCJjbGllbnRJZFwiOlwiMjVkelgzdmJZcWt0Vnh5WFwiLFwiZG9tYWluSWRcIjpcImJqMjlcIixcInNjb3BlXCI6W1wiRFJJVkUuQUxMXCIsXCJTSEFSRS5BTExcIixcIkZJTEUuQUxMXCIsXCJVU0VSLkFMTFwiLFwiVklFVy5BTExcIixcIlNUT1JBR0UuQUxMXCIsXCJTVE9SQUdFRklMRS5MSVNUXCIsXCJCQVRDSFwiLFwiT0FVVEguQUxMXCIsXCJJTUFHRS5BTExcIixcIklOVklURS5BTExcIixcIkFDQ09VTlQuQUxMXCIsXCJTWU5DTUFQUElORy5MSVNUXCIsXCJTWU5DTUFQUElORy5ERUxFVEVcIl0sXCJyb2xlXCI6XCJ1c2VyXCIsXCJyZWZcIjpcImh0dHBzOi8vd3d3LmFsaXl1bmRyaXZlLmNvbS9cIixcImRldmljZV9pZFwiOlwiODhmOTgzNGYzZWE5NGY3MjliMTY0ZThlMTU2NGVjYTNcIn0iLCJleHAiOjE2OTI4MTEwMTEsImlhdCI6MTY5MjgwMzc1MX0.lboIbl1kEPcZ9UwFNsUcwHIh7Bj6fTnyzW8vgc-5Iu91ZzkarKM6VPSoxYMaSJikzGoHQTyz3XNwVrOimS03NeC6ppdC4VoQhbsSBeEM1SDvtAi0Z5p4saurjBEJY1XPekIhjW4u_Cy69UArPaYxrChZDqG6Rf6Fy3refx-3Dw0' \
-//   -H 'content-type: application/json' \
-//   -H 'origin: https://www.aliyundrive.com' \
-//   -H 'referer: https://www.aliyundrive.com/' \
-//   -H 'sec-ch-ua: "Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"' \
-//   -H 'sec-ch-ua-mobile: ?0' \
-//   -H 'sec-ch-ua-platform: "macOS"' \
-//   -H 'sec-fetch-dest: empty' \
-//   -H 'sec-fetch-mode: cors' \
-//   -H 'sec-fetch-site: same-site' \
-//   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36' \
-//   --data-raw '{"drive_id":"622310670","part_info_list":[{"part_number":1}],"parent_file_id":"root","name":"example01.png","type":"file","check_name_mode":"overwrite","size":4930,"create_scene":"","device_name":"","content_hash":"455FDA33DA839628F1DE6B7929FE3C5B595A69EE","content_hash_name":"sha1","proof_code":"BTLmRomai1Y=","proof_version":"v1"}' \
-//   --compressed

@@ -39,12 +39,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const { id: user_id, settings } = user;
-  const source_drive_res = await Drive.Get({ id: source_drive_id, user_id, store });
+  const source_drive_res = await Drive.Get({ id: source_drive_id, user, store });
   if (source_drive_res.error) {
     return e(source_drive_res);
   }
   const source_drive = source_drive_res.data;
-  const target_drive_res = await Drive.Get({ id: target_drive_id, user_id, store });
+  const target_drive_res = await Drive.Get({ id: target_drive_id, user, store });
   if (target_drive_res.error) {
     return e(target_drive_res);
   }

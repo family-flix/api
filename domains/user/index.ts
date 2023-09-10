@@ -165,6 +165,29 @@ export class User {
       token,
     });
   }
+  static async Get(body: { id: string }, store: DatabaseStore) {
+    const { id } = body;
+    const user = await store.prisma.user.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+        settings: true,
+      },
+    });
+    if (!user) {
+      return Result.Err("不存在");
+    }
+    const { settings: settings_str } = user;
+    const settings = await User.parseSettings(settings_str);
+    return Result.Ok(
+      new User({
+        id,
+        token: "",
+        settings,
+        store,
+      })
+    );
+  }
   static async Existing(body: { email: string }, store: DatabaseStore) {
     const { email } = body;
     const existing_user = await store.prisma.credential.findUnique({
@@ -242,7 +265,6 @@ export class User {
       token,
     });
   }
-
   static async parseSettings(settings: null | { detail: string | null }) {
     if (!settings) {
       return {};
@@ -251,7 +273,7 @@ export class User {
     if (!detail) {
       return {};
     }
-    const r = await parseJSONStr<UserSettings>(detail);
+    const r = parseJSONStr<UserSettings>(detail);
     if (r.error) {
       return {};
     }

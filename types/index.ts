@@ -30,7 +30,7 @@ export const Result = {
           e.code = code;
           return e;
         }
-        if (typeof message === "object") {
+        if (message instanceof Error) {
           // @ts-ignore
           message.code = code;
           return message;

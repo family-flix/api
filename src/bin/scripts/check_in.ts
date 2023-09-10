@@ -1,4 +1,4 @@
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { Result } from "@/types";
 import { DatabaseStore } from "@/domains/store";
 
@@ -46,13 +46,13 @@ export async function check_in(store: DatabaseStore) {
     const drive = drives_resp.data[i];
     // console.log("prepare check in for drive", drive.user_name);
     const { id, name, profile, user_id } = drive;
-    const d_res = await parseJSONStr<{ drive_id: number }>(profile);
+    const d_res = parseJSONStr<{ drive_id: number }>(profile);
     if (d_res.error) {
       continue;
     }
     const { drive_id } = d_res.data;
-    const client_res = await AliyunDriveClient.Get({
-      drive_id,
+    const client_res = await AliyunBackupDriveClient.Get({
+      drive_id: String(drive_id),
       store,
     });
     if (client_res.error) {

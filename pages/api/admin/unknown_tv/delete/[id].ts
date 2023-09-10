@@ -21,7 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id } = user;
   const tv_res = await store.find_parsed_tv({
     id,
     user_id,
@@ -56,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const episode = list[i];
       const { id, file_id, drive_id } = episode;
       if (file_id) {
-        const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+        const drive_res = await Drive.Get({ id: drive_id, user, store });
         if (drive_res.error) {
           continue;
         }
@@ -101,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const season = list[i];
       const { id, file_id, drive_id } = season;
       if (file_id) {
-        const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+        const drive_res = await Drive.Get({ id: drive_id, user, store });
         if (drive_res.error) {
           continue;
         }

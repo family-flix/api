@@ -61,6 +61,7 @@ export type ModelKeys = keyof Omit<
 
 export type ModelQuery<F extends (...args: any[]) => any> = NonNullable<Parameters<F>[number]>;
 export type ModelWhereInput<T extends ModelKeys> = NonNullable<Parameters<PrismaClient[T]["findMany"]>[0]>["where"];
+export type DriveWhereInput = NonNullable<ModelWhereInput<"drive">>;
 export type TVProfileWhereInput = NonNullable<ModelWhereInput<"tv_profile">>;
 export type SeasonProfileWhereInput = NonNullable<ModelWhereInput<"season_profile">>;
 export type EpisodeProfileWhereInput = NonNullable<ModelWhereInput<"episode_profile">>;

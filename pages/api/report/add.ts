@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!data) {
     return e(Result.Err("缺少问题内容"));
   }
-  const d_res = await parseJSONStr(data);
+  const d_res = parseJSONStr(data);
   if (d_res.error) {
     return e(d_res);
   }

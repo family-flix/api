@@ -1,5 +1,5 @@
 /**
- * @file 创建阿里云盘相册
+ * @file 获取阿里云盘 相册文件列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -9,31 +9,29 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { Drive } from "@/domains/drive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { drive_id, album_id } = req.query as Partial<{ drive_id: string; album_id: string }>;
-  const { name } = req.body as Partial<{ name: string }>;
+  const { id: backup_drive_id } = req.query as Partial<{ id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  if (!album_id) {
-    return e(Result.Err("缺少相册 id"));
-  }
-  if (!drive_id) {
+  if (!backup_drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
-  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
-  if (drive_res.error) {
-    return e(drive_res);
+  const client_res = await AliyunBackupDriveClient.Get({ drive_id: backup_drive_id, store });
+  if (client_res.error) {
+    return e(client_res);
   }
-  const drive = drive_res.data;
-  const data_res = await drive.client.delete_album({ album_id });
+  const client = client_res.data;
+  const data_res = await client.fetch_rewards_v2();
   if (data_res.error) {
     return e(data_res);
   }
-  res.status(200).json({ code: 0, msg: "删除成功", data: null });
+  const data = data_res.data;
+  res.status(200).json({ code: 0, msg: "", data });
 }

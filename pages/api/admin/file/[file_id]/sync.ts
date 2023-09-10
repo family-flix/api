@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       console.log("[API]tv/sync/[id].ts - after if(!token)");
       return e(Result.Err("缺少 TMDB_TOKEN"));
     }
-    const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+    const drive_res = await Drive.Get({ id: drive_id, user, store });
     if (drive_res.error) {
       // console.log("[API]tv/sync/[id].ts - drive_res.error", drive_res.error.message);
       job.finish();

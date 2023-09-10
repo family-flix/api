@@ -1181,7 +1181,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     parsed_episode: ParsedEpisodeRecord;
   }) {
     const { parsed_tv, parsed_season, parsed_episode } = body;
-    const { id, episode_number, season_number } = parsed_episode;
+    const { id } = parsed_episode;
     if (!parsed_tv) {
       return Result.Err("缺少关联电视剧");
     }
@@ -1297,6 +1297,21 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     });
     if (tv === null) {
       return Result.Err("没有找到匹配的电视剧");
+    }
+    const same_episode = await this.store.prisma.episode.findFirst({
+      where: {
+        season_text: season_number,
+        episode_text: episode_number,
+        tv_id: tv.id,
+      },
+      include: {
+        profile: true,
+      },
+    });
+    // console.log("[DOMAIN]Search search same episode by season_text", same_episode);
+    // @todo 还可以缓存优化
+    if (same_episode) {
+      return Result.Ok(same_episode.profile);
     }
     const s_n = season_to_num(season_number);
     const e_n = episode_to_num(episode_number);

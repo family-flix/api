@@ -5,25 +5,26 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Drive } from "@/domains/drive";
+import { DriveTypes } from "@/domains/drive/constants";
 import { User } from "@/domains/user";
-import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { payload } = req.body as { payload: AliyunDrivePayload };
+  const { type = DriveTypes.AliyunBackupDrive, payload } = req.body as { type: number; payload: unknown };
   if (!payload) {
-    return e("请传入云盘信息");
+    return e(Result.Err("请传入云盘信息"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res.error);
   }
-  const { id: user_id } = t_res.data;
-  const r = await Drive.Add({ payload, user_id }, store);
+  const user = t_res.data;
+  const r = await Drive.Add({ type, payload, user }, store);
+  // console.log('[API]drive/add - after r', r.error?.message);
   if (r.error) {
     return e(r);
   }

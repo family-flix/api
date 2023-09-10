@@ -6,7 +6,7 @@ import type { Handler } from "mitt";
 import { BaseDomain } from "@/domains/base";
 import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import {
   ArticleCardNode,
   ArticleHeadNode,
@@ -18,6 +18,7 @@ import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DatabaseStore } from "@/domains/store";
 import { ParsedTVRecord, FileSyncTaskRecord } from "@/domains/store/types";
+import { AliyunDriveClient } from "@/domains/aliyundrive/types";
 import { folder_client } from "@/domains/store/utils";
 import { Result } from "@/types";
 import { is_video_file } from "@/utils";
@@ -103,7 +104,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     //   }
     //   return name || original_name;
     // })();
-    const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+    const drive_res = await Drive.Get({ id: drive_id, user, store });
     if (drive_res.error) {
       return Result.Err(drive_res.error);
     }

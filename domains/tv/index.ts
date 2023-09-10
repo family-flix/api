@@ -1,4 +1,4 @@
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { ImageUploader } from "@/domains/uploader";
 import { DatabaseStore } from "@/domains/store";
 import { r_id } from "@/utils";
@@ -46,7 +46,7 @@ export class TV {
       return Result.Ok(null);
     }
     const cur_time = format_number_with_3decimals(original_cur_time);
-    const client_res = await AliyunDriveClient.Get({ drive_id, store });
+    const client_res = await AliyunBackupDriveClient.Get({ drive_id: String(drive_id), store });
     if (client_res.error) {
       return Result.Ok(null);
     }
