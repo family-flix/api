@@ -33,10 +33,11 @@ model drive {
         // 网盘用于存放影视剧的目录 file_id
         root_folder_id   String?
 
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        drive_token_id String
+        drive_token    drive_token @relation(fields: [drive_token_id], references: [id], onDelete: Cascade)
+        user_id        String
+        user           user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        drive_token             drive_token?
         parsed_tvs              parsed_tv[]
         parsed_seasons          parsed_season[]
         parsed_episodes         parsed_episode[]
@@ -60,10 +61,7 @@ model drive_token {
         // json
         data       String
         expired_at Float
-
-        // 关联 drive 表
-        drive_id String @unique
-        drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        drives     drive[]
 
         @@map("DriveToken")
 }

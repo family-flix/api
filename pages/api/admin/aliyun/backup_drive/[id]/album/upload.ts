@@ -6,26 +6,25 @@ import fs from "fs";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
+import { Drive } from "@/domains/drive";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { Drive } from "@/domains/drive";
-import dayjs from "dayjs";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
+  const { id: backup_drive_id } = req.query as Partial<{ id: string }>;
   //   const { name } = req.body as Partial<{ name: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  if (!id) {
+  if (!backup_drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
-  const drive_res = await Drive.Get({ id, user_id: user.id, store });
+  const drive_res = await Drive.Get({ id: backup_drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 import { store } from "@/store";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { TV } from "@/domains/tv";
 import { ImageUploader } from "@/domains/uploader";
 import path from "path";
@@ -48,7 +48,7 @@ async function main() {
   // console.log(img_path, formatVideoTime(curTime));
   // console.log(r.data);
   // const drive = new AliyunDriveClient({ drive_id: "HOuEKtDerEOikQG", store });
-  const client_res = await AliyunDriveClient.Get({ drive_id: 123, store });
+  const client_res = await AliyunBackupDriveClient.Get({ drive_id: "123", store });
   if (client_res.error) {
     return;
   }

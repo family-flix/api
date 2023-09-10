@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 
@@ -18,14 +18,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive_id: string;
   }>;
   if (!drive_id) {
-    return e("缺少云盘 id");
+    return e(Result.Err("缺少云盘 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  const user = t_res.data;
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

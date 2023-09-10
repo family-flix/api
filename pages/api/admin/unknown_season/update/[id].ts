@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (parsed_season.season_number === season_number) {
     return e(Result.Err(`季已经是 '${season_number}' 了`));
   }
-  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

@@ -8,6 +8,7 @@ import axios from "axios";
 import { Drive } from "@/domains/drive";
 import { Application } from "@/domains/application";
 import path from "path";
+import { User } from "@/domains/user";
 
 async function prepare_upload_file(
   file_buffer: Buffer,
@@ -70,15 +71,13 @@ async function main() {
   // if (!user) {
   //   return;
   // }
-  const user = {
-    id: "c983KOZIgUtKheH",
-  };
+  const t_res = await User.Get({ id: "c983KOZIgUtKheH" }, store);
+  if (t_res.error) {
+    return;
+  }
+  const user = t_res.data;
   const drive_id = "WHFIiV9ILBmwaAK";
-  const drive_res = await Drive.Get({
-    id: drive_id,
-    user_id: user.id,
-    store,
-  });
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return;
   }

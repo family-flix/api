@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("没有匹配的记录"));
   }
   const { permission } = member;
-  const r = await parseJSONStr(permission);
+  const r = parseJSONStr(permission);
   if (r.error) {
     return e(r);
   }

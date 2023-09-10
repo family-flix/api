@@ -4,11 +4,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
+import { toNumber } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -18,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     file_id = "root",
     next_marker = "",
     name,
-    page_size: page_size_str = "24",
+    page_size: page_size_str,
   } = req.query as Partial<{
     id: string;
     file_id: string;
@@ -27,19 +28,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size: string;
   }>;
   if (!drive_id) {
-    return e("缺少云盘 id");
+    return e(Result.Err("缺少云盘 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const page_size = Number(page_size_str);
-  const drive_res = await Drive.Get({
-    id: drive_id,
-    user_id,
-    store,
-  });
+  const user = t_res.data;
+  const page_size = toNumber(page_size_str, 24);
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

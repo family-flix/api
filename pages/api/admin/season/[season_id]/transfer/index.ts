@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (season === null) {
     return e(Result.Err("没有匹配的记录"));
   }
-  const target_drive_res = await Drive.Get({ id: target_drive_id, user_id, store });
+  const target_drive_res = await Drive.Get({ id: target_drive_id, user, store });
   if (target_drive_res.error) {
     return e(target_drive_res);
   }
@@ -176,7 +176,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         if (source_drive_id === target_drive_id) {
           return;
         }
-        const source_drive_res = await Drive.Get({ id: source_drive_id, user_id, store });
+        const source_drive_res = await Drive.Get({ id: source_drive_id, user, store });
         if (source_drive_res.error) {
           return;
         }
@@ -346,20 +346,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     job.finish();
   }
   run(season);
-  const { overview, poster_path, backdrop_path, original_language, first_air_date } = season.tv.profile;
-  const data = {
-    id,
-    name: tv_name,
-    overview,
-    poster_path,
-    backdrop_path,
-    original_language,
-    first_air_date,
-  };
   res.status(200).json({
     code: 0,
     msg: "开始转存",
-    data,
+    data: {
+      job_id: job.id,
+    },
   });
 }
 
@@ -430,16 +422,14 @@ async function archive_files(body: {
         });
         return;
       }
-      const { resolution, source, encode, voice_encode, type } = parse_filename_for_video(file_name, [
-        "resolution",
-        "source",
-        "encode",
-        "voice_encode",
-        "type",
-      ]);
+      const { resolution, source, encode, voice_encode, type } = parse_filename_for_video(
+        file_name,
+        ["resolution", "source", "encode", "voice_encode", "type"],
+        user.get_filename_rules()
+      );
       const tv_name_with_pinyin = build_tv_name({ name, original_name });
       const matched_season = seasons.find((s) => s.season_number === season_number);
-      const air_date = (() => {
+      const air_date_of_year = (() => {
         if (matched_season && matched_season.air_date) {
           return dayjs(matched_season.air_date).year();
         }
@@ -451,7 +441,7 @@ async function archive_files(body: {
       const new_name = [
         tv_name_with_pinyin,
         `${season_number}${episode_number}`,
-        air_date,
+        air_date_of_year,
         resolution,
         source,
         encode,
@@ -479,7 +469,7 @@ async function archive_files(body: {
           return;
         }
       }
-      const season_folder_name = [tv_name_with_pinyin, season_number, air_date].join(".");
+      const season_folder_name = [tv_name_with_pinyin, season_number, air_date_of_year].join(".");
       const new_folder_parent_path = [drive.profile.root_folder_name, season_folder_name].join("/");
       const season_folder_res = await (async () => {
         if (created_folders[season_number]) {
@@ -619,15 +609,18 @@ async function archive_files(body: {
         ],
       })
     );
-    const move_res = await drive.client.move_files_to_folder({
-      files: file_ids,
-      target_folder_id: file_id,
-    });
-    if (move_res.error) {
-      errors.push({
-        file_id,
-        tip: "移动文件到文件夹失败",
+    const exceed_res = await drive.is_exceed_capacity();
+    if (exceed_res.data === false) {
+      const move_res = await drive.client.move_files_to_folder({
+        files: file_ids,
+        target_folder_id: file_id,
       });
+      if (move_res.error) {
+        errors.push({
+          file_id,
+          tip: "移动文件到文件夹失败",
+        });
+      }
     }
   }
   if (errors.length !== 0) {

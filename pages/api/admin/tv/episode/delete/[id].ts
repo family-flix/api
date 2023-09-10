@@ -24,7 +24,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id } = user;
   const episode = await store.prisma.episode.findFirst({
     where: {
       id: episode_id,
@@ -54,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   for (let i = 0; i < parsed_episodes.length; i += 1) {
     const parsed_episode = parsed_episodes[i];
     const { drive_id, file_id } = parsed_episode;
-    const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+    const drive_res = await Drive.Get({ id: drive_id, user, store });
     if (drive_res.error) {
       continue;
     }

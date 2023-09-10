@@ -1,9 +1,9 @@
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { store } from "@/store";
 
 (async () => {
-  const drive_id = 123;
-  const client_res = await AliyunDriveClient.Get({ drive_id, store });
+  const drive_id = "123";
+  const client_res = await AliyunBackupDriveClient.Get({ drive_id, store });
   if (client_res.error) {
     return;
   }

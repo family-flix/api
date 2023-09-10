@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("没有匹配的季"));
   }
   const { parsed_tv, drive_id } = parsed_episode;
-  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: tmdb_id, name } = body as TVProfileItemInTMDB & {
     id?: string;
   };
-  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

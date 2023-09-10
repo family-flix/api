@@ -8,7 +8,7 @@ import path from "path";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Folder } from "@/domains/folder";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
@@ -37,10 +37,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name: string;
   }>;
   if (!file_id) {
-    return e("缺少文件夹 id 参数");
+    return e(Result.Err("缺少文件夹 id 参数"));
   }
   if (!drive_id) {
-    return e("缺少云盘 id 参数");
+    return e(Result.Err("缺少云盘 id 参数"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -54,14 +54,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     parent_file_id: "tv",
     items: [],
   };
-  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }
   const drive = drive_res.data;
-  if (!drive) {
-    return e("没有匹配的云盘记录");
-  }
   const client = drive.client;
   const folder = new Folder(file_id, {
     name: "tv",

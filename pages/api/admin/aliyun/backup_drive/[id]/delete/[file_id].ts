@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
   const file_res = await store.find_file({
     file_id,
   });
@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const file = file_res.data;
   if (file && include_drive === "1") {
     const { drive_id } = file;
-    const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+    const drive_res = await Drive.Get({ id: drive_id, user, store });
     if (drive_res.error) {
       return e(drive_res);
     }

@@ -11,7 +11,7 @@ import { Folder } from "@/domains/folder";
 import { DiffTypes, FolderDiffer } from "@/domains/folder_differ";
 import { is_video_file } from "@/utils";
 import { Drive } from "@/domains/drive";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 
@@ -20,14 +20,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
   if (!id) {
-    return e("缺少云盘 id");
+    return e(Result.Err("缺少云盘 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const drive_res = await Drive.Get({ id, user_id, store });
+  const user = t_res.data;
+  const drive_res = await Drive.Get({ id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }
@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: drive_id } = drive;
   const { root_folder_id, root_folder_name } = drive.profile;
   if (root_folder_id === null || root_folder_name === null) {
-    return e("请先设置索引目录");
+    return e(Result.Err("请先设置索引目录"));
   }
   const client = drive.client;
   const prev_folder = new Folder(root_folder_id, {

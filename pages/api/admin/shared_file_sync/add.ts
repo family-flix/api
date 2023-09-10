@@ -30,7 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
+  const { id: user_id } = user;
   const sync_task = await store.prisma.bind_for_parsed_tv.findFirst({
     where: {
       url,
@@ -80,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("该电视剧没有可以关联的文件夹"));
   }
   const random_drive_id = parsed_tvs[0].drive_id;
-  const drive_res = await Drive.Get({ id: random_drive_id, user_id, store });
+  const drive_res = await Drive.Get({ id: random_drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

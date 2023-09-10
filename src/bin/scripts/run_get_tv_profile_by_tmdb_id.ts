@@ -11,7 +11,7 @@ async function main(tmdb_id: number) {
     return;
   }
   const user = t_res.data;
-  const drive_res = await Drive.Get({ id: "FxamFUFJ81GTiX7", user_id: user.id, store });
+  const drive_res = await Drive.Get({ id: "FxamFUFJ81GTiX7", user, store });
   if (drive_res.error) {
     return;
   }

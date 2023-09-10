@@ -9,8 +9,7 @@ import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { ReportTypes } from "@/constants";
-import { parseJSONStr, r_id } from "@/utils";
+import { r_id } from "@/utils";
 
 type AnswerPayload = Partial<{
   content: string;

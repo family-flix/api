@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!subtitle) {
     return e(Result.Err("没有匹配的记录"));
   }
-  const drive_res = await Drive.Get({ id: subtitle.drive_id, user_id: user.id, store });
+  const drive_res = await Drive.Get({ id: subtitle.drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

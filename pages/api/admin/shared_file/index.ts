@@ -4,12 +4,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { User } from "@/domains/user";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { parseJSONStr } from "@/utils";
+import { AliyunDriveProfile } from "@/domains/aliyundrive/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -41,12 +42,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive) {
     return e(Result.Err("请先添加一个云盘", 10002));
   }
-  const p_res = await parseJSONStr<{ drive_id: number }>(drive.profile);
+  const p_res = parseJSONStr<AliyunDriveProfile>(drive.profile);
   if (p_res.error) {
     return e(p_res);
   }
   const { drive_id } = p_res.data;
-  const client_res = await AliyunDriveClient.Get({ drive_id, store });
+  const client_res = await AliyunBackupDriveClient.Get({ drive_id: String(drive_id), store });
   if (client_res.error) {
     return e(client_res);
   }

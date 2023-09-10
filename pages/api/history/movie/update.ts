@@ -6,11 +6,10 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { TV } from "@/domains/tv";
 import { Member } from "@/domains/user/member";
+import { Drive } from "@/domains/drive";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
-import { parseJSONStr } from "@/utils";
-import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -70,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return e(Result.Err("没有匹配的视频源"));
     }
     const { drive_id } = file;
-    const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+    const drive_res = await Drive.Get({ id: drive_id, user, store });
     if (drive_res.error) {
       return e(drive_res);
     }
@@ -115,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("没有匹配的视频源");
   }
   const { drive_id } = file;
-  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

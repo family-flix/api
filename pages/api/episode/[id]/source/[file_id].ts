@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("该视频源不存在"));
   }
   const { file_id, drive_id } = source;
-  const drive_res = await Drive.Get({ id: drive_id, user_id: user.id, store });
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }

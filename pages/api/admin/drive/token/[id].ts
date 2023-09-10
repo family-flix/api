@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { parseJSONStr } from "@/utils";
@@ -26,23 +26,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_resp.error) {
     return e(t_resp);
   }
-  const { id: user_id } = t_resp.data;
-  const drive_res = await Drive.Get({ id: drive_id, user_id, store });
+  const user = t_resp.data;
+  const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }
   const drive = drive_res.data;
   const drive_token_res = await store.find_aliyun_drive_token({
-    drive_id: drive.id,
+    id: drive.profile.token_id,
   });
   if (drive_token_res.error) {
     return e(drive_token_res);
   }
   const drive_token = drive_token_res.data;
   if (!drive_token) {
-    return e("该云盘没有 token 记录");
+    return e(Result.Err("该云盘没有 token 记录"));
   }
-  const prev_token_res = await parseJSONStr(drive_token.data);
+  const prev_token_res = parseJSONStr(drive_token.data);
   if (prev_token_res.error) {
     return e(prev_token_res);
   }
