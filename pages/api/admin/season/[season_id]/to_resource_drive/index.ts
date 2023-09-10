@@ -266,53 +266,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             "[API]admin/season/[season_id]/to_resource_drive - before Drive.GetByUniqueId",
             source_drive.client.resource_drive_id
           );
-          const target_drive_res = await Drive.GetByUniqueId({
-            id: source_drive.client.resource_drive_id,
-            user,
-            store,
-          });
-          console.log(
-            "[API]admin/season/[season_id]/to_resource_drive - after Drive.GetByUniqueId",
-            target_drive_res.data
-          );
-          if (target_drive_res.error) {
-            return;
-          }
-          const target_drive = target_drive_res.data;
-          const r3 = await DriveAnalysis.New({
-            drive: target_drive,
-            store,
-            user,
-            tmdb_token: user.settings.tmdb_token,
-            assets: app.assets,
-            on_print(v) {
-              job.output.write(v);
-            },
-            on_finish() {
-              job.output.write(
-                new ArticleLineNode({
-                  children: [
-                    new ArticleTextNode({
-                      text: "完成目标云盘转存后的文件索引",
-                    }),
-                  ],
-                })
-              );
-            },
-          });
-          if (r3.error) {
-            return;
-          }
-          const analysis = r3.data;
-          await analysis.run(
-            created_folders.map((folder) => {
-              const { file_name } = folder;
-              return {
-                name: [target_drive.profile.root_folder_name, file_name].join("/"),
-                type: "folder",
-              };
-            })
-          );
+
+          // const target_drive_res = await Drive.GetByUniqueId({
+          //   id: source_drive.client.resource_drive_id,
+          //   user,
+          //   store,
+          // });
+          // if (target_drive_res.error) {
+          //   return;
+          // }
+          // const target_drive = target_drive_res.data;
+          // const r3 = await DriveAnalysis.New({
+          //   drive: target_drive,
+          //   store,
+          //   user,
+          //   tmdb_token: user.settings.tmdb_token,
+          //   assets: app.assets,
+          //   on_print(v) {
+          //     job.output.write(v);
+          //   },
+          //   on_finish() {
+          //     job.output.write(
+          //       new ArticleLineNode({
+          //         children: [
+          //           new ArticleTextNode({
+          //             text: "完成目标云盘转存后的文件索引",
+          //           }),
+          //         ],
+          //       })
+          //     );
+          //   },
+          // });
+          // if (r3.error) {
+          //   return;
+          // }
+          // const analysis = r3.data;
+          // await analysis.run(
+          //   created_folders.map((folder) => {
+          //     const { file_name } = folder;
+          //     return {
+          //       name: [target_drive.profile.root_folder_name, file_name].join("/"),
+          //       type: "folder",
+          //     };
+          //   })
+          // );
         }
       })();
     }
