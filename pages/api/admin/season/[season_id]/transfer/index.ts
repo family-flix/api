@@ -232,6 +232,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                 new ArticleTextNode({
                   text: `归档电视剧 '${tv_name}' 失败`,
                 }),
+                new ArticleTextNode({
+                  text: archive_res.error.message,
+                }),
               ],
             })
           );

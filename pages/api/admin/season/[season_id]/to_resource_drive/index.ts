@@ -223,6 +223,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                 new ArticleTextNode({
                   text: `归档电视剧 '${tv_name}' 失败`,
                 }),
+                new ArticleTextNode({
+                  text: archive_res.error.message,
+                }),
               ],
             })
           );
@@ -259,11 +262,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             );
             return;
           }
+          console.log(
+            "[API]admin/season/[season_id]/to_resource_drive - before Drive.GetByUniqueId",
+            source_drive.client.resource_drive_id
+          );
           const target_drive_res = await Drive.GetByUniqueId({
             id: source_drive.client.resource_drive_id,
             user,
             store,
           });
+          console.log(
+            "[API]admin/season/[season_id]/to_resource_drive - after Drive.GetByUniqueId",
+            target_drive_res.data
+          );
           if (target_drive_res.error) {
             return;
           }
