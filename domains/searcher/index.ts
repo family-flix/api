@@ -375,6 +375,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         //     return;
         //   }
         // }
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [`[${prefix}]`, " 准备添加电视剧信息"].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
         const r = await this.process_parsed_tv({ parsed_tv });
         if (r.error) {
           this.emit(
@@ -811,6 +819,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         const parsed_season = correct_list[i];
         const { parsed_tv, season_number } = parsed_season;
         const prefix = get_prefix_from_parsed_tv(parsed_tv);
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [`[${prefix}/${season_number}]`, " 准备添加季信息"].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
         const r = await this.process_parsed_season({
           parsed_tv,
           parsed_season,
@@ -1133,14 +1149,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         // console.log(parsed_episode);
         const { name, original_name, correct_name } = parsed_tv;
         const prefix = correct_name || name || original_name;
-        // this.emit(
-        //   Events.Print,
-        //   new ArticleLineNode({
-        //     children: [`[${prefix}/${season_number}/${episode_number}]`, " 准备添加剧集信息"].map((text) => {
-        //       return new ArticleTextNode({ text });
-        //     }),
-        //   })
-        // );
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [`[${prefix}/${season_number}/${episode_number}]`, " 准备添加剧集信息"].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
         // console.log(`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息");
         const r = await this.process_parsed_episode({
           parsed_tv,
@@ -1495,6 +1511,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           );
           continue;
         }
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [`[${prefix}]`, " 准备添加电影信息"].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
         const r = await this.process_parsed_movie({ parsed_movie });
         if (r.error) {
           this.emit(

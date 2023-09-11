@@ -430,10 +430,10 @@ async function archive_files(body: {
         );
         const rename_res = await drive.client.rename_file(file_id, new_name);
         if (rename_res.error) {
-          errors.push({
-            file_id,
-            tip: rename_res.error.message,
-          });
+          // errors.push({
+          //   file_id,
+          //   tip: rename_res.error.message,
+          // });
           return;
         }
       }
@@ -586,13 +586,13 @@ async function archive_files(body: {
       if (move_res.error) {
         errors.push({
           file_id,
-          tip: "移动文件到文件夹失败",
+          tip: `移动文件到文件夹失败, ${move_res.error.message}`,
         });
       }
     }
   }
   if (errors.length !== 0) {
-    return Result.Err("归档失败", 0, errors);
+    return Result.Err(errors.join("\n"), 0, errors);
   }
   return Result.Ok(
     Object.keys(created_folders).map((season_number) => {
