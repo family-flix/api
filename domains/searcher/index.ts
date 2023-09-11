@@ -13,7 +13,13 @@ import {
   SeasonProfileFromTMDB,
   TVProfileFromTMDB,
 } from "@/domains/tmdb/services";
-import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
+import {
+  ArticleLineNode,
+  ArticleListItemNode,
+  ArticleListNode,
+  ArticleSectionNode,
+  ArticleTextNode,
+} from "@/domains/article";
 import { DatabaseStore } from "@/domains/store";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
@@ -195,6 +201,20 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           children: ["限定搜索范围", files.length, "个关键字"].map((text) => {
             return new ArticleTextNode({ text: String(text) });
           }),
+        })
+      );
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: files.map((file) => {
+                return new ArticleListItemNode({
+                  children: [new ArticleTextNode({ text: file.name })],
+                });
+              }),
+            }),
+          ],
         })
       );
       const file_groups = split_array_into_chunks(
