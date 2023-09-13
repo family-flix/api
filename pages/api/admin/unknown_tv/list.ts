@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     take: page_size,
     skip: (page - 1) * page_size,
     orderBy: {
-      created: "asc",
+      created: "desc",
     },
   });
   res.status(200).json({

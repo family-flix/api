@@ -413,77 +413,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               }),
             })
           );
-          continue;
         }
-        await (async () => {
-          // console.log(`[${prefix}]`, "检查能否建立同步任务", r.data.profile.in_production, parsed_tv.file_name);
-          if (r.data.profile.in_production && parsed_tv.file_name) {
-            // console.log(`[${prefix}]`, "处于更新中");
-            const body = {
-              name: parsed_tv.file_name,
-              user_id,
-            };
-            if (drive_id) {
-              // @ts-ignore
-              body.drive_id = drive_id;
-            }
-            const transfer_res = await this.store.find_shared_file_save(body);
-            if (transfer_res.error) {
-              // console.log(`[${prefix}]`, "获取转存记录失败", transfer_res.error.message);
-              this.emit(
-                Events.Print,
-                new ArticleLineNode({
-                  children: [`[${prefix}]`, "建立同步任务失败", transfer_res.error.message].map((text) => {
-                    return new ArticleTextNode({ text: String(text) });
-                  }),
-                })
-              );
-              return;
-            }
-            if (!transfer_res.data) {
-              // console.log(`[${prefix}]`, "不存在转存记录");
-              this.emit(
-                Events.Print,
-                new ArticleLineNode({
-                  children: [`[${prefix}]`, "建立同步任务失败", "不存在同名转存记录"].map((text) => {
-                    return new ArticleTextNode({ text: String(text) });
-                  }),
-                })
-              );
-              return;
-            }
-            // console.log(`[${prefix}]`, "建立一个资源同步任务");
-            const { url, file_id, name } = transfer_res.data;
-            const r = await this.store.add_sync_task({
-              url,
-              file_id,
-              name,
-              in_production: 1,
-              parsed_tv_id: parsed_tv.id,
-              user_id,
-            });
-            if (r.error) {
-              this.emit(
-                Events.Print,
-                new ArticleLineNode({
-                  children: [`[${prefix}]`, "建立同步任务失败", r.error.message].map((text) => {
-                    return new ArticleTextNode({ text: String(text) });
-                  }),
-                })
-              );
-              return;
-            }
-            this.emit(
-              Events.Print,
-              new ArticleLineNode({
-                children: [`[${prefix}]`, "建立同步任务成功"].map((text) => {
-                  return new ArticleTextNode({ text: String(text) });
-                }),
-              })
-            );
-            //     log(`[${prefix}]`, "建立资源同步任务成功");
-          }
-        })();
       }
     } while (no_more === false);
   }
@@ -580,6 +510,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     const prefix = [correct_name, name, original_name].filter(Boolean).join("/");
     // log("[](search_tv_in_tmdb)start search", tv.name || tv.original_name);
     const tv_profile_in_tmdb_res = await (async () => {
+      const existing = await this.store.prisma.tv_profile.findFirst({
+        where: {
+          OR: [
+            {
+              name,
+            },
+          ],
+        },
+      });
+      if (existing) {
+        return Result.Ok(existing);
+      }
       if (correct_name) {
         // console.log(`[${prefix}]`, "使用", correct_name, "搜索");
         const r = await this.search_tv_in_tmdb(correct_name);
@@ -969,6 +911,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("没有匹配的电视剧");
     }
     const { season_number } = parsed_season;
+    const existing = await this.store.prisma.season.findFirst({
+      where: {
+        season_text: season_number,
+        tv_id: tv.id,
+      },
+      include: {
+        profile: true,
+      },
+    });
+    if (existing) {
+      return Result.Ok(existing.profile);
+    }
     const s_n = season_to_num(season_number);
     if (typeof s_n === "number") {
       const r = await this.client.fetch_partial_season_profile({

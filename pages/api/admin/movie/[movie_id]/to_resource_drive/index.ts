@@ -20,7 +20,7 @@ import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
 import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
-import { build_tv_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
+import { build_media_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { DriveAnalysis } from "@/domains/analysis";
 
@@ -194,40 +194,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             return;
           }
           const target_drive = target_drive_res.data;
-          const r3 = await DriveAnalysis.New({
-            drive: target_drive,
-            store,
-            user,
-            tmdb_token: user.settings.tmdb_token,
-            assets: app.assets,
-            on_print(v) {
-              job.output.write(v);
-            },
-            on_finish() {
-              job.output.write(
-                new ArticleLineNode({
-                  children: [
-                    new ArticleTextNode({
-                      text: "完成目标云盘转存后的文件索引",
-                    }),
-                  ],
-                })
-              );
-            },
-          });
-          if (r3.error) {
-            return;
-          }
-          const analysis = r3.data;
-          await analysis.run(
-            created_folders.map((folder) => {
-              const { file_name } = folder;
-              return {
-                name: [target_drive.profile.root_folder_name, , file_name].join("/"),
-                type: "folder",
-              };
-            })
-          );
+          console.log("[API]admin/movie/movie_id/to_resource_drive - before DriveAnalysis.New", target_drive);
+          // const r3 = await DriveAnalysis.New({
+          //   drive: target_drive,
+          //   store,
+          //   user,
+          //   tmdb_token: user.settings.tmdb_token,
+          //   assets: app.assets,
+          //   on_print(v) {
+          //     job.output.write(v);
+          //   },
+          //   on_finish() {
+          //     job.output.write(
+          //       new ArticleLineNode({
+          //         children: [
+          //           new ArticleTextNode({
+          //             text: "完成目标云盘转存后的文件索引",
+          //           }),
+          //         ],
+          //       })
+          //     );
+          //   },
+          // });
+          // if (r3.error) {
+          //   return;
+          // }
+          console.log("[API]admin/movie/movie_id/to_resource_drive", created_folders);
+          // const analysis = r3.data;
+          // await analysis.run(
+          //   created_folders.map((folder) => {
+          //     const { file_name } = folder;
+          //     return {
+          //       name: [target_drive.profile.root_folder_name, , file_name].join("/"),
+          //       type: "folder",
+          //     };
+          //   })
+          // );
         }
       })();
     }
@@ -307,7 +309,7 @@ async function archive_movie_files(body: {
         ["resolution", "source", "encode", "voice_encode", "type"],
         user.get_filename_rules()
       );
-      const movie_name_with_pinyin = build_tv_name({ name, original_name });
+      const movie_name_with_pinyin = build_media_name({ name, original_name });
       const air_date_of_year = (() => {
         if (!air_date) {
           return "";

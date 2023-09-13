@@ -47,13 +47,13 @@ type TheTypesOfEvents = {
   [Events.Finished]: void;
 };
 type DriveAnalysisProps = {
-  /** 当存在该值时会强制进行搜索 */
-  extra_scope?: string[];
-  drive: Drive;
   user: User;
+  drive: Drive;
   store: DatabaseStore;
   assets: string;
   tmdb_token: string;
+  /** 当存在该值时会强制进行搜索 */
+  extra_scope?: string[];
   on_season_added?: (season: SeasonRecord) => void;
   on_episode_added?: (episode: EpisodeRecord) => void;
   on_movie_added?: (movie: MovieRecord) => void;
@@ -69,7 +69,6 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       drive,
       store,
       user,
-      tmdb_token,
       assets,
       on_season_added,
       on_episode_added,
@@ -78,8 +77,14 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       on_finish,
       on_error,
     } = body;
-    if (!tmdb_token) {
+    if (!user) {
+      return Result.Err("缺少用户信息");
+    }
+    if (!user.settings.tmdb_token) {
       return Result.Err("缺少 TMDB_TOKEN");
+    }
+    if (!assets) {
+      return Result.Err("缺少静态资源根路径");
     }
     if (!drive) {
       return Result.Err("缺少云盘信息");
@@ -87,18 +92,12 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     if (!store) {
       return Result.Err("缺少数据库实例");
     }
-    if (!assets) {
-      return Result.Err("缺少静态资源根路径");
-    }
-    if (!user) {
-      return Result.Err("缺少用户信息");
-    }
     const r = new DriveAnalysis({
       extra_scope,
       drive,
       store,
       user,
-      tmdb_token,
+      tmdb_token: user.settings.tmdb_token,
       assets,
       on_season_added,
       on_episode_added,
@@ -291,7 +290,49 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     };
     walker.on_file = async (file) => {
       // 这里是从云盘索引到的文件，所以 name 就是不包含路径的部分
-      const { name, parent_paths } = file;
+      const { file_id, type, name, parent_paths } = file;
+      await (async () => {
+        if (type === "file") {
+          return;
+        }
+        const save_record_res = await this.store.find_shared_file_save({
+          name: name,
+        });
+        if (save_record_res.error) {
+          return;
+        }
+        const save_record = save_record_res.data;
+        if (!save_record) {
+          return;
+        }
+        const r = await this.store.add_sync_task({
+          url: save_record.url,
+          file_id: save_record.file_id,
+          file_id_link_resource: file_id,
+          name,
+          in_production: 1,
+          user_id: user.id,
+        });
+        if (r.error) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [`[${name}]`, "建立同步任务失败", r.error.message].map((text) => {
+                return new ArticleTextNode({ text: String(text) });
+              }),
+            })
+          );
+          return;
+        }
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [`[${name}]`, "建立同步任务成功"].map((text) => {
+              return new ArticleTextNode({ text: String(text) });
+            }),
+          })
+        );
+      })();
       await adding_file_safely(file, { user_id: user.id, drive_id: drive.id }, store);
       await store.prisma.tmp_file.deleteMany({
         where: {

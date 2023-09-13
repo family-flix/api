@@ -7,7 +7,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { TaskTypes } from "@/domains/job/constants";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
-import { DriveTypes } from "@/domains/drive/constants";
 import { DriveAnalysis } from "@/domains/analysis";
 import { Job } from "@/domains/job";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
@@ -15,7 +14,6 @@ import { response_error_factory } from "@/utils/backend";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
 import { app, store } from "@/store";
-import { toNumber } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -35,7 +33,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id, settings } = user;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
@@ -56,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     })()}`,
     type: TaskTypes.DriveAnalysis,
     unique_id: drive.id,
-    user_id,
+    user_id: user.id,
     store,
   });
   if (job_res.error) {
@@ -67,14 +64,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive,
     store,
     user,
-    tmdb_token: settings.tmdb_token,
     assets: app.assets,
-    async on_episode_added(episode) {},
     on_print(v) {
       job.output.write(v);
     },
     on_finish() {
-      // console.log("索引完成");
       job.output.write(
         new ArticleLineNode({
           children: [

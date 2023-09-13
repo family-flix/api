@@ -13,7 +13,7 @@ import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { r_id } from "@/utils";
 import { ModelQuery } from "@/domains/store/types";
-import { build_tv_name } from "@/utils/parse_filename_for_video";
+import { build_media_name } from "@/utils/parse_filename_for_video";
 
 export const config = {
   api: {
@@ -95,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
   const file_buffer = fs.readFileSync(filepath);
   const correct_filename = filename || tmp_filename;
-  const name_and_original_name = build_tv_name(episode.tv.profile);
+  const name_and_original_name = build_media_name(episode.tv.profile);
   const folder_res = await client.ensure_dir([
     "_flix_subtitles",
     [name_and_original_name, episode.season.season_text].filter(Boolean).join("."),

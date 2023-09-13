@@ -55,12 +55,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       platform: profile.source,
       profile_platforms: profile.sources,
       sources: sources.map((source) => {
-        const { id, file_id, file_name, parent_paths, drive } = source;
+        const { id, file_id, file_name, parent_paths, size, drive } = source;
         return {
           id,
           file_id,
           file_name,
           parent_paths,
+          size,
           drive: {
             id: drive.id,
             name: drive.name,

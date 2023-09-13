@@ -28,7 +28,7 @@ import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
 import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
-import { build_tv_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
+import { build_media_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { AliyunResourceClient } from "@/domains/aliyundrive/resource";
 import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 
@@ -235,7 +235,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           new ArticleLineNode({
             children: [
               new ArticleTextNode({
-                text: "创建分享并转存至目标云盘",
+                text: "移动至资源盘",
               }),
             ],
           })
@@ -266,7 +266,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             "[API]admin/season/[season_id]/to_resource_drive - before Drive.GetByUniqueId",
             source_drive.client.resource_drive_id
           );
-
           // const target_drive_res = await Drive.GetByUniqueId({
           //   id: source_drive.client.resource_drive_id,
           //   user,
@@ -395,7 +394,7 @@ async function archive_files(body: {
         ["resolution", "source", "encode", "voice_encode", "type"],
         user.get_filename_rules()
       );
-      const tv_name_with_pinyin = build_tv_name({ name, original_name });
+      const tv_name_with_pinyin = build_media_name({ name, original_name });
       const matched_season = seasons.find((s) => s.season_number === season_number);
       const air_date_of_year = (() => {
         if (matched_season && matched_season.air_date) {

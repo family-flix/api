@@ -135,7 +135,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             drive,
             store,
             user,
-            tmdb_token: settings.tmdb_token,
             assets: app.assets,
             extra_scope: tmp_folders
               .map((tv) => {

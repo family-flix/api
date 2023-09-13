@@ -6,7 +6,6 @@ import type { Handler } from "mitt";
 import { BaseDomain } from "@/domains/base";
 import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import {
   ArticleCardNode,
   ArticleHeadNode,

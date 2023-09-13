@@ -39,10 +39,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("法比安")) {
+    if (!filename.includes("送给你不幸")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -74,6 +74,7 @@ export function parse_filename_for_video(
     .replace(/\]\[/, ".")
     .replace(/[【】《》「」\[\]]{1,}/g, ".")
     .replace(/^\./, "")
+    .replace(/^\(([0-9]{1,})\)/, "E$1.")
     .replace(/\+{1,}/g, ".")
     .replace(/(^[\u4e00-\u9fa5]{1,})([0-9]{1,})(\.[a-zA-Z]{1,}[0-9a-zA-Z]{1,}$)/, (matched, p1, p2, p3) => {
       return (
@@ -1251,7 +1252,7 @@ export function is_korean(text: string) {
 /**
  * 构建一个带有首字母的电视剧名称
  */
-export function build_tv_name(values: { name: string | null; original_name: string | null }) {
+export function build_media_name(values: { name: string | null; original_name: string | null }) {
   const { name, original_name } = values;
   const first_char_pin_yin = get_first_letter(name);
   const n = [first_char_pin_yin, name].filter(Boolean).join(" ");

@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 
@@ -14,21 +14,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { id, season_id } = req.query as Partial<{ id: string; season_id: string }>;
   if (!id) {
-    return e("缺少电视剧 id");
+    return e(Result.Err("缺少电视剧 id"));
   }
   if (!season_id) {
-    return e("缺少季 id");
+    return e(Result.Err("缺少季 id"));
   }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: member_id } = t_res.data;
-
+  const member = t_res.data;
   const season = await store.prisma.season.findFirst({
     where: {
       id: season_id,
       tv_id: id,
+      user_id: member.user.id,
     },
     include: {
       profile: true,
@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
 
   if (season === null) {
-    return e("没有匹配的季记录");
+    return e(Result.Err("没有匹配的季记录"));
   }
   const { season_number, profile, episodes } = season;
   const { name, overview, poster_path } = profile;

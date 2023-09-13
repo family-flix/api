@@ -9,7 +9,7 @@ import { DriveWhereInput } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { toNumber } from "@/utils/primitive";
+import { to_number } from "@/utils/primitive";
 import { parseJSONStr } from "@/utils";
 import { AliyunDriveProfile } from "@/domains/aliyundrive/types";
 
@@ -31,8 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const { id: user_id } = user;
-  const page = toNumber(page_str, 1);
-  const page_size = toNumber(page_size_str, 20);
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
   let queries: DriveWhereInput[] = [];
   if (name) {
     queries = queries.concat({
@@ -71,9 +71,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     no_more: list.length + (page - 1) * page_size >= count,
     list: list.map((drive) => {
-      const { unique_id, profile, drive_token } = drive;
+      const { name, unique_id, profile, drive_token } = drive;
       const data = {
         id: unique_id,
+        name,
       };
       const profile_res = parseJSONStr<AliyunDriveProfile>(profile);
       if (profile_res.data) {

@@ -6,7 +6,7 @@
  * @param v
  * @returns
  */
-export function toNumber<R extends any>(v: any, defaultValue: R): number | R {
+export function to_number<R extends any>(v: any, defaultValue: R): number | R {
   if (typeof v !== "string" && typeof v !== "number") {
     return defaultValue;
   }
