@@ -22,7 +22,7 @@ export enum TaskTypes {
   RefreshTVAndSeasonProfile,
   /** 刷新电影信息 */
   RefreshMovieProfile,
-  /** 转存/归档资源 */
+  /** 转存分享资源 */
   Transfer,
   /** 删除云盘内文件 */
   DeleteDriveFile,

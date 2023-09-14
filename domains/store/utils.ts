@@ -7,7 +7,7 @@ import { Folder } from "@/domains/folder";
 import { Result, resultify, Unpacked } from "@/types";
 import { sleep } from "@/utils";
 
-import { ModelKeys, ModelQuery } from "./types";
+import { ModelKeys } from "./types";
 import { DatabaseStore } from ".";
 
 const defaultRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { url, code, file_id, file_name, drive_id } = req.body as Partial<{
     /** 分享资源链接 */
     url: string;
-    /** 分享资源链接 */
+    /** 分享资源密码 */
     code: string;
     /** 要转存的分享文件的 file_id */
     file_id: string;
@@ -29,6 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     /** 转存到哪个云盘 */
     drive_id: string;
   }>;
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
+  }
+  const user = t_res.data;
   if (!url) {
     return e(Result.Err("缺少分享资源链接"));
   }
@@ -41,11 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive_id) {
     return e(Result.Err("请指定转存到哪个网盘"));
   }
-  const t_res = await User.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res);
-  }
-  const user = t_res.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
@@ -54,26 +54,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!drive.has_root_folder()) {
     return e(Result.Err("请先为云盘设置索引根目录"));
   }
-  const existing2_res = await store.find_tmp_file({
+  const exiting_tmp_file_res = await store.find_tmp_file({
     name: file_name,
     drive_id,
     user_id: user.id,
   });
-  if (existing2_res.data) {
+  if (exiting_tmp_file_res.data) {
     return e(Result.Err("最近转存过同名文件"));
   }
-  const existing_res = await store.find_file({
+  const existing_file_res = await store.find_file({
     name: file_name,
     parent_paths: drive.profile.root_folder_name!,
     drive_id,
     user_id: user.id,
   });
-  if (existing_res.data) {
+  if (existing_file_res.data) {
     return e(Result.Err("云盘内已有同名文件"));
   }
   const job_res = await Job.New({
-    desc: `转存资源 '${file_name}' 到云盘 '${drive.name}'`,
     unique_id: file_id,
+    desc: `转存资源 '${file_name}' 到云盘 '${drive.name}'`,
     type: TaskTypes.Transfer,
     user_id: user.id,
     store,
@@ -89,47 +89,75 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }),
     })
   );
-  drive.client.on_transfer_failed((error) => {
-    job.throw(error);
-  });
-  drive.client.on_transfer_finish(async () => {
-    job.output.write(
-      new ArticleLineNode({
-        children: ["转存完成"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    job.finish();
-    await store.add_tmp_file({
-      name: file_name,
-      type: FileType.Folder,
-      parent_paths: drive.profile.root_folder_name ?? "",
-      drive_id,
-      user_id: user.id,
+  async function run(resource: { name: string; file_id: string; url: string }) {
+    const { url, file_id, name } = resource;
+    drive.client.on_transfer_failed((error) => {
+      job.output.write(
+        new ArticleLineNode({
+          children: [error.message].map((text) => new ArticleTextNode({ text })),
+        })
+      );
     });
-    const r2 = await store.find_shared_file_save({
-      url,
-      file_id,
-      name: file_name,
-      drive_id,
-      user_id: user.id,
-    });
-    if (r2.error) {
-      return e(r2);
-    }
-    if (!r2.data) {
-      await store.add_shared_file_save({
-        url,
-        file_id,
-        name: file_name,
+    drive.client.on_transfer_finish(async () => {
+      job.output.write(
+        new ArticleLineNode({
+          children: ["添加到待索引文件l"].map((text) => new ArticleTextNode({ text })),
+        })
+      );
+      await store.add_tmp_file({
+        name,
+        type: FileType.Folder,
+        parent_paths: drive.profile.root_folder_name ?? "",
         drive_id,
         user_id: user.id,
       });
+      job.output.write(
+        new ArticleLineNode({
+          children: ["添加转存记录列表"].map((text) => new ArticleTextNode({ text })),
+        })
+      );
+      const r2 = await store.find_shared_file_save({
+        url,
+        file_id,
+        name,
+        drive_id,
+        user_id: user.id,
+      });
+      if (!r2.data) {
+        await store.add_shared_file_save({
+          url,
+          file_id,
+          name,
+          drive_id,
+          user_id: user.id,
+        });
+      }
+    });
+    const r = await drive.client.save_multiple_shared_files({
+      url,
+      code,
+      file_ids: [{ file_id }],
+    });
+    if (r.error) {
+      job.output.write(
+        new ArticleLineNode({
+          children: ["转存失败", r.error.message].map((text) => new ArticleTextNode({ text })),
+        })
+      );
+      job.finish();
+      return;
     }
-  });
-  drive.client.save_multiple_shared_files({
+    job.output.write(
+      new ArticleLineNode({
+        children: ["转存成功"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    job.finish();
+  }
+  run({
     url,
-    code,
-    file_ids: [{ file_id }],
+    file_id,
+    name: file_name,
   });
   res.status(200).json({
     code: 0,

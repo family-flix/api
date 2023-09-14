@@ -5,12 +5,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
-import { store } from "@/store";
 import { normalize_partial_tv } from "@/domains/tv/utils";
 import { ModelQuery, TVProfileWhereInput } from "@/domains/store/types";
+import { BaseApiResp } from "@/types";
 import { season_to_chinese_num } from "@/utils";
+import { response_error_factory } from "@/utils/backend";
+import { to_number } from "@/utils/primitive";
+import { store } from "@/store";
 import { MediaProfileSourceTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -24,8 +25,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     season_number,
     invalid = "0",
     duplicated = "0",
-    page: page_str = "1",
-    page_size: page_size_str = "20",
+    page: page_str,
+    page_size: page_size_str,
   } = req.query as Partial<{
     name: string;
     genres: string;
@@ -45,9 +46,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id } = user;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
   let queries: TVProfileWhereInput[] = [];
   if (name) {
     queries = queries.concat({
@@ -118,7 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     });
   }
-  const where: ModelQuery<typeof store.prisma.season.findMany>["where"] = {
+  const where: ModelQuery<"season"> = {
     profile: {
       source: {
         // 不是「其他」季
@@ -128,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     episodes: {
       some: {},
     },
-    user_id,
+    user_id: user.id,
   };
   if (queries.length !== 0) {
     where.tv = {
@@ -174,11 +174,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         include: {
           _count: true,
           profile: true,
-          parsed_tvs: {
-            include: {
-              binds: true,
-            },
-          },
+          parsed_tvs: true,
         },
       },
       episodes: {

@@ -61,7 +61,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const r2 = await DriveAnalysis.New({
     drive,
     user,
-    tmdb_token: user.settings.tmdb_token,
     assets: app.assets,
     store,
     on_print(v) {

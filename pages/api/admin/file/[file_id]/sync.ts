@@ -31,26 +31,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const { id: user_id, settings } = user;
-  const parsed_tv = await store.prisma.parsed_tv.findFirst({
+  const tasks = await store.prisma.bind_for_parsed_tv.findMany({
     where: {
-      file_id,
-      binds: {
-        every: {
-          invalid: 0,
-        },
-      },
-    },
-    include: {
-      binds: true,
+      file_id_link_resource: file_id,
     },
   });
-  if (!parsed_tv) {
+  if (tasks.length === 0) {
     return e(Result.Err("该文件夹没有关联同步任务"));
   }
-  if (parsed_tv.binds.length === 0) {
-    return e(Result.Err("该文件夹没有关联同步任务"));
-  }
-  const valid_bind = parsed_tv.binds.find((bind) => {
+  const valid_bind = tasks.find((bind) => {
     return bind.invalid === 0;
   });
   if (!valid_bind) {
@@ -67,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(job_res);
   }
   const job = job_res.data;
-  async function run(bind: FileSyncTaskRecord & { parsed_tv: ParsedTVRecord }, drive_id: string) {
+  async function run(bind: FileSyncTaskRecord, drive_id: string) {
     const token = settings.tmdb_token;
     if (!token) {
       console.log("[API]tv/sync/[id].ts - after if(!token)");
@@ -112,13 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     job.finish();
     // console.log("[API]tv/sync/[id].ts - before job.finish");
   }
-  run(
-    {
-      ...valid_bind,
-      parsed_tv,
-    },
-    drive_id
-  );
+  run(valid_bind, drive_id);
   res.status(200).json({
     code: 0,
     msg: "",

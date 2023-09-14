@@ -8,7 +8,7 @@ import { Member } from "@/domains/user/member";
 import { MemberNotifyWhereInput, ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
-import { toNumber } from "@/utils/primitive";
+import { to_number } from "@/utils/primitive";
 import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -31,10 +31,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const member = t_res.data;
-  const page = toNumber(page_str, 1);
-  const page_size = toNumber(page_size_str, 20);
-  const type = toNumber(type_str, 1);
-  const status = toNumber(status_str, null);
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
+  const type = to_number(type_str, 1);
+  const status = to_number(status_str, null);
   let queries: MemberNotifyWhereInput[] = [];
   if (type) {
     queries = queries.concat({
@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       status,
     });
   }
-  const where: ModelQuery<typeof store.prisma.member_notification.findMany>["where"] = {
+  const where: ModelQuery<"member_notification"> = {
     member_id: member.id,
     is_delete: 0,
   };

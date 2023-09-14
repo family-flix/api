@@ -1820,7 +1820,6 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       expired_at,
     });
   }
-
   async update_profile(values: Partial<AliyunDriveProfile>) {
     const drive_res = await this.store.find_drive({
       id: this.id,
@@ -1849,6 +1848,40 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r.error.message);
     }
     return Result.Ok(next_profile);
+  }
+  async fetch_vip_info() {
+    await this.ensure_initialized();
+    const url = "/business/v1.0/users/vip/info";
+    const r = await this.request.post<{
+      identity: string;
+      level: null;
+      icon: string;
+      mediumIcon: string;
+      status: string;
+      autoRenew: boolean;
+      vipCode: string;
+      vipList: {
+        name: string;
+        code: string;
+        promotedAt: number;
+        expire: number;
+      }[];
+    }>(API_HOST + url, {});
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    const { identity, vipList } = r.data;
+    return Result.Ok({
+      identity,
+      list: vipList.map((vip) => {
+        const { name, expire, promotedAt } = vip;
+        return {
+          name,
+          expired_at: dayjs(expire * 1000).format("YYYY-MM-DD HH:mm:ss"),
+          started_at: dayjs(promotedAt * 1000).format("YYYY-MM-DD HH:mm:ss"),
+        };
+      }),
+    });
   }
   /** 系统文件夹/系统盘 */
   async fetch_system_folders() {

@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     },
   });
-  const where: ModelQuery<typeof store.prisma.tv.findMany>["where"] = {
+  const where: ModelQuery<"tv"> = {
     profile: {
       unique_id: {
         in: duplicate_tv_profiles.map((profile) => {
@@ -68,11 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       _count: true,
       profile: true,
-      parsed_tvs: {
-        include: {
-          binds: true,
-        },
-      },
+      parsed_tvs: true,
     },
     take: page_size,
     skip: (page - 1) * page_size,

@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = t_res.data;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
-  const where: ModelQuery<typeof store.prisma.season.findMany>["where"] = {
+  const where: ModelQuery<"season"> = {
     tv_id,
     //     profile: {
     //       OR: name

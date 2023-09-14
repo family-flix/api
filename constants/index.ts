@@ -17,6 +17,8 @@ export enum ReportTypes {
 
 export enum MediaProfileSourceTypes {
   TMDB = 1,
-  /** 其他（花絮、彩蛋等 */
+  /** 自动识别出的 花絮、彩蛋等 */
   Other = 2,
+  /** 手动编辑 */
+  Manual = 3,
 }

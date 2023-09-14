@@ -19,10 +19,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const member = t_res.data;
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
+      user_id: member.user.id,
     },
     include: {
       profile: true,
@@ -49,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (tv === null) {
-    return e("没有匹配的电视剧记录");
+    return e(Result.Err("没有匹配的电视剧记录"));
   }
   const { profile, seasons, episodes } = tv;
   const { name, original_name, overview, poster_path, popularity } = profile;

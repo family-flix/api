@@ -9,7 +9,7 @@ import { TVProfileWhereInput } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { toNumber } from "@/utils/primitive";
+import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -29,8 +29,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const { id: user_id } = user;
-  const page = toNumber(page_str, 1);
-  const page_size = toNumber(page_size_str, 20);
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
   let queries: TVProfileWhereInput[] = [{}];
   if (name) {
     queries = queries.concat({

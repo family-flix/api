@@ -1,6 +1,5 @@
-import { ModelQuery, ModelWhereInput } from "@/domains/store/types";
+import { ModelParam, ModelQuery } from "@/domains/store/types";
 import { store } from "@/store";
-import { sleep } from "@/utils";
 
 async function main() {
   // console.log("[DOMAIN]searcher/index - process_parsed_episode_list", scope, this.force);
@@ -14,7 +13,7 @@ async function main() {
   let next_marker: string | null = null;
   let no_more = false;
 
-  const where: ModelQuery<typeof store.prisma.parsed_episode.findMany>["where"] = {
+  const where: ModelQuery<"parsed_episode"> = {
     // episode_id: null,
     // can_search: force ? undefined : 1,
     user_id,
@@ -24,7 +23,7 @@ async function main() {
     where.drive_id = drive_id;
   }
   if (scope && scope.length && scope.length <= 10) {
-    let queries: NonNullable<ModelWhereInput<"parsed_episode">>[] = scope.map((s) => {
+    let queries: NonNullable<ModelQuery<"parsed_episode">>[] = scope.map((s) => {
       const { name } = s;
       return {
         file_name: {
@@ -48,7 +47,7 @@ async function main() {
   const count = await store.prisma.parsed_episode.count({ where });
   console.log("[DOMAIN]Searcher - process_parsed_episode_list", count);
   do {
-    type ParsedEpisodeInput = ModelQuery<typeof store.prisma.parsed_episode.findMany>;
+    type ParsedEpisodeInput = ModelParam<typeof store.prisma.parsed_episode.findMany>;
 
     const list = await store.prisma.parsed_episode.findMany({
       where,

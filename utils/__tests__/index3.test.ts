@@ -277,4 +277,14 @@ describe("动漫", () => {
       episode: "E01",
     });
   });
+  test("(1)送给你不幸.rmvb", () => {
+    const name = "(1)送给你不幸.rmvb";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E01",
+    });
+  });
 });

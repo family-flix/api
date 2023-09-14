@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
+import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { User } from "@/domains/user";
-import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page = Number(page_str);
   const page_size = Number(page_size_str);
 
-  const where: ModelQuery<typeof store.prisma.parsed_episode.findMany>["where"] = {
+  const where: ModelQuery<"parsed_episode"> = {
     episode_id: null,
     user_id,
   };

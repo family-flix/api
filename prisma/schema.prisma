@@ -47,6 +47,7 @@ model drive {
         parsed_movies           parsed_movie[]
         shared_file_in_progress shared_file_in_progress[]
         subtitles               subtitle[]
+        sync_tasks              bind_for_parsed_tv[]
 
         @@unique([user_id, unique_id])
         @@map("Drive")
@@ -105,7 +106,6 @@ model tv_profile {
         season_count      Int?    @default(0)
         // (Ended已完结)、(Returning Series回归剧)
         status            String?
-        // 是否更新中
         in_production     Int?    @default(0)
 
         tvs       tv[]
@@ -114,7 +114,6 @@ model tv_profile {
         @@map("TVProfile")
 }
 
-// 电视剧季基本信息
 model season_profile {
         id      String   @id
         created DateTime @default(now())
@@ -129,6 +128,7 @@ model season_profile {
         season_number Int?
         air_date      String?
         episode_count Int?    @default(0)
+        vote_average  Float?  @default(0)
 
         seasons season[]
 
@@ -224,7 +224,6 @@ model parsed_tv {
 
         parsed_episodes parsed_episode[]
         parsed_seasons  parsed_season[]
-        binds           bind_for_parsed_tv[]
 
         @@map("ParsedTV")
 }
@@ -372,16 +371,16 @@ model season {
         user_id       String
         user          user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        parsed_season parsed_season[]
-        // play_histories play_history[]
-        episodes      episode[]
-        reports       report[]
+        parsed_season  parsed_season[]
+        play_histories play_history[]
+        episodes       episode[]
+        reports        report[]
+        sync_tasks     bind_for_parsed_tv[]
 
         @@unique([user_id, profile_id])
         @@map("Season")
 }
 
-// 根据 parsed_episode 创建的剧集
 model episode {
         id      String   @id
         created DateTime @default(now())
@@ -417,7 +416,6 @@ model movie {
         profile_id String
         profile    movie_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
-        // 关联 user 表
         user_id       String
         user          user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
         collection_id String?
@@ -437,8 +435,13 @@ model collection {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        title String
-        desc  String?
+        title  String
+        desc   String?
+        type   Int     @default(0)
+        rules  String?
+        sort   Int     @default(0)
+        // 样式配置
+        styles String?
 
         tvs     tv[]
         seasons season[]
@@ -511,15 +514,14 @@ model play_history {
 
         tv_id      String?
         tv         tv?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
-        // season_id  String?
-        // season     season?  @relation(fields: [season_id], references: [id])
+        season_id  String?
+        season     season?  @relation(fields: [season_id], references: [id])
         episode_id String?
         episode    episode? @relation(fields: [episode_id], references: [id])
         movie_id   String?
         movie      movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
-
-        member_id String
-        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        member_id  String
+        member     member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
         @@map("PlayHistory")
 }
@@ -582,20 +584,25 @@ model bind_for_parsed_tv {
         updated DateTime @default(now())
 
         // 分享文件夹所属 url
-        url           String
+        url                     String
         // 关联的分享文件夹 file_id
-        file_id       String
+        file_id                 String
         // 关联的分享文件夹名称
-        name          String
+        name                    String
+        // 云盘中和分享资源文件夹关联的文件夹
+        file_id_link_resource   String
+        file_name_link_resource String
         // 是否连载中
-        in_production Int?   @default(1)
+        in_production           Int?   @default(1)
         // 分享资源是否失效
-        invalid       Int?   @default(0)
+        invalid                 Int?   @default(0)
 
-        parsed_tv_id String
-        parsed_tv    parsed_tv @relation(fields: [parsed_tv_id], references: [id], onDelete: Cascade)
-        user_id      String
-        user         user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        season_id String?
+        season    season? @relation(fields: [season_id], references: [id], onDelete: Cascade)
+        drive_id  String
+        drive     drive   @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        user_id   String
+        user      user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("BindForParsedTV")
 }
@@ -932,7 +939,7 @@ model user {
         shared_files            shared_file[]
         shared_file_in_progress shared_file_in_progress[]
         tmp_files               tmp_file[]
-        binds_for_parsed_tv     bind_for_parsed_tv[]
+        sync_tasks              bind_for_parsed_tv[]
         notifications           notification[]
         outputs                 output[]
         reports                 report[]

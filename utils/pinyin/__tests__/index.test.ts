@@ -46,4 +46,9 @@ describe("国漫", () => {
     const result = get_first_letter(name);
     expect(result).toStrictEqual(null);
   });
+  test("72小时黄金行动", () => {
+    const name = "72小时黄金行动";
+    const result = get_first_letter(name);
+    expect(result).toStrictEqual(null);
+  });
 });

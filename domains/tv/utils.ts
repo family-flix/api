@@ -39,9 +39,7 @@ export function format_number_with_3decimals(number: number) {
 export function normalize_partial_tv(
   tv: TVRecord & {
     profile: TVProfileRecord;
-    parsed_tvs: (ParsedTVRecord & {
-      binds: TVBindTaskRecord[];
-    })[];
+    parsed_tvs: ParsedTVRecord[];
     // episodes: (EpisodeRecord & {
     //   profile: EpisodeProfileRecord;
     //   parsed_episodes: ParsedEpisodeRecord[];
@@ -70,24 +68,6 @@ export function normalize_partial_tv(
     genres,
     origin_country,
   } = profile;
-  const binds = parsed_tvs
-    .filter((parsed_tv) => {
-      const { binds } = parsed_tv;
-      return !!binds;
-    })
-    .reduce((total, cur) => {
-      return total.concat(cur.binds);
-    }, [] as FileSyncTaskRecord[])
-    .map((bind) => {
-      const { id, url, file_id, name, invalid } = bind;
-      return {
-        id,
-        url,
-        file_id,
-        file_name: name,
-        invalid,
-      };
-    });
   const incomplete = episode_count && episode_count !== _count.episodes;
   // const episode_sources = episodes
   //   .map((episode) => {
@@ -101,36 +81,6 @@ export function normalize_partial_tv(
   // if (binds.length === 0 && incomplete) {
   //   tips.push(`该电视剧集数不全且缺少可同步的分享资源(${_count.episodes}/${episode_count})`);
   // }
-  const valid_bind = (() => {
-    if (binds.length === 0) {
-      return null;
-    }
-    const valid_task = binds.find((b) => !b.invalid);
-    if (!valid_task) {
-      return null;
-    }
-    return {
-      id: valid_task.id,
-    };
-  })();
-  if (binds.length !== 0 && valid_bind === null) {
-    tips.push("更新已失效");
-  }
-  const need_bind = (() => {
-    if (!incomplete) {
-      return false;
-    }
-    if (in_production && binds.length === 0) {
-      return true;
-    }
-    if (valid_bind === null) {
-      return true;
-    }
-    return false;
-  })();
-  if (in_production && incomplete && binds.length === 0) {
-    tips.push("未完结但缺少同步任务");
-  }
   if (!in_production && incomplete) {
     tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
   }
@@ -161,11 +111,11 @@ export function normalize_partial_tv(
     cur_season_count: _count.seasons,
     genres,
     origin_country,
-    binds,
-    valid_bind,
+    binds: [],
+    valid_bind: null,
     incomplete,
-    need_bind,
-    sync_task: valid_bind,
+    need_bind: false,
+    sync_task: null,
     tips,
   };
 }

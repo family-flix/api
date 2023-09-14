@@ -8,11 +8,13 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { User } from "@/domains/user";
+import { to_number } from "@/utils/primitive";
+import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
-  const { page: page_str = "1", page_size: page_size_str = "20" } = query as Partial<{
+  const { page: page_str, page_size: page_size_str } = query as Partial<{
     page: string;
     page_size: string;
   }>;
@@ -22,10 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
-
-  const where: NonNullable<Parameters<typeof store.prisma.parsed_season.findMany>[number]>["where"] = {
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
+  const where: ModelQuery<"parsed_season"> = {
     season_id: null,
     user_id,
   };
@@ -59,15 +60,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       no_more: list.length + (page - 1) * page_size >= count,
       list: list.map((parsed_season) => {
         const { id, season_number, parsed_tv } = parsed_season;
+        const profile = (() => {
+          if (!parsed_tv.tv) {
+            return {
+              name: parsed_tv.name,
+              poster_path: null,
+            };
+          }
+          const { name, poster_path } = parsed_tv.tv.profile;
+          return {
+            name,
+            poster_path,
+          };
+        })();
         return {
           id,
           season_number,
-          name: (() => {
-            if (parsed_tv?.tv?.profile) {
-              return parsed_tv.tv.profile.name || parsed_tv.tv.profile.original_name;
-            }
-            return parsed_tv.name || parsed_tv.original_name;
-          })(),
+          name: profile.name,
+          profile,
         };
       }),
     },

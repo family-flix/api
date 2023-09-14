@@ -92,15 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       _count: true,
       profile: true,
-      parsed_tvs: {
-        include: {
-          binds: {
-            orderBy: {
-              created: "desc",
-            },
-          },
-        },
-      },
+      parsed_tvs: true,
       episodes: {
         include: {
           profile: true,

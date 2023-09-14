@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include_file: string;
   }>;
   if (!id) {
-    return e("缺少电视剧 id");
+    return e(Result.Err("缺少电视剧 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {

@@ -13,7 +13,7 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { r_id } from "@/utils";
-import { build_tv_name } from "@/utils/parse_filename_for_video";
+import { build_media_name } from "@/utils/parse_filename_for_video";
 import { TVProfileRecord, TVRecord } from "@/domains/store/types";
 import { Job, TaskTypes } from "@/domains/job";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
@@ -182,7 +182,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const file_buffer = fs.readFileSync(filepath);
-        const name_and_original_name = build_tv_name(tv.profile);
+        const name_and_original_name = build_media_name(tv.profile);
         const dir = [
           "_flix_subtitles",
           [name_and_original_name, season.season_text].filter(Boolean).join("."),

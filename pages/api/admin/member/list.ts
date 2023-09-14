@@ -9,14 +9,15 @@ import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
     name,
-    page: page_str = "1",
-    page_size: page_size_str = "20",
+    page: page_str,
+    page_size: page_size_str,
   } = req.query as Partial<{
     name: string;
     page: string;
@@ -27,9 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
-  const where: ModelQuery<typeof store.prisma.member.findMany>["where"] = {
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
+  const where: ModelQuery<"member"> = {
     user_id,
     delete: 0,
   };

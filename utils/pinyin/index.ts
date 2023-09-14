@@ -11,8 +11,11 @@ export function get_first_letter(str: any) {
   if (!str.match(/[\u4e00-\u9fa5]/)) {
     return null;
   }
-  const unicode = str.charCodeAt(0);
   let ch = str.charAt(0);
+  if (!ch.match(/[\u4e00-\u9fa5]/)) {
+    return null;
+  }
+  const unicode = str.charCodeAt(0);
   if (unicode >= 19968 && unicode <= 40869) {
     ch = dict.firstletter.all.charAt(unicode - 19968);
   }
