@@ -1,21 +1,23 @@
 /**
- * @file 获取未识别的文件夹列表
+ * @file 获取未识别，认为是电视剧的记录列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
+import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { User } from "@/domains/user";
+import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
   const {
     name,
-    page: page_str = "1",
-    page_size: page_size_str = "20",
+    page: page_str,
+    page_size: page_size_str,
   } = query as Partial<{
     name: string;
     page: string;
@@ -26,12 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
-  const where: NonNullable<Parameters<typeof store.prisma.parsed_tv.findMany>[number]>["where"] = {
+  const user = t_res.data;
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
+  const where: ModelQuery<"parsed_tv"> = {
     tv_id: null,
-    user_id,
+    user_id: user.id,
   };
   if (name) {
     where.OR = [
@@ -50,11 +52,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const count = await store.prisma.parsed_tv.count({ where });
   const list = await store.prisma.parsed_tv.findMany({
     where,
-    select: {
-      id: true,
-      name: true,
-      original_name: true,
-      file_name: true,
+    include: {
+      parsed_seasons: {
+        where: {
+          season: null,
+        },
+      },
+      parsed_episodes: {
+        where: {
+          episode: null,
+        },
+      },
+      drive: true,
     },
     take: page_size,
     skip: (page - 1) * page_size,
@@ -70,7 +79,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page_size,
       no_more: list.length + (page - 1) * page_size >= count,
       total: count,
-      list,
+      list: list.map((parsed_tv) => {
+        const { id, name, file_id, file_name, parsed_seasons, parsed_episodes, drive } = parsed_tv;
+        return {
+          id,
+          name,
+          file_id,
+          file_name,
+          parsed_seasons: parsed_seasons.map((season) => {
+            const { id, file_name } = season;
+            return {
+              id,
+              file_name,
+            };
+          }),
+          parsed_episodes: parsed_episodes.map((episode) => {
+            const { id, file_name, parent_paths } = episode;
+            return {
+              id,
+              file_name,
+              parent_paths,
+            };
+          }),
+          drive: {
+            id: drive.id,
+            name: drive.name,
+          },
+        };
+      }),
     },
   });
 }

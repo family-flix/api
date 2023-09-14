@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = user;
   const page = to_number(page_str, 1);
   const page_size = to_number(page_size_str, 20);
-  const where: ModelQuery<typeof store.prisma.shared_file_in_progress.findMany>["where"] = {
+  const where: ModelQuery<"shared_file_in_progress"> = {
     user_id,
   };
   if (name) {

@@ -38,16 +38,19 @@ CREATE TABLE "new_BindForParsedTV" (
     "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "url" TEXT NOT NULL,
     "file_id" TEXT NOT NULL,
-    "file_id_link_resource" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "file_id_link_resource" TEXT NOT NULL,
+    "file_name_link_resource" TEXT NOT NULL,
     "in_production" INTEGER DEFAULT 1,
     "invalid" INTEGER DEFAULT 0,
     "season_id" TEXT,
+    "drive_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     CONSTRAINT "BindForParsedTV_season_id_fkey" FOREIGN KEY ("season_id") REFERENCES "Season" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "BindForParsedTV_drive_id_fkey" FOREIGN KEY ("drive_id") REFERENCES "Drive" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "BindForParsedTV_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
-INSERT INTO "new_BindForParsedTV" ("created", "file_id", "file_id_link_resource", "id", "in_production", "invalid", "name", "updated", "url", "user_id") SELECT b."created", b."file_id", p."file_id", b."id", b."in_production", b."invalid", b."name", b."updated", b."url", b."user_id" FROM "BindForParsedTV" b LEFT JOIN "ParsedTV" p ON p."id" = b."parsed_tv_id";
+INSERT INTO "new_BindForParsedTV" ("created", "drive_id", "file_id", "file_id_link_resource", "file_name_link_resource", "id", "in_production", "invalid", "name", "updated", "url", "user_id") SELECT b."created", p."drive_id", b."file_id", p."file_id", p."file_name", b."id", b."in_production", b."invalid", b."name", b."updated", b."url", b."user_id" FROM "BindForParsedTV" b LEFT JOIN "ParsedTV" p ON p."id" = b."parsed_tv_id";
 DROP TABLE "BindForParsedTV";
 ALTER TABLE "new_BindForParsedTV" RENAME TO "BindForParsedTV";
 CREATE TABLE "new_Collection" (
@@ -57,6 +60,9 @@ CREATE TABLE "new_Collection" (
     "title" TEXT NOT NULL,
     "desc" TEXT,
     "type" INTEGER NOT NULL DEFAULT 0,
+    "rules" TEXT,
+    "sort" INTEGER NOT NULL DEFAULT 0,
+    "styles" TEXT,
     "user_id" TEXT NOT NULL,
     CONSTRAINT "Collection_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );

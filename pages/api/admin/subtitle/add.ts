@@ -8,11 +8,11 @@ import { File, IncomingForm } from "formidable";
 
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
+import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
 import { r_id } from "@/utils";
-import { ModelQuery } from "@/domains/store/types";
 import { build_media_name } from "@/utils/parse_filename_for_video";
 
 export const config = {
@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!lang) {
     return e(Result.Err("请传入字幕语言"));
   }
-  const where: ModelQuery<typeof store.prisma.episode.findFirst>["where"] = {
+  const where: ModelQuery<"episode"> = {
     tv_id,
     episode_text,
     season_text: "S01",

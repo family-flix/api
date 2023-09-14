@@ -5,10 +5,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
+import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const page = Number(page_str);
   const page_size = Number(page_size_str);
 
-  const where: ModelQuery<typeof store.prisma.report.findMany>["where"] = {
+  const where: ModelQuery<"report"> = {
     user_id,
   };
   const count = await store.prisma.report.count({ where });

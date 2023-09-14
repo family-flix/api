@@ -16,7 +16,7 @@ import {
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DatabaseStore } from "@/domains/store";
-import { ParsedTVRecord, FileSyncTaskRecord } from "@/domains/store/types";
+import { ParsedTVRecord, FileSyncTaskRecord, FileRecord } from "@/domains/store/types";
 import { AliyunDriveClient } from "@/domains/aliyundrive/types";
 import { folder_client } from "@/domains/store/utils";
 import { Result } from "@/types";
@@ -39,7 +39,7 @@ type TheTypesOfEvents = {
   [Events.Error]: Error;
 };
 type ResourceSyncTaskProps = {
-  task: FileSyncTaskRecord & { parsed_tv: ParsedTVRecord };
+  task: FileSyncTaskRecord;
   user: User;
   drive: Drive;
   store: DatabaseStore;
@@ -58,13 +58,10 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     options: { id: string } & {
       user: User;
       store: DatabaseStore;
-    } & Pick<
-        ResourceSyncTaskProps,
-        "TMDB_TOKEN" | "assets" | "wait_complete" | "on_file" | "on_print" | "on_finish" | "on_error"
-      >
+    } & Pick<ResourceSyncTaskProps, "assets" | "wait_complete" | "on_file" | "on_print" | "on_finish" | "on_error">
   ) {
-    const { id, user, store, TMDB_TOKEN, assets, wait_complete, on_file, on_finish, on_print, on_error } = options;
-    if (!TMDB_TOKEN) {
+    const { id, user, store, assets, wait_complete, on_file, on_finish, on_print, on_error } = options;
+    if (!user.settings.tmdb_token) {
       return Result.Err("缺少 TMDB_TOKEN");
     }
     if (!assets) {
@@ -73,36 +70,13 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     const sync_task = await store.prisma.bind_for_parsed_tv.findFirst({
       where: {
         id,
-        parsed_tv: {
-          file_id: {
-            not: null,
-          },
-        },
         user_id: user.id,
-      },
-      include: {
-        parsed_tv: {
-          include: {
-            tv: {
-              include: {
-                profile: true,
-              },
-            },
-          },
-        },
       },
     });
     if (sync_task === null) {
       return Result.Err("没有匹配的同步任务记录");
     }
-    const { parsed_tv } = sync_task;
-    const { name, original_name, tv, drive_id } = parsed_tv;
-    // const tv_name = (() => {
-    //   if (tv) {
-    //     return tv.profile.name || tv.profile.original_name;
-    //   }
-    //   return name || original_name;
-    // })();
+    const { file_id, drive_id } = sync_task;
     const drive_res = await Drive.Get({ id: drive_id, user, store });
     if (drive_res.error) {
       return Result.Err(drive_res.error);
@@ -117,7 +91,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       drive,
       store,
       wait_complete,
-      TMDB_TOKEN,
       assets,
       client: drive.client,
       on_file,
@@ -127,8 +100,70 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     });
     return Result.Ok(t);
   }
+  static async Create(values: { url: string; user: User; store: DatabaseStore }) {
+    // const { url, user, store } = values;
+    // const sync_tasks = await store.prisma.bind_for_parsed_tv.findMany({
+    //   where: {
+    //     url,
+    //     user_id: user.id,
+    //   },
+    // });
+    // if (sync_tasks.length !== 0) {
+    //   return Result.Err(`该分享资源已关联文件夹`, 40001, {
+    //     list: sync_tasks.map((task) => {
+    //       const { id, name, url, file_name_link_resource } = task;
+    //       return {
+    //         id,
+    //         name,
+    //         url,
+    //         file_name_link_resource,
+    //       };
+    //     }),
+    //   });
+    // }
+    // const random_drive_id_res = await (async () => {
+    //   if (target_drive_id) {
+    //     return Result.Ok(target_drive_id);
+    //   }
+    //   const drive = await store.prisma.drive.findFirst({
+    //     where: {
+    //       type: DriveTypes.AliyunBackupDrive,
+    //       user_id: user.id,
+    //     },
+    //   });
+    //   if (!drive) {
+    //     return Result.Err("请先添加阿里云盘");
+    //   }
+    //   return Result.Ok(drive.id);
+    // })();
+    // if (random_drive_id_res.error) {
+    //   return e(random_drive_id_res);
+    // }
+    // const random_drive_id = random_drive_id_res.data;
+    // const drive_res = await Drive.Get({ id: random_drive_id, user, store });
+    // if (drive_res.error) {
+    //   return e(drive_res);
+    // }
+    // const drive = drive_res.data;
+    // const r1 = await drive.client.fetch_share_profile(url);
+    // if (r1.error) {
+    //   return e(r1);
+    // }
+    // const { share_id } = r1.data;
+    // const files_res = await drive.client.fetch_shared_files("root", {
+    //   share_id,
+    // });
+    // if (files_res.error) {
+    //   return e(files_res);
+    // }
+    // const resource_files = files_res.data.items;
+    // if (resource_files.length === 0) {
+    //   return e(Result.Err("该分享没有包含文件夹"));
+    // }
+    // const resource = resource_files[0];
+  }
 
-  task: FileSyncTaskRecord & { parsed_tv: ParsedTVRecord };
+  task: FileSyncTaskRecord;
   user: ResourceSyncTaskProps["user"];
   drive: ResourceSyncTaskProps["drive"];
   store: ResourceSyncTaskProps["store"];
@@ -190,28 +225,13 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       })
     );
     const { task, client, store } = this;
-    const { id, url, file_id, invalid, parsed_tv } = task;
-    const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
+    const { id, url, file_id, file_id_link_resource, invalid } = task;
+    // const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
 
     const drive_id = this.drive.id;
 
     if (invalid) {
       const tip = "该更新已失效，请重新绑定更新";
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [
-            new ArticleTextNode({
-              text: tip,
-            }),
-          ],
-        })
-      );
-      this.emit(Events.Error, new Error(tip));
-      return Result.Err(tip);
-    }
-    if (target_folder_id === null || target_folder_name === null) {
-      const tip = "该任务没有关联的云盘文件夹";
       this.emit(
         Events.Print,
         new ArticleLineNode({
@@ -245,7 +265,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
                 children: [
                   new ArticleCardNode({
                     value: {
-                      tv_id: parsed_tv.tv_id,
                       task_id: task.id,
                     },
                   }),
@@ -275,7 +294,8 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r1.error);
     }
     const { share_id } = r1.data;
-    const prev_folder = new Folder(target_folder_id, {
+    const target_folder_name = "__filename";
+    const prev_folder = new Folder(file_id_link_resource, {
       name: target_folder_name,
       client: folder_client({ drive_id }, store),
     });

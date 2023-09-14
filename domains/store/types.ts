@@ -59,12 +59,12 @@ export type ModelKeys = keyof Omit<
   | "$transaction"
 >;
 
-export type ModelQuery<F extends (...args: any[]) => any> = NonNullable<Parameters<F>[number]>;
-export type ModelWhereInput<T extends ModelKeys> = NonNullable<Parameters<PrismaClient[T]["findMany"]>[0]>["where"];
-export type DriveWhereInput = NonNullable<ModelWhereInput<"drive">>;
-export type TVProfileWhereInput = NonNullable<ModelWhereInput<"tv_profile">>;
-export type SeasonProfileWhereInput = NonNullable<ModelWhereInput<"season_profile">>;
-export type EpisodeProfileWhereInput = NonNullable<ModelWhereInput<"episode_profile">>;
-export type MemberNotifyWhereInput = NonNullable<ModelWhereInput<"member_notification">>;
-export type MovieProfileWhereInput = NonNullable<ModelWhereInput<"movie_profile">>;
-export type MemberWhereInput = NonNullable<ModelWhereInput<"member">>;
+export type ModelParam<F extends (...args: any[]) => any> = NonNullable<Parameters<F>[number]>;
+export type ModelQuery<T extends ModelKeys> = NonNullable<Parameters<PrismaClient[T]["findMany"]>[0]>["where"];
+export type DriveWhereInput = NonNullable<ModelQuery<"drive">>;
+export type TVProfileWhereInput = NonNullable<ModelQuery<"tv_profile">>;
+export type SeasonProfileWhereInput = NonNullable<ModelQuery<"season_profile">>;
+export type EpisodeProfileWhereInput = NonNullable<ModelQuery<"episode_profile">>;
+export type MemberNotifyWhereInput = NonNullable<ModelQuery<"member_notification">>;
+export type MovieProfileWhereInput = NonNullable<ModelQuery<"movie_profile">>;
+export type MemberWhereInput = NonNullable<ModelQuery<"member">>;

@@ -291,6 +291,7 @@ export async function fetch_tv_profile(
       overview: string;
       poster_path: string;
       season_number: number;
+      vote_average: number;
     }[];
     spoken_languages: {
       english_name: string;

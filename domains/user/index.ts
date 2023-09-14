@@ -292,10 +292,7 @@ export class User {
   /** 用户 id */
   id: UserUniqueID;
   nickname: string = "unknown";
-  /**
-   * JWT token
-   * @todo 没啥用，就是登录后返回了该值。改成方法获取并返回
-   */
+  /** JWT token */
   token: string;
   settings: UserSettings;
   store: DatabaseStore;

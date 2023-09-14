@@ -164,8 +164,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       this.on_error(on_error);
     }
   }
-
-  async run(files?: { name: string; type: string }[], options: Partial<{ force: boolean }> = {}) {
+  async run(files?: { name: string; type: string; file_id?: string }[], options: Partial<{ force: boolean }> = {}) {
     const { drive, user, store } = this;
     const { force = false } = options;
     const { client } = drive;
@@ -296,7 +295,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
           return;
         }
         const save_record_res = await this.store.find_shared_file_save({
-          name: name,
+          name,
         });
         if (save_record_res.error) {
           return;
@@ -308,10 +307,12 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         const r = await this.store.add_sync_task({
           url: save_record.url,
           file_id: save_record.file_id,
-          file_id_link_resource: file_id,
           name,
+          file_id_link_resource: file_id,
+          file_name_link_resource: name,
           in_production: 1,
           user_id: user.id,
+          drive_id: drive.id,
         });
         if (r.error) {
           this.emit(
@@ -370,14 +371,14 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       const k = [parsed.tv.name, parsed.tv.original_name].join("/");
       if (!added_parsed_tv_list[k]) {
         added_parsed_tv_list[k] = parsed.tv;
-        // this.emit(
-        //   Events.Print,
-        //   new ArticleLineNode({
-        //     children: ["解析出电视剧 ", tv.name || tv.original_name].map((text) => {
-        //       return new ArticleTextNode({ text });
-        //     }),
-        //   })
-        // );
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: ["解析出电视剧 ", tv.name || tv.original_name].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
       }
       this.emit(
         Events.Print,
@@ -416,6 +417,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       return;
     };
     // @todo 如果希望仅索引一个文件夹，是否可以这里直接传目标文件夹，而不是每次都从根文件夹开始索引？
+    // 因为要拿到一个文件的完整路径，才从根开始。如果能拿到指定文件的路径，就可以不从根开始
     const folder = new Folder(drive.profile.root_folder_id!, {
       client,
     });
@@ -436,7 +438,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         return Result.Err(r.error);
       }
       // console.log("[DOMAIN]analysis/index - before walker.detect");
-      // @todo 如果 detect 由于内部调用 folder.next() 报错，这里没有处理会导致一直 pending
+      // @todo 如果 run 由于内部调用 folder.next() 报错，这里没有处理会导致一直 pending
       await walker.run(folder);
       // console.log("[DOMAIN]analysis/index - after walker.detect");
     }

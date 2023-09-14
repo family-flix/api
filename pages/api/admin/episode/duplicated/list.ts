@@ -4,19 +4,20 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
+import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
-import { User } from "@/domains/user";
-import { ModelQuery } from "@/domains/store/types";
+import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
     name,
-    page: page_str = "1",
-    page_size: page_size_str = "20",
+    page: page_str,
+    page_size: page_size_str,
   } = req.query as Partial<{
     name: string;
     page: string;
@@ -27,8 +28,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
   const duplicate_episode_profiles = await store.prisma.episode_profile.groupBy({
     by: ["unique_id"],
     where: {
@@ -46,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     },
   });
-  const where: ModelQuery<typeof store.prisma.episode.findMany>["where"] = {
+  const where: ModelQuery<"episode"> = {
     profile: {
       unique_id: {
         in: duplicate_episode_profiles

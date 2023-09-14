@@ -20,61 +20,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  if (!id || id === "undefined") {
-    return e(Result.Err("缺少电视剧 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id, settings } = user;
-  const tv = await store.prisma.tv.findFirst({
+  if (!id || id === "undefined") {
+    return e(Result.Err("缺少电视剧 id"));
+  }
+  const season = await store.prisma.season.findFirst({
     where: {
       id,
-      user_id,
+      user_id: user.id,
     },
     include: {
       profile: true,
-      parsed_tvs: {
-        include: {
-          binds: true,
-        },
-      },
+      sync_tasks: true,
     },
   });
-  if (tv === null) {
-    return e("没有匹配的电视剧记录");
+  if (season === null) {
+    return e(Result.Err("没有匹配的电视剧记录"));
   }
   const {
-    profile: { name, original_name },
-    parsed_tvs,
-  } = tv;
-  const binds = parsed_tvs
-    .map((parsed_tv) => {
-      return parsed_tv.binds.map((bind) => {
-        const { binds, ...rest } = parsed_tv;
-        return {
-          ...bind,
-          parsed_tv: rest,
-        };
-      });
-    })
-    .reduce((total, cur) => {
-      return total.concat(cur);
-    }, [])
+    profile: { name },
+    sync_tasks,
+  } = season;
+  const tasks = sync_tasks
     .filter((bind) => {
       return !bind.invalid;
     })
     .filter(Boolean);
-  if (binds.length === 0) {
-    return e("电视剧还没有更新任务");
+  if (tasks.length === 0) {
+    return e(Result.Err("电视剧还没有更新任务"));
   }
   const job_res = await Job.New({
-    desc: `更新电视剧 '${name || original_name}'`,
+    desc: `更新电视剧 '${name}'`,
     unique_id: id,
     type: TaskTypes.TVSync,
-    user_id,
+    user_id: user.id,
     store,
   });
   if (job_res.error) {
@@ -82,15 +65,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const job = job_res.data;
   async function run() {
-    const token = settings.tmdb_token;
+    const token = user.settings.tmdb_token;
     if (!token) {
       console.log("[API]tv/sync/[id].ts - after if(!token)");
       return e(Result.Err("缺少 TMDB_TOKEN"));
     }
-    for (let i = 0; i < binds.length; i += 1) {
-      const bind = binds[i];
-      const { parsed_tv } = bind;
-      const { drive_id } = parsed_tv;
+    const the_files_in_drive: Record<string, { name: string }[]> = {};
+    for (let i = 0; i < tasks.length; i += 1) {
+      const task = tasks[i];
+      const { name, drive_id } = task;
       const drive_res = await Drive.Get({ id: drive_id, user, store });
       if (drive_res.error) {
         // console.log("[API]tv/sync/[id].ts - drive_res.error", drive_res.error.message);
@@ -104,10 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         type: FileType;
       }[] = [];
       const resourceSyncTask = new ResourceSyncTask({
-        task: {
-          ...bind,
-          parsed_tv,
-        },
+        task,
         user,
         drive,
         client: drive.client,
@@ -130,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             new ArticleLineNode({
               children: [
                 new ArticleTextNode({
-                  text: `电视剧 '${name || original_name}' 完成同步，开始索引新增影片`,
+                  text: `电视剧 '${name}' 完成同步，开始索引新增影片`,
                 }),
               ],
             })
@@ -142,28 +122,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       });
       await resourceSyncTask.run();
-      // console.log("[API]tv/sync/[id].ts - after await resourceSyncTask.run()");
-      // if (added_files.length === 0) {
-      //   job.output.write(
-      //     new ArticleLineNode({
-      //       children: [
-      //         new ArticleTextNode({
-      //           text: "本次更新没有新增文件，结束更新",
-      //         }),
-      //       ],
-      //     })
-      //   );
-      //   job.finish();
-      //   return;
-      // }
+      the_files_in_drive[drive_id] = the_files_in_drive[drive_id] || [];
+      the_files_in_drive[drive_id].push({
+        name,
+      });
+      // console.log("[API]tv/sync/[id].ts - after await analysis.run");
+    }
+    const drive_ids = Object.keys(the_files_in_drive);
+    for (let i = 0; i < drive_ids.length; i += 1) {
+      const drive_id = drive_ids[i];
+      const files = the_files_in_drive[drive_id];
+      const drive_res = await Drive.Get({ id: drive_id, user, store });
+      if (drive_res.error) {
+        // console.log("[API]tv/sync/[id].ts - drive_res.error", drive_res.error.message);
+        job.finish();
+        return;
+      }
+      const drive = drive_res.data;
       const r2 = await DriveAnalysis.New({
         drive,
         store,
         user,
         assets: app.assets,
-        extra_scope: parsed_tvs
-          .map((tv) => {
-            return tv.name;
+        extra_scope: files
+          .map((file) => {
+            return file.name;
           })
           .filter(Boolean) as string[],
         on_print(v) {
@@ -189,19 +172,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         return e(r2);
       }
       const analysis = r2.data;
-      const { root_folder_name } = drive.profile;
+      // const { root_folder_name } = drive.profile;
       // console.log("[]", tmp_folders);
       // console.log("[API]tv/sync/[id].ts - before await analysis.run", added_files);
-      await analysis.run(
-        added_files.map((file) => {
-          const { name, parent_paths, type } = file;
-          return {
-            name: [parent_paths, name].filter(Boolean).join("/"),
-            type: type === FileType.File ? "file" : "folder",
-          };
-        })
-      );
-      // console.log("[API]tv/sync/[id].ts - after await analysis.run");
+      // await analysis.run(
+      //   added_files.map((file) => {
+      //     const { name, parent_paths, type } = file;
+      //     return {
+      //       name: [parent_paths, name].filter(Boolean).join("/"),
+      //       type: type === FileType.File ? "file" : "folder",
+      //     };
+      //   })
+      // );
     }
     // console.log("[API]tv/sync/[id].ts - before job.finish");
     job.finish();

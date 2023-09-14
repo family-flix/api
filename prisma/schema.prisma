@@ -47,6 +47,7 @@ model drive {
         parsed_movies           parsed_movie[]
         shared_file_in_progress shared_file_in_progress[]
         subtitles               subtitle[]
+        sync_tasks              bind_for_parsed_tv[]
 
         @@unique([user_id, unique_id])
         @@map("Drive")
@@ -583,20 +584,23 @@ model bind_for_parsed_tv {
         updated DateTime @default(now())
 
         // 分享文件夹所属 url
-        url                   String
+        url                     String
         // 关联的分享文件夹 file_id
-        file_id               String
-        // 云盘中和分享资源文件夹关联的文件夹
-        file_id_link_resource String
+        file_id                 String
         // 关联的分享文件夹名称
-        name                  String
+        name                    String
+        // 云盘中和分享资源文件夹关联的文件夹
+        file_id_link_resource   String
+        file_name_link_resource String
         // 是否连载中
-        in_production         Int?   @default(1)
+        in_production           Int?   @default(1)
         // 分享资源是否失效
-        invalid               Int?   @default(0)
+        invalid                 Int?   @default(0)
 
         season_id String?
         season    season? @relation(fields: [season_id], references: [id], onDelete: Cascade)
+        drive_id  String
+        drive     drive   @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         user_id   String
         user      user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -935,7 +939,7 @@ model user {
         shared_files            shared_file[]
         shared_file_in_progress shared_file_in_progress[]
         tmp_files               tmp_file[]
-        binds_for_parsed_tv     bind_for_parsed_tv[]
+        sync_tasks              bind_for_parsed_tv[]
         notifications           notification[]
         outputs                 output[]
         reports                 report[]

@@ -20,14 +20,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const { id: user_id } = user;
-  await store.prisma.bind_for_parsed_tv.deleteMany({
-    where: {
-      parsed_tv: {
-        tv_id: null,
-      },
-      user_id,
-    },
-  });
+  // await store.prisma.bind_for_parsed_tv.deleteMany({
+  //   where: {
+  //     user_id,
+  //   },
+  // });
   await store.prisma.parsed_episode.deleteMany({
     where: {
       OR: [

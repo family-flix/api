@@ -21,6 +21,7 @@ import { MediaSearcher } from "@/domains/searcher";
 import { EpisodeProfileFromTMDB, PartialSeasonFromTMDB, TVProfileFromTMDB } from "@/domains/tmdb/services";
 import { season_to_num } from "@/utils";
 import { Result } from "@/types";
+import { MediaProfileSourceTypes } from "@/constants";
 
 import {
   check_episode_profile_need_refresh,
@@ -28,7 +29,6 @@ import {
   check_season_profile_need_refresh,
   check_tv_profile_need_refresh,
 } from "./utils";
-import { MediaProfileSourceTypes } from "@/constants";
 
 enum Events {
   Print,
@@ -75,7 +75,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const page_size = 20;
     let page = 1;
     let no_more = false;
-    const where: ModelQuery<typeof this.store.prisma.tv.findMany>["where"] = {
+    const where: ModelQuery<"tv"> = {
       OR: [
         {
           profile: {
@@ -496,7 +496,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const page_size = 20;
     let page = 1;
     let no_more = false;
-    const where: ModelQuery<typeof this.store.prisma.movie.findMany>["where"] = {
+    const where: ModelQuery<"movie"> = {
       user_id: this.user.id,
     };
     const count = await this.store.prisma.movie.count({
