@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const page = to_number(page_str, 1);
-  const page_size = to_number(page_size_str, 2);
+  const page_size = to_number(page_size_str, 20);
   const in_production = to_number(in_production_str, 0);
   const invalid = to_number(invalid_str, 0);
   const queries: NonNullable<ModelQuery<"bind_for_parsed_tv">>[] = [];
@@ -64,6 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   }
   const where: ModelQuery<"bind_for_parsed_tv"> = {
+    in_production: 1,
     user_id: user.id,
   };
   if (queries.length !== 0) {
@@ -89,6 +90,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     skip: (page - 1) * page_size,
     take: page_size,
+    orderBy: {
+      created: "desc",
+    },
   });
   res.status(200).json({
     code: 0,
@@ -99,7 +103,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page_size,
       no_more: list.length + (page - 1) * page_size >= count,
       list: list.map((task) => {
-        const { id, file_id, name, file_id_link_resource, file_name_link_resource, url, season, drive_id } = task;
+        const { id, file_id, name, invalid, file_id_link_resource, file_name_link_resource, url, season, drive_id } =
+          task;
         return {
           id,
           resource_file_id: file_id,
@@ -107,6 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           drive_file_id: file_id_link_resource,
           drive_file_name: file_name_link_resource,
           url,
+          invalid,
           season: (() => {
             if (!season) {
               return null;

@@ -8,11 +8,17 @@ import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { ModelQuery } from "@/domains/store/types";
+import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { page: page_str = "1", page_size: page_size_str = "10" } = req.query as { page: string; page_size: string };
+  const {
+    type,
+    page: page_str,
+    page_size: page_size_str,
+  } = req.query as { type: string; page: string; page_size: string };
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -20,9 +26,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = t_res.data;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
-  const where: NonNullable<Parameters<typeof store.prisma.drive.findMany>[number]>["where"] = {
+  const where: ModelQuery<"drive"> = {
     user_id,
   };
+  if (type !== undefined) {
+    where.type = to_number(type, 0);
+  }
   const count = await store.prisma.drive.count({ where });
   const list = await store.prisma.drive.findMany({
     where,
@@ -40,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page,
       page_size,
       total: count,
-      no_more: list.length + (page - 1) >= count,
+      no_more: list.length + (page - 1) * page_size >= count,
       list: list.map((drive) => {
         const { id, name, avatar, total_size, used_size, root_folder_id } = drive;
         return {

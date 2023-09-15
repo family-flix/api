@@ -128,7 +128,7 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
       new ArticleLineNode({
         children: [
           new ArticleTextNode({
-            text: "开始对比文件列表",
+            text: "对比文件列表",
           }),
         ],
       })

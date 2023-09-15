@@ -25,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     season_number,
     invalid = "0",
     duplicated = "0",
+    in_production,
     page: page_str,
     page_size: page_size_str,
   } = req.query as Partial<{
@@ -34,6 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     /** @deprecated */
     drive_id: string;
     drive_ids: string;
+    in_production: string;
     season_number: string;
     invalid: string;
     duplicated: string;
@@ -85,6 +87,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
         };
       }),
+    });
+  }
+  if (in_production) {
+    queries = queries.concat({
+      in_production: to_number(in_production, 0),
     });
   }
   if (Number(duplicated) === 1) {
@@ -170,6 +177,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       _count: true,
       profile: true,
+      sync_tasks: true,
       tv: {
         include: {
           _count: true,
@@ -204,11 +212,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     total: count,
     list: list
       .map((season) => {
-        const { id, season_text, profile, tv, _count } = season;
+        const { id, season_text, profile, tv, sync_tasks, _count } = season;
         const { air_date, episode_count } = profile;
         const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
         const { name, original_name, overview, poster_path, popularity, need_bind, sync_task, valid_bind, binds } =
-          normalize_partial_tv(tv);
+          normalize_partial_tv({
+            ...tv,
+            sync_tasks,
+          });
         const tips: string[] = [];
         if (binds.length !== 0 && valid_bind === null && tv.profile.in_production) {
           tips.push("更新任务已失效");

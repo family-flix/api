@@ -1,6 +1,5 @@
 /**
  * @file 获取文件播放信息
- * @deprecated 使用 /api/admin/season/[id]/preview
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -14,30 +13,54 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { file_id: id } = req.query as Partial<{ file_id: string }>;
+  const { id: source_id } = req.query as Partial<{ id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  if (!id) {
+  if (!source_id) {
     return e(Result.Err("缺少文件 id"));
   }
-  const file = await store.prisma.file.findFirst({
-    where: {
-      file_id: id,
-    },
-  });
-  if (!file) {
-    return e(Result.Err("没有匹配的记录"));
+  const source = await (async () => {
+    const episode_source = await store.prisma.parsed_episode.findFirst({
+      where: {
+        id: source_id,
+        user_id: user.id,
+      },
+    });
+    if (episode_source) {
+      return {
+        id: episode_source.id,
+        file_id: episode_source.file_id,
+        drive_id: episode_source.drive_id,
+      };
+    }
+    const movie_source = await store.prisma.parsed_movie.findFirst({
+      where: {
+        id: source_id,
+        user_id: user.id,
+      },
+    });
+    if (movie_source) {
+      return {
+        id: movie_source.id,
+        file_id: movie_source.file_id,
+        drive_id: movie_source.drive_id,
+      };
+    }
+    return null;
+  })();
+  if (!source) {
+    return e(Result.Err("没有匹配的影片记录"));
   }
-  const { drive_id } = file;
+  const { file_id, drive_id } = source;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }
   const drive = drive_res.data;
-  const r = await drive.client.fetch_video_preview_info(id);
+  const r = await drive.client.fetch_video_preview_info(file_id);
   if (r.error) {
     return e(r);
   }
@@ -45,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (info.sources.length === 0) {
     return e(Result.Err("该文件暂时不可播放，请等待一段时间后重试"));
   }
-  const file_profile_res = await drive.client.fetch_file(id);
+  const file_profile_res = await drive.client.fetch_file(file_id);
   if (file_profile_res.error) {
     return e(file_profile_res);
   }
@@ -79,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     other: info.sources.map((res) => {
       const { url, type, width, height } = res;
       return {
-        id,
+        id: file_id,
         url,
         thumbnail,
         type,

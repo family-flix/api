@@ -1,5 +1,5 @@
 /**
- * @file 管理后台/更新同步任务
+ * @file 管理后台/关联一个季
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";

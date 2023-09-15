@@ -40,15 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!file_id) {
     return e(Result.Err("缺少文件 id"));
   }
-  const running_task_res = await store.prisma.async_task.findFirst({
-    where: {
-      unique_id: drive_id,
-      status: TaskStatus.Running,
-    },
-  });
-  if (running_task_res) {
-    return e(Result.Err("该文件所在云盘有进行中的任务"));
-  }
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res.error);

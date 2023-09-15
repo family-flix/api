@@ -94,7 +94,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         store,
         TMDB_TOKEN: token,
         assets: app.assets,
-        wait_complete: true,
         on_file(v) {
           console.log("[API]tv/sync/[id].ts - ResourceSyncTask on_file", v.name);
           if (v.type !== FileType.File) {
