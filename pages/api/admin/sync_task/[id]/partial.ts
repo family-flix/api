@@ -3,10 +3,8 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
-import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";

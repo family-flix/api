@@ -1,13 +1,4 @@
-import {
-  EpisodeProfileRecord,
-  EpisodeRecord,
-  FileSyncTaskRecord,
-  ParsedEpisodeRecord,
-  ParsedTVRecord,
-  TVBindTaskRecord,
-  TVProfileRecord,
-  TVRecord,
-} from "@/domains/store/types";
+import { ParsedTVRecord, SyncTaskRecord, TVProfileRecord, TVRecord } from "@/domains/store/types";
 import { bytes_to_size } from "@/utils";
 
 export function format_number_with_3decimals(number: number) {
@@ -40,21 +31,14 @@ export function normalize_partial_tv(
   tv: TVRecord & {
     profile: TVProfileRecord;
     parsed_tvs: ParsedTVRecord[];
-    // episodes: (EpisodeRecord & {
-    //   profile: EpisodeProfileRecord;
-    //   parsed_episodes: ParsedEpisodeRecord[];
-    //   _count: {
-    //     parsed_episodes: number;
-    //   };
-    // })[];
+    sync_tasks: SyncTaskRecord[];
     _count: {
       episodes: number;
       seasons: number;
-      // parsed_episodes: number;
     };
   }
 ) {
-  const { id, profile, parsed_tvs, _count } = tv;
+  const { id, profile, sync_tasks, _count } = tv;
   const {
     name,
     original_name,
@@ -68,6 +52,7 @@ export function normalize_partial_tv(
     genres,
     origin_country,
   } = profile;
+  const binds = sync_tasks;
   const incomplete = episode_count && episode_count !== _count.episodes;
   // const episode_sources = episodes
   //   .map((episode) => {
@@ -78,9 +63,39 @@ export function normalize_partial_tv(
   //   }, 0);
   // const tips: { text: string[] }[] = [];
   const tips: string[] = [];
-  // if (binds.length === 0 && incomplete) {
-  //   tips.push(`该电视剧集数不全且缺少可同步的分享资源(${_count.episodes}/${episode_count})`);
+  // if (sync_tasks.length === 0 && incomplete) {
+  //   tips.push(`该电视剧集数不全且缺少同步任务(${_count.episodes}/${episode_count})`);
   // }
+  const valid_bind = (() => {
+    if (binds.length === 0) {
+      return null;
+    }
+    const valid_task = binds.find((b) => !b.invalid);
+    if (!valid_task) {
+      return null;
+    }
+    return {
+      id: valid_task.id,
+    };
+  })();
+  if (binds.length !== 0 && valid_bind === null) {
+    tips.push("更新已失效");
+  }
+  const need_bind = (() => {
+    if (!incomplete) {
+      return false;
+    }
+    if (in_production && binds.length === 0) {
+      return true;
+    }
+    if (valid_bind === null) {
+      return true;
+    }
+    return false;
+  })();
+  if (in_production && incomplete && binds.length === 0) {
+    tips.push("未完结但缺少同步任务");
+  }
   if (!in_production && incomplete) {
     tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
   }
@@ -111,11 +126,11 @@ export function normalize_partial_tv(
     cur_season_count: _count.seasons,
     genres,
     origin_country,
-    binds: [],
-    valid_bind: null,
+    binds: sync_tasks,
+    valid_bind,
     incomplete,
-    need_bind: false,
-    sync_task: null,
+    need_bind,
+    sync_task: valid_bind,
     tips,
   };
 }

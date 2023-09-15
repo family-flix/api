@@ -7,8 +7,14 @@ import Joi from "joi";
 import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { AliyunDriveClient, AliyunDrivePayload, AliyunDriveProfile } from "@/domains/aliyundrive/types";
 import { AliyunResourceClient } from "@/domains/aliyundrive/resource";
-import { ArticleLineNode, ArticleSectionNode } from "@/domains/article";
-import { DriveRecord } from "@/domains/store/types";
+import {
+  ArticleLineNode,
+  ArticleListItemNode,
+  ArticleListNode,
+  ArticleSectionNode,
+  ArticleTextNode,
+} from "@/domains/article";
+import { DriveRecord, FileRecord } from "@/domains/store/types";
 import { User } from "@/domains/user";
 import { BaseDomain } from "@/domains/base";
 import { DatabaseStore } from "@/domains/store";
@@ -16,6 +22,7 @@ import { Result, resultify } from "@/types";
 import { parseJSONStr, r_id } from "@/utils";
 
 import { DriveTypes } from "./constants";
+import { FileType } from "@/constants";
 
 const drivePayloadSchema = Joi.object({
   app_id: Joi.string().required(),
@@ -459,7 +466,6 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     });
     return Result.Ok(d);
   }
-
   /**
    * 刷新网盘 token
    */
@@ -482,14 +488,12 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     });
     return Result.Ok(null);
   }
-
   has_root_folder() {
     if (!this.profile.root_folder_id || !this.profile.root_folder_name) {
       return false;
     }
     return true;
   }
-
   /** 设置索引根目录 */
   async set_root_folder(
     values: Partial<{
@@ -581,6 +585,481 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       },
       data,
     });
+    return Result.Ok(null);
+  }
+  /**
+   * 删除云盘内一个文件
+   */
+  async delete_file(f: FileRecord) {
+    const { file_id } = f;
+    await this.store.prisma.file.deleteMany({
+      where: {
+        file_id,
+      },
+    });
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["删除关联的同步任务"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const where = {
+      file_id,
+    };
+    // 删除同步任务
+    const r1 = await this.store.prisma.bind_for_parsed_tv.findMany({
+      where,
+    });
+    if (r1.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r1.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.bind_for_parsed_tv.deleteMany({
+      where,
+    });
+    // 删除关联的剧集
+    const r2 = await this.store.prisma.parsed_episode.findMany({
+      where,
+    });
+    if (r2.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r2.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name, text.episode_number].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.parsed_episode.deleteMany({
+      where,
+    });
+    // 删除关联的电影
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["删除关联的解析电影结果"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const r3 = await this.store.prisma.parsed_movie.findMany({
+      where,
+    });
+    if (r3.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r3.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.parsed_movie.deleteMany({
+      where,
+    });
+    // 删除关联的字幕
+    const r4 = await this.store.prisma.subtitle.findMany({
+      where,
+    });
+    if (r4.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r3.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.subtitle.deleteMany({
+      where,
+    });
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["开始删除云盘内文件"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const r5 = await this.client.delete_file(file_id);
+    if (r5.error) {
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["删除云盘文件失败，因为", r5.error.message].map((text) => new ArticleTextNode({ text })),
+        })
+      );
+      return Result.Err(r5.error.message);
+    }
+    return Result.Ok(null);
+  }
+  async delete_folder(f: FileRecord) {
+    const { name, file_id } = f;
+    const files_res = await this.store.find_files({
+      parent_file_id: file_id,
+    });
+    if (files_res.error) {
+      return Result.Err(files_res.error.message);
+    }
+    const child_files = files_res.data;
+    this.emit(
+      Events.Print,
+      new ArticleSectionNode({
+        children: [
+          new ArticleLineNode({
+            children: [`文件夹 「${name}」 下有 ${child_files.length} 个文件夹/文件`].map(
+              (text) => new ArticleTextNode({ text })
+            ),
+          }),
+          new ArticleListNode({
+            children: child_files.map((file) => {
+              const { name, parent_paths } = file;
+              return new ArticleListItemNode({
+                children: [`${parent_paths}/${name}`].map((text) => new ArticleTextNode({ text })),
+              });
+            }),
+          }),
+        ],
+      })
+    );
+    for (let i = 0; i < child_files.length; i += 1) {
+      await (async () => {
+        const child = child_files[i];
+        const { type, name, parent_paths } = child;
+        if (type === FileType.Folder) {
+          this.emit(
+            Events.Print,
+            new ArticleSectionNode({
+              children: [
+                new ArticleLineNode({
+                  children: [`「${parent_paths}/${name}」`, "是文件夹，先删除子文件夹及字文件"].map(
+                    (text) => new ArticleTextNode({ text })
+                  ),
+                }),
+              ],
+            })
+          );
+          await this.delete_folder(child);
+          this.emit(
+            Events.Print,
+            new ArticleSectionNode({
+              children: [
+                new ArticleLineNode({
+                  children: [`「${parent_paths}/${name}」`, "子文件夹及字文件删除完毕"].map(
+                    (text) => new ArticleTextNode({ text })
+                  ),
+                }),
+              ],
+            })
+          );
+          return;
+        }
+      })();
+    }
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: [`删除文件夹 「${name}」 下的所有子文件/文件`].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    await this.store.prisma.file.deleteMany({
+      where: {
+        file_id: {
+          in: child_files.map((f) => f.file_id),
+        },
+      },
+    });
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["删除关联的同步任务"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const where = {
+      file_id: {
+        in: child_files.map((f) => f.file_id),
+      },
+    };
+    const r1 = await this.store.prisma.bind_for_parsed_tv.findMany({
+      where,
+    });
+    if (r1.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r1.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.bind_for_parsed_tv.deleteMany({
+      where,
+    });
+    // 删除关联的剧集源
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["删除关联的剧集源"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const r2 = await this.store.prisma.parsed_episode.findMany({
+      where,
+    });
+    if (r2.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r2.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name, text.episode_number].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.parsed_episode.deleteMany({
+      where,
+    });
+    // 删除关联的季
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["删除关联的解析季"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const r3 = await this.store.prisma.parsed_season.findMany({
+      where,
+    });
+    if (r3.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r3.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.season_number].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.parsed_season.deleteMany({
+      where,
+    });
+    // 删除关联的电视剧
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["开始删除关联的解析电视剧结果"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const r4 = await this.store.prisma.parsed_tv.findMany({
+      where,
+    });
+    if (r4.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r4.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name || ""].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.parsed_tv.deleteMany({
+      where,
+    });
+    // 删除关联的电影
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["删除关联的解析电影结果"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const r5 = await this.store.prisma.parsed_movie.findMany({
+      where,
+    });
+    if (r5.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r5.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.parsed_movie.deleteMany({
+      where,
+    });
+    const r6 = await this.store.prisma.subtitle.findMany({
+      where,
+    });
+    if (r6.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r5.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.name].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
+    await this.store.prisma.subtitle.deleteMany({
+      where,
+    });
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["开始删除云盘内文件"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    const r7 = await this.client.delete_file(file_id);
+    if (r7.error) {
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["删除云盘文件失败，因为", r7.error.message].map((text) => new ArticleTextNode({ text })),
+        })
+      );
+    }
+    return Result.Ok(null);
+  }
+  /**
+   * 删除云盘内的指定文件
+   */
+  async delete_file_in_drive(file_id: string) {
+    const file_res = await this.store.find_file({
+      file_id,
+    });
+    if (file_res.error) {
+      return Result.Err(file_res.error.message);
+    }
+    const file = file_res.data;
+    if (!file) {
+      await this.store.prisma.subtitle.deleteMany({
+        where: {
+          file_id,
+        },
+      });
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["直接删除还未索引的文件"].map((text) => {
+            return new ArticleTextNode({ text });
+          }),
+        })
+      );
+      const r = await this.client.delete_file(file_id);
+      if (r.error) {
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: ["删除失败，因为", r.error.message].map((text) => {
+              return new ArticleTextNode({ text });
+            }),
+          })
+        );
+        return Result.Err(r.error.message);
+      }
+      return Result.Ok(null);
+    }
+    if (file.type === FileType.File) {
+      await this.delete_file(file);
+      return Result.Ok(null);
+    }
+    await this.delete_folder(file);
     return Result.Ok(null);
   }
 }

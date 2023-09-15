@@ -6,17 +6,11 @@ import type { Handler } from "mitt";
 import { BaseDomain } from "@/domains/base";
 import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
-import {
-  ArticleCardNode,
-  ArticleHeadNode,
-  ArticleLineNode,
-  ArticleSectionNode,
-  ArticleTextNode,
-} from "@/domains/article";
+import { ArticleCardNode, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DatabaseStore } from "@/domains/store";
-import { ParsedTVRecord, FileSyncTaskRecord, FileRecord } from "@/domains/store/types";
+import { SyncTaskRecord } from "@/domains/store/types";
 import { AliyunDriveClient } from "@/domains/aliyundrive/types";
 import { folder_client } from "@/domains/store/utils";
 import { Result } from "@/types";
@@ -39,7 +33,7 @@ type TheTypesOfEvents = {
   [Events.Error]: Error;
 };
 type ResourceSyncTaskProps = {
-  task: FileSyncTaskRecord;
+  task: SyncTaskRecord;
   user: User;
   drive: Drive;
   store: DatabaseStore;
@@ -163,32 +157,18 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     // const resource = resource_files[0];
   }
 
-  task: FileSyncTaskRecord;
+  task: SyncTaskRecord;
   user: ResourceSyncTaskProps["user"];
   drive: ResourceSyncTaskProps["drive"];
   store: ResourceSyncTaskProps["store"];
   TMDB_TOKEN: ResourceSyncTaskProps["TMDB_TOKEN"];
   assets: ResourceSyncTaskProps["assets"];
   client: AliyunDriveClient;
-  wait_complete = false;
 
   constructor(options: Partial<{}> & ResourceSyncTaskProps) {
     super();
 
-    const {
-      user,
-      drive,
-      store,
-      task,
-      client,
-      TMDB_TOKEN,
-      assets,
-      wait_complete,
-      on_file,
-      on_print,
-      on_finish,
-      on_error,
-    } = options;
+    const { user, drive, store, task, client, TMDB_TOKEN, assets, on_file, on_print, on_finish, on_error } = options;
     this.task = task;
     this.store = store;
     this.user = user;
@@ -196,9 +176,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     this.TMDB_TOKEN = TMDB_TOKEN;
     this.assets = assets;
     this.client = client;
-    if (wait_complete !== undefined) {
-      this.wait_complete = wait_complete;
-    }
     if (on_file) {
       this.on_file(on_file);
     }
@@ -213,19 +190,19 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     }
   }
   async run() {
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [
-          new ArticleHeadNode({
-            level: 3,
-            text: "开始执行同步任务",
-          }),
-        ],
-      })
-    );
+    // this.emit(
+    //   Events.Print,
+    //   new ArticleLineNode({
+    //     children: [
+    //       new ArticleHeadNode({
+    //         level: 3,
+    //         text: "开始执行同步任务",
+    //       }),
+    //     ],
+    //   })
+    // );
     const { task, client, store } = this;
-    const { id, url, file_id, file_id_link_resource, invalid } = task;
+    const { id, url, file_id, file_id_link_resource, file_name_link_resource: file_name, invalid } = task;
     // const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
 
     const drive_id = this.drive.id;
@@ -294,7 +271,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r1.error);
     }
     const { share_id } = r1.data;
-    const target_folder_name = "__filename";
+    const target_folder_name = file_name;
     const prev_folder = new Folder(file_id_link_resource, {
       name: target_folder_name,
       client: folder_client({ drive_id }, store),
@@ -325,23 +302,18 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         this.emit(Events.Print, node);
       },
     });
-    const pending = (async () => {
-      await differ.run();
-      await this.consume_effects_for_shared_file(differ.effects);
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [
-            new ArticleTextNode({
-              text: "完成资源同步",
-            }),
-          ],
-        })
-      );
-    })();
-    if (this.wait_complete) {
-      await pending;
-    }
+    await differ.run();
+    await this.consume_effects_for_shared_file(differ.effects);
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: [
+          new ArticleTextNode({
+            text: "完成资源同步",
+          }),
+        ],
+      })
+    );
     return Result.Ok({});
   }
   /**

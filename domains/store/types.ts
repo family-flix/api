@@ -39,12 +39,11 @@ export type MovieProfileRecord = movie_profile;
 
 export type ReportRecord = report;
 export type AsyncTaskRecord = async_task;
-export type TVBindTaskRecord = bind_for_parsed_tv;
+export type SyncTaskRecord = bind_for_parsed_tv;
 export type SharedFilesInProgressRecord = shared_file_in_progress;
 export type RecordCommonPart = {
   id: string;
 };
-export type FileSyncTaskRecord = bind_for_parsed_tv;
 
 export type ModelKeys = keyof Omit<
   PrismaClient,

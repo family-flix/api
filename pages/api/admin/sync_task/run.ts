@@ -72,6 +72,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             new ArticleLineNode({
               children: [
                 new ArticleTextNode({
+                  text: ``,
+                }),
+              ],
+            })
+          );
+          job.output.write(
+            new ArticleLineNode({
+              children: [
+                new ArticleTextNode({
                   text: `开始更新 ${name}`,
                 }),
               ],

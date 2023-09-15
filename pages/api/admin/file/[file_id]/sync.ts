@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { Job } from "@/domains/job";
-import { FileSyncTaskRecord, ParsedTVRecord } from "@/domains/store/types";
+import { SyncTaskRecord, ParsedTVRecord } from "@/domains/store/types";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { Drive } from "@/domains/drive";
 import { TaskTypes } from "@/domains/job/constants";
@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(job_res);
   }
   const job = job_res.data;
-  async function run(bind: FileSyncTaskRecord, drive_id: string) {
+  async function run(bind: SyncTaskRecord, drive_id: string) {
     const token = settings.tmdb_token;
     if (!token) {
       console.log("[API]tv/sync/[id].ts - after if(!token)");
@@ -77,7 +77,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       store,
       TMDB_TOKEN: token,
       assets: app.assets,
-      wait_complete: true,
       on_print(v) {
         job.output.write(v);
       },

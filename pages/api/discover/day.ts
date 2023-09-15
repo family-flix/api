@@ -13,21 +13,28 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
+  const { start, end } = req.query as Partial<{ start: string; end: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const seasons = await store.prisma.season.findMany({
+  const range = [
+    start ? dayjs(start).toISOString() : dayjs().startOf("day").toISOString(),
+    end ? dayjs(end).toISOString() : dayjs().endOf("day").toISOString(),
+  ];
+  const episodes = await store.prisma.episode.findMany({
     where: {
+      created: {
+        gte: range[0],
+        lt: range[1],
+      },
       user_id: user.id,
     },
     include: {
-      profile: true,
-      episodes: {
-        take: 1,
-        orderBy: {
-          episode_number: "desc",
+      season: {
+        include: {
+          profile: true,
         },
       },
       tv: {
@@ -36,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       },
     },
+    distinct: ["season_id"],
     orderBy: [
       {
         created: "desc",
@@ -46,8 +54,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where: {
       user_id: user.id,
       created: {
-        lt: dayjs().endOf("day").toISOString(),
-        gte: dayjs().startOf("day").toISOString(),
+        gte: range[0],
+        lt: range[1],
       },
     },
     include: {
@@ -66,16 +74,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     poster_path: string;
     text: string | null;
   };
-  const medias = seasons
-    .map((season) => {
-      const { id, tv, profile, episodes } = season;
+  const medias = episodes
+    .map((episode) => {
+      const { id, tv, season } = episode;
       return {
         id,
         type: 1,
         tv_id: tv.id,
         name: tv.profile.name,
-        poster_path: profile.poster_path || tv.profile.poster_path,
-        text: episodes.length ? `更新至 ${episodes[0].episode_number} 集` : null,
+        poster_path: season.profile.poster_path || tv.profile.poster_path,
+        text: `更新至 ${episode.episode_number} 集`,
       } as MediaPayload;
     })
     .concat(
@@ -93,6 +101,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   res.status(200).json({
     code: 0,
     msg: "",
-    data: medias,
+    data: {
+      total: medias.length,
+      list: medias,
+    },
   });
 }
