@@ -233,7 +233,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         return {
           id,
           tv_id: tv.id,
-          name,
+          name: name || original_name,
           original_name,
           overview,
           season_number: season_text,

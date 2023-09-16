@@ -115,8 +115,25 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       no_more = list.length + (page - 1) * page_size >= count;
       page += 1;
       for (let i = 0; i < list.length; i += 1) {
-        const season = list[i];
-        await this.refresh_tv_profile(season.tv, {});
+        await (async () => {
+          const season = list[i];
+          if (
+            season.tv.profile.source &&
+            [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual].includes(season.tv.profile.source)
+          ) {
+            this.emit(
+              Events.Print,
+              new ArticleLineNode({
+                children: [
+                  season.tv.profile.name || season.tv.profile.original_name || "unknown",
+                  "已手动修改过详情，直接跳过",
+                ].map((text) => new ArticleTextNode({ text })),
+              })
+            );
+            return;
+          }
+          await this.refresh_tv_profile(season.tv, {});
+        })();
       }
     } while (no_more === false);
     return Result.Ok(null);
@@ -252,7 +269,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       where: {
         profile: {
           source: {
-            not: MediaProfileSourceTypes.Other,
+            notIn: [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual],
           },
         },
         tv_id: tv.id,

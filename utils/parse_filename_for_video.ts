@@ -345,6 +345,9 @@ export function parse_filename_for_video(
       regexp: /[1-9][0-9]{0,}分钟版/,
     },
     {
+      regexp: /单集[0-9]{1,}[gG][bB]/,
+    },
+    {
       regexp: /重[置制]版/,
     },
     {
@@ -354,7 +357,7 @@ export function parse_filename_for_video(
       regexp: /压缩版本/,
     },
     {
-      regexp: /高码|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
+      regexp: /高码[率]{0,1}|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
     },
     {
       regexp: /多语版|网络版|劇場版|合成版|连续剧版|亚马逊版|\.Extended/,
