@@ -14,18 +14,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { tv_id: id, season_id } = req.query as Partial<{ tv_id: string; season_id: string }>;
-  if (!id || id === "undefined") {
-    return e(Result.Err("缺少电视剧 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  const user = t_res.data;
+  if (!id || id === "undefined") {
+    return e(Result.Err("缺少电视剧 id"));
+  }
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
-      user_id,
+      user_id: user.id,
     },
     include: {
       _count: true,
@@ -136,7 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           where: {
             tv_id: id,
             season_id: cur_season.id,
-            user_id,
+            user_id: user.id,
           },
           include: {
             profile: true,

@@ -16,11 +16,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  const { url } = req.body as Partial<{
+  const { url, resource_file_id, resource_file_name } = req.body as Partial<{
     url: string;
-    target_file_id: string;
-    target_file_name: string;
-    target_drive_id: string;
+    resource_file_id: string;
+    resource_file_name: string;
   }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -54,6 +53,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         id: duplicated_sync_task.id,
       })
     );
+  }
+  /**
+   * 手动指定了要关联的分享资源
+   */
+  if (resource_file_id && resource_file_name) {
+    await store.prisma.bind_for_parsed_tv.update({
+      where: {
+        id: sync_task.id,
+      },
+      data: {
+        updated: dayjs().toISOString(),
+        invalid: 0,
+        url,
+        file_id: resource_file_id,
+        name: resource_file_name,
+      },
+    });
+    res.status(200).json({ code: 0, msg: "更新成功", data: {} });
+    return;
   }
   const drive_res = await Drive.Get({ id: sync_task.drive_id, user, store });
   if (drive_res.error) {
@@ -98,6 +116,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     data: {
       updated: dayjs().toISOString(),
+      invalid: 0,
       url,
       file_id: resource.file_id,
       name: resource.name,

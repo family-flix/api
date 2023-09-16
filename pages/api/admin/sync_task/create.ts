@@ -11,15 +11,18 @@ import { DriveTypes } from "@/domains/drive/constants";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { FileType } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { url, target_file_name, target_file_id, target_drive_id } = req.body as Partial<{
+  const { url, resource_file_id, resource_file_name, drive_file_id, drive_file_name, drive_id } = req.body as Partial<{
     url: string;
-    target_file_id: string;
-    target_file_name: string;
-    target_drive_id: string;
+    resource_file_id: string;
+    resource_file_name: string;
+    drive_file_id: string;
+    drive_file_name: string;
+    drive_id: string;
   }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -50,9 +53,73 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       })
     );
   }
+  /**
+   * 手动选择了转存的文件夹和云盘内文件夹进行关联
+   */
+  if (resource_file_id && resource_file_name && drive_file_id && drive_file_name && drive_id) {
+    const r = await store.add_sync_task({
+      url,
+      file_id: resource_file_id,
+      name: resource_file_name,
+      file_id_link_resource: drive_file_id,
+      file_name_link_resource: drive_file_name,
+      in_production: 1,
+      invalid: 0,
+      user_id: user.id,
+      drive_id,
+    });
+    if (r.error) {
+      return e(r);
+    }
+    res.status(200).json({
+      code: 0,
+      msg: "新增同步任务成功",
+      data: {},
+    });
+    return;
+  }
+  /**
+   * 手动选择了转存的文件夹
+   */
+  if (resource_file_id && resource_file_name) {
+    const drive_file = await store.prisma.file.findFirst({
+      where: {
+        name: resource_file_name,
+        type: FileType.Folder,
+        user_id: user.id,
+      },
+    });
+    if (!drive_file) {
+      return e(Result.Err("没有匹配的云盘文件", 20001));
+    }
+    const { file_id: drive_file_id, name: drive_file_name } = drive_file;
+    const r = await store.add_sync_task({
+      url,
+      file_id: resource_file_id,
+      name: resource_file_name,
+      file_id_link_resource: drive_file_id,
+      file_name_link_resource: drive_file_name,
+      in_production: 1,
+      invalid: 0,
+      user_id: user.id,
+      drive_id,
+    });
+    if (r.error) {
+      return e(r);
+    }
+    res.status(200).json({
+      code: 0,
+      msg: "新增同步任务成功",
+      data: {},
+    });
+    return;
+  }
+  /**
+   * 默认情况，仅输入一个链接
+   */
   const random_drive_id_res = await (async () => {
-    if (target_drive_id) {
-      return Result.Ok(target_drive_id);
+    if (drive_id) {
+      return Result.Ok(drive_id);
     }
     const drive = await store.prisma.drive.findFirst({
       where: {
@@ -91,12 +158,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const resource = resource_files[0];
   const drive_file_res = await (async () => {
-    if (target_file_id && target_drive_id) {
+    if (drive_file_id && drive_id) {
       // 给指定文件夹关联资源
       const drive_file = await store.prisma.file.findFirst({
         where: {
-          file_id: target_file_id,
-          drive_id: target_drive_id,
+          file_id: drive_file_id,
+          drive_id: drive_id,
           user_id: user.id,
         },
       });

@@ -240,4 +240,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("4K高码率[单集6GB]", () => {
+    const name = "4K高码率[单集6GB]";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });
