@@ -294,8 +294,28 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         if (type === "file") {
           return;
         }
+        const sync_task_res = await this.store.find_sync_task({
+          file_name_link_resource: name,
+          user_id: user.id,
+        });
+        if (sync_task_res.error) {
+          return;
+        }
+        const sync_task = sync_task_res.data;
+        if (sync_task) {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [`[${name}]`, "已存在同名同步任务"].map((text) => {
+                return new ArticleTextNode({ text: String(text) });
+              }),
+            })
+          );
+          return;
+        }
         const save_record_res = await this.store.find_shared_file_save({
           name,
+          user_id: user.id,
         });
         if (save_record_res.error) {
           return;
@@ -493,7 +513,6 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       drive,
       force,
       assets: this.assets,
-      tmdb_token: this.tmdb_token,
       store,
       on_season_added: (season) => {
         this.emit(Events.AddSeason, season);

@@ -10,7 +10,7 @@ import { User } from "@/domains/user";
 import { MediaSearcher } from "@/domains/searcher";
 import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/backend";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { Drive } from "@/domains/drive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id } = req.query as Partial<{ id: string }>;
   const body = req.body as TVProfileItemInTMDB;
   if (!id) {
-    return e("缺少电视剧 id");
+    return e(Result.Err("缺少电视剧 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -28,18 +28,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const user = t_res.data;
   const { id: user_id, settings } = user;
   if (!settings.tmdb_token) {
-    return e("缺少 TMDB_TOKEN");
+    return e(Result.Err("缺少 TMDB_TOKEN"));
   }
   const tv_res = await store.find_parsed_tv({ id, user_id });
   if (tv_res.error) {
     return e(tv_res);
   }
   if (!tv_res.data) {
-    return e("没有匹配的电视剧记录");
+    return e(Result.Err("没有匹配的电视剧记录"));
   }
   const parsed_tv = tv_res.data;
   const { drive_id } = parsed_tv;
-  const { id: tmdb_id, name } = body as TVProfileItemInTMDB & {
+  const { id: tmdb_id } = body as TVProfileItemInTMDB & {
     id?: string;
   };
   const drive_res = await Drive.Get({ id: drive_id, user, store });
@@ -50,7 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const search = new MediaSearcher({
     user,
     drive,
-    tmdb_token: settings.tmdb_token,
     assets: app.assets,
     store,
   });

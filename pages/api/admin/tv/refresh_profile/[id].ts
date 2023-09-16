@@ -8,29 +8,25 @@ import { User } from "@/domains/user";
 import { ProfileRefresh } from "@/domains/profile_refresh";
 import { TaskTypes } from "@/domains/job/constants";
 import { Job } from "@/domains/job";
-import { TMDBClient } from "@/domains/tmdb";
-import { TVProfileFromTMDB } from "@/domains/tmdb/services";
 import { TVProfileRecord, TVRecord } from "@/domains/store/types";
-import { check_tv_profile_need_refresh } from "@/domains/profile_refresh/utils";
 import { MediaSearcher } from "@/domains/searcher";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
   const { tmdb_id } = req.body as { tmdb_id: number };
-  if (!id) {
-    return e("缺少电视剧 id");
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
+  if (!id) {
+    return e(Result.Err("缺少电视剧 id"));
+  }
   if (!user.settings.tmdb_token) {
     return e(Result.Err("缺少 TMDB_TOKEN"));
   }
@@ -58,16 +54,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const job = job_res.data;
   const searcher_res = await MediaSearcher.New({
+    user,
     store,
     assets: app.assets,
-    tmdb_token: user.settings.tmdb_token,
   });
   if (searcher_res.error) {
     return e(searcher_res);
   }
   const searcher = searcher_res.data;
   const refresher = new ProfileRefresh({
-    tmdb_token: user.settings.tmdb_token,
     searcher,
     store,
     user,

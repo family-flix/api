@@ -34,15 +34,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const user = t_res.data;
   const page = to_number(page_str, 1);
   const page_size = to_number(page_size_str, 20);
-  const in_production = to_number(in_production_str, 0);
-  const invalid = to_number(invalid_str, 0);
-  const queries: NonNullable<ModelQuery<"bind_for_parsed_tv">>[] = [];
-  if (in_production) {
-    queries.push({
+  const in_production = to_number(in_production_str, 1);
+  const queries: NonNullable<ModelQuery<"bind_for_parsed_tv">>[] = [
+    {
       in_production,
-    });
-  }
-  if (invalid) {
+    },
+  ];
+  if (invalid_str !== undefined) {
+    const invalid = to_number(invalid_str, 0);
     queries.push({
       invalid,
     });
@@ -64,7 +63,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   }
   const where: ModelQuery<"bind_for_parsed_tv"> = {
-    in_production: 1,
     user_id: user.id,
   };
   if (queries.length !== 0) {

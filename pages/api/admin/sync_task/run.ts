@@ -15,6 +15,7 @@ import { FileType } from "@/constants";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { app, store } from "@/store";
+import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -39,14 +40,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   async function run() {
     let page = 1;
     let no_more = false;
+    const where: ModelQuery<"bind_for_parsed_tv"> = {
+      season_id: { not: null },
+      in_production: 1,
+      invalid: 0,
+      user_id: user.id,
+    };
+    const count = await store.prisma.bind_for_parsed_tv.count({ where });
+    job.output.write(
+      new ArticleLineNode({
+        children: ["共", String(count), "个同步任务"].map((text) => {
+          return new ArticleTextNode({
+            text,
+          });
+        }),
+      })
+    );
     do {
       const tasks = await store.prisma.bind_for_parsed_tv.findMany({
-        where: {
-          season_id: { not: null },
-          in_production: 1,
-          invalid: 0,
-          user_id: user.id,
-        },
+        where,
         skip: (page - 1) * page_size,
         take: page_size,
       });
@@ -68,15 +80,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           task.on_print((v) => {
             job.output.write(v);
           });
-          job.output.write(
-            new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: ``,
-                }),
-              ],
-            })
-          );
           job.output.write(
             new ArticleLineNode({
               children: [
@@ -129,17 +132,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             on_print(v) {
               job.output.write(v);
             },
-            on_finish() {
-              job.output.write(
-                new ArticleLineNode({
-                  children: [
-                    new ArticleTextNode({
-                      text: "索引完成",
-                    }),
-                  ],
-                })
-              );
-            },
             on_error(error) {
               job.throw(error);
             },
@@ -161,6 +153,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         })();
       }
     } while (no_more === false);
+    job.output.write(
+      new ArticleLineNode({
+        children: [
+          new ArticleTextNode({
+            text: "索引完成",
+          }),
+        ],
+      })
+    );
     job.finish();
   }
   run();
