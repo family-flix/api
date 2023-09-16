@@ -55,7 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive,
     user,
     store,
-    tmdb_token: settings.tmdb_token,
     force: true,
     assets: app.assets,
     on_print(v) {

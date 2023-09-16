@@ -19,7 +19,6 @@ async function main(tmdb_id: number) {
   const searcher_res = await MediaSearcher.New({
     user,
     drive,
-    tmdb_token: user.settings.tmdb_token,
     assets: app.assets,
     store,
   });

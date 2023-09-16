@@ -6,6 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { normalize_partial_tv } from "@/domains/tv/utils";
+import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
@@ -39,10 +40,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { id: user_id } = user;
   const page = to_number(page_str, 1);
   const page_size = to_number(page_size_str, 20);
-  const where: NonNullable<Parameters<typeof store.prisma.season.findMany>[0]>["where"] = {
-    episodes: {
-      none: {},
-    },
+  const where: ModelQuery<"season"> = {
+    OR: [
+      {
+        episodes: {
+          none: {},
+        },
+      },
+      {
+        episodes: {
+          every: {
+            parsed_episodes: {
+              none: {},
+            },
+          },
+        },
+      },
+    ],
     user_id,
   };
   const count = await store.prisma.season.count({

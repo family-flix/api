@@ -36,16 +36,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const job = job_res.data;
   const searcher_res = await MediaSearcher.New({
+    user,
     store,
     assets: app.assets,
-    tmdb_token: user.settings.tmdb_token,
   });
   if (searcher_res.error) {
     return e(searcher_res);
   }
   const searcher = searcher_res.data;
   const refresher = new ProfileRefresh({
-    tmdb_token: user.settings.tmdb_token,
     searcher,
     store,
     user,

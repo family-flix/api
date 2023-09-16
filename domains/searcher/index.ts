@@ -67,19 +67,18 @@ type TheTypesOfEvents = {
 };
 
 type MediaSearcherProps = {
-  /** 数据库操作 */
-  store: DatabaseStore;
+  /** 强制索引全部，忽略 can_search 为 0 */
+  force?: boolean;
   /** 搜索到的电视剧、季和剧集中如果存在图片，是否要将图片上传到 cdn */
   upload_image?: boolean;
+  /** 上传到本地存储路径 */
+  assets: string;
+  /** 数据库操作 */
+  store: DatabaseStore;
   /** 仅处理该网盘下的所有未匹配电视剧 */
   drive?: Drive;
   /** 仅处理该用户的所有未匹配电视剧 */
-  user?: User;
-  /** 强制索引全部，忽略 can_search 为 0 */
-  force?: boolean;
-  assets: string;
-  /** TMDB token */
-  tmdb_token: string;
+  user: User;
   on_season_added?: (season: SeasonRecord) => void;
   on_episode_added?: (episode: EpisodeRecord) => void;
   on_movie_added?: (movie: MovieRecord) => void;
@@ -90,11 +89,10 @@ type MediaSearcherProps = {
 
 const PAGE_SIZE = 20;
 export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
-  static New(body: Partial<MediaSearcherProps>) {
+  static New(body: MediaSearcherProps) {
     const {
       user,
       drive,
-      tmdb_token,
       assets,
       force,
       store,
@@ -105,20 +103,25 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       on_finish,
       on_error,
     } = body;
-    if (!store) {
-      return Result.Err("缺少 store 实例");
+    if (!user) {
+      return Result.Err("缺少用户信息");
     }
-    if (!tmdb_token) {
+    if (!user.settings.tmdb_token) {
       return Result.Err("缺少 TMDB token");
     }
+    // if (!drive) {
+    //   return Result.Err("缺少数据库实例");
+    // }
     if (!assets) {
       return Result.Err("缺少静态资源根路径");
+    }
+    if (!store) {
+      return Result.Err("缺少 store 实例");
     }
     const searcher = new MediaSearcher({
       user,
       drive,
       force,
-      tmdb_token,
       assets,
       store,
       on_season_added,
@@ -153,7 +156,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       drive,
       force = false,
       assets,
-      tmdb_token,
       store,
       on_season_added,
       on_episode_added,
@@ -163,7 +165,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       on_error,
     } = options;
     this.store = store;
-    this.client = new TMDBClient({ token: tmdb_token });
+    this.client = new TMDBClient({ token: user.settings.tmdb_token });
     this.upload = new ImageUploader({ root: assets });
     this.options = {
       user_id: user?.id,

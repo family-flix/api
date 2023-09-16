@@ -42,7 +42,6 @@ type ProfileRefreshProps = {
   user: User;
   searcher: MediaSearcher;
   store: DatabaseStore;
-  tmdb_token: string;
   on_print?: (node: ArticleLineNode | ArticleSectionNode) => void;
   on_finish?: () => void;
 };
@@ -51,16 +50,15 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   searcher: ProfileRefreshProps["searcher"];
   client: TMDBClient;
   store: ProfileRefreshProps["store"];
-  //   on_print: ProfileRefreshProps["on_print"];
 
   constructor(props: ProfileRefreshProps) {
     super();
 
-    const { user, tmdb_token, searcher, store, on_print, on_finish } = props;
+    const { user, searcher, store, on_print, on_finish } = props;
     this.store = store;
     this.user = user;
     this.searcher = searcher;
-    this.client = new TMDBClient({ token: tmdb_token });
+    this.client = new TMDBClient({ token: user.settings.tmdb_token });
     if (on_print) {
       this.on_print(on_print);
     }
@@ -75,42 +73,50 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const page_size = 20;
     let page = 1;
     let no_more = false;
-    const where: ModelQuery<"tv"> = {
+    const where: ModelQuery<"season"> = {
       OR: [
         {
           profile: {
-            created: {
-              gte: dayjs().subtract(1, "month").toISOString(),
+            air_date: {
+              gte: dayjs().subtract(6, "month").toISOString(),
             },
-            // first_air_date: {
-            //   lt: new Date()
-            // }
           },
         },
         {
           profile: {
-            first_air_date: null,
+            air_date: null,
           },
         },
       ],
+      user_id: this.user.id,
     };
-    const count = await this.store.prisma.tv.count({
+    const count = await this.store.prisma.season.count({
       where,
     });
     do {
-      const list = await this.store.prisma.tv.findMany({
+      const list = await this.store.prisma.season.findMany({
         where,
         include: {
           profile: true,
+          tv: {
+            include: {
+              profile: true,
+            },
+          },
         },
         skip: (page - 1) * page_size,
         take: page_size,
+        orderBy: {
+          profile: {
+            air_date: "desc",
+          },
+        },
       });
       no_more = list.length + (page - 1) * page_size >= count;
       page += 1;
       for (let i = 0; i < list.length; i += 1) {
-        const tv = list[i];
-        await this.refresh_tv_profile(tv);
+        const season = list[i];
+        await this.refresh_tv_profile(season.tv, {});
       }
     } while (no_more === false);
     return Result.Ok(null);
@@ -118,9 +124,9 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   /**
    * 根据数据库中的「电视剧详情」记录，刷新。如果存在新的 tmdb_id，使用该 tmdb 记录替换已存在的
    */
-  async refresh_tv_profile(tv: TVRecord & { profile: TVProfileRecord }, extra?: { tmdb_id: number }) {
+  async refresh_tv_profile(tv: TVRecord & { profile: TVProfileRecord }, extra: { tmdb_id?: number }) {
     const { name, original_name, unique_id } = tv.profile;
-    const correct_tmdb_id = extra ? extra.tmdb_id : Number(unique_id);
+    const correct_tmdb_id = extra.tmdb_id ? extra.tmdb_id : Number(unique_id);
     const r = await this.client.fetch_tv_profile(correct_tmdb_id);
     if (r.error) {
       // console.log(tv.profile, extra);
@@ -497,6 +503,20 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     let page = 1;
     let no_more = false;
     const where: ModelQuery<"movie"> = {
+      OR: [
+        {
+          profile: {
+            air_date: {
+              gte: dayjs().subtract(6, "month").toISOString(),
+            },
+          },
+        },
+        {
+          profile: {
+            air_date: null,
+          },
+        },
+      ],
       user_id: this.user.id,
     };
     const count = await this.store.prisma.movie.count({
@@ -510,6 +530,11 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         },
         skip: (page - 1) * page_size,
         take: page_size,
+        orderBy: {
+          profile: {
+            air_date: "desc",
+          },
+        },
       });
       no_more = list.length + (page - 1) * page_size >= count;
       page += 1;

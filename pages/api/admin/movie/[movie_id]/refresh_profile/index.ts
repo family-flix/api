@@ -45,12 +45,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("缺少 TMDB_TOKEN"));
   }
   const searcher = new MediaSearcher({
+    user,
     store,
     assets: app.assets,
-    tmdb_token: user.settings.tmdb_token,
   });
   const refresher = new ProfileRefresh({
-    tmdb_token: user.settings.tmdb_token,
     searcher,
     store,
     user,
