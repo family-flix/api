@@ -81,10 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   /**
    * 手动选择了转存的文件夹
    */
-  if (resource_file_id && resource_file_name) {
+  if (drive_file_id && drive_file_name) {
     const drive_file = await store.prisma.file.findFirst({
       where: {
-        name: resource_file_name,
+        name: drive_file_name,
         type: FileType.Folder,
         user_id: user.id,
       },
@@ -92,7 +92,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (!drive_file) {
       return e(Result.Err("没有匹配的云盘文件", 20001));
     }
-    const { file_id: drive_file_id, name: drive_file_name } = drive_file;
+    const drive_res = await Drive.Get({ id: drive_file.drive_id, user, store });
+    if (drive_res.error) {
+      return e(drive_res);
+    }
+    const drive = drive_res.data;
+    const r1 = await drive.client.fetch_share_profile(url);
+    if (r1.error) {
+      return e(r1);
+    }
+    const { share_id } = r1.data;
+    const files_res = await drive.client.fetch_shared_files("root", {
+      share_id,
+    });
+    if (files_res.error) {
+      return e(files_res);
+    }
+    const resource_files = files_res.data.items;
+    if (resource_files.length === 0) {
+      return e(Result.Err("该分享没有包含文件夹"));
+    }
+    const resource = resource_files[0];
+    const { file_id: resource_file_id, name: resource_file_name } = resource;
     const r = await store.add_sync_task({
       url,
       file_id: resource_file_id,

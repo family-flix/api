@@ -14,7 +14,7 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { file_id: id } = req.query as Partial<{ file_id: string }>;
+  const { file_id: id, drive_id } = req.query as Partial<{ file_id: string; drive_id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -23,18 +23,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id) {
     return e(Result.Err("缺少文件 id"));
   }
-  const file = await store.prisma.file.findFirst({
-    where: {
-      file_id: id,
-    },
-  });
-  if (!file) {
-    return e(Result.Err("没有匹配的记录"));
+  const drive_id_res = await (async () => {
+    if (drive_id) {
+      return Result.Ok(drive_id);
+    }
+    const file = await store.prisma.file.findFirst({
+      where: {
+        file_id: id,
+      },
+    });
+    if (!file) {
+      return Result.Err("没有匹配的记录");
+    }
+    return Result.Ok(file.drive_id);
+  })();
+  if (drive_id_res.error) {
+    return e(drive_id_res);
   }
-  const { drive_id } = file;
-  const drive_res = await Drive.Get({ id: drive_id, user, store });
+  const drive_res = await Drive.Get({ id: drive_id_res.data, user, store });
   if (drive_res.error) {
-    return e(drive_res);
+    return Result.Err(drive_res.error.message);
   }
   const drive = drive_res.data;
   const r = await drive.client.fetch_video_preview_info(id);
