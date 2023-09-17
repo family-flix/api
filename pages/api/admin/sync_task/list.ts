@@ -118,8 +118,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             const { name, overview, poster_path } = season.tv.profile;
             return {
               id: season.id,
+              tv_id: season.tv.id,
               name,
               overview,
+              air_date: season.profile.air_date,
               poster_path: season.profile.poster_path || poster_path,
               cur_episode_count: season._count.episodes,
               episode_count: season.profile.episode_count,

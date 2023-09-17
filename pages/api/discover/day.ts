@@ -9,6 +9,7 @@ import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/backend";
 import { store } from "@/store";
+import { MediaProfileSourceTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -29,6 +30,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         gte: range[0],
         lt: range[1],
       },
+      season: {
+        profile: {
+          source: {
+            not: MediaProfileSourceTypes.Other,
+          },
+        },
+      },
       user_id: user.id,
     },
     include: {
@@ -46,7 +54,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     distinct: ["season_id"],
     orderBy: [
       {
-        created: "desc",
+        episode_number: "desc",
+      },
+      {
+        season: {
+          profile: {
+            air_date: "desc",
+          },
+        },
       },
     ],
   });
@@ -63,16 +78,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     orderBy: [
       {
-        created: "desc",
+        profile: {
+          air_date: "desc",
+        },
       },
     ],
   });
   type MediaPayload = {
     id: string;
     tv_id?: string;
+    season_text?: string;
     name: string;
     poster_path: string;
     text: string | null;
+    air_date: string;
   };
   const medias = episodes
     .map((episode) => {
@@ -82,8 +101,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         type: 1,
         tv_id: tv.id,
         name: tv.profile.name,
+        season_text: season.season_text,
         poster_path: season.profile.poster_path || tv.profile.poster_path,
-        text: `更新至 ${episode.episode_number} 集`,
+        air_date: season.profile.air_date,
+        text: (() => {
+          if (season.profile.episode_count === episode.episode_number) {
+            return `全 ${season.profile.episode_count} 集`;
+          }
+          return `更新至 ${episode.episode_number} 集`;
+        })(),
       } as MediaPayload;
     })
     .concat(
@@ -94,6 +120,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           type: 2,
           name: profile.name,
           poster_path: profile.poster_path,
+          air_date: profile.air_date,
           text: null,
         } as MediaPayload;
       })
