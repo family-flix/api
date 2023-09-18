@@ -589,7 +589,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (e.error) {
       return Result.Err(e.error.message);
     }
-    console.log("[DOMAIN]aliyundrive/fetch_video_preview_info", file_id, this.drive_id);
+    // console.log("[DOMAIN]aliyundrive/fetch_video_preview_info", file_id, this.drive_id);
     const r = await this.request.post<{
       video_preview_play_info: {
         category: string;
@@ -607,7 +607,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       };
     }>(API_HOST + "/v2/file/get_video_preview_play_info", {
       file_id,
-      drive_id: this.drive_id,
+      drive_id: String(this.drive_id),
       category: "live_transcoding",
       template_id: "QHD|FHD|HD|SD|LD",
       // 60s * 6min * 2h
