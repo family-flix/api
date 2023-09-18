@@ -28,4 +28,6 @@ export enum TaskTypes {
   DeleteDriveFile,
   /** 上传字幕 */
   UploadSubtitle,
+  /** 重命名多个文件 */
+  RenameFiles,
 }
