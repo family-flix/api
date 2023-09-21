@@ -10,7 +10,7 @@ import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
 import { FileType } from "@/constants";
 import { file } from "@prisma/client";
@@ -75,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     desc: `移动文件后索引云盘 '${target_drive.name}'`,
     unique_id: target_drive.id,
-    type: TaskTypes.TVTransfer,
+    type: TaskTypes.MoveTV,
     user_id,
     store,
   });

@@ -144,6 +144,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     name: string;
     type: "file" | "folder";
     size?: number;
+    md5?: string;
     parent_file_id: string;
     parent_paths: string;
   }) => Promise<void> = promise_noop;
@@ -225,6 +226,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       parent_paths,
       type,
       size,
+      md5: data.md5,
     });
     if (type === "folder") {
       const parsed_info = parse_filename_for_video(

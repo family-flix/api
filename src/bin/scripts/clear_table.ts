@@ -2,7 +2,7 @@ require("dotenv").config();
 
 import { ModelKeys } from "@/domains/store/types";
 import { store } from "@/store";
-import { parse_argv } from "@/utils/backend";
+import { parse_argv } from "@/utils/server";
 
 function main() {
   const args = process.argv.slice(2);

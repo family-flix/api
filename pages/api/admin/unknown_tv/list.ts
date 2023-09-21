@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { to_number } from "@/utils/primitive";
 
@@ -80,10 +80,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       no_more: list.length + (page - 1) * page_size >= count,
       total: count,
       list: list.map((parsed_tv) => {
-        const { id, name, file_id, file_name, parsed_seasons, parsed_episodes, drive } = parsed_tv;
+        const { id, name, original_name, file_id, file_name, parsed_seasons, parsed_episodes, drive } = parsed_tv;
         return {
           id,
-          name,
+          name: name || original_name,
           file_id,
           file_name,
           parsed_seasons: parsed_seasons.map((season) => {

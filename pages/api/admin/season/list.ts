@@ -9,7 +9,7 @@ import { normalize_partial_tv } from "@/domains/tv/utils";
 import { ModelQuery, TVProfileWhereInput } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { season_to_chinese_num } from "@/utils";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { to_number } from "@/utils/primitive";
 import { store } from "@/store";
 import { MediaProfileSourceTypes } from "@/constants";

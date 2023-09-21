@@ -372,7 +372,7 @@ export class AliyunResourceClient extends BaseDomain<TheTypesOfEvents> {
     }
     await this.ensure_initialized();
     const { page_size = 20, marker } = options;
-    console.log("[DOMAIN]AliyunResourceDrive - fetch_files", this.drive_id);
+    // console.log("[DOMAIN]AliyunResourceDrive - fetch_files", this.drive_id);
     const r = await this.request.post<{
       items: AliyunDriveFileResp[];
       next_marker: string;

@@ -10,7 +10,7 @@ import { Drive } from "@/domains/drive";
 import { DriveAnalysis } from "@/domains/analysis";
 import { Job } from "@/domains/job";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
 import { app, store } from "@/store";
@@ -25,12 +25,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { target_folders } = req.body as Partial<{
     target_folders: { file_id: string; parent_paths?: string; name: string; type: string }[];
   }>;
-  if (!drive_id) {
-    return e(Result.Err("缺少云盘 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
+  }
+  if (!drive_id) {
+    return e(Result.Err("缺少云盘 id"));
   }
   const user = t_res.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
@@ -42,12 +42,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("请先设置索引目录", 30001));
   }
   const job_res = await Job.New({
-    desc: `索引云盘 '${drive.name}'${(() => {
+    desc: `索引云盘「${drive.name}」${(() => {
       if (!target_folders) {
         return "";
       }
       if (!Array.isArray(target_folders)) {
         return "";
+      }
+      if (target_folders.length === 1) {
+        return target_folders[0].name;
       }
       return " 部分文件";
     })()}`,

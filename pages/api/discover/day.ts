@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { MediaProfileSourceTypes } from "@/constants";
 

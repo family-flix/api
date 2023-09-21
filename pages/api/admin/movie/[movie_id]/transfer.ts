@@ -20,7 +20,7 @@ import { DriveAnalysis } from "@/domains/analysis";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
 import { app, store } from "@/store";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { build_media_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
 
 type TheFilePrepareTransfer = {
@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  if (!id || id === "undefined") {
+  if (!id) {
     return e(Result.Err("缺少电影 id"));
   }
   if (!target_drive_id) {
@@ -81,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     unique_id: target_drive.id,
     desc: `移动电影 '${tv_name}' 到云盘 '${target_drive.name}'`,
-    type: TaskTypes.MovieTransfer,
+    type: TaskTypes.MoveMovie,
     user_id,
     store,
   });

@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { Member } from "@/domains/user/member";
 import { BaseApiResp, Result } from "@/types";
 import { store } from "@/store";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { season_to_chinese_num } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

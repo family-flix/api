@@ -70,7 +70,11 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     if (sync_task === null) {
       return Result.Err("没有匹配的同步任务记录");
     }
-    const { file_id, drive_id } = sync_task;
+    if (sync_task.invalid) {
+      const tip = "该更新已失效，请重新绑定更新";
+      return Result.Err(tip);
+    }
+    const { drive_id } = sync_task;
     const drive_res = await Drive.Get({ id: drive_id, user, store });
     if (drive_res.error) {
       return Result.Err(drive_res.error);
@@ -79,20 +83,21 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     if (drive.profile.root_folder_id === null || drive.profile.root_folder_name === null) {
       return Result.Err("请先设置云盘索引根目录");
     }
-    const t = new ResourceSyncTask({
-      task: sync_task,
-      user,
-      drive,
-      store,
-      wait_complete,
-      assets,
-      client: drive.client,
-      on_file,
-      on_print,
-      on_finish,
-      on_error,
-    });
-    return Result.Ok(t);
+    return Result.Ok(
+      new ResourceSyncTask({
+        task: sync_task,
+        user,
+        drive,
+        store,
+        wait_complete,
+        assets,
+        client: drive.client,
+        on_file,
+        on_print,
+        on_finish,
+        on_error,
+      })
+    );
   }
   static async Create(values: { url: string; user: User; store: DatabaseStore }) {
     // const { url, user, store } = values;
@@ -157,19 +162,20 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     // const resource = resource_files[0];
   }
 
-  task: SyncTaskRecord;
+  /** 任务信息 */
+  profile: SyncTaskRecord;
   user: ResourceSyncTaskProps["user"];
   drive: ResourceSyncTaskProps["drive"];
+  client: AliyunDriveClient;
   store: ResourceSyncTaskProps["store"];
   TMDB_TOKEN: ResourceSyncTaskProps["TMDB_TOKEN"];
   assets: ResourceSyncTaskProps["assets"];
-  client: AliyunDriveClient;
 
   constructor(options: Partial<{}> & ResourceSyncTaskProps) {
     super();
 
     const { user, drive, store, task, client, TMDB_TOKEN, assets, on_file, on_print, on_finish, on_error } = options;
-    this.task = task;
+    this.profile = task;
     this.store = store;
     this.user = user;
     this.drive = drive;
@@ -201,8 +207,8 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     //     ],
     //   })
     // );
-    const { task, client, store } = this;
-    const { id, url, file_id, file_id_link_resource, file_name_link_resource: file_name, invalid } = task;
+    const { profile, client, store } = this;
+    const { id, url, file_id, file_id_link_resource, file_name_link_resource, invalid } = profile;
     // const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
 
     const drive_id = this.drive.id;
@@ -242,7 +248,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
                 children: [
                   new ArticleCardNode({
                     value: {
-                      task_id: task.id,
+                      task_id: profile.id,
                     },
                   }),
                 ],
@@ -271,26 +277,21 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r1.error);
     }
     const { share_id } = r1.data;
-    const target_folder_name = file_name;
     const prev_folder = new Folder(file_id_link_resource, {
-      name: target_folder_name,
+      name: file_name_link_resource,
       client: folder_client({ drive_id }, store),
     });
     const folder = new Folder(file_id, {
       // 这里本应该用 file_name，但是很可能分享文件的名字改变了，但我还要认为它没变。
-      // 比如原先名字是「40集更新中」，等更新完了，就变成「40集已完结」，而我已开始存的名字是「40集更新中」，在存文件的时候，根本找不到「40集已完结」这个名字
-      // 所以继续用旧的「40集更新中」
-      name: target_folder_name,
+      // 比如原先名字是「40集更新中」，等更新完了，就变成「40集已完结」，而我已开始存的名字是「40集更新中」。
+      // 后面在索引文件的时候，根本找不到「40集已完结」这个名字，所以继续用旧的「40集更新中」
+      name: file_name_link_resource,
       client: {
         fetch_files: async (file_id: string, options: Partial<{ marker: string; page_size: number }> = {}) => {
-          const r = await client.fetch_shared_files(file_id, {
+          return client.fetch_shared_files(file_id, {
             ...options,
             share_id,
           });
-          if (r.error) {
-            return r;
-          }
-          return r;
         },
       },
     });
@@ -320,8 +321,8 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
    * 执行 FolderDiffer 生成的 effect
    */
   async consume_effects_for_shared_file(effects: DifferEffect[]) {
-    const { task, store, client } = this;
-    const { url } = task;
+    const { profile, store, client } = this;
+    const { url } = profile;
     const user_id = this.user.id;
     const drive_id = this.drive.id;
     //     log("应用 diff 的结果，共", effects.length, "个");

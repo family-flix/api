@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { store } from "@/store";
 import { User } from "@/domains/user";

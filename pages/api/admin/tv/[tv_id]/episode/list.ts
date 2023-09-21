@@ -8,7 +8,7 @@ import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
 import { store } from "@/store";
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

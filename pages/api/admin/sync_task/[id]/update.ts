@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import { User } from "@/domains/user";
 import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   await store.prisma.bind_for_parsed_tv.update({
     where: {
-      id: task.task.id,
+      id: task.profile.id,
     },
     data: {
       updated: dayjs().toISOString(),

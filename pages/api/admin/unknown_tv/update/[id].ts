@@ -9,7 +9,7 @@ import { TVProfileItemInTMDB } from "@/domains/tmdb/services";
 import { User } from "@/domains/user";
 import { MediaSearcher } from "@/domains/searcher";
 import { app, store } from "@/store";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types";
 import { Drive } from "@/domains/drive";
 

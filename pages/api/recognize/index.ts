@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import * as tencentcloud from "tencentcloud-sdk-nodejs-asr";
 
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 
 const AsrClient = tencentcloud.asr.v20190614.Client;
 
