@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { Member } from "@/domains/user/member";
 import { MemberNotifyWhereInput, ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { to_number } from "@/utils/primitive";
 import { store } from "@/store";
 

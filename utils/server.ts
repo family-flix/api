@@ -1,7 +1,7 @@
 import { NextApiResponse } from "next";
 
-import { Result, resultify } from "@/types";
 import { decode_token } from "@/domains/user/jwt";
+import { Result, resultify } from "@/types";
 
 /**
  * 解析 token

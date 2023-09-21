@@ -1,8 +1,8 @@
 import { ExtraUserAndDriveInfo } from "@/domains/walker/utils";
 import { DatabaseStore } from "@/domains/store";
+import { FileRecord } from "@/domains/store/types";
 import { FileType } from "@/constants";
 import { Result } from "@/types";
-import { is_video_file } from "@/utils";
 
 /**
  * 在遍历文件夹的过程中，根据给定的目标文件/文件夹，和当前遍历到的文件夹/文件进行对比，判断是否要跳过
@@ -116,4 +116,18 @@ export async function adding_file_safely(
     return Result.Err(adding_res.error);
   }
   return Result.Ok({ id: adding_res.data.id });
+}
+
+export function get_diff_of_file(file: { size?: number; md5?: string }, record: FileRecord) {
+  const diff: Partial<FileRecord> = {};
+  if (file.size && file.size !== record.size) {
+    diff.size = file.size;
+  }
+  if (file.md5 && file.md5 !== record.md5) {
+    diff.md5 = file.md5;
+  }
+  if (Object.keys(diff).length === 0) {
+    return null;
+  }
+  return diff;
 }

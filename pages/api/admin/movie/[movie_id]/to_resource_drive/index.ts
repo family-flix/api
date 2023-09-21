@@ -19,7 +19,7 @@ import { MovieProfileRecord, MovieRecord, ParsedMovieRecord } from "@/domains/st
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
 import { app, store } from "@/store";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { build_media_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { DriveAnalysis } from "@/domains/analysis";
@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  if (!id || id === "undefined") {
+  if (!id) {
     return e(Result.Err("缺少电影 id"));
   }
   const user = t_res.data;
@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     unique_id: movie.id,
     desc: `移动电影 '${mvoie_name}' 到资源盘`,
-    type: TaskTypes.MovieTransfer,
+    type: TaskTypes.MoveMovie,
     user_id,
     store,
   });

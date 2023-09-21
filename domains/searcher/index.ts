@@ -213,7 +213,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
             new ArticleListNode({
               children: files.map((file) => {
                 return new ArticleListItemNode({
-                  children: [new ArticleTextNode({ text: file.name })],
+                  children: [file.name].map((text) => new ArticleTextNode({ text })),
                 });
               }),
             }),
@@ -339,16 +339,41 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       where.drive_id = drive_id;
     }
     if (scope && scope.length && scope.length <= 10) {
-      where.OR = scope.map((s) => {
-        const { name } = s;
-        return {
-          name: {
-            contains: name,
-          },
-        };
-      });
+      const queries1: NonNullable<ModelQuery<"parsed_tv">>[] = scope
+        .map((s) => {
+          const { name } = s;
+          return [
+            {
+              name: {
+                contains: name,
+              },
+            },
+            {
+              original_name: {
+                contains: name,
+              },
+            },
+            {
+              file_name: {
+                contains: name,
+              },
+            },
+          ];
+        })
+        .reduce((total, cur) => {
+          return total.concat(cur);
+        }, []);
+      where.OR = queries1;
     }
     // console.log("[DOMAIN]searcher/index - process_parsed_tv_list where is", JSON.stringify(where, null, 2));
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["搜索待查询电视剧", JSON.stringify(where)].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
     const count = await this.store.prisma.parsed_tv.count({
       where,
     });
@@ -782,6 +807,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       };
     }
     // console.log("[DOMAIN]searcher/index - process_parsed_season_list where is", JSON.stringify(where, null, 2));
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["搜索待查询电视剧季", JSON.stringify(where)].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
     const count = await this.store.prisma.parsed_season.count({ where });
     this.emit(
       Events.Print,
@@ -1134,6 +1167,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       where.OR = queries;
     }
     // console.log("[DOMAIN]searcher/index - process_parsed_episode_list where is", JSON.stringify(where, null, 2));
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["搜索待查询剧集", JSON.stringify(where)].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
     const count = await this.store.prisma.parsed_episode.count({ where });
     this.emit(
       Events.Print,
@@ -1237,15 +1278,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (parsed_tv.tv_id === null) {
       return Result.Err("缺少关联电视剧详情");
     }
-    if (!parsed_season) {
-      return Result.Err("缺少关联季");
-    }
-    if (parsed_season.season_id === null) {
-      return Result.Err("缺少关联季详情");
-    }
+    // if (!parsed_season) {
+    //   return Result.Err("缺少关联季");
+    // }
+    // if (parsed_season.season_id === null) {
+    //   return Result.Err("缺少关联季详情");
+    // }
     const profile_res = await this.get_episode_profile_with_tmdb({
       parsed_tv,
-      parsed_season,
       parsed_episode,
     });
     if (profile_res.error) {
@@ -1326,11 +1366,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(r2.data);
   }
   cached_episode_profiles: Record<string, EpisodeProfileRecord> = {};
-  async get_episode_profile_with_tmdb(body: {
-    parsed_tv: ParsedTVRecord;
-    parsed_season: ParsedSeasonRecord;
-    parsed_episode: ParsedEpisodeRecord;
-  }) {
+  async get_episode_profile_with_tmdb(body: { parsed_tv: ParsedTVRecord; parsed_episode: ParsedEpisodeRecord }) {
     const { parsed_tv, parsed_episode } = body;
     const { season_number, episode_number } = parsed_episode;
     if (parsed_tv.tv_id === null) {
@@ -1496,6 +1532,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       });
     }
     // console.log("[DOMAIN]searcher/index - process_parsed_movie_list where is", JSON.stringify(where, null, 2));
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["搜索待查询电影", JSON.stringify(where)].map((text) => {
+          return new ArticleTextNode({ text });
+        }),
+      })
+    );
     const count = await this.store.prisma.parsed_movie.count({ where });
     // console.log('[DOMAIN]Searcher - process_parsed_movie_list');
     this.emit(

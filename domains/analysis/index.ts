@@ -25,8 +25,9 @@ import { User } from "@/domains/user";
 import { DatabaseStore } from "@/domains/store";
 import { FolderWalker } from "@/domains/walker";
 import { Result } from "@/types";
+import { FileType } from "@/constants";
 
-import { need_skip_the_file_when_walk, adding_file_safely } from "./utils";
+import { need_skip_the_file_when_walk, get_diff_of_file } from "./utils";
 
 enum Events {
   AddTV,
@@ -290,6 +291,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     walker.on_file = async (file) => {
       // 这里是从云盘索引到的文件，所以 name 就是不包含路径的部分
       const { file_id, type, name, parent_paths } = file;
+      // console.log("[DOMAIN]analysis/index - walker.on_file", name, file.md5);
       await (async () => {
         if (type === "file") {
           return;
@@ -354,7 +356,63 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
           })
         );
       })();
-      await adding_file_safely(file, { user_id: user.id, drive_id: drive.id }, store);
+      await (async () => {
+        const existing = await store.prisma.file.findFirst({
+          where: {
+            file_id: file.file_id,
+          },
+        });
+        if (!existing) {
+          const r = await store.add_file({
+            file_id,
+            name,
+            parent_file_id: file.parent_file_id,
+            parent_paths,
+            type: (() => {
+              if (type === "file") {
+                return FileType.File;
+              }
+              if (type === "folder") {
+                return FileType.Folder;
+              }
+              return FileType.Unknown;
+            })(),
+            size: file.size,
+            drive_id: drive.id,
+            user_id: user.id,
+          });
+          if (r.error) {
+            this.emit(
+              Events.Print,
+              new ArticleLineNode({
+                children: [`[${name}]`, "新增文件失败", r.error.message].map((text) => {
+                  return new ArticleTextNode({ text: String(text) });
+                }),
+              })
+            );
+          }
+          return;
+        }
+        const diff = get_diff_of_file(file, existing);
+        // console.log("[DOMAIN]analysis/index - walker.on_file get diff", diff);
+        if (diff === null) {
+          return;
+        }
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: [`[${name}]`, "文件已存在且有变更字段，更新"].map((text) => {
+              return new ArticleTextNode({ text: String(text) });
+            }),
+          })
+        );
+        await store.prisma.file.update({
+          where: {
+            id: existing.id,
+          },
+          data: diff,
+        });
+      })();
       await store.prisma.tmp_file.deleteMany({
         where: {
           name,

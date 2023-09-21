@@ -15,7 +15,7 @@ import {
   ArticleTextNode,
 } from "@/domains/article";
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { FileType } from "@/constants";
 import { FileRecord } from "@/domains/store/types";

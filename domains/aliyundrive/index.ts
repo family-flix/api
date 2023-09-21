@@ -425,6 +425,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       parent_file_id: string;
       /** 类型 */
       type: string;
+      md5: string;
       /** 缩略图 */
       thumbnail: string;
     }>(API_HOST + "/v2/file/get", {
@@ -441,8 +442,12 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(r.data);
   }
   /** 添加文件夹 */
-  async add_folder(params: { parent_file_id?: string; name: string }) {
+  async add_folder(
+    params: { parent_file_id?: string; name: string },
+    options: Partial<{ check_name_mode: "refuse" | "auto_rename" | "ignore" }> = {}
+  ) {
     const { parent_file_id = "root", name } = params;
+    const { check_name_mode = "refuse" } = options;
     if (!name) {
       return Result.Err("缺少文件夹名称");
     }
@@ -452,7 +457,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       file_name: string;
       parent_file_id: string;
     }>(API_HOST + "/adrive/v2/file/createWithFolders", {
-      check_name_mode: "refuse",
+      check_name_mode,
       drive_id: String(this.drive_id),
       name,
       parent_file_id,
@@ -533,9 +538,14 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
   /**
    * 重命名文件夹或文件
    */
-  async rename_file(file_id: string, next_name: string) {
+  async rename_file(
+    file_id: string,
+    next_name: string,
+    options: Partial<{ check_name_mode: "auto_rename" | "refuse" | "ignore" }> = {}
+  ) {
+    const { check_name_mode = "refuse" } = options;
     if (file_id === undefined) {
-      return Result.Err("Please pass folder file id");
+      return Result.Err("请传入 file_id");
     }
     await this.ensure_initialized();
     const result = await this.request.post<{
@@ -561,7 +571,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       sync_meta: string;
       trashed: boolean;
     }>(API_HOST + "/v3/file/update", {
-      check_name_mode: "refuse",
+      check_name_mode,
       drive_id: String(this.drive_id),
       file_id,
       name: next_name,
@@ -1525,13 +1535,6 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (!resource_client.root_folder_id) {
       return Result.Err("请先设置资源索引根目录");
     }
-    console.log(
-      "[DOMAIN]aliyundriv/index",
-      resource_client.root_folder_id,
-      this.resource_drive_id,
-      file_ids,
-      this.drive_id
-    );
     const url = "/adrive/v2/file/crossDriveCopy";
     const r = await this.request.post<{
       items: {
@@ -1551,7 +1554,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error);
     }
-    console.log("[DOMAIN]aliyundriv/index - before v2/batch", r.data.items);
+    // console.log("[DOMAIN]aliyundriv/index - before v2/batch", r.data.items);
     const r2 = await this.request.post<{
       responses: {
         body: {

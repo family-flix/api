@@ -4,7 +4,6 @@ import dayjs from "dayjs";
 import { store } from "@/store";
 
 import { check_in } from "../scripts/check_in";
-import { check_tv_in_progress_is_completed, patch_shared_files } from "../scripts/patch_tv_in_progress";
 import { ping_drive_status } from "../scripts/ping_drive_status";
 import { walk_added_files } from "../scripts/walk_added_files";
 import { clear_expired_shared_files_in_progress } from "../scripts/clear_expired_shared_files_in_progress";
@@ -33,8 +32,8 @@ import { clear_expired_shared_files_in_progress } from "../scripts/clear_expired
     "0 0 * * * *",
     async () => {
       console.log("执行任务 at 0 0 * * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      patch_shared_files(store);
-      check_tv_in_progress_is_completed(store);
+      // patch_shared_files(store);
+      // check_tv_in_progress_is_completed(store);
     },
     null,
     true,

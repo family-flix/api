@@ -12,7 +12,7 @@ import { Drive } from "@/domains/drive";
 import { TaskTypes } from "@/domains/job/constants";
 import { DriveAnalysis } from "@/domains/analysis";
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { FileType } from "@/constants";
 import { app, store } from "@/store";
 
@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  if (!id || id === "undefined") {
+  if (!id) {
     return e(Result.Err("缺少电视剧 id"));
   }
   const season = await store.prisma.season.findFirst({
@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     desc: `更新电视剧 '${name}'`,
     unique_id: id,
-    type: TaskTypes.TVSync,
+    type: TaskTypes.FilesSync,
     user_id: user.id,
     store,
   });

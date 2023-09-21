@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { TV } from "@/domains/tv";
 import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

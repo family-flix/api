@@ -1,6 +1,5 @@
 /**
  * @file 执行指定同步任务
- * @deprecated
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -11,7 +10,7 @@ import { Job } from "@/domains/job";
 import { TaskTypes } from "@/domains/job/constants";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -36,11 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(task_res);
   }
   const task = task_res.data;
-  const { name } = task.task;
+  const { name } = task.profile;
   const job_res = await Job.New({
     unique_id: id,
-    desc: `同步文件夹 '${name}' 新增影片`,
-    type: TaskTypes.TVSync,
+    desc: `同步文件夹 '${name}'`,
+    type: TaskTypes.FilesSync,
     user_id: user.id,
     store,
   });
@@ -59,8 +58,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           children: ["同步失败", r.error.message].map((text) => new ArticleTextNode({ text })),
         })
       );
-      job.finish();
-      return;
     }
     job.finish();
   }

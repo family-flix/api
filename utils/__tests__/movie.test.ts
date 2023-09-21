@@ -272,4 +272,14 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("Oblivion.Verses.2017.SPANISH.中字.XZYS", () => {
+    const name = "Oblivion.Verses.2017.SPANISH.中字.XZYS";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Oblivion.Verses",
+      season: "",
+      episode: "",
+    });
+  });
 });

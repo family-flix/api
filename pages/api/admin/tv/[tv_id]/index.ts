@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { season_to_chinese_num } from "@/utils";
 import { store } from "@/store";
 
@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  if (!id || id === "undefined") {
+  if (!id) {
     return e(Result.Err("缺少电视剧 id"));
   }
   const tv = await store.prisma.tv.findFirst({

@@ -276,8 +276,9 @@ model parsed_episode {
         // 1文件 2文件夹 3未知
         type           Int
         // 文件大小
-        size           Float? @default(0)
-        can_search     Int?   @default(1)
+        size           Float?  @default(0)
+        can_search     Int?    @default(1)
+        md5            String?
 
         episode_id       String?
         episode          episode?      @relation(fields: [episode_id], references: [id], onDelete: Cascade)
@@ -681,7 +682,8 @@ model file {
         // 1文件 2文件夹 3未知
         type           Int
         // 文件大小
-        size           Float? @default(0)
+        size           Float?  @default(0)
+        md5            String?
 
         // 关联 drive 表
         drive_id String

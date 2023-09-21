@@ -5,7 +5,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Member } from "@/domains/user/member";
 import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { season_to_chinese_num } from "@/utils";
 

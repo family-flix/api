@@ -26,6 +26,8 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
   name: string = "";
   /** 类型 */
   type: "folder" = "folder";
+  /** 其实是没有的，只是为了 Folder 和 File 的参数一致 */
+  md5?: string;
   size: number = 0;
   /** 该文件夹的子文件/子文件夹 */
   items: (File | Folder)[] = [];
@@ -186,6 +188,7 @@ export class File {
   name: string = "";
   /** 文件大小（单位字节） */
   size: number = 0;
+  md5?: string;
   parents: Folder["parents"];
   /** 获取该文件信息的方法合集对象 */
   private client: Folder["client"];
@@ -202,9 +205,10 @@ export class File {
     this.parents = parents;
   }
   set_profile(profile: PartialAliyunDriveFile) {
-    const { name, size = 0 } = profile;
+    const { name, size = 0, content_hash } = profile;
     this.name = name;
     this.size = size;
+    this.md5 = content_hash;
   }
   to_json() {
     return {

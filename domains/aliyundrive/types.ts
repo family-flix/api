@@ -19,6 +19,7 @@ export type AliyunDriveFileResp = {
   sync_flag: boolean;
   sync_meta: string;
   type: string;
+  content_hash: string;
   updated_at: string;
   children: AliyunDriveFileResp[];
   childrenError: string;
@@ -30,6 +31,7 @@ export type PartialAliyunDriveFile = {
   parent_file_id: string;
   type?: string;
   size?: number;
+  content_hash?: string;
   items?: PartialAliyunDriveFile[];
 };
 

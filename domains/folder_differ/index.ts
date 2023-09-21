@@ -1,5 +1,5 @@
 /**
- * @file 对比两个文件夹的差异
+ * @file 递归对比两个文件夹的差异
  */
 import type { Handler } from "mitt";
 
@@ -101,14 +101,32 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
     // log("[DOMAIN](FolderDiffer)run", this.prev_folder.name, this.folder.name, this.is_child);
     const r1 = await this.folder.next();
     if (r1.error) {
-      // log(prefix, "获取新文件列表失败", r1.error.message);
-      // log("folder next failed", r1.error.message);
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["获取新文件列表失败", r1.error.message].map(
+            (text) =>
+              new ArticleTextNode({
+                text,
+              })
+          ),
+        })
+      );
       return;
     }
     const r2 = await this.prev_folder.next();
     if (r2.error) {
-      // log(prefix, "获取旧文件列表失败", r2.error.message);
-      // log("prev folder next failed", r2.error.message);
+      this.emit(
+        Events.Print,
+        new ArticleLineNode({
+          children: ["获取旧文件列表失败", r2.error.message].map(
+            (text) =>
+              new ArticleTextNode({
+                text,
+              })
+          ),
+        })
+      );
       return;
     }
     const cur_files = r1.data.filter((f) => {

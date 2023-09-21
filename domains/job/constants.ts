@@ -7,17 +7,17 @@ export enum TaskTypes {
   /** 云盘索引 */
   DriveAnalysis = 0,
   /** 电视剧转存 */
-  TVTransfer,
+  MoveTV,
   /** 电影转存 */
-  MovieTransfer,
+  MoveMovie,
+  /** 归档电视剧 */
+  ArchiveSeason,
   /** 移动电影/电视剧到阿里云资源盘 */
   MoveToResourceDrive,
   /** 搜索影视剧详情 */
   SearchMedia,
-  /** 电视剧更新 */
-  TVSync,
-  /** 文件夹同步 */
-  FolderSync,
+  /** 文件夹更新 */
+  FilesSync,
   /** 刷新电视剧信息 */
   RefreshTVAndSeasonProfile,
   /** 刷新电影信息 */
@@ -30,4 +30,6 @@ export enum TaskTypes {
   UploadSubtitle,
   /** 重命名多个文件 */
   RenameFiles,
+  /** 领取签到奖励 */
+  ReceiveSignInRewards,
 }

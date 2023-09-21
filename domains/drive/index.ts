@@ -159,7 +159,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(
       new Drive({
-        id,
+        id: drive_record.id,
         profile: {
           type,
           name,
@@ -297,19 +297,19 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
             drive_token: true,
           },
         });
-        console.log("[DOMAIN]drive/index - before !existing_drive", existing_drive);
+        // console.log("[DOMAIN]drive/index - before !existing_drive", existing_drive);
         if (!existing_drive) {
           return Result.Err("没有匹配的云盘记录");
         }
         const { avatar, name, profile, root_folder_id, drive_token, used_size, total_size } = existing_drive;
         const r = parseJSONStr<AliyunDriveProfile>(profile);
-        console.log("[DOMAIN]drive/index - after r");
+        // console.log("[DOMAIN]drive/index - after r");
         if (r.error) {
           return Result.Err(r.error.message);
         }
         const { resource_drive_id, device_id, user_id, app_id, nick_name, user_name } = r.data;
         const r2 = parseJSONStr<{ access_token: string; refresh_token: string }>(drive_token.data);
-        console.log("[DOMAIN]drive/index - after r2");
+        // console.log("[DOMAIN]drive/index - after r2");
         if (r2.error) {
           return Result.Err(r2.error.message);
         }
@@ -335,7 +335,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           root_folder_id,
           store,
         });
-        console.log("[DOMAIN]drive/index - before store.prisma.drive.create");
+        // console.log("[DOMAIN]drive/index - before store.prisma.drive.create");
         const created_drive = await store.prisma.drive.create({
           data: {
             id: r_id(),
@@ -590,7 +590,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /**
    * 删除云盘内一个文件
    */
-  async delete_file(f: FileRecord) {
+  async delete_file(f: { file_id: string }) {
     const { file_id } = f;
     await this.store.prisma.file.deleteMany({
       where: {
@@ -734,7 +734,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(null);
   }
-  async delete_folder(f: FileRecord) {
+  async delete_folder(f: { file_id: string; name: string }) {
     const { name, file_id } = f;
     const files_res = await this.store.find_files({
       parent_file_id: file_id,

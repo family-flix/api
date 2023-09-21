@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { User } from "@/domains/user";
 
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page: page_str = "1",
     page_size: page_size_str = "20",
   } = req.query as Partial<{ tv_id: string; page: string; page_size: string }>;
-  if (!id || id === "undefined") {
+  if (!id) {
     return e("缺少电视剧 id");
   }
   const t_res = await User.New(authorization, store);

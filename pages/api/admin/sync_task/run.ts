@@ -13,7 +13,7 @@ import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { User } from "@/domains/user";
 import { FileType } from "@/constants";
 import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/backend";
+import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
 import { ModelQuery } from "@/domains/store/types";
 
@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     unique_id: "sync_all_tv",
     desc: "同步所有文件夹新增影片",
-    type: TaskTypes.TVSync,
+    type: TaskTypes.FilesSync,
     user_id: user.id,
     store,
   });
