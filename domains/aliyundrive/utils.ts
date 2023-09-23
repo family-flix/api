@@ -111,58 +111,58 @@ export async function archive_season_files(body: {
       file_id: string;
     }[];
   };
-  // const parents: Record<string, { file_id: string; file_name: string }> = {};
-  // for (let i = 0; i < files.length; i += 1) {
-  //   const { parent_file_id, parent_paths } = files[i];
-  //   const paths = parent_paths.split("/");
-  //   parents[parent_paths] = {
-  //     file_id: parent_file_id,
-  //     file_name: paths[paths.length - 1],
-  //   };
-  // }
-  const created_folders: Record<string, CreatedFolder> = {};
-  const errors: {
-    file_id: string;
-    tip: string;
-  }[] = [];
-  for (let j = 0; j < files.length; j += 1) {
-    await (async () => {
-      const parsed_episode = files[j];
-      const { file_id, file_name, episode_number, season_number } = parsed_episode;
-      const { name, original_name, air_date } = season_profile;
-      if (!name) {
-        // 这种情况几乎没有
-        errors.push({
-          file_id,
-          tip: "电视剧没有正确的名称",
-        });
-        return;
-      }
-      const { resolution, source, encode, voice_encode, type } = parse_filename_for_video(
-        file_name,
-        ["resolution", "source", "encode", "voice_encode", "type"],
-        user.get_filename_rules()
+  const { name, original_name, air_date, season_text } = season_profile;
+  const tv_name_with_pinyin = build_media_name({ name, original_name });
+  const air_date_of_year = dayjs(air_date).year();
+  const season_folder_name = [tv_name_with_pinyin, season_text, air_date_of_year].join(".");
+  const new_folder_parent_path = [drive.profile.root_folder_name, season_folder_name].join("/");
+  const parents: Record<string, { file_id: string; file_name: string }> = {};
+  for (let i = 0; i < files.length; i += 1) {
+    const { parent_file_id, parent_paths } = files[i];
+    const paths = parent_paths.split("/");
+    parents[parent_paths] = {
+      file_id: parent_file_id,
+      file_name: paths[paths.length - 1],
+    };
+  }
+  let need_create_parent_folder = true;
+  const paths = Object.keys(parents);
+  if (paths.length === 1) {
+    const key = paths[0];
+    if (key === new_folder_parent_path) {
+      need_create_parent_folder = false;
+      job.output.write(
+        new ArticleLineNode({
+          children: ["无需创建新文件夹"].map(
+            (text) =>
+              new ArticleTextNode({
+                text,
+              })
+          ),
+        })
       );
-      const tv_name_with_pinyin = build_media_name({ name, original_name });
-      const air_date_of_year = (() => {
-        return dayjs(air_date).year();
-      })();
-      const new_name = [
-        tv_name_with_pinyin,
-        `${season_number}${episode_number}`,
-        air_date_of_year,
-        resolution,
-        source,
-        encode,
-        voice_encode,
-        type.replace(/^\./, ""),
-      ]
-        .filter(Boolean)
-        .join(".");
-      if (file_name !== new_name) {
+    }
+  }
+  const created_folder_res = await (async () => {
+    if (need_create_parent_folder) {
+      const exceed_res = await drive.is_exceed_capacity();
+      if (exceed_res.data) {
+        return Result.Err("云盘容量超出且需要文件夹，操作失败");
+      }
+      job.output.write(
+        new ArticleLineNode({
+          children: [
+            new ArticleTextNode({
+              text: `创建新文件夹 '${season_folder_name}' 存放格式化后的视频文件`,
+            }),
+          ],
+        })
+      );
+      const existing_res = await drive.client.existing(drive.profile.root_folder_name!, season_folder_name);
+      if (existing_res.data) {
         job.output.write(
           new ArticleLineNode({
-            children: [`将文件「${file_name}」名字修改为「${new_name}」`].map(
+            children: ["使用云盘中查找到的"].map(
               (text) =>
                 new ArticleTextNode({
                   text,
@@ -170,206 +170,230 @@ export async function archive_season_files(body: {
             ),
           })
         );
-        const rename_res = await drive.client.rename_file(file_id, new_name, {
+        return Result.Ok({
+          file_id: existing_res.data.file_id,
+          file_name: existing_res.data.name,
+        });
+      }
+      const r2 = await drive.client.add_folder({
+        parent_file_id: drive.profile.root_folder_id!,
+        name: season_folder_name,
+      });
+      if (r2.error) {
+        job.output.write(
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: `创建文件夹 '${season_folder_name}' 失败，因为 ${r2.error.message}`,
+              }),
+            ],
+          })
+        );
+        return Result.Err(r2.error.message);
+      }
+      job.output.write(
+        new ArticleLineNode({
+          children: ["使用新创建的文件夹"].map(
+            (text) =>
+              new ArticleTextNode({
+                text,
+              })
+          ),
+        })
+      );
+      return Result.Ok({
+        file_id: r2.data.file_id,
+        file_name: r2.data.file_name,
+      });
+    }
+    job.output.write(
+      new ArticleLineNode({
+        children: ["复用现有的文件夹"].map(
+          (text) =>
+            new ArticleTextNode({
+              text,
+            })
+        ),
+      })
+    );
+    return Result.Ok({
+      file_id: parents[paths[0]].file_id,
+      file_name: season_folder_name,
+    });
+  })();
+  if (created_folder_res.error) {
+    return Result.Err(created_folder_res.error.message);
+  }
+  const created_folder = {
+    file_id: created_folder_res.data.file_id,
+    file_name: created_folder_res.data.file_name,
+    file_ids: [],
+  } as CreatedFolder;
+  const errors: {
+    file_id: string;
+    tip: string;
+  }[] = [];
+  for (let j = 0; j < files.length; j += 1) {
+    await (async () => {
+      const parsed_episode = files[j];
+      const { file_id, file_name, episode_number, season_number, parent_paths } = parsed_episode;
+      const { resolution, source, encode, voice_encode, voice_type, type } = parse_filename_for_video(
+        file_name,
+        ["resolution", "source", "encode", "voice_encode", "voice_type", "type"],
+        user.get_filename_rules()
+      );
+      const parent_infos = parse_filename_for_video(parent_paths, ["resolution", "voice_type"]);
+      const tv_name_with_pinyin = build_media_name({ name, original_name });
+      const air_date_of_year = (() => {
+        return dayjs(air_date).year();
+      })();
+      let new_file_name = [
+        tv_name_with_pinyin,
+        `${season_number}${episode_number}`,
+        air_date_of_year,
+        resolution || parent_infos.resolution,
+        voice_type || parent_infos.voice_type,
+        source,
+        encode,
+        voice_encode,
+        type.replace(/^\./, ""),
+      ]
+        .filter(Boolean)
+        .join(".");
+      if (file_name !== new_file_name) {
+        job.output.write(
+          new ArticleLineNode({
+            children: [`将文件「${file_name}」名字修改为「${new_file_name}」`].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
+          })
+        );
+        const rename_res = await drive.client.rename_file(file_id, new_file_name, {
           check_name_mode: "auto_rename",
         });
         if (rename_res.error) {
+          job.output.write(
+            new ArticleLineNode({
+              children: ["重命名失败，因为", rename_res.error.message].map(
+                (text) =>
+                  new ArticleTextNode({
+                    text,
+                  })
+              ),
+            })
+          );
           return;
         }
-      }
-      const season_folder_name = [tv_name_with_pinyin, season_number, air_date_of_year].join(".");
-      const new_folder_parent_path = [drive.profile.root_folder_name, season_folder_name].join("/");
-      if (parsed_episode.parent_paths === new_folder_parent_path) {
         job.output.write(
           new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: `父文件夹名称已经是${new_folder_parent_path}，无需修改`,
-              }),
-            ],
+            children: ["重命名成功，新的名字是", rename_res.data.name].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
           })
         );
-        created_folders[season_number] =
-          created_folders[season_number] ||
-          ({
-            existing: true,
-            file_id: parsed_episode.parent_file_id,
-            file_name: season_folder_name,
-            file_ids: [],
-          } as CreatedFolder);
-        created_folders[season_number].file_ids.push({ file_id });
-        return;
+        new_file_name = rename_res.data.name;
       }
-      const season_folder_res = await (async () => {
-        if (created_folders[season_number]) {
-          const { file_id, file_name } = created_folders[season_number];
-          return Result.Ok({
-            file_id,
-            name: file_name,
-          });
-        }
-        job.output.write(
-          new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: `创建新文件夹 '${season_folder_name}' 存放格式化后的视频文件`,
-              }),
-            ],
-          })
-        );
-        const existing_res = await drive.client.existing(drive.profile.root_folder_name!, season_folder_name);
-        if (existing_res.error) {
-          return Result.Err(existing_res.error.message);
-        }
-        if (existing_res.data) {
-          return Result.Ok({
-            file_id: existing_res.data.file_id,
-            name: season_folder_name,
-          });
-        }
-        const r2 = await drive.client.add_folder({
-          parent_file_id: drive.profile.root_folder_id!,
-          name: season_folder_name,
-        });
-        if (r2.error) {
-          return Result.Err(r2.error.message);
-        }
-        const created_season_folder_file_id = r2.data.file_id;
-        const r3 = await store.add_file({
-          file_id: created_season_folder_file_id,
-          name: season_folder_name,
-          parent_file_id: drive.profile.root_folder_id!,
-          parent_paths: drive.profile.root_folder_name!,
-          type: FileType.Folder,
-          drive_id: drive.id,
-          user_id: user.id,
-        });
-        if (r3.error) {
-          console.log("创建本地文件记录失败", r3.error.message);
-        }
-        return Result.Ok({
-          file_id: created_season_folder_file_id,
-          name: season_folder_name,
-        });
-      })();
-      if (season_folder_res.error) {
-        job.output.write(
-          new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: `创建文件夹 '${season_folder_name}' 失败，因为 ${season_folder_res.error.message}`,
-              }),
-            ],
-          })
-        );
-        errors.push({
-          file_id,
-          tip: `创建文件夹 '${season_folder_name}' 失败，因为 ${season_folder_res.error.message}`,
-        });
-        return;
-      }
-      const season_folder = season_folder_res.data;
-      created_folders[season_number] =
-        created_folders[season_number] ||
-        ({
-          existing: false,
-          file_id: season_folder.file_id,
-          file_name: season_folder.name,
-          file_ids: [],
-        } as CreatedFolder);
-      created_folders[season_number].file_ids.push({ file_id });
+      await store.prisma.parsed_tv.updateMany({
+        where: {
+          file_id: created_folder.file_id,
+        },
+        data: {
+          file_name: created_folder.file_name,
+        },
+      });
+      await store.prisma.parsed_season.updateMany({
+        where: {
+          file_id: created_folder.file_id,
+        },
+        data: {
+          file_name: created_folder.file_name,
+        },
+      });
       await store.prisma.parsed_episode.updateMany({
         where: {
           file_id,
         },
         data: {
-          parent_file_id: season_folder.file_id,
+          parent_file_id: created_folder.file_id,
           parent_paths: new_folder_parent_path,
-          file_name: new_name,
+          file_name: new_file_name,
         },
       });
-      job.output.write(
-        new ArticleLineNode({
-          children: [
-            new ArticleTextNode({
-              text: `更新源文件信息，${file_id} -> ${season_folder.file_id}/${new_name}`,
-            }),
-          ],
-        })
-      );
       await store.prisma.file.updateMany({
         where: {
           file_id,
         },
         data: {
-          parent_file_id: season_folder.file_id,
+          parent_file_id: created_folder.file_id,
           parent_paths: new_folder_parent_path,
-          name: new_name,
+          name: new_file_name,
         },
       });
+      created_folder.file_ids.push({ file_id });
     })();
   }
-  const folders = Object.keys(created_folders);
-  for (let k = 0; k < folders.length; k += 1) {
-    await (async () => {
-      const { existing, file_id, file_ids } = created_folders[folders[k]];
-      if (existing) {
-        return;
-      }
+  if (need_create_parent_folder) {
+    job.output.write(
+      new ArticleSectionNode({
+        children: [
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: "移动以下文件",
+              }),
+              new ArticleListNode({
+                children: created_folder.file_ids.map((file) => {
+                  return new ArticleListItemNode({
+                    children: [
+                      new ArticleTextNode({
+                        text: file.file_id,
+                      }),
+                    ],
+                  });
+                }),
+              }),
+              new ArticleTextNode({
+                text: `到云盘文件夹「${created_folder.file_name}」`,
+              }),
+            ],
+          }),
+        ],
+      })
+    );
+    const move_res = await drive.client.move_files_to_folder({
+      files: created_folder.file_ids,
+      target_folder_id: created_folder.file_id,
+    });
+    if (move_res.error) {
       job.output.write(
-        new ArticleSectionNode({
-          children: [
-            new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: "移动以下文件",
-                }),
-                new ArticleListNode({
-                  children: file_ids.map((file) => {
-                    return new ArticleListItemNode({
-                      children: [
-                        new ArticleTextNode({
-                          text: file.file_id,
-                        }),
-                      ],
-                    });
-                  }),
-                }),
-                new ArticleTextNode({
-                  text: `到云盘文件夹 '${file_id}'`,
-                }),
-              ],
-            }),
-          ],
+        new ArticleLineNode({
+          children: ["移动文件到目标文件夹失败"].map(
+            (text) =>
+              new ArticleTextNode({
+                text,
+              })
+          ),
         })
       );
-      const exceed_res = await drive.is_exceed_capacity();
-      if (exceed_res.data === false) {
-        const move_res = await drive.client.move_files_to_folder({
-          files: file_ids,
-          target_folder_id: file_id,
-        });
-        if (move_res.error) {
-          errors.push({
-            file_id,
-            tip: `移动文件到文件夹失败, ${move_res.error.message}`,
-          });
-        }
-      }
-    })();
+      errors.push({
+        file_id: created_folder.file_id,
+        tip: `移动文件到文件夹失败, ${move_res.error.message}`,
+      });
+    }
   }
   if (errors.length !== 0) {
     return Result.Err(errors.join("\n"), 0, errors);
   }
-  return Result.Ok(
-    Object.keys(created_folders).map((season_number) => {
-      const { file_id, file_name, file_ids } = created_folders[season_number];
-      return {
-        file_id,
-        file_name,
-        children: file_ids,
-        season_number,
-      };
-    })[0]
-  );
+  const { file_id, file_name, file_ids } = created_folder;
+  return Result.Ok({
+    file_id,
+    file_name,
+    children: file_ids,
+  });
 }

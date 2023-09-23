@@ -1,15 +1,14 @@
 /**
- * @file 管理后台 刷新/绑定电视剧详情
+ * @file 刷新(从 TMDB 拉取最新)指定时间范围内的电视剧、季详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { ProfileRefresh } from "@/domains/profile_refresh";
-import { TaskTypes } from "@/domains/job/constants";
 import { Job } from "@/domains/job";
-import { TVProfileRecord, TVRecord } from "@/domains/store/types";
+import { TaskTypes } from "@/domains/job/constants";
 import { MediaSearcher } from "@/domains/searcher";
+import { ProfileRefresh } from "@/domains/profile_refresh";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
@@ -17,33 +16,16 @@ import { app, store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.query as Partial<{ id: string }>;
-  const { tmdb_id } = req.body as { tmdb_id: number };
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  if (!id) {
-    return e(Result.Err("缺少电视剧 id"));
-  }
   if (!user.settings.tmdb_token) {
     return e(Result.Err("缺少 TMDB_TOKEN"));
   }
-  const tv = await store.prisma.tv.findFirst({
-    where: {
-      id,
-      user_id: user.id,
-    },
-    include: {
-      profile: true,
-    },
-  });
-  if (tv === null) {
-    return e(Result.Err("没有匹配的电视剧记录"));
-  }
   const job_res = await Job.New({
-    desc: `更新「${tv.profile.name}」详情、季详情`,
+    desc: "更新电视剧、季信息",
     unique_id: "update_tv_and_season",
     type: TaskTypes.RefreshTVAndSeasonProfile,
     user_id: user.id,
@@ -70,18 +52,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.output.write(node);
     },
   });
-  async function run(tv: TVRecord & { profile: TVProfileRecord }) {
-    const r = await refresher.refresh_tv_profile(tv, { tmdb_id });
-    if (r.error) {
-      job.throw(r.error);
-      return;
-    }
+  async function run() {
+    await refresher.refresh_season_list();
     job.finish();
   }
-  run(tv);
+  run();
   res.status(200).json({
     code: 0,
-    msg: "开始更新",
+    msg: "开始刷新",
     data: {
       job_id: job.id,
     },

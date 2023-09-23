@@ -149,35 +149,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       await (async () => {
         const from_drive_id = drive_ids_of_parsed_episodes[i];
         const the_files_prepare_transfer = parsed_episode_groups_by_drive_id[from_drive_id];
-        if (from_drive_id === to_drive_id) {
-          return;
-        }
-        const from_drive_res = await Drive.Get({ id: from_drive_id, user, store });
-        if (from_drive_res.error) {
-          return;
-        }
-        const from_drive = from_drive_res.data;
         if (the_files_prepare_transfer.length === 0) {
           job.output.write(
             new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: `云盘 '${from_drive.name}' 要转存的文件数为 0`,
-                }),
-              ],
+              children: [`云盘「${from_drive_id}」要转存的文件数为 0`].map(
+                (text) =>
+                  new ArticleTextNode({
+                    text,
+                  })
+              ),
             })
           );
           return;
         }
         job.output.write(
           new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: `从云盘 '${from_drive.name}' 转存的文件数为 ${the_files_prepare_transfer.length}`,
-              }),
-            ],
+            children: [`从云盘「${from_drive_id}」转存的文件数为 ${the_files_prepare_transfer.length}`].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
           })
         );
+        const from_drive_res = await Drive.Get({ id: from_drive_id, user, store });
+        if (from_drive_res.error) {
+          return;
+        }
+        const from_drive = from_drive_res.data;
+        from_drive.on_print((line) => {
+          job.output.write(line);
+        });
         const archive_res = await archive_season_files({
           job,
           drive: from_drive,
@@ -194,44 +196,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         if (archive_res.error) {
           job.output.write(
             new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: `归档电视剧 '${tv_name}' 失败`,
-                }),
-                new ArticleTextNode({
-                  text: archive_res.error.message,
-                }),
-              ],
+              children: [`归档电视剧 '${tv_name}' 失败`, archive_res.error.message].map(
+                (text) =>
+                  new ArticleTextNode({
+                    text,
+                  })
+              ),
+            })
+          );
+          return null;
+        }
+        if (from_drive_id === to_drive_id) {
+          job.output.write(
+            new ArticleLineNode({
+              children: ["目标云盘即当前云盘"].map(
+                (text) =>
+                  new ArticleTextNode({
+                    text,
+                  })
+              ),
             })
           );
           return;
         }
         job.output.write(
           new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: "创建分享并转存至目标云盘",
-              }),
-            ],
+            children: ["创建分享并转存至目标云盘", archive_res.data.file_id, archive_res.data.file_name].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
           })
         );
-        const created_folder = archive_res.data;
+        const folder_in_from_drive = archive_res.data;
         const transfer_res = await from_drive.client.move_files_to_drive({
-          file_ids: [created_folder.file_id],
+          file_ids: [folder_in_from_drive.file_id],
           target_drive_client: to_drive.client,
           target_folder_id: to_drive_root_folder_id,
         });
         if (transfer_res.error) {
           job.output.write(
             new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: "转存分享资源失败，因为",
-                }),
-                new ArticleTextNode({
-                  text: transfer_res.error.message,
-                }),
-              ],
+              children: ["转存分享资源失败，因为", transfer_res.error.message].map(
+                (text) =>
+                  new ArticleTextNode({
+                    text,
+                  })
+              ),
             })
           );
           return;
@@ -247,11 +259,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           on_finish() {
             job.output.write(
               new ArticleLineNode({
-                children: [
-                  new ArticleTextNode({
-                    text: "完成目标云盘转存后的文件索引",
-                  }),
-                ],
+                children: ["完成目标云盘转存后的文件索引"].map(
+                  (text) =>
+                    new ArticleTextNode({
+                      text,
+                    })
+                ),
               })
             );
           },
@@ -260,16 +273,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const analysis = r3.data;
+        job.output.write(
+          new ArticleLineNode({
+            children: ["在目标云盘索引新增的文件"].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
+          })
+        );
         const r = await analysis.run([
           {
-            name: [to_drive_root_folder_name!, created_folder.file_name].join("/"),
+            name: [to_drive_root_folder_name!, folder_in_from_drive.file_name].join("/"),
             type: "folder",
           },
         ]);
         if (r.error) {
           job.output.write(
             new ArticleLineNode({
-              children: ["索引云盘", to_drive.name, "失败，因为", r.error.message].map(
+              children: ["索引云盘「", to_drive.name, "」失败，因为", r.error.message].map(
                 (text) =>
                   new ArticleTextNode({
                     text,
@@ -280,21 +303,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const from_drive_episode_count = the_files_prepare_transfer.length;
-        const created_folder_in_to_drive = await store.prisma.file.findFirst({
+        job.output.write(
+          new ArticleLineNode({
+            children: [
+              "在目标云盘搜索转存后的文件夹",
+              [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
+            ].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
+          })
+        );
+        const folder_in_to_drive = await store.prisma.file.findFirst({
           where: {
-            name: created_folder.file_name,
+            name: folder_in_from_drive.file_name,
             parent_paths: to_drive.profile.root_folder_name!,
+            type: FileType.Folder,
             drive_id: to_drive.id,
             user_id: user.id,
           },
+          orderBy: {
+            created: "desc",
+          },
         });
-        if (!created_folder_in_to_drive) {
+        if (!folder_in_to_drive) {
           job.output.write(
             new ArticleLineNode({
               children: [
                 "没有在目标云盘找到转存后的文件夹",
                 to_drive.profile.root_folder_name!,
-                created_folder.file_name,
+                folder_in_from_drive.file_name,
               ].map(
                 (text) =>
                   new ArticleTextNode({
@@ -305,9 +345,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           );
           return;
         }
+        job.output.write(
+          new ArticleLineNode({
+            children: ["在目标云盘转存后的文件夹", JSON.stringify(folder_in_to_drive), "获取文件总数"].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
+          })
+        );
         const to_drive_episode_count = await store.prisma.file.count({
           where: {
-            parent_file_id: created_folder_in_to_drive.file_id,
+            parent_file_id: folder_in_to_drive.file_id,
+            drive_id: to_drive.id,
             user_id: user.id,
           },
         });
@@ -332,7 +383,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }
         job.output.write(
           new ArticleLineNode({
-            children: ["删除源云盘视频文件"].map(
+            children: ["删除源云盘视频文件", folder_in_from_drive.file_id].map(
               (text) =>
                 new ArticleTextNode({
                   text,
@@ -340,7 +391,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             ),
           })
         );
-        await from_drive.delete_file_in_drive(created_folder.file_id);
+        await from_drive.delete_file_in_drive(folder_in_from_drive.file_id);
       })();
     }
     job.finish();

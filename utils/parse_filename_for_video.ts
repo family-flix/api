@@ -14,6 +14,7 @@ export const VIDEO_KEY_NAME_MAP = {
   episode_count: "总集数",
   episode_name: "集名称",
   type: "后缀",
+  voice_type: "语言",
   /**
    * chi 中文
    * eng 英文
@@ -39,7 +40,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("送给你不幸")) {
+    if (!filename.includes("四魂のかけらを使え！")) {
       return;
     }
     console.log(...args);
@@ -224,7 +225,7 @@ export function parse_filename_for_video(
     },
     // 奇怪的冗余信息
     {
-      regexp: /超前点映|超前完结|点映礼/,
+      regexp: /超前点映|超前完结|点映礼|B站logo/,
     },
     {
       regexp: /（[^）]{1,}）$/,
@@ -308,6 +309,7 @@ export function parse_filename_for_video(
       regexp: /[多双粤国英]{1,}[语言音]{1,}[轨频]/,
     },
     {
+      key: k("voice_type"),
       regexp:
         /[国粤日][语配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码/,
     },
@@ -484,7 +486,7 @@ export function parse_filename_for_video(
     {
       key: k("episode"),
       desc: "多集合并场景",
-      regexp: /第[1-9]{1,}-[0-9]{1,}[集話话]/,
+      regexp: /第[0-9]{1,}-[0-9]{1,}[集話话]/,
     },
     // 总季数，要放在「中文名称」前面
     {

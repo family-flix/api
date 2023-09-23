@@ -64,19 +64,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           if (!parsed_tv.tv) {
             return {
               name: parsed_tv.name,
+              original_name: parsed_tv.original_name,
               poster_path: null,
             };
           }
-          const { name, poster_path } = parsed_tv.tv.profile;
+          const { name, original_name, poster_path } = parsed_tv.tv.profile;
           return {
             name,
+            original_name,
             poster_path,
           };
         })();
         return {
           id,
           season_number,
-          name: profile.name,
+          name: profile.name || profile.original_name,
           profile,
         };
       }),
