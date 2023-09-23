@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
-import { User } from "@/domains/user";
+import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
@@ -15,11 +15,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { start, end } = req.query as Partial<{ start: string; end: string }>;
-  const t_res = await User.New(authorization, store);
+  const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const user = t_res.data;
+  const member = t_res.data;
   const range = [
     start ? dayjs(start).toISOString() : dayjs().startOf("day").toISOString(),
     end ? dayjs(end).toISOString() : dayjs().endOf("day").toISOString(),
@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
         },
       },
-      user_id: user.id,
+      user_id: member.user.id,
     },
     include: {
       season: {
@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const movies = await store.prisma.movie.findMany({
     where: {
-      user_id: user.id,
+      user_id: member.user.id,
       created: {
         gte: range[0],
         lt: range[1],

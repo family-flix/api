@@ -16,6 +16,7 @@ import { MediaProfileSourceTypes } from "@/constants";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const {
+    name,
     drive_ids,
     page: page_str,
     page_size: page_size_str,
@@ -62,16 +63,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     };
   }
+  if (name) {
+    where.tv = {
+      profile: {
+        OR: [
+          {
+            name: {
+              contains: name,
+            },
+          },
+          {
+            original_name: {
+              contains: name,
+            },
+          },
+        ],
+      },
+    };
+  }
   if (queries.length !== 0) {
     where.profile = {
       AND: queries,
     };
   }
-  // where.tv = {
-  //   profile: {
-  //     in_production: 0,
-  //   },
-  // };
   const count = await store.prisma.season.count({
     where,
   });
@@ -148,8 +162,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         episodes: episodes.map((episode) => {
           const { id, season_text, episode_text, parsed_episodes } = episode;
           const sources = parsed_episodes.map((source) => {
-            const { file_id, file_name, parent_paths, size, drive } = source;
+            const { id, file_id, file_name, parent_paths, size, drive } = source;
             return {
+              id,
               file_id,
               file_name,
               parent_paths,

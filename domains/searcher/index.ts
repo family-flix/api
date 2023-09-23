@@ -580,11 +580,40 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
    * 返回从三方平台搜索到的详情信息
    */
   async search_tv_profile_with_parsed_tv(parsed_tv: ParsedTVRecord) {
+    const { user_id } = this.options;
     const { name, original_name, correct_name } = parsed_tv;
     const prefix = [correct_name, name, original_name].filter(Boolean).join("/");
     // log("[](search_tv_in_tmdb)start search", tv.name || tv.original_name);
-    const tv_profile_in_tmdb_res = await (async () => {
-      const existing = await this.store.prisma.tv_profile.findFirst({
+    const tv_profile_res = await (async () => {
+      const r1 = await this.store.prisma.parsed_tv.findFirst({
+        where: {
+          AND: [
+            {
+              file_name: {
+                not: null,
+              },
+            },
+            {
+              file_name: parsed_tv.file_name,
+            },
+          ],
+          tv_id: {
+            not: null,
+          },
+          user_id,
+        },
+        include: {
+          tv: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+      });
+      if (r1 && r1.tv) {
+        return Result.Ok(r1.tv.profile);
+      }
+      const r2 = await this.store.prisma.tv_profile.findFirst({
         where: {
           OR: [
             {
@@ -593,8 +622,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           ],
         },
       });
-      if (existing) {
-        return Result.Ok(existing);
+      if (r2) {
+        return Result.Ok(r2);
       }
       if (correct_name) {
         // console.log(`[${prefix}]`, "使用", correct_name, "搜索");
@@ -623,17 +652,17 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
       return Result.Ok(null);
     })();
-    if (tv_profile_in_tmdb_res.error) {
-      return Result.Err(tv_profile_in_tmdb_res.error);
+    if (tv_profile_res.error) {
+      return Result.Err(tv_profile_res.error);
     }
-    let tv_profile_in_tmdb = tv_profile_in_tmdb_res.data;
-    if (tv_profile_in_tmdb === null) {
+    let tv_profile = tv_profile_res.data;
+    if (tv_profile === null) {
       return Result.Ok(null);
     }
-    console.log(`[${prefix}]`, "搜索到的电视剧为", tv_profile_in_tmdb.name || tv_profile_in_tmdb.original_name);
-    return Result.Ok(tv_profile_in_tmdb);
+    console.log(`[${prefix}]`, "搜索到的电视剧为", tv_profile.name || tv_profile.original_name);
+    return Result.Ok(tv_profile);
   }
-  /** 使用名字在 tmdb 搜索 */
+  /** 使用名字在 tmdb 搜索并返回 tv_profile 记录 */
   async search_tv_in_tmdb(name: string) {
     await sleep(800);
     const r1 = await this.client.search_tv(name);
@@ -999,6 +1028,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     });
     if (tv === null) {
       return Result.Err("没有匹配的电视剧");
+    }
+    const same_season = await this.store.prisma.season.findFirst({
+      where: {
+        season_text: parsed_season.season_number,
+        tv_id: tv.id,
+      },
+      include: {
+        profile: true,
+      },
+    });
+    if (same_season) {
+      return Result.Ok(same_season.profile);
     }
     const { season_number } = parsed_season;
     const existing = await this.store.prisma.season.findFirst({

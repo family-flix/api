@@ -425,7 +425,8 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       parent_file_id: string;
       /** 类型 */
       type: string;
-      md5: string;
+      size: number;
+      content_hash: string;
       /** 缩略图 */
       thumbnail: string;
     }>(API_HOST + "/v2/file/get", {
@@ -1234,7 +1235,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       drive_id: String(this.drive_id),
       file_id_list: file_ids,
     };
-    console.log("[DOMAIN]AliyunDrive - create_shared_resource", body);
+    // console.log("[DOMAIN]AliyunDrive - create_shared_resource", body);
     const r = await this.request.post<{
       share_url: string;
       file_id: string;

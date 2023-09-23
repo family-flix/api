@@ -250,4 +250,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("4K B站logo", () => {
+    const name = "4K B站logo";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

@@ -155,37 +155,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         if (the_files_prepare_transfer.length === 0) {
           job.output.write(
             new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: `云盘 '${from_drive.name}' 要转存的文件数为 0`,
-                }),
-              ],
+              children: [`云盘 '${from_drive.name}' 要转存的文件数为 0`].map(
+                (text) =>
+                  new ArticleTextNode({
+                    text,
+                  })
+              ),
             })
           );
           return;
         }
         job.output.write(
           new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: `从云盘 '${from_drive.name}' 转存的文件数为 ${the_files_prepare_transfer.length}`,
-              }),
-            ],
+            children: [`从云盘 '${from_drive.name}' 转存的文件数为 ${the_files_prepare_transfer.length}`].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
           })
         );
         const from_drive_root_folder_id = from_drive.profile.root_folder_id;
         if (!from_drive_root_folder_id) {
           job.output.write(
             new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: `源云盘 '${from_drive.name}' 未设置索引根目录`,
-                }),
-              ],
+              children: [`源云盘 '${from_drive.name}' 未设置索引根目录`].map(
+                (text) =>
+                  new ArticleTextNode({
+                    text,
+                  })
+              ),
             })
           );
           return;
         }
+        job.output.write(
+          new ArticleLineNode({
+            children: ["开始归档（格式化名称）"].map((text) => new ArticleTextNode({ text })),
+          })
+        );
         const archive_res = await archive_season_files({
           job,
           drive: from_drive,

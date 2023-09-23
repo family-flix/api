@@ -23,6 +23,7 @@ import { parseJSONStr, r_id } from "@/utils";
 
 import { DriveTypes } from "./constants";
 import { FileType } from "@/constants";
+import { Handler } from "mitt";
 
 const drivePayloadSchema = Joi.object({
   app_id: Joi.string().required(),
@@ -590,48 +591,16 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /**
    * 删除云盘内一个文件
    */
-  async delete_file(f: { file_id: string }) {
+  async delete_file(f: { file_id: string }, options: Partial<{ ignore_drive_file: boolean }> = {}) {
     const { file_id } = f;
     await this.store.prisma.file.deleteMany({
       where: {
         file_id,
       },
     });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["删除关联的同步任务"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
     const where = {
       file_id,
     };
-    // 删除同步任务
-    const r1 = await this.store.prisma.bind_for_parsed_tv.findMany({
-      where,
-    });
-    if (r1.length) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: r1.map(
-                (text) =>
-                  new ArticleListItemNode({
-                    children: [text.name].map((text) => {
-                      return new ArticleTextNode({ text });
-                    }),
-                  })
-              ),
-            }),
-          ],
-        })
-      );
-    }
-    await this.store.prisma.bind_for_parsed_tv.deleteMany({
-      where,
-    });
     // 删除关联的剧集
     const r2 = await this.store.prisma.parsed_episode.findMany({
       where,
@@ -722,6 +691,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         children: ["开始删除云盘内文件"].map((text) => new ArticleTextNode({ text })),
       })
     );
+    if (options.ignore_drive_file) {
+      return Result.Ok(null);
+    }
     const r5 = await this.client.delete_file(file_id);
     if (r5.error) {
       this.emit(
@@ -734,6 +706,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(null);
   }
+  /**
+   * 删除一个文件夹
+   */
   async delete_folder(f: { file_id: string; name: string }) {
     const { name, file_id } = f;
     const files_res = await this.store.find_files({
@@ -853,28 +828,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         children: ["删除关联的剧集源"].map((text) => new ArticleTextNode({ text })),
       })
     );
-    const r2 = await this.store.prisma.parsed_episode.findMany({
-      where,
-    });
-    if (r2.length) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: r2.map(
-                (text) =>
-                  new ArticleListItemNode({
-                    children: [text.name, text.episode_number].map((text) => {
-                      return new ArticleTextNode({ text });
-                    }),
-                  })
-              ),
-            }),
-          ],
-        })
-      );
-    }
+    // const r2 = await this.store.prisma.parsed_episode.findMany({
+    //   where,
+    // });
     await this.store.prisma.parsed_episode.deleteMany({
       where,
     });
@@ -1002,6 +958,19 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     this.emit(
       Events.Print,
       new ArticleLineNode({
+        children: ["删除起始文件夹", f.name, f.file_id].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    await this.store.prisma.file.deleteMany({
+      where: {
+        file_id: {
+          in: [f.file_id],
+        },
+      },
+    });
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
         children: ["开始删除云盘内文件"].map((text) => new ArticleTextNode({ text })),
       })
     );
@@ -1062,4 +1031,93 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     await this.delete_folder(file);
     return Result.Ok(null);
   }
+
+  on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
+    return this.on(Events.Print, handler);
+  }
+}
+import { ModelParam, ModelQuery } from "@/domains/store/types";
+import { to_number } from "@/utils/primitive";
+
+export async function clear_expired_files_in_drive(values: { drive_id: string; user: User; store: DatabaseStore }) {
+  const { user, drive_id, store } = values;
+  // 799170603(130资源盘)
+  // 625667282(138资源盘)
+  const d_res = await Drive.Get({ id: drive_id, store, user });
+  if (d_res.error) {
+    return Result.Err(d_res.error.message);
+  }
+  const drive = d_res.data;
+  const page_size_str = 20;
+  const page_size = to_number(page_size_str, 20);
+
+  let next_marker: string | null = null;
+  let no_more = false;
+  const where: ModelQuery<"file"> = {
+    drive_id: drive.id,
+    user_id: user.id,
+  };
+  const count = await store.prisma.file.count({ where });
+  // console.log("共", count, "条记录");
+  do {
+    const list = await store.prisma.file.findMany({
+      where,
+      take: page_size + 1,
+      ...(() => {
+        const cursor: { id?: string } = {};
+        if (next_marker) {
+          cursor.id = next_marker;
+          return {
+            cursor,
+          };
+        }
+        return {} as ModelParam<typeof store.prisma.file.findMany>["cursor"];
+      })(),
+    });
+    no_more = list.length < page_size + 1;
+    next_marker = null;
+    if (list.length === page_size + 1) {
+      const last_record = list[list.length - 1];
+      next_marker = last_record.id;
+    }
+    const correct_list = list.slice(0, page_size);
+
+    for (let i = 0; i < correct_list.length; i += 1) {
+      await (async () => {
+        const item = correct_list[i];
+        // await sleep(1000);
+        const res = await drive.client.fetch_file(item.file_id);
+        if (res.error) {
+          console.log("file_id", item.file_id);
+          console.log(res.error.message);
+          if (res.error.message.includes("file not exist")) {
+            await drive.delete_file({ file_id: item.file_id }, { ignore_drive_file: true });
+          }
+          return;
+        }
+        const { file_id, name, content_hash, size } = res.data;
+        console.log({
+          file_id,
+          name,
+        });
+        const payload: Partial<FileRecord> = {};
+        if (!item.md5) {
+          payload.md5 = content_hash;
+        }
+        if (!item.size) {
+          payload.size = size;
+        }
+        if (Object.keys(payload).length === 0) {
+          return;
+        }
+        await store.prisma.file.update({
+          where: {
+            id: item.id,
+          },
+          data: payload,
+        });
+      })();
+    }
+  } while (no_more === false);
+  return Result.Ok(null);
 }

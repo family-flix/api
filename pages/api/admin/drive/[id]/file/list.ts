@@ -1,11 +1,11 @@
 /**
- * @file 获取文件列表
+ * @file 获取 季 列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { ModelQuery } from "@/domains/store/types";
+import { ModelQuery, TVProfileWhereInput } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
@@ -18,13 +18,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page: page_str,
     page_size: page_size_str,
     size_order = "asc",
-    drive_ids,
   } = req.query as Partial<{
     name: string;
-    drive_ids: string;
-    size_order: "asc" | "desc";
     page: string;
     page_size: string;
+    size_order: "asc" | "desc";
   }>;
   const { authorization } = req.headers;
   const t_res = await User.New(authorization, store);
@@ -45,13 +43,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
         },
       ],
-    });
-  }
-  if (drive_ids) {
-    queries = queries.concat({
-      drive_id: {
-        in: drive_ids.split("|"),
-      },
     });
   }
   const where: ModelQuery<"file"> = {

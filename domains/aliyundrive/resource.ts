@@ -410,6 +410,8 @@ export class AliyunResourceClient extends BaseDomain<TheTypesOfEvents> {
       parent_file_id: string;
       /** 类型 */
       type: string;
+      content_hash: string;
+      size: number;
       /** 缩略图 */
       thumbnail: string;
     }>(API_HOST + "/v2/file/get", {

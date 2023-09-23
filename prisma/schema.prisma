@@ -281,7 +281,7 @@ model parsed_episode {
         md5            String?
 
         episode_id       String?
-        episode          episode?      @relation(fields: [episode_id], references: [id], onDelete: Cascade)
+        episode          episode?      @relation(fields: [episode_id], references: [id])
         parsed_tv_id     String
         parsed_tv        parsed_tv     @relation(fields: [parsed_tv_id], references: [id], onDelete: Cascade)
         parsed_season_id String
@@ -319,7 +319,7 @@ model parsed_movie {
         can_search     Int?    @default(1)
 
         movie_id String?
-        movie    movie?  @relation(fields: [movie_id], references: [id], onDelete: Cascade)
+        movie    movie?  @relation(fields: [movie_id], references: [id])
         drive_id String
         drive    drive   @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         user_id  String
@@ -350,7 +350,6 @@ model tv {
         parsed_tvs     parsed_tv[]
         reports        report[]
 
-        @@unique([user_id, profile_id])
         @@map("TV")
 }
 
@@ -378,7 +377,6 @@ model season {
         reports        report[]
         sync_tasks     bind_for_parsed_tv[]
 
-        @@unique([user_id, profile_id])
         @@map("Season")
 }
 
@@ -405,7 +403,6 @@ model episode {
         reports         report[]
         subtitles       subtitle[]
 
-        @@unique([user_id, profile_id])
         @@map("Episode")
 }
 
@@ -427,7 +424,6 @@ model movie {
         reports        report[]
         subtitles      subtitle[]
 
-        @@unique([user_id, profile_id])
         @@map("Movie")
 }
 

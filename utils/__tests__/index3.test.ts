@@ -287,4 +287,14 @@ describe("动漫", () => {
       episode: "E01",
     });
   });
+  test("第10-11话 大器、成为骑士！ Xros Heart 、燃烧！.mkv", () => {
+    const name = "第10-11话 大器、成为骑士！ Xros Heart 、燃烧！.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E10-11",
+    });
+  });
 });
