@@ -365,6 +365,19 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     const { drive_total_size, drive_used_size } = r.data;
     this.used_size = drive_used_size;
     this.total_size = drive_total_size;
+    // console.log(this.resource_drive_id);
+    // if (!this.resource_drive_id) {
+    //   const r3 = await this.ping();
+    //   // console.log("[DOMAIN]AliyunResourceDrive - init", r3.data, this.resource_drive_id);
+    //   if (r3.error) {
+    //     return Result.Err(r3.error.message);
+    //   }
+    // console.log(r3.data);
+    //   await this.update_profile({
+    //     resource_drive_id: r3.data.resource_drive_id,
+    //   });
+    //   this.resource_drive_id = r3.data.resource_drive_id;
+    // }
     return Result.Ok({
       id: this.id,
       used_size: this.used_size,

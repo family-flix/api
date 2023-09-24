@@ -45,6 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (r.error) {
         return e(r);
       }
+      res.status(200).json({ code: 0, msg: "重命名成功", data: null });
+      return;
     }
     return e(Result.Err("没有匹配的记录"));
   }
