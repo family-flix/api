@@ -19,6 +19,7 @@ import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/
 import { User } from "@/domains/user";
 import { MediaSearcher } from "@/domains/searcher";
 import { EpisodeProfileFromTMDB, PartialSeasonFromTMDB, TVProfileFromTMDB } from "@/domains/tmdb/services";
+import { walk_model_with_cursor } from "@/domains/store/utils";
 import { season_to_num } from "@/utils";
 import { Result, Unpacked } from "@/types";
 import { MediaProfileSourceTypes } from "@/constants";
@@ -393,47 +394,68 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     }> = {}
   ) {
     const { after } = lifetimes;
-    const seasons = await this.store.prisma.season.findMany({
-      where: {
-        profile: {
-          source: {
-            notIn: [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual],
-          },
-          OR: [
-            {
-              air_date: {
-                gte: dayjs().subtract(6, "month").toISOString(),
-              },
-            },
-            {
-              air_date: null,
-            },
-          ],
+    const where: ModelQuery<"season"> = {
+      profile: {
+        source: {
+          notIn: [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual],
         },
-        user_id: this.user.id,
+        OR: [
+          {
+            air_date: {
+              gte: dayjs().subtract(3, "month").toISOString(),
+            },
+          },
+          {
+            air_date: null,
+          },
+        ],
       },
-      include: {
-        profile: true,
-        tv: {
+      user_id: this.user.id,
+    };
+    const count = await this.store.prisma.season.count({ where });
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: ["共", String(count), "个季需要刷新"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+    walk_model_with_cursor(
+      (extra) => {
+        return this.store.prisma.season.findMany({
+          where,
           include: {
             profile: true,
+            tv: {
+              include: {
+                profile: true,
+              },
+            },
           },
-        },
-      },
-    });
-    for (let i = 0; i < seasons.length; i += 1) {
-      const season = seasons[i];
-      await this.refresh_season_profile({
-        season,
-        tv: season.tv,
-      });
-      if (after) {
-        await after({
-          season,
-          tv: season.tv,
+          ...extra,
         });
+      },
+      {
+        page_size: 20,
+        handler: async (season, i) => {
+          this.emit(
+            Events.Print,
+            new ArticleLineNode({
+              children: [`第${i + 1}个`].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+          await this.refresh_season_profile({
+            season,
+            tv: season.tv,
+          });
+          if (after) {
+            await after({
+              season,
+              tv: season.tv,
+            });
+          }
+        },
       }
-    }
+    );
     return Result.Ok(null);
   }
   async refresh_season_profile(
@@ -568,12 +590,18 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         children: [prefix, "电视剧详情变更了，重新搜索季详情"].map((text) => new ArticleTextNode({ text })),
       })
     );
-    const scopes =
+    const scopes: { name: string }[] =
       // @ts-ignore
       r1.data.scopes ||
       [r1.data.name, r1.data.original_name].filter(Boolean).map((name) => {
         return { name } as { name: string };
       });
+    this.emit(
+      Events.Print,
+      new ArticleLineNode({
+        children: [prefix, ...scopes.map((s) => s.name)].map((text) => new ArticleTextNode({ text })),
+      })
+    );
     await this.searcher.process_parsed_season_list(scopes);
     await this.searcher.process_parsed_episode_list(scopes);
     return Result.Ok(null);
@@ -731,7 +759,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         {
           profile: {
             air_date: {
-              gte: dayjs().subtract(6, "month").toISOString(),
+              gte: dayjs().subtract(3, "month").toISOString(),
             },
           },
         },

@@ -7,7 +7,7 @@ import { Folder } from "@/domains/folder";
 import { Result, resultify, Unpacked } from "@/types";
 import { sleep } from "@/utils";
 
-import { ModelKeys } from "./types";
+import { ModelKeys, ModelParam, ModelQuery } from "./types";
 import { DatabaseStore } from ".";
 
 const defaultRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -296,90 +296,39 @@ export function folder_client(body: { drive_id: string }, store: DatabaseStore) 
 //   });
 // });
 
-// export async function walk_model_with_cursor(fn: (handler: any) => any) {
-//   const PAGE_SIZE = 20;
-//   // const count = await store.prisma.parsed_episode.count({ where });
-//   // console.log("[DOMAIN]Searcher - process_parsed_episode_list", count, cursor);
-//   do {
-//     type ParsedEpisodeInput = ModelQuery<typeof store.prisma.parsed_episode.findMany>;
-
-//     let next_marker: string | null = null;
-//     const cursor: { id?: string } = {};
-//     let no_more = false;
-
-//     const parsed_episode_list = await store.prisma.parsed_episode.findMany({
-//       where,
-//       include: {
-//         parsed_tv: true,
-//         parsed_season: true,
-//       },
-//       take: PAGE_SIZE,
-//       skip: (() => {
-//         if (next_marker) {
-//           return 1;
-//         }
-//         return 0;
-//       })(),
-//       orderBy: [
-//         {
-//           parsed_tv: {
-//             name: "desc",
-//           },
-//         },
-//       ],
-//       ...(() => {
-//         const cursor: { id?: string } = {};
-//         if (next_marker) {
-//           cursor.id = next_marker;
-//           return {
-//             cursor,
-//           };
-//         }
-//         return {} as ParsedEpisodeInput["cursor"];
-//       })(),
-//     });
-//     // console.log("找到", parsed_episode_list.length, "个需要添加的剧集", where);
-//     // no_more = parsed_episode_list.length + (page - 1) * PAGE_SIZE >= count;
-//     no_more = parsed_episode_list.length < PAGE_SIZE;
-//     next_marker = null;
-//     if (parsed_episode_list.length === PAGE_SIZE) {
-//       const last_episode = parsed_episode_list[parsed_episode_list.length - 1];
-//       next_marker = last_episode.id;
-//     }
-//     console.log("找到", parsed_episode_list.length, "个需要添加的剧集", where, no_more);
-//     // page += 1;
-//     for (let i = 0; i < parsed_episode_list.length; i += 1) {
-//       const parsed_episode = parsed_episode_list[i];
-//       const { parsed_tv, parsed_season, season_number, episode_number } = parsed_episode;
-//       // console.log(parsed_episode);
-//       const { name, original_name, correct_name } = parsed_tv;
-//       const prefix = correct_name || name || original_name;
-//       // this.emit(
-//       //   Events.Print,
-//       //   new ArticleLineNode({
-//       //     children: [`[${prefix}/${season_number}/${episode_number}]`, " 准备添加剧集信息"].map((text) => {
-//       //       return new ArticleTextNode({ text });
-//       //     }),
-//       //   })
-//       // );
-//       console.log(`[${prefix}/${season_number}/${episode_number}]`, "准备添加剧集信息");
-//       // const r = await this.process_parsed_episode({
-//       //   parsed_tv,
-//       //   parsed_season,
-//       //   parsed_episode,
-//       // });
-//       // if (r.error) {
-//       //   this.emit(
-//       //     Events.Print,
-//       //     new ArticleLineNode({
-//       //       children: [`[${prefix}/${season_number}/${episode_number}]`, "添加剧集详情失败", r.error.message].map(
-//       //         (text) => {
-//       //           return new ArticleTextNode({ text });
-//       //         }
-//       //       ),
-//       //     })
-//       //   );
-//       // }
-//     }
-//   } while (no_more === false);
-// }
+export async function walk_model_with_cursor<F extends (extra: { take: number }) => any>(
+  fn: F,
+  options: { page_size: number; handler: (data: Unpacked<ReturnType<F>>[number], index: number) => any }
+) {
+  const { page_size, handler } = options;
+  let next_marker = "";
+  let no_more = false;
+  // const count = await store.prisma.file.count({ where });
+  do {
+    const extra_args = {
+      take: page_size + 1,
+      ...(() => {
+        const cursor: { id?: string } = {};
+        if (next_marker) {
+          cursor.id = next_marker;
+          return {
+            cursor,
+          };
+        }
+        return {};
+      })(),
+    };
+    const list = await fn(extra_args);
+    no_more = list.length < page_size + 1;
+    next_marker = "";
+    if (list.length === page_size + 1) {
+      const last_record = list[list.length - 1];
+      next_marker = last_record.id;
+    }
+    const correct_list = list.slice(0, page_size);
+    for (let i = 0; i < correct_list.length; i += 1) {
+      const data = correct_list[i];
+      await handler(data, i);
+    }
+  } while (no_more === false);
+}

@@ -2,14 +2,18 @@
  * @file 清除所有无效的文件
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from "next";
+import { Application } from "@/domains/application";
 
 import { User } from "@/domains/user";
-import { FileRecord, ModelParam, ModelQuery } from "@/domains/store/types";
-import { store } from "@/store";
-import { to_number } from "@/utils/primitive";
 import { clear_expired_files_in_drive, Drive } from "@/domains/drive";
-import { sleep } from "@/utils";
+
+const OUTPUT_PATH = "/apps/flix_prod";
+const DATABASE_PATH = "file://$OUTPUT_PATH/data/family-flix.db?connection_limit=1";
+
+const app = new Application({
+  root_path: OUTPUT_PATH,
+});
+const store = app.store;
 
 async function main() {
   const drives = await store.prisma.drive.findMany({});

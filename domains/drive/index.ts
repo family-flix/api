@@ -791,13 +791,12 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         children: ["删除关联的同步任务"].map((text) => new ArticleTextNode({ text })),
       })
     );
-    const where = {
-      file_id: {
-        in: child_files.map((f) => f.file_id),
-      },
-    };
     const r1 = await this.store.prisma.bind_for_parsed_tv.findMany({
-      where,
+      where: {
+        file_id_link_resource: {
+          in: child_files.map((f) => f.file_id),
+        },
+      },
     });
     if (r1.length) {
       this.emit(
@@ -819,8 +818,17 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       );
     }
     await this.store.prisma.bind_for_parsed_tv.deleteMany({
-      where,
+      where: {
+        file_id_link_resource: {
+          in: [f, ...child_files].map((f) => f.file_id),
+        },
+      },
     });
+    const where = {
+      file_id: {
+        in: [f, ...child_files].map((f) => f.file_id),
+      },
+    };
     // 删除关联的剧集源
     this.emit(
       Events.Print,
