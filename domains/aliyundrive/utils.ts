@@ -191,9 +191,19 @@ export async function archive_season_files(body: {
         );
         return Result.Err(r2.error.message);
       }
+      await store.add_file({
+        file_id: r2.data.file_id,
+        name: r2.data.file_id,
+        parent_file_id: drive.profile.root_folder_id!,
+        parent_paths: drive.profile.root_folder_name!,
+        size: 0,
+        type: FileType.Folder,
+        drive_id: drive.id,
+        user_id: user.id,
+      });
       job.output.write(
         new ArticleLineNode({
-          children: ["使用新创建的文件夹"].map(
+          children: ["使用新创建的文件夹", r2.data.file_id].map(
             (text) =>
               new ArticleTextNode({
                 text,
@@ -242,7 +252,7 @@ export async function archive_season_files(body: {
         ["resolution", "source", "encode", "voice_encode", "voice_type", "type"],
         user.get_filename_rules()
       );
-      const parent_infos = parse_filename_for_video(parent_paths, ["resolution", "voice_type"]);
+      const parent_infos = parse_filename_for_video(parent_paths, ["resolution", "source", "voice_type"]);
       const tv_name_with_pinyin = build_media_name({ name, original_name });
       const air_date_of_year = (() => {
         return dayjs(air_date).year();
@@ -253,9 +263,9 @@ export async function archive_season_files(body: {
         air_date_of_year,
         resolution || parent_infos.resolution,
         voice_type || parent_infos.voice_type,
-        source,
-        encode,
-        voice_encode,
+        source || parent_infos.source,
+        encode || parent_infos.encode,
+        voice_encode || parent_infos.voice_encode,
         type.replace(/^\./, ""),
       ]
         .filter(Boolean)
@@ -299,22 +309,6 @@ export async function archive_season_files(body: {
         );
         new_file_name = rename_res.data.name;
       }
-      await store.prisma.parsed_tv.updateMany({
-        where: {
-          file_id: created_folder.file_id,
-        },
-        data: {
-          file_name: created_folder.file_name,
-        },
-      });
-      await store.prisma.parsed_season.updateMany({
-        where: {
-          file_id: created_folder.file_id,
-        },
-        data: {
-          file_name: created_folder.file_name,
-        },
-      });
       await store.prisma.parsed_episode.updateMany({
         where: {
           file_id,
@@ -335,6 +329,25 @@ export async function archive_season_files(body: {
           name: new_file_name,
         },
       });
+      if (need_create_parent_folder) {
+        // 旧的 parsed_tv 和 parsed_season 作废
+      }
+      // await store.prisma.parsed_tv.updateMany({
+      //   where: {
+      //     file_id: created_folder.file_id,
+      //   },
+      //   data: {
+      //     file_name: created_folder.file_name,
+      //   },
+      // });
+      // await store.prisma.parsed_season.updateMany({
+      //   where: {
+      //     file_id: created_folder.file_id,
+      //   },
+      //   data: {
+      //     file_name: created_folder.file_name,
+      //   },
+      // });
       created_folder.file_ids.push({ file_id });
     })();
   }

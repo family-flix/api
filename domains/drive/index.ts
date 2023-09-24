@@ -836,9 +836,28 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         children: ["删除关联的剧集源"].map((text) => new ArticleTextNode({ text })),
       })
     );
-    // const r2 = await this.store.prisma.parsed_episode.findMany({
-    //   where,
-    // });
+    const r2 = await this.store.prisma.parsed_episode.findMany({
+      where,
+    });
+    if (r2.length) {
+      this.emit(
+        Events.Print,
+        new ArticleSectionNode({
+          children: [
+            new ArticleListNode({
+              children: r2.map(
+                (text) =>
+                  new ArticleListItemNode({
+                    children: [text.id, "/", text.episode_number].map((text) => {
+                      return new ArticleTextNode({ text });
+                    }),
+                  })
+              ),
+            }),
+          ],
+        })
+      );
+    }
     await this.store.prisma.parsed_episode.deleteMany({
       where,
     });
@@ -1047,8 +1066,13 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
 import { ModelParam, ModelQuery } from "@/domains/store/types";
 import { to_number } from "@/utils/primitive";
 
-export async function clear_expired_files_in_drive(values: { drive_id: string; user: User; store: DatabaseStore }) {
-  const { user, drive_id, store } = values;
+export async function clear_expired_files_in_drive(values: {
+  drive_id: string;
+  user: User;
+  store: DatabaseStore;
+  on_print?: (node: ArticleLineNode) => void;
+}) {
+  const { user, drive_id, store, on_print } = values;
   // 799170603(130资源盘)
   // 625667282(138资源盘)
   const d_res = await Drive.Get({ id: drive_id, store, user });
@@ -1066,6 +1090,13 @@ export async function clear_expired_files_in_drive(values: { drive_id: string; u
     user_id: user.id,
   };
   const count = await store.prisma.file.count({ where });
+  if (on_print) {
+    on_print(
+      new ArticleLineNode({
+        children: ["共", String(count), "条记录"].map((text) => new ArticleTextNode({ text })),
+      })
+    );
+  }
   // console.log("共", count, "条记录");
   do {
     const list = await store.prisma.file.findMany({
@@ -1095,25 +1126,42 @@ export async function clear_expired_files_in_drive(values: { drive_id: string; u
         const item = correct_list[i];
         // await sleep(1000);
         const res = await drive.client.fetch_file(item.file_id);
+        if (on_print) {
+          on_print(
+            new ArticleLineNode({
+              children: [item.name].map((text) => new ArticleTextNode({ text })),
+            })
+          );
+        }
         if (res.error) {
-          console.log("file_id", item.file_id);
-          console.log(res.error.message);
+          // console.log("file_id", item.file_id);
+          // console.log(res.error.message);
+          if (on_print) {
+            on_print(
+              new ArticleLineNode({
+                children: [res.error.message].map((text) => new ArticleTextNode({ text })),
+              })
+            );
+          }
           if (res.error.message.includes("file not exist")) {
             await drive.delete_file({ file_id: item.file_id }, { ignore_drive_file: true });
           }
           return;
         }
         const { file_id, name, content_hash, size } = res.data;
-        console.log({
-          file_id,
-          name,
-        });
+        // console.log({
+        //   file_id,
+        //   name,
+        // });
         const payload: Partial<FileRecord> = {};
         if (!item.md5) {
           payload.md5 = content_hash;
         }
         if (!item.size) {
           payload.size = size;
+        }
+        if (item.name !== name) {
+          payload.name = name;
         }
         if (Object.keys(payload).length === 0) {
           return;

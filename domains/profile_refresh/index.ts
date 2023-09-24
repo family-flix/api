@@ -419,7 +419,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         children: ["共", String(count), "个季需要刷新"].map((text) => new ArticleTextNode({ text })),
       })
     );
-    walk_model_with_cursor(
+    await walk_model_with_cursor(
       (extra) => {
         return this.store.prisma.season.findMany({
           where,

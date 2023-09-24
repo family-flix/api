@@ -32,4 +32,5 @@ export enum TaskTypes {
   RenameFiles,
   /** 领取签到奖励 */
   ReceiveSignInRewards,
+  ClearInvalidFiles,
 }

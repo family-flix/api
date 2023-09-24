@@ -152,6 +152,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const from_drive = from_drive_res.data;
+        from_drive.on_print((node) => {
+          job.output.write(node);
+        });
         if (the_files_prepare_transfer.length === 0) {
           job.output.write(
             new ArticleLineNode({
@@ -217,18 +220,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           );
           return;
         }
-        if (from_drive_id === target_drive_id) {
-          job.output.write(
-            new ArticleLineNode({
-              children: ["目标盘即当前盘，直接跳过"].map((text) => {
-                return new ArticleTextNode({
-                  text,
-                });
-              }),
-            })
-          );
-          return;
-        }
+        // if (from_drive_id === target_drive_id) {
+        //   job.output.write(
+        //     new ArticleLineNode({
+        //       children: ["目标盘即当前盘，直接跳过"].map((text) => {
+        //         return new ArticleTextNode({
+        //           text,
+        //         });
+        //       }),
+        //     })
+        //   );
+        //   return;
+        // }
         job.output.write(
           new ArticleLineNode({
             children: [`电视剧 '${tv_name}' 归档成功`].map(
@@ -240,15 +243,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           })
         );
         const to_drive_res = await (async () => {
-          if (from_drive.client instanceof AliyunResourceClient && target_drive_id) {
-            // 从资源盘移动到指定盘
-            const to_drive_res = await Drive.Get({ id: target_drive_id, user, store });
-            if (to_drive_res.error) {
-              return Result.Err(to_drive_res.error.message);
-            }
-            const to_drive = to_drive_res.data;
-            return Result.Ok(to_drive);
-          }
+          // if (from_drive.client instanceof AliyunResourceClient && target_drive_id) {
+          //   // 从资源盘移动到指定盘
+          //   const to_drive_res = await Drive.Get({ id: target_drive_id, user, store });
+          //   if (to_drive_res.error) {
+          //     return Result.Err(to_drive_res.error.message);
+          //   }
+          //   const to_drive = to_drive_res.data;
+          //   return Result.Ok(to_drive);
+          // }
           if (from_drive.client instanceof AliyunBackupDriveClient && !target_drive_id) {
             // 移动到资源盘
             if (!from_drive.client.resource_drive_id) {
@@ -292,19 +295,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           );
           return;
         }
-        const created_folder = archive_res.data;
+        const folder_in_from_drive = archive_res.data;
         await (async () => {
           if (from_drive.client instanceof AliyunBackupDriveClient && to_drive.client instanceof AliyunResourceClient) {
             if (from_drive.client.resource_drive_id !== to_drive.client.drive_id) {
               // 从备份盘移动到资源盘，只能是同一阿里云盘账号下的
               return;
             }
-            const f = created_folder;
-            const existing_res = await to_drive.client.existing(to_drive.profile.root_folder_id!, f.file_name);
+            const existing_res = await to_drive.client.existing(
+              to_drive.profile.root_folder_id!,
+              folder_in_from_drive.file_name
+            );
             if (existing_res.data !== null) {
               job.output.write(
                 new ArticleLineNode({
-                  children: [`「${f.file_name}」`, "已经在云盘", `「${to_drive.profile.name}」`].map(
+                  children: [`「${folder_in_from_drive.file_name}」`, "已经在云盘", `「${to_drive.profile.name}」`].map(
                     (text) =>
                       new ArticleTextNode({
                         text,
@@ -316,7 +321,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             }
             job.output.write(
               new ArticleLineNode({
-                children: ["将文件夹", f.file_name, "移动到云盘", to_drive.profile.name].map(
+                children: ["将文件夹", folder_in_from_drive.file_name, "移动到云盘", to_drive.profile.name].map(
                   (text) =>
                     new ArticleTextNode({
                       text,
@@ -325,7 +330,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               })
             );
             const transfer_res = await from_drive.client.move_file_to_resource_drive({
-              file_ids: [f.file_id],
+              file_ids: [folder_in_from_drive.file_id],
             });
             if (transfer_res.error) {
               job.output.write(
@@ -344,7 +349,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           if (from_drive.client instanceof AliyunResourceClient) {
             // 从资源盘可以随意转存到其他盘
             const transfer_res = await from_drive.client.move_files_to_drive({
-              file_ids: [created_folder.file_id],
+              file_ids: [folder_in_from_drive.file_id],
               target_drive_client: to_drive.client,
               target_folder_id: to_drive_root_folder_id,
             });
@@ -401,7 +406,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         // console.log(created_folder.file_name);
         const r = await analysis.run([
           {
-            name: [to_drive.profile.root_folder_name, created_folder.file_name].join("/"),
+            name: [to_drive.profile.root_folder_name, folder_in_from_drive.file_name].join("/"),
             type: "folder",
           },
         ]);
@@ -419,21 +424,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const from_drive_episode_count = the_files_prepare_transfer.length;
-        const created_folder_in_to_drive = await store.prisma.file.findFirst({
+        const folder_in_to_drive = await store.prisma.file.findFirst({
           where: {
-            name: created_folder.file_name,
+            name: folder_in_from_drive.file_name,
             parent_paths: to_drive.profile.root_folder_name!,
             drive_id: to_drive.id,
             user_id: user.id,
           },
         });
-        if (!created_folder_in_to_drive) {
+        if (!folder_in_to_drive) {
           job.output.write(
             new ArticleLineNode({
               children: [
                 "没有在目标云盘找到转存后的文件夹",
                 to_drive.profile.root_folder_name!,
-                created_folder.file_name,
+                folder_in_from_drive.file_name,
               ].map(
                 (text) =>
                   new ArticleTextNode({
@@ -446,7 +451,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }
         job.output.write(
           new ArticleLineNode({
-            children: ["获取在目标云盘的文件数", created_folder_in_to_drive.file_id].map(
+            children: ["获取在目标云盘的文件数", folder_in_to_drive.file_id].map(
               (text) =>
                 new ArticleTextNode({
                   text,
@@ -456,7 +461,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         );
         const to_drive_episode_count = await store.prisma.file.count({
           where: {
-            parent_file_id: created_folder_in_to_drive.file_id,
+            parent_file_id: folder_in_to_drive.file_id,
             user_id: user.id,
           },
         });
@@ -489,7 +494,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             ),
           })
         );
-        await from_drive.delete_file_in_drive(created_folder.file_id);
+        await from_drive.delete_file_in_drive(folder_in_from_drive.file_id);
       })();
     }
     job.output.write(

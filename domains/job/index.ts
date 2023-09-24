@@ -128,6 +128,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   output: Article;
   profile: JobProps["profile"];
   store: DatabaseStore;
+  prev_write_time: number;
   // start: number;
 
   constructor(options: JobProps) {
@@ -138,12 +139,17 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     this.output = output;
     this.profile = profile;
     this.store = store;
-    // this.start = dayjs().unix();
-
+    this.prev_write_time = dayjs().valueOf();
+    // setInterval(() => {
+    //   if (dayjs(this.prev_write_time).isBefore(dayjs().add(3, "minute"))) {
+    //     console.log("bingo");
+    //   }
+    // }, 1000 * 60 * 2);
     this.output.on_write(this.update_content);
   }
   pending_lines = [];
   update_content = throttle(async () => {
+    this.prev_write_time = dayjs().valueOf();
     const content = this.output.to_json();
     this.output.clear();
     if (content.length === 0) {
