@@ -272,35 +272,12 @@ export function folder_client(body: { drive_id: string }, store: DatabaseStore) 
   } as Folder["client"];
 }
 
-// walk_model_with_cursor(async (handler) => {
-//   const parsed_episode_list = await store.prisma.parsed_episode.findMany({
-//     where,
-//     include: {
-//       parsed_tv: true,
-//       parsed_season: true,
-//     },
-//     take: PAGE_SIZE,
-//     skip: (() => {
-//       if (next_marker) {
-//         return 1;
-//       }
-//       return 0;
-//     })(),
-//     orderBy: [
-//       {
-//         parsed_tv: {
-//           name: "desc",
-//         },
-//       },
-//     ],
-//   });
-// });
-
-export async function walk_model_with_cursor<F extends (extra: { take: number }) => any>(
-  fn: F,
-  options: { page_size: number; handler: (data: Unpacked<ReturnType<F>>[number], index: number) => any }
-) {
-  const { page_size, handler } = options;
+export async function walk_model_with_cursor<F extends (extra: { take: number }) => any>(options: {
+  fn: F;
+  page_size?: number;
+  handler: (data: Unpacked<ReturnType<F>>[number], index: number) => any;
+}) {
+  const { fn, page_size = 20, handler } = options;
   let next_marker = "";
   let no_more = false;
   // const count = await store.prisma.file.count({ where });

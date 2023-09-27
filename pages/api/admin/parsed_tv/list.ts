@@ -1,21 +1,23 @@
 /**
- * @file 获取解析出的所有季
+ * @file 获取解析出的所有电视剧
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { User } from "@/domains/user";
+import { to_number } from "@/utils/primitive";
+import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
     name,
-    page: page_str = "1",
-    page_size: page_size_str = "20",
+    page: page_str,
+    page_size: page_size_str,
     can_search,
   } = req.query as Partial<{
     name: string;
@@ -27,13 +29,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
-  const where: NonNullable<Parameters<typeof store.prisma.parsed_tv.findMany>[number]>["where"] = {
-    can_search: can_search ? Number(can_search) : undefined,
-    user_id,
+  const user = t_res.data;
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
+  const where: ModelQuery<"parsed_tv"> = {
+    user_id: user.id,
   };
+  if (can_search) {
+    where.can_search = to_number(can_search, 0);
+  }
   if (name) {
     where.file_name = {
       contains: name,
@@ -41,6 +45,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const list = await store.prisma.parsed_tv.findMany({
     where,
+    include: {
+      tv: {
+        include: {
+          profile: true,
+        },
+      },
+    },
     orderBy: {
       created: "desc",
     },

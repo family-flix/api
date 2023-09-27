@@ -282,4 +282,15 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("[酷漫404&亿万同人字幕组][雷神4：爱与雷霆][Thor.Love.and.Thunder][WEB-IMAX][1080P][AAC 5.1][特效中英字幕][AVC-8Bit][MKV][V1].mkv", () => {
+    const name =
+      "[酷漫404&亿万同人字幕组][雷神4：爱与雷霆][Thor.Love.and.Thunder][WEB-IMAX][1080P][AAC 5.1][特效中英字幕][AVC-8Bit][MKV][V1].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "雷神4：爱与雷霆",
+      original_name: "Thor.Love.and.Thunder",
+      season: "",
+      episode: "",
+    });
+  });
 });

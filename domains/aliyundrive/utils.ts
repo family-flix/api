@@ -94,7 +94,7 @@ export async function archive_season_files(body: {
   drive: Drive;
   user: User;
   files: TheFilePrepareTransfer[];
-  season_profile: {
+  profile: {
     name: string;
     original_name: string | null;
     season_text: string;
@@ -102,7 +102,7 @@ export async function archive_season_files(body: {
   };
   store: DatabaseStore;
 }) {
-  const { files, season_profile, drive, job, user, store } = body;
+  const { files, profile: season_profile, drive, job, user, store } = body;
   type CreatedFolder = {
     existing?: boolean;
     file_id: string;
@@ -310,6 +310,342 @@ export async function archive_season_files(body: {
         new_file_name = rename_res.data.name;
       }
       await store.prisma.parsed_episode.updateMany({
+        where: {
+          file_id,
+        },
+        data: {
+          parent_file_id: created_folder.file_id,
+          parent_paths: new_folder_parent_path,
+          file_name: new_file_name,
+        },
+      });
+      await store.prisma.file.updateMany({
+        where: {
+          file_id,
+        },
+        data: {
+          parent_file_id: created_folder.file_id,
+          parent_paths: new_folder_parent_path,
+          name: new_file_name,
+        },
+      });
+      if (need_create_parent_folder) {
+        // 旧的 parsed_tv 和 parsed_season 作废
+      }
+      // await store.prisma.parsed_tv.updateMany({
+      //   where: {
+      //     file_id: created_folder.file_id,
+      //   },
+      //   data: {
+      //     file_name: created_folder.file_name,
+      //   },
+      // });
+      // await store.prisma.parsed_season.updateMany({
+      //   where: {
+      //     file_id: created_folder.file_id,
+      //   },
+      //   data: {
+      //     file_name: created_folder.file_name,
+      //   },
+      // });
+      created_folder.file_ids.push({ file_id });
+    })();
+  }
+  if (need_create_parent_folder) {
+    job.output.write(
+      new ArticleSectionNode({
+        children: [
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: "移动以下文件",
+              }),
+              new ArticleListNode({
+                children: created_folder.file_ids.map((file) => {
+                  return new ArticleListItemNode({
+                    children: [
+                      new ArticleTextNode({
+                        text: file.file_id,
+                      }),
+                    ],
+                  });
+                }),
+              }),
+              new ArticleTextNode({
+                text: `到云盘文件夹「${created_folder.file_name}」`,
+              }),
+            ],
+          }),
+        ],
+      })
+    );
+    const move_res = await drive.client.move_files_to_folder({
+      files: created_folder.file_ids,
+      target_folder_id: created_folder.file_id,
+    });
+    if (move_res.error) {
+      job.output.write(
+        new ArticleLineNode({
+          children: ["移动文件到目标文件夹失败"].map(
+            (text) =>
+              new ArticleTextNode({
+                text,
+              })
+          ),
+        })
+      );
+      errors.push({
+        file_id: created_folder.file_id,
+        tip: `移动文件到文件夹失败, ${move_res.error.message}`,
+      });
+    }
+  }
+  if (errors.length !== 0) {
+    return Result.Err(errors.join("\n"), 0, errors);
+  }
+  const { file_id, file_name, file_ids } = created_folder;
+  return Result.Ok({
+    file_id,
+    file_name,
+    children: file_ids,
+  });
+}
+
+/**
+ * 归档指定云盘的指定文件
+ * 将剧集源文件重命名，并移动到一个新的文件夹中
+ * 返回创建好的文件夹列表 Record<season_number, {
+ * // 创建的文件夹 id
+ * file_id: string;
+ * // 创建的文件夹 id
+ * // 文件夹内包含的文件
+ * file_ids: string[];
+ * }>
+ */
+export async function archive_movie_files(body: {
+  job: Job;
+  drive: Drive;
+  user: User;
+  files: {
+    file_id: string;
+    file_name: string;
+    parent_file_id: string;
+    parent_paths: string;
+  }[];
+  profile: {
+    name: string | null;
+    original_name: string | null;
+    air_date: string | null;
+  };
+  store: DatabaseStore;
+}) {
+  const { files, profile: movie_profile, drive, job, user, store } = body;
+  type CreatedFolder = {
+    existing?: boolean;
+    file_id: string;
+    file_name: string;
+    file_ids: {
+      file_id: string;
+    }[];
+  };
+  const { name, original_name, air_date } = movie_profile;
+  const tv_name_with_pinyin = build_media_name({ name, original_name });
+  const air_date_of_year = dayjs(air_date).year();
+  const season_folder_name = [tv_name_with_pinyin, air_date_of_year].join(".");
+  const new_folder_parent_path = [drive.profile.root_folder_name, season_folder_name].join("/");
+  const parents: Record<string, { file_id: string; file_name: string }> = {};
+  for (let i = 0; i < files.length; i += 1) {
+    const { parent_file_id, parent_paths } = files[i];
+    const paths = parent_paths.split("/");
+    parents[parent_paths] = {
+      file_id: parent_file_id,
+      file_name: paths[paths.length - 1],
+    };
+  }
+  let need_create_parent_folder = true;
+  const paths = Object.keys(parents);
+  if (paths.length === 1) {
+    const key = paths[0];
+    if (key === new_folder_parent_path) {
+      need_create_parent_folder = false;
+      job.output.write(
+        new ArticleLineNode({
+          children: ["无需创建新文件夹"].map(
+            (text) =>
+              new ArticleTextNode({
+                text,
+              })
+          ),
+        })
+      );
+    }
+  }
+  const created_folder_res = await (async () => {
+    if (need_create_parent_folder) {
+      const exceed_res = await drive.is_exceed_capacity();
+      if (exceed_res.data) {
+        return Result.Err("云盘容量超出且需要文件夹，操作失败");
+      }
+      job.output.write(
+        new ArticleLineNode({
+          children: [
+            new ArticleTextNode({
+              text: `创建新文件夹 '${season_folder_name}' 存放格式化后的视频文件`,
+            }),
+          ],
+        })
+      );
+      const existing_res = await drive.client.existing(drive.profile.root_folder_name!, season_folder_name);
+      if (existing_res.data) {
+        job.output.write(
+          new ArticleLineNode({
+            children: ["使用云盘中查找到的"].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
+          })
+        );
+        return Result.Ok({
+          file_id: existing_res.data.file_id,
+          file_name: existing_res.data.name,
+        });
+      }
+      const r2 = await drive.client.add_folder({
+        parent_file_id: drive.profile.root_folder_id!,
+        name: season_folder_name,
+      });
+      if (r2.error) {
+        job.output.write(
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: `创建文件夹 '${season_folder_name}' 失败，因为 ${r2.error.message}`,
+              }),
+            ],
+          })
+        );
+        return Result.Err(r2.error.message);
+      }
+      await store.add_file({
+        file_id: r2.data.file_id,
+        name: r2.data.file_id,
+        parent_file_id: drive.profile.root_folder_id!,
+        parent_paths: drive.profile.root_folder_name!,
+        size: 0,
+        type: FileType.Folder,
+        drive_id: drive.id,
+        user_id: user.id,
+      });
+      job.output.write(
+        new ArticleLineNode({
+          children: ["使用新创建的文件夹", r2.data.file_id].map(
+            (text) =>
+              new ArticleTextNode({
+                text,
+              })
+          ),
+        })
+      );
+      return Result.Ok({
+        file_id: r2.data.file_id,
+        file_name: r2.data.file_name,
+      });
+    }
+    job.output.write(
+      new ArticleLineNode({
+        children: ["复用现有的文件夹"].map(
+          (text) =>
+            new ArticleTextNode({
+              text,
+            })
+        ),
+      })
+    );
+    return Result.Ok({
+      file_id: parents[paths[0]].file_id,
+      file_name: season_folder_name,
+    });
+  })();
+  if (created_folder_res.error) {
+    return Result.Err(created_folder_res.error.message);
+  }
+  const created_folder = {
+    file_id: created_folder_res.data.file_id,
+    file_name: created_folder_res.data.file_name,
+    file_ids: [],
+  } as CreatedFolder;
+  const errors: {
+    file_id: string;
+    tip: string;
+  }[] = [];
+  for (let j = 0; j < files.length; j += 1) {
+    await (async () => {
+      const parsed_movie = files[j];
+      const { file_id, file_name, parent_paths } = parsed_movie;
+      const { resolution, source, encode, voice_encode, voice_type, type } = parse_filename_for_video(
+        file_name,
+        ["resolution", "source", "encode", "voice_encode", "voice_type", "type"],
+        user.get_filename_rules()
+      );
+      const parent_infos = parse_filename_for_video(parent_paths, ["resolution", "source", "voice_type"]);
+      const tv_name_with_pinyin = build_media_name({ name, original_name });
+      const air_date_of_year = (() => {
+        return dayjs(air_date).year();
+      })();
+      let new_file_name = [
+        tv_name_with_pinyin,
+        air_date_of_year,
+        resolution || parent_infos.resolution,
+        voice_type || parent_infos.voice_type,
+        source || parent_infos.source,
+        encode || parent_infos.encode,
+        voice_encode || parent_infos.voice_encode,
+        type.replace(/^\./, ""),
+      ]
+        .filter(Boolean)
+        .join(".");
+      if (file_name !== new_file_name) {
+        job.output.write(
+          new ArticleLineNode({
+            children: [`将文件「${file_name}」名字修改为「${new_file_name}」`].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
+          })
+        );
+        const rename_res = await drive.client.rename_file(file_id, new_file_name, {
+          check_name_mode: "auto_rename",
+        });
+        if (rename_res.error) {
+          job.output.write(
+            new ArticleLineNode({
+              children: ["重命名失败，因为", rename_res.error.message].map(
+                (text) =>
+                  new ArticleTextNode({
+                    text,
+                  })
+              ),
+            })
+          );
+          return;
+        }
+        job.output.write(
+          new ArticleLineNode({
+            children: ["重命名成功，新的名字是", rename_res.data.name].map(
+              (text) =>
+                new ArticleTextNode({
+                  text,
+                })
+            ),
+          })
+        );
+        new_file_name = rename_res.data.name;
+      }
+      await store.prisma.parsed_movie.updateMany({
         where: {
           file_id,
         },

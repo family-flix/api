@@ -12,26 +12,24 @@ import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types";
 import { app, store } from "@/store";
 import { TaskTypes } from "@/domains/job/constants";
+import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id: drive_id, force } = req.query as Partial<{
+  const { id: drive_id, force: force_str } = req.query as Partial<{
     id: string;
     force: string;
   }>;
-  const { target_folders } = req.body as Partial<{
-    target_folders: { name: string; type: string }[];
-  }>;
-  if (!drive_id) {
-    return e(Result.Err("缺少云盘 id"));
-  }
+  const force = to_number(force_str, 1);
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
+  if (!drive_id) {
+    return e(Result.Err("缺少云盘 id"));
+  }
   const user = t_res.data;
-  const { id: user_id, settings } = user;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
@@ -41,10 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("请先设置索引目录", 30001));
   }
   const job_res = await Job.New({
-    desc: `云盘 '${drive.name}' 影视剧搜索详情信息`,
+    desc: `云盘「${drive.name}」影视剧搜索详情信息`,
     type: TaskTypes.SearchMedia,
     unique_id: drive.id,
-    user_id,
+    user_id: user.id,
     store,
   });
   if (job_res.error) {
@@ -55,20 +53,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive,
     user,
     store,
-    force: true,
+    force: Boolean(force),
     assets: app.assets,
     on_print(v) {
       job.output.write(v);
-    },
-    on_finish() {
-      job.finish();
     },
   });
   if (r2.error) {
     return e(r2);
   }
   const searcher = r2.data;
-  searcher.run();
+  async function run() {
+    await searcher.run();
+    job.finish();
+  }
+  run();
   res.status(200).json({
     code: 0,
     msg: "开始搜索任务",

@@ -1,29 +1,31 @@
 /**
  * @file 云盘所有逻辑
  */
+import { Handler } from "mitt";
 import dayjs from "dayjs";
 import Joi from "joi";
 
 import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { AliyunDriveClient, AliyunDrivePayload, AliyunDriveProfile } from "@/domains/aliyundrive/types";
-import { AliyunResourceClient } from "@/domains/aliyundrive/resource";
 import {
+  Article,
   ArticleLineNode,
   ArticleListItemNode,
   ArticleListNode,
   ArticleSectionNode,
   ArticleTextNode,
 } from "@/domains/article";
-import { DriveRecord, FileRecord } from "@/domains/store/types";
+import { ModelParam, ModelQuery, DriveRecord, FileRecord } from "@/domains/store/types";
+import { walk_model_with_cursor } from "@/domains/store/utils";
 import { User } from "@/domains/user";
 import { BaseDomain } from "@/domains/base";
 import { DatabaseStore } from "@/domains/store";
+import { FileType } from "@/constants";
 import { Result, resultify } from "@/types";
 import { parseJSONStr, r_id } from "@/utils";
+import { to_number } from "@/utils/primitive";
 
 import { DriveTypes } from "./constants";
-import { FileType } from "@/constants";
-import { Handler } from "mitt";
 
 const drivePayloadSchema = Joi.object({
   app_id: Joi.string().required(),
@@ -49,11 +51,12 @@ type TheTypesOfEvents = {
 };
 type DriveProps = {
   id: string;
+  type: DriveTypes;
   profile: Pick<DriveRecord, "name" | "type" | "root_folder_id" | "root_folder_name"> & {
     drive_id: string;
     token_id: string;
-  };
-  client: AliyunBackupDriveClient | AliyunResourceClient;
+  } & AliyunDriveProfile;
+  client: AliyunBackupDriveClient;
   user: User;
   store: DatabaseStore;
 };
@@ -75,26 +78,15 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error);
     }
-    const { drive_id } = r.data;
+    const { drive_id, ...rest } = r.data;
     // console.log("[DOMAIN]drive/index - Get", drive_id, type, drive_token_id);
     const client_res = await (async (): Promise<Result<AliyunDriveClient>> => {
-      if (type === DriveTypes.AliyunBackupDrive) {
-        const r = await AliyunBackupDriveClient.Get({ drive_id, store });
-        if (r.error) {
-          return Result.Err(r.error.message);
-        }
-        const client = r.data;
-        return Result.Ok(client);
+      const r = await AliyunBackupDriveClient.Get({ drive_id, store });
+      if (r.error) {
+        return Result.Err(r.error.message);
       }
-      if (type === DriveTypes.AliyunResourceDrive) {
-        const r = await AliyunResourceClient.Get({ drive_id, store });
-        if (r.error) {
-          return Result.Err(r.error.message);
-        }
-        const client = r.data;
-        return Result.Ok(client);
-      }
-      return Result.Err("未知云盘类型");
+      const client = r.data;
+      return Result.Ok(client);
     })();
     if (client_res.error) {
       return Result.Err(client_res.error.message);
@@ -102,6 +94,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(
       new Drive({
         id,
+        type: type ?? DriveTypes.AliyunBackupDrive,
         profile: {
           type,
           name,
@@ -109,6 +102,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           token_id: drive_token_id,
           root_folder_id,
           root_folder_name,
+          ...rest,
         },
         client: client_res.data,
         user,
@@ -134,26 +128,15 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error);
     }
-    const { drive_id } = r.data;
+    const { drive_id, ...rest } = r.data;
     // console.log("[DOMAIN]drive/index - Get", drive_id, type, drive_token_id);
     const client_res = await (async (): Promise<Result<AliyunDriveClient>> => {
-      if (type === DriveTypes.AliyunBackupDrive) {
-        const r = await AliyunBackupDriveClient.Get({ drive_id, store });
-        if (r.error) {
-          return Result.Err(r.error.message);
-        }
-        const client = r.data;
-        return Result.Ok(client);
+      const r = await AliyunBackupDriveClient.Get({ drive_id, store });
+      if (r.error) {
+        return Result.Err(r.error.message);
       }
-      if (type === DriveTypes.AliyunResourceDrive) {
-        const r = await AliyunResourceClient.Get({ drive_id, store });
-        if (r.error) {
-          return Result.Err(r.error.message);
-        }
-        const client = r.data;
-        return Result.Ok(client);
-      }
-      return Result.Err("未知云盘类型");
+      const client = r.data;
+      return Result.Ok(client);
     })();
     if (client_res.error) {
       return Result.Err(client_res.error.message);
@@ -161,6 +144,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(
       new Drive({
         id: drive_record.id,
+        type: type ?? DriveTypes.AliyunBackupDrive,
         profile: {
           type,
           name,
@@ -168,6 +152,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           token_id: drive_token_id,
           root_folder_id,
           root_folder_name,
+          ...rest,
         },
         client: client_res.data,
         user,
@@ -222,9 +207,10 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         if (existing_drive) {
           return Result.Err("该云盘已存在，请检查信息后重试", undefined, { id: existing_drive.id });
         }
+        const drive_record_id = r_id();
         const client = new AliyunBackupDriveClient({
           // 这里给一个空的是为了下面能调用 ping 方法
-          id: "",
+          id: drive_record_id,
           drive_id: String(drive_id),
           resource_drive_id,
           device_id,
@@ -245,7 +231,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         }
         const created_drive = await store.prisma.drive.create({
           data: {
-            id: r_id(),
+            id: drive_record_id,
             name: name || user_name || nick_name,
             avatar,
             type: DriveTypes.AliyunBackupDrive,
@@ -324,11 +310,12 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           },
         });
         if (existing_resource_drive) {
-          return Result.Err("该云盘已存在，请检查信息后重试", undefined, { id: existing_resource_drive.id });
+          return Result.Err("该资源盘已存在，请检查信息后重试", undefined, { id: existing_resource_drive.id });
         }
         const { access_token, refresh_token } = r2.data;
-        const client = new AliyunResourceClient({
-          id: "",
+        const drive_record_id = r_id();
+        const client = new AliyunBackupDriveClient({
+          id: drive_record_id,
           drive_id: resource_drive_id,
           device_id,
           access_token,
@@ -339,13 +326,12 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         // console.log("[DOMAIN]drive/index - before store.prisma.drive.create");
         const created_drive = await store.prisma.drive.create({
           data: {
-            id: r_id(),
+            id: drive_record_id,
             name: `资源盘/${name}`,
             avatar,
             type: DriveTypes.AliyunResourceDrive,
             unique_id: String(resource_drive_id),
             profile: JSON.stringify({
-              backup_drive_id: drive_id,
               avatar,
               user_name,
               nick_name,
@@ -353,6 +339,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
               drive_id: String(resource_drive_id),
               device_id,
               user_id,
+              backup_drive_id: drive_id,
             } as AliyunDriveProfile),
             root_folder_id: root_folder_id ?? null,
             used_size: used_size ?? 0,
@@ -381,20 +368,24 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(created_drive_res);
     }
     const {
-      drive_id,
       client,
-      drive: { id, name, root_folder_id, root_folder_name, drive_token_id },
+      drive: { id, name, root_folder_id, root_folder_name, drive_token_id, profile },
     } = created_drive_res.data;
+    const json_res = await parseJSONStr<AliyunDriveProfile>(profile);
+    if (json_res.error) {
+      return Result.Err(json_res.error.message);
+    }
     return Result.Ok(
       new Drive({
         id,
+        type,
         profile: {
           type,
           name,
-          drive_id: String(drive_id),
           token_id: drive_token_id,
           root_folder_id: root_folder_id,
           root_folder_name: root_folder_name,
+          ...json_res.data,
         },
         client,
         user,
@@ -420,19 +411,21 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
 
   /** 云盘 id */
   id: string;
+  type: DriveTypes;
   /** 云盘名称 */
   name: string;
   /** 云盘所属用户 id */
   user_id: string;
   profile: DriveProps["profile"];
-  client: AliyunBackupDriveClient | AliyunResourceClient;
+  client: AliyunBackupDriveClient;
   store: DatabaseStore;
 
   constructor(options: DriveProps) {
     super();
 
-    const { id, profile, client, user, store } = options;
+    const { id, type, profile, client, user, store } = options;
     this.name = profile.name;
+    this.type = type;
     this.id = id;
     this.profile = profile;
     this.user_id = user.id;
@@ -449,15 +442,39 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r);
     }
     const { total_size, used_size } = r.data;
+    const payload: {
+      updated: string;
+      total_size: number;
+      used_size: number;
+      profile?: string;
+    } = {
+      updated: dayjs().toISOString(),
+      total_size,
+      used_size,
+    };
+    if (client instanceof AliyunBackupDriveClient) {
+      const r2 = await client.fetch_vip_info();
+      if (r2.data) {
+        const { user_name, nick_name, avatar, drive_id, device_id, user_id, app_id, resource_drive_id } = this.profile;
+        const next_profile = {
+          user_name,
+          nick_name,
+          avatar,
+          drive_id,
+          device_id,
+          user_id,
+          app_id,
+          resource_drive_id,
+          vip: r2.data.list,
+        };
+        payload.profile = JSON.stringify(next_profile);
+      }
+    }
     const d = await store.prisma.drive.update({
       where: {
         id: this.id,
       },
-      data: {
-        updated: dayjs().toISOString(),
-        total_size,
-        used_size,
-      },
+      data: payload,
       select: {
         avatar: true,
         name: true,
@@ -1063,8 +1080,6 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     return this.on(Events.Print, handler);
   }
 }
-import { ModelParam, ModelQuery } from "@/domains/store/types";
-import { to_number } from "@/utils/primitive";
 
 export async function clear_expired_files_in_drive(values: {
   drive_id: string;
@@ -1073,107 +1088,63 @@ export async function clear_expired_files_in_drive(values: {
   on_print?: (node: ArticleLineNode) => void;
 }) {
   const { user, drive_id, store, on_print } = values;
-  // 799170603(130资源盘)
-  // 625667282(138资源盘)
   const d_res = await Drive.Get({ id: drive_id, store, user });
   if (d_res.error) {
     return Result.Err(d_res.error.message);
   }
   const drive = d_res.data;
-  const page_size_str = 20;
-  const page_size = to_number(page_size_str, 20);
 
-  let next_marker: string | null = null;
-  let no_more = false;
   const where: ModelQuery<"file"> = {
     drive_id: drive.id,
     user_id: user.id,
   };
   const count = await store.prisma.file.count({ where });
   if (on_print) {
-    on_print(
-      new ArticleLineNode({
-        children: ["共", String(count), "条记录"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
+    on_print(Article.build_line(["共", String(count), "条记录"]));
   }
-  // console.log("共", count, "条记录");
-  do {
-    const list = await store.prisma.file.findMany({
-      where,
-      take: page_size + 1,
-      ...(() => {
-        const cursor: { id?: string } = {};
-        if (next_marker) {
-          cursor.id = next_marker;
-          return {
-            cursor,
-          };
-        }
-        return {} as ModelParam<typeof store.prisma.file.findMany>["cursor"];
-      })(),
-    });
-    no_more = list.length < page_size + 1;
-    next_marker = null;
-    if (list.length === page_size + 1) {
-      const last_record = list[list.length - 1];
-      next_marker = last_record.id;
-    }
-    const correct_list = list.slice(0, page_size);
-
-    for (let i = 0; i < correct_list.length; i += 1) {
-      await (async () => {
-        const item = correct_list[i];
-        // await sleep(1000);
-        const res = await drive.client.fetch_file(item.file_id);
-        if (on_print) {
-          on_print(
-            new ArticleLineNode({
-              children: [item.name].map((text) => new ArticleTextNode({ text })),
-            })
-          );
-        }
-        if (res.error) {
-          // console.log("file_id", item.file_id);
-          // console.log(res.error.message);
+  await walk_model_with_cursor({
+    fn(extra) {
+      return store.prisma.file.findMany({
+        where,
+        ...extra,
+      });
+    },
+    async handler(item, index) {
+      const prefix = `「${item.name}」`;
+      const res = await drive.client.fetch_file(item.file_id);
+      if (on_print) {
+        on_print(Article.build_line([prefix, `第 ${index + 1}`]));
+      }
+      if (res.error) {
+        if (res.error.message.includes("file not exist")) {
           if (on_print) {
-            on_print(
-              new ArticleLineNode({
-                children: [res.error.message].map((text) => new ArticleTextNode({ text })),
-              })
-            );
+            on_print(Article.build_line([prefix, "删除云盘文件", item.name]));
           }
-          if (res.error.message.includes("file not exist")) {
-            await drive.delete_file({ file_id: item.file_id }, { ignore_drive_file: true });
-          }
-          return;
+          await drive.delete_file({ file_id: item.file_id }, { ignore_drive_file: true });
         }
-        const { file_id, name, content_hash, size } = res.data;
-        // console.log({
-        //   file_id,
-        //   name,
-        // });
-        const payload: Partial<FileRecord> = {};
-        if (!item.md5) {
-          payload.md5 = content_hash;
-        }
-        if (!item.size) {
-          payload.size = size;
-        }
-        if (item.name !== name) {
-          payload.name = name;
-        }
-        if (Object.keys(payload).length === 0) {
-          return;
-        }
-        await store.prisma.file.update({
-          where: {
-            id: item.id,
-          },
-          data: payload,
-        });
-      })();
-    }
-  } while (no_more === false);
+        return;
+      }
+      const { name, content_hash, size } = res.data;
+      const payload: Partial<FileRecord> = {};
+      if (!item.md5) {
+        payload.md5 = content_hash;
+      }
+      if (!item.size) {
+        payload.size = size;
+      }
+      if (item.name !== name) {
+        payload.name = name;
+      }
+      if (Object.keys(payload).length === 0) {
+        return;
+      }
+      await store.prisma.file.update({
+        where: {
+          id: item.id,
+        },
+        data: payload,
+      });
+    },
+  });
   return Result.Ok(null);
 }

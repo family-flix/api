@@ -1,5 +1,5 @@
 /**
- * @file 管理后台/将指定季移动到指定盘
+ * @file 管理后台/将指定季移动到资源盘
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -7,10 +7,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { Drive } from "@/domains/drive";
-import { AliyunResourceClient } from "@/domains/aliyundrive/resource";
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
+import { DriveTypes } from "@/domains/drive/constants";
 import { archive_season_files, TheFilePrepareTransfer } from "@/domains/aliyundrive/utils";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { EpisodeRecord, ParsedEpisodeRecord } from "@/domains/store/types";
 import { DriveAnalysis } from "@/domains/analysis";
 import { BaseApiResp, Result } from "@/types";
@@ -22,7 +20,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { season_id: id } = req.query as Partial<{ season_id: string; target_drive_id: string }>;
-  const { target_drive_id } = req.body as Partial<{ target_drive_id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -54,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           parsed_episodes: true,
         },
       },
-      parsed_season: {
+      parsed_seasons: {
         orderBy: {
           season_number: "asc",
         },
@@ -68,9 +65,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { name, original_name } = tv.profile;
   const tv_name = name || original_name;
   if (!tv_name) {
-    return e(Result.Err(`电视剧 ${id} 没有名称，请先更新该电视剧详情`));
+    return e(Result.Err(`电视剧「${id}」没有名称，请先更新该电视剧详情`));
   }
   const season_payload = {
+    id: season.id,
+    tv_id: tv.id,
     name: tv_name,
     original_name,
     season_text,
@@ -80,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   };
   const job_res = await Job.New({
     unique_id: season.id,
-    desc: `移动电视剧 '${tv_name}/${season_text}' 到资源盘`,
+    desc: `移动电视剧「${tv_name}/${season_text}」到资源盘`,
     type: TaskTypes.MoveToResourceDrive,
     user_id: user.id,
     store,
@@ -90,6 +89,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const job = job_res.data;
   async function run(season: {
+    id: string;
+    tv_id: string;
     name: string;
     original_name: string | null;
     season_text: string;
@@ -127,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         type: FileType.File,
         episode_number,
         season_number,
-      };
+      } as TheFilePrepareTransfer;
       parsed_episode_groups_by_drive_id[drive_id] = parsed_episode_groups_by_drive_id[drive_id] || [];
       parsed_episode_groups_by_drive_id[drive_id].push(payload);
     }
@@ -139,235 +140,76 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const the_files_prepare_transfer = parsed_episode_groups_by_drive_id[from_drive_id];
         const from_drive_res = await Drive.Get({ id: from_drive_id, user, store });
         if (from_drive_res.error) {
-          job.output.write(
-            new ArticleLineNode({
-              children: [`获取源云盘 '${from_drive_id}' 失败，因为`, from_drive_res.error.message].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line([`获取源云盘「${from_drive_id}」失败，因为`, from_drive_res.error.message]);
           return;
         }
         const from_drive = from_drive_res.data;
-        from_drive.on_print((node) => {
-          job.output.write(node);
-        });
-        if (the_files_prepare_transfer.length === 0) {
-          job.output.write(
-            new ArticleLineNode({
-              children: [`云盘 '${from_drive.name}' 要转存的文件数为 0`].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+        const prefix = `「${from_drive.name}」`;
+        if (![DriveTypes.AliyunBackupDrive].includes(from_drive.type)) {
+          job.output.write_line([prefix, `不是阿里云备份盘，无法移动到资源盘`]);
           return;
         }
-        job.output.write(
-          new ArticleLineNode({
-            children: [`从云盘 '${from_drive.name}' 转存的文件数为 ${the_files_prepare_transfer.length}`].map(
-              (text) =>
-                new ArticleTextNode({
-                  text,
-                })
-            ),
-          })
-        );
+        if (the_files_prepare_transfer.length === 0) {
+          job.output.write_line([prefix, `要移动的文件数为 0`]);
+          return;
+        }
+        job.output.write_line([prefix, `要移动的文件数为 ${the_files_prepare_transfer.length}`]);
         const from_drive_root_folder_id = from_drive.profile.root_folder_id;
         if (!from_drive_root_folder_id) {
-          job.output.write(
-            new ArticleLineNode({
-              children: [`源云盘 '${from_drive.name}' 未设置索引根目录`].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line([prefix, `未设置索引根目录，中断操作`]);
           return;
         }
-        job.output.write(
-          new ArticleLineNode({
-            children: ["开始归档（格式化名称）"].map((text) => new ArticleTextNode({ text })),
-          })
-        );
+        job.output.write_line([prefix, "开始归档（格式化名称）"]);
         const archive_res = await archive_season_files({
+          files: the_files_prepare_transfer,
+          profile: season,
           job,
           drive: from_drive,
           user,
-          files: the_files_prepare_transfer,
-          season_profile: {
-            name: season.name,
-            original_name: season.original_name,
-            season_text: season.season_text,
-            air_date: season.air_date,
-          },
           store,
         });
         if (archive_res.error) {
-          job.output.write(
-            new ArticleLineNode({
-              children: [`电视剧 '${tv_name}' 归档失败`, archive_res.error.message].map(
-                (text) => new ArticleTextNode({ text })
-              ),
-            })
-          );
+          job.output.write_line([prefix, `归档失败，因为`, archive_res.error.message]);
           return;
         }
-        // if (from_drive_id === target_drive_id) {
-        //   job.output.write(
-        //     new ArticleLineNode({
-        //       children: ["目标盘即当前盘，直接跳过"].map((text) => {
-        //         return new ArticleTextNode({
-        //           text,
-        //         });
-        //       }),
-        //     })
-        //   );
-        //   return;
-        // }
-        job.output.write(
-          new ArticleLineNode({
-            children: [`电视剧 '${tv_name}' 归档成功`].map(
-              (text) =>
-                new ArticleTextNode({
-                  text,
-                })
-            ),
-          })
-        );
-        const to_drive_res = await (async () => {
-          // if (from_drive.client instanceof AliyunResourceClient && target_drive_id) {
-          //   // 从资源盘移动到指定盘
-          //   const to_drive_res = await Drive.Get({ id: target_drive_id, user, store });
-          //   if (to_drive_res.error) {
-          //     return Result.Err(to_drive_res.error.message);
-          //   }
-          //   const to_drive = to_drive_res.data;
-          //   return Result.Ok(to_drive);
-          // }
-          if (from_drive.client instanceof AliyunBackupDriveClient && !target_drive_id) {
-            // 移动到资源盘
-            if (!from_drive.client.resource_drive_id) {
-              return Result.Err(`云盘「${from_drive.name}」还未初始化资源盘`);
-            }
-            const to_drive_res = await Drive.GetByUniqueId({ id: from_drive.client.resource_drive_id, user, store });
-            if (to_drive_res.error) {
-              return Result.Err(to_drive_res.error.message);
-            }
-            const to_drive = to_drive_res.data;
-            return Result.Ok(to_drive);
-          }
-          return Result.Err("无法获取到目标云盘");
-        })();
+        job.output.write_line([prefix, `归档成功`]);
+        if (!from_drive.client.resource_drive_id) {
+          job.output.write_line([prefix, "该备份盘未初始化资源盘"]);
+          return;
+        }
+        const to_drive_res = await Drive.GetByUniqueId({ id: from_drive.client.resource_drive_id, user, store });
         if (to_drive_res.error) {
-          job.output.write(
-            new ArticleLineNode({
-              children: ["初始化失败，因为", to_drive_res.error.message].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line([prefix, "初始化失败，因为", to_drive_res.error.message]);
           return;
         }
         const to_drive = to_drive_res.data;
         const to_drive_root_folder_id = to_drive.profile.root_folder_id;
         const to_drive_root_folder_name = to_drive.profile.root_folder_name;
         if (!to_drive_root_folder_id || !to_drive_root_folder_name) {
-          job.output.write(
-            new ArticleLineNode({
-              children: ["目标云盘未设置索引根目录"].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line([prefix, "目标云盘未设置索引根目录"]);
           return;
         }
         const folder_in_from_drive = archive_res.data;
-        await (async () => {
-          if (from_drive.client instanceof AliyunBackupDriveClient && to_drive.client instanceof AliyunResourceClient) {
-            if (from_drive.client.resource_drive_id !== to_drive.client.drive_id) {
-              // 从备份盘移动到资源盘，只能是同一阿里云盘账号下的
-              return;
-            }
-            const existing_res = await to_drive.client.existing(
-              to_drive.profile.root_folder_id!,
-              folder_in_from_drive.file_name
-            );
-            if (existing_res.data !== null) {
-              job.output.write(
-                new ArticleLineNode({
-                  children: [`「${folder_in_from_drive.file_name}」`, "已经在云盘", `「${to_drive.profile.name}」`].map(
-                    (text) =>
-                      new ArticleTextNode({
-                        text,
-                      })
-                  ),
-                })
-              );
-              return;
-            }
-            job.output.write(
-              new ArticleLineNode({
-                children: ["将文件夹", folder_in_from_drive.file_name, "移动到云盘", to_drive.profile.name].map(
-                  (text) =>
-                    new ArticleTextNode({
-                      text,
-                    })
-                ),
-              })
-            );
-            const transfer_res = await from_drive.client.move_file_to_resource_drive({
-              file_ids: [folder_in_from_drive.file_id],
-            });
-            if (transfer_res.error) {
-              job.output.write(
-                new ArticleLineNode({
-                  children: ["移动到云盘", to_drive.profile.name, ", 失败，因为", transfer_res.error.message].map(
-                    (text) =>
-                      new ArticleTextNode({
-                        text,
-                      })
-                  ),
-                })
-              );
-              return;
-            }
-          }
-          if (from_drive.client instanceof AliyunResourceClient) {
-            // 从资源盘可以随意转存到其他盘
-            const transfer_res = await from_drive.client.move_files_to_drive({
-              file_ids: [folder_in_from_drive.file_id],
-              target_drive_client: to_drive.client,
-              target_folder_id: to_drive_root_folder_id,
-            });
-            if (transfer_res.error) {
-              job.output.write(
-                new ArticleLineNode({
-                  children: ["移动到云盘失败，因为", transfer_res.error.message].map(
-                    (text) =>
-                      new ArticleTextNode({
-                        text,
-                      })
-                  ),
-                })
-              );
-              return;
-            }
-          }
-        })();
+        if (from_drive.client.resource_drive_id !== to_drive.client.drive_id) {
+          job.output.write_line([prefix, "资源盘不属于备份盘"]);
+          return;
+        }
+        const existing_res = await to_drive.client.existing(
+          to_drive.profile.root_folder_id!,
+          folder_in_from_drive.file_name
+        );
+        if (existing_res.data !== null) {
+          job.output.write_line([prefix, folder_in_from_drive.file_name, "已经在目标资源盘"]);
+          return;
+        }
+        job.output.write_line([prefix, "将文件夹", folder_in_from_drive.file_name, "移动到目标资源盘"]);
+        const transfer_res = await from_drive.client.move_file_to_resource_drive({
+          file_ids: [folder_in_from_drive.file_id],
+        });
+        if (transfer_res.error) {
+          job.output.write_line([prefix, "移动到目标资源盘失败，因为", transfer_res.error.message]);
+          return;
+        }
         const r3 = await DriveAnalysis.New({
           drive: to_drive,
           store,
@@ -376,53 +218,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           on_print(v) {
             job.output.write(v);
           },
-          on_finish() {
-            job.output.write(
-              new ArticleLineNode({
-                children: ["完成目标云盘转存后的文件索引"].map(
-                  (text) =>
-                    new ArticleTextNode({
-                      text,
-                    })
-                ),
-              })
-            );
-          },
         });
         if (r3.error) {
-          job.output.write(
-            new ArticleLineNode({
-              children: ["创建索引云盘任务失败", "失败，因为", r3.error.message].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line([prefix, "创建索引云盘任务失败，因为", r3.error.message]);
           return;
         }
         const analysis = r3.data;
-        // console.log(created_folder.file_name);
-        const r = await analysis.run([
+        const r = await analysis.run(
+          [
+            {
+              name: [to_drive.profile.root_folder_name, folder_in_from_drive.file_name].join("/"),
+              type: "folder",
+            },
+          ],
           {
-            name: [to_drive.profile.root_folder_name, folder_in_from_drive.file_name].join("/"),
-            type: "folder",
-          },
-        ]);
+            async before_search() {
+              const folder_in_to_drive = await store.prisma.file.findFirst({
+                where: {
+                  name: folder_in_from_drive.file_name,
+                  parent_paths: to_drive.profile.root_folder_name!,
+                  drive_id: to_drive.id,
+                  user_id: user.id,
+                },
+              });
+              if (!folder_in_to_drive) {
+                return;
+              }
+              const parsed_tv_in_to_drive = await store.prisma.parsed_tv.findFirst({
+                where: {
+                  file_id: folder_in_to_drive.file_id,
+                  drive_id: to_drive.id,
+                  user_id: user.id,
+                },
+              });
+              if (!parsed_tv_in_to_drive) {
+                return;
+              }
+              job.output.write_line([prefix, "在目标资源盘找到解析结果，直接绑定电视剧"]);
+              await store.prisma.parsed_tv.update({
+                where: {
+                  id: parsed_tv_in_to_drive.id,
+                },
+                data: {
+                  tv_id: season.tv_id,
+                },
+              });
+            },
+          }
+        );
         if (r.error) {
-          job.output.write(
-            new ArticleLineNode({
-              children: ["索引云盘", to_drive.name, "失败，因为", r.error.message].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line([prefix, "索引目标资源盘失败，因为", r.error.message]);
           return;
         }
+        job.output.write_line([prefix, "转存到目标资源盘后完成索引"]);
         const from_drive_episode_count = the_files_prepare_transfer.length;
         const folder_in_to_drive = await store.prisma.file.findFirst({
           where: {
@@ -433,32 +281,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
         });
         if (!folder_in_to_drive) {
-          job.output.write(
-            new ArticleLineNode({
-              children: [
-                "没有在目标云盘找到转存后的文件夹",
-                to_drive.profile.root_folder_name!,
-                folder_in_from_drive.file_name,
-              ].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line([prefix, "没有在目标资源盘找到转存后的文件夹"]);
           return;
         }
-        job.output.write(
-          new ArticleLineNode({
-            children: ["获取在目标云盘的文件数", folder_in_to_drive.file_id].map(
-              (text) =>
-                new ArticleTextNode({
-                  text,
-                })
-            ),
-          })
-        );
+        job.output.write_line([prefix, "获取在目标云盘的文件数", folder_in_to_drive.file_id]);
         const to_drive_episode_count = await store.prisma.file.count({
           where: {
             parent_file_id: folder_in_to_drive.file_id,
@@ -466,47 +292,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
         });
         if (from_drive_episode_count !== to_drive_episode_count) {
-          job.output.write(
-            new ArticleLineNode({
-              children: [
-                "转存后文件数不一致，中断删除源云盘文件。",
-                "源云盘有",
-                String(from_drive_episode_count),
-                "但目标云盘有",
-                String(to_drive_episode_count),
-              ].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line([
+            prefix,
+            "转存后文件数不一致，中断删除源云盘文件。",
+            "源云盘有",
+            String(from_drive_episode_count),
+            "但目标云盘有",
+            String(to_drive_episode_count),
+          ]);
           return;
         }
-        job.output.write(
-          new ArticleLineNode({
-            children: ["删除源云盘视频文件"].map(
-              (text) =>
-                new ArticleTextNode({
-                  text,
-                })
-            ),
-          })
-        );
+        job.output.write_line([prefix, "开始删除源云盘视频文件"]);
+        from_drive.on_print((node) => {
+          job.output.write(node);
+        });
         await from_drive.delete_file_in_drive(folder_in_from_drive.file_id);
+        job.output.write_line([prefix, "归档完成"]);
       })();
     }
-    job.output.write(
-      new ArticleLineNode({
-        children: ["任务完成"].map(
-          (text) =>
-            new ArticleTextNode({
-              text,
-            })
-        ),
-      })
-    );
+    job.output.write_line(["所有归档任务完成"]);
     job.finish();
   }
   run(season_payload);

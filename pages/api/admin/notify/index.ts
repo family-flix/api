@@ -22,8 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  await walk_model_with_cursor(
-    (args) => {
+  await walk_model_with_cursor({
+    fn: (args) => {
       const where: ModelQuery<"member"> = {
         disabled: 0,
         user_id: user.id,
@@ -38,24 +38,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         ...args,
       });
     },
-    {
-      page_size: 20,
-      async handler(data) {
-        await store.prisma.member_notification.create({
-          data: {
-            id: r_id(),
-            unique_id: dayjs().unix().toString(),
-            content: JSON.stringify({
-              msg: content,
-            }),
-            type: 1,
-            status: 1,
-            is_delete: 0,
-            member_id: data.id,
-          },
-        });
-      },
-    }
-  );
+    page_size: 20,
+    async handler(data) {
+      await store.prisma.member_notification.create({
+        data: {
+          id: r_id(),
+          unique_id: dayjs().unix().toString(),
+          content: JSON.stringify({
+            msg: content,
+          }),
+          type: 1,
+          status: 1,
+          is_delete: 0,
+          member_id: data.id,
+        },
+      });
+    },
+  });
   res.status(200).json({ code: 0, msg: "推送成功", data: null });
 }

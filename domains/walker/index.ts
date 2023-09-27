@@ -1,5 +1,5 @@
 /**
- * @file 文件夹遍历器
+ * @file 文件夹遍历解析器
  */
 import type { Handler } from "mitt";
 
@@ -172,6 +172,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
    */
   async walk(data: Folder | File, parent: ParentFolder[] = []) {
     const { id: file_id, type, name, size, parent_file_id } = data;
+    // console.log('[DOMAIN]walker - walk', file_id, name);
     const parent_paths = parent.map((p) => p.file_name).join("/");
     const parent_ids = parent.map((p) => p.file_id).join("/");
     const filepath = (() => {

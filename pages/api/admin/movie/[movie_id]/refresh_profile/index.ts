@@ -1,5 +1,5 @@
 /**
- * @file 刷新/绑定电影详情
+ * @file 刷新电影详情
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -8,6 +8,7 @@ import { MediaSearcher } from "@/domains/searcher";
 import { ProfileRefresh } from "@/domains/profile_refresh";
 import { Job } from "@/domains/job";
 import { TaskTypes } from "@/domains/job/constants";
+import { MovieProfileRecord, MovieRecord } from "@/domains/store/types";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
@@ -16,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { movie_id } = req.query as Partial<{ movie_id: string }>;
-  const { tmdb_id } = req.body as { tmdb_id: string };
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -38,28 +38,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (movie === null) {
     return e(Result.Err("没有匹配的电影记录"));
   }
-  if (!tmdb_id && !movie.profile) {
-    return e(Result.Err("该电影还没有匹配的详情"));
-  }
-  if (!user.settings.tmdb_token) {
-    return e(Result.Err("缺少 TMDB_TOKEN"));
-  }
-  const searcher = new MediaSearcher({
+  const searcher_res = await MediaSearcher.New({
     user,
     store,
     assets: app.assets,
+    on_print(v) {
+      job.output.write(v);
+    },
   });
+  if (searcher_res.error) {
+    return e(searcher_res);
+  }
+  const searcher = searcher_res.data;
+  const job_res = await Job.New({
+    unique_id: movie_id,
+    desc: "刷新电影详情",
+    type: TaskTypes.RefreshMovieProfile,
+    user_id: user.id,
+    store,
+  });
+  if (job_res.error) {
+    return e(job_res);
+  }
+  const job = job_res.data;
   const refresher = new ProfileRefresh({
     searcher,
     store,
     user,
+    on_print(node) {
+      job.output.write(node);
+    },
   });
-  const r = await refresher.refresh_movie_profile(movie, tmdb_id ? { tmdb_id: Number(tmdb_id) } : undefined);
-  if (r.error) {
-    return e(r.error);
+  async function run(movie: MovieRecord & { profile: MovieProfileRecord }) {
+    const r = await refresher.refresh_movie_profile(movie);
+    if (r.error) {
+      job.finish();
+      return e(r.error);
+    }
+    if (r.data === null) {
+      job.finish();
+      return e(Result.Err("没有要更新的内容"));
+    }
+    job.finish();
   }
-  if (r.data === null) {
-    return e(Result.Err("没有要更新的内容"));
-  }
-  res.status(200).json({ code: 0, msg: "更新成功", data: r.data });
+  run(movie);
+  res.status(200).json({
+    code: 0,
+    msg: "开始更新",
+    data: {
+      job_id: job.id,
+    },
+  });
 }

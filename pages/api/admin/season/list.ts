@@ -132,9 +132,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         not: MediaProfileSourceTypes.Other,
       },
     },
-    episodes: {
-      some: {},
-    },
+    AND: [
+      {
+        episodes: {
+          some: {},
+        },
+      },
+      {
+        parsed_episodes: {
+          some: {},
+        },
+      },
+    ],
     user_id: user.id,
   };
   if (queries.length !== 0) {
@@ -145,7 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
   }
   if (drive_ids) {
-    where.parsed_season = {
+    where.parsed_seasons = {
       every: {
         drive_id: {
           in: drive_ids.split("|"),
@@ -189,18 +198,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         include: {
           profile: true,
           _count: true,
-          parsed_episodes: {
-            select: {
-              file_id: true,
-              file_name: true,
-              size: true,
-            },
-          },
         },
         orderBy: {
           episode_number: "desc",
         },
       },
+      parsed_episodes: true,
     },
     orderBy: {
       profile: { air_date: "desc" },

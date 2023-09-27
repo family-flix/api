@@ -54,14 +54,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     distinct: ["season_id"],
     orderBy: [
       {
-        episode_number: "desc",
-      },
-      {
         season: {
           profile: {
             air_date: "desc",
           },
         },
+      },
+      {
+        episode_number: "desc",
       },
     ],
   });

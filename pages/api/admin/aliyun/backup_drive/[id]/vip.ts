@@ -1,5 +1,5 @@
 /**
- * @file 获取阿里云盘 相册文件列表
+ * @file 获取阿里云盘 vip 信息
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";

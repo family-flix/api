@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file 创建集合
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -29,5 +29,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!title) {
     return e(Result.Err("缺少 title"));
   }
-  res.status(200).json({ code: 0, msg: "", data: null });
+  res.status(200).json({ code: 0, msg: "创建成功", data: null });
 }

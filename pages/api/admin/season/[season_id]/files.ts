@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       _count: true,
       profile: true,
-      parsed_season: {
+      parsed_seasons: {
         include: {
           parsed_episodes: {
             include: {
@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       backdrop_path,
       original_language,
       first_air_date,
-      folders: season.parsed_season.map((folder) => {
+      folders: season.parsed_seasons.map((folder) => {
         const { id, file_name, parsed_episodes, season_number, drive } = folder;
         return {
           id,

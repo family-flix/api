@@ -8,14 +8,16 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { User } from "@/domains/user";
+import { to_number } from "@/utils/primitive";
+import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { query } = req;
   const {
     name,
-    page: page_str = "1",
-    page_size: page_size_str = "20",
+    page: page_str,
+    page_size: page_size_str,
   } = query as Partial<{
     page: string;
     page_size: string;
@@ -26,13 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
-
-  const where: NonNullable<Parameters<typeof store.prisma.parsed_movie.findMany>[number]>["where"] = {
+  const user = t_res.data;
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
+  const where: ModelQuery<"parsed_movie"> = {
     movie_id: null,
-    user_id,
+    user_id: user.id,
   };
   if (name) {
     where.OR = [

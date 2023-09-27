@@ -45,9 +45,9 @@ export class TMDBClient {
     });
   }
   /** 获取电视剧详情 */
-  async fetch_tv_profile(id: number) {
+  async fetch_tv_profile(id: number | string) {
     const { token, language } = this.options;
-    const result = await fetch_tv_profile(id, {
+    const result = await fetch_tv_profile(Number(id), {
       api_key: token,
       language,
     });
@@ -127,9 +127,9 @@ export class TMDBClient {
     });
   }
   /** 获取电视剧详情 */
-  async fetch_movie_profile(id: number) {
+  async fetch_movie_profile(id: number | string) {
     const { token, language } = this.options;
-    const result = await fetch_movie_profile(id, {
+    const result = await fetch_movie_profile(Number(id), {
       api_key: token,
       language,
     });

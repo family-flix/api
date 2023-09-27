@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   async function run() {
-    await refresher.refresh_movies();
+    await refresher.refresh_movie_list();
     job.finish();
   }
   run();

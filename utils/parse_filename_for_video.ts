@@ -40,10 +40,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("四魂のかけらを使え！")) {
+    if (!filename.includes("哈兰")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -691,7 +691,7 @@ export function parse_filename_for_video(
         /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！，：·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5）])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
-        cur_filename = cur_filename.replace(/^([0-9]{4}\.{1,})([\u4e00-\u9fa5]{1,})/, "$2.$1");
+        cur_filename = cur_filename.replace(/^([0-9]{4}\.{1,})([\u4e00-\u9fa5！，：·、■（）]{1,})/, "$2.$1");
         // 把 老友记S02 这种情况转换成 老友记.S02
         cur_filename = cur_filename.replace(/^([\u4e00-\u9fa5]{1,})([sS][0-9]{1,})/, "$1.$2");
         // 如果名字前面有很多冗余信息，前面就会出现 ..名称 这种情况，就需要手动处理掉
@@ -722,7 +722,7 @@ export function parse_filename_for_video(
     // 影片来源
     {
       key: k("source"),
-      regexp: /(HMAX){0,1}[wW][eE][bB](-HR){0,1}([Rr][i][p]){0,1}(-{0,1}[dD][lL]){0,1}/,
+      regexp: /(HMAX){0,1}[wW][eE][bB](-IMAX){0,1}(-HR){0,1}([Rr][i][p]){0,1}(-{0,1}[dD][lL]){0,1}/,
     },
     {
       key: k("source"),
@@ -765,7 +765,10 @@ export function parse_filename_for_video(
         cur_filename = cur_filename.replace(/([xX]26[45])\.(FLAC)/, "$1_$2");
       },
     },
-
+    // AVC 是编解码器，8位深度
+    {
+      regexp: /AVC-[0-9]{1,}Bit/,
+    },
     {
       // HEVC=H265? AVC=H264？
       regexp: /(HE|A)[VC]C(\.FLAC){0,1}/,
@@ -1270,6 +1273,6 @@ export function build_media_name(values: { name: string | null; original_name: s
     }
     return original_name;
   })().replace(/ /, "");
-  const name_with_pin_yin = [n, original_n].filter(Boolean).join(".");
+  const name_with_pin_yin = [n, original_n].filter(Boolean).join(".").replace(/:/, "：");
   return name_with_pin_yin;
 }

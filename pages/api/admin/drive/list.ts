@@ -10,27 +10,39 @@ import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { ModelQuery } from "@/domains/store/types";
 import { to_number } from "@/utils/primitive";
+import { parseJSONStr } from "@/utils";
+import { AliyunDriveProfile } from "@/domains/aliyundrive/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
     type,
+    name,
+    hidden: hidden_str,
     page: page_str,
     page_size: page_size_str,
-  } = req.query as { type: string; page: string; page_size: string };
+  } = req.query as { type: string; name: string; hidden: string; page: string; page_size: string };
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
+  const user = t_res.data;
+  const hidden = to_number(hidden_str, 1);
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
   const where: ModelQuery<"drive"> = {
-    user_id,
+    user_id: user.id,
   };
   if (type !== undefined) {
     where.type = to_number(type, 0);
+  }
+  if (name) {
+    where.name = {
+      contains: name,
+    };
+  }
+  if (hidden !== 0) {
   }
   const count = await store.prisma.drive.count({ where });
   const list = await store.prisma.drive.findMany({
@@ -42,6 +54,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   // const { list, page, page_size, total, no_more } = r.data;
+  const data = [];
+  for (let i = 0; i < list.length; i += 1) {
+    const drive = list[i];
+    const { name, avatar, total_size, used_size, root_folder_id, profile } = drive;
+    const r = await parseJSONStr<AliyunDriveProfile>(profile);
+    const payload = {
+      id: drive.id,
+      name,
+      avatar,
+      total_size,
+      used_size,
+      root_folder_id,
+    };
+    if (r.data) {
+      // @ts-ignore
+      payload.vip = r.data.vip;
+    }
+    data.push(payload);
+  }
   res.status(200).json({
     code: 0,
     msg: "",
@@ -50,17 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page_size,
       total: count,
       no_more: list.length + (page - 1) * page_size >= count,
-      list: list.map((drive) => {
-        const { id, name, avatar, total_size, used_size, root_folder_id } = drive;
-        return {
-          id,
-          name,
-          avatar,
-          total_size,
-          used_size,
-          root_folder_id,
-        };
-      }),
+      list: data,
     },
   });
 }

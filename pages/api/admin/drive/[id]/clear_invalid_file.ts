@@ -35,7 +35,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const job = job_res.data;
   async function run(id: string) {
-    await clear_expired_files_in_drive({ drive_id: id, user, store });
+    await clear_expired_files_in_drive({
+      drive_id: id,
+      user,
+      store,
+      on_print(node) {
+        job.output.write(node);
+      },
+    });
     job.finish();
   }
   run(id);

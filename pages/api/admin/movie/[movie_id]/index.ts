@@ -13,18 +13,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { movie_id } = req.query as Partial<{ movie_id: string }>;
-  if (!movie_id || movie_id === "undefined") {
-    return e(Result.Err("缺少电影 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const tv = await store.prisma.movie.findFirst({
+  const user = t_res.data;
+  if (!movie_id) {
+    return e(Result.Err("缺少电影 id"));
+  }
+  const movie = await store.prisma.movie.findFirst({
     where: {
       id: movie_id,
-      user_id,
+      user_id: user.id,
     },
     include: {
       profile: true,
@@ -35,12 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     },
   });
-  if (tv === null) {
+  if (movie === null) {
     return e("没有匹配的电影记录");
   }
-
   const data = (() => {
-    const { id, profile, parsed_movies } = tv;
+    const { id, profile, parsed_movies } = movie;
     const { name, original_name, overview, poster_path, backdrop_path, original_language } = profile;
     const sources = parsed_movies;
 

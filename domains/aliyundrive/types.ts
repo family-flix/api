@@ -32,6 +32,7 @@ export type PartialAliyunDriveFile = {
   type?: string;
   size?: number;
   content_hash?: string;
+  mime_type?: string;
   items?: PartialAliyunDriveFile[];
 };
 
@@ -74,7 +75,18 @@ export type AliyunDriveProfile = {
   device_id: string;
   user_id: string;
   app_id: string;
+  /** 如果是资源盘就有该字段 */
+  backup_drive_id?: string;
+  /** 如果是备份盘就有该字段 */
   resource_drive_id?: string;
+  vip?: {
+    /** 描述，如（超级会员） */
+    name: string;
+    /** 截止时间（秒数） */
+    expired_at: number;
+    /** 开始时间（秒数） */
+    started_at: number;
+  }[];
 };
 
-export type AliyunDriveClient = AliyunBackupDriveClient | AliyunResourceClient;
+export type AliyunDriveClient = AliyunBackupDriveClient;

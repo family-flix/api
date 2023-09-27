@@ -448,4 +448,14 @@ describe("提取视频信息", () => {
       episode: "E10",
     });
   });
+  test("2023.哈兰·科本的庇护所.8集全", () => {
+    const name = "2023.哈兰·科本的庇护所.8集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "哈兰·科本的庇护所",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

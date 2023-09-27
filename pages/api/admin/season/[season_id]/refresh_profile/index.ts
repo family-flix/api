@@ -1,5 +1,5 @@
 /**
- * @file 管理后台 刷新/绑定电视剧季详情
+ * @file 管理后台 刷新电视剧季详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -19,7 +19,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { season_id } = req.query as Partial<{ season_id: string }>;
-  const { tmdb_id } = req.body as Partial<{ tmdb_id: number }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -27,9 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const user = t_res.data;
   if (!season_id) {
     return e(Result.Err("缺少电视剧 id"));
-  }
-  if (!user.settings.tmdb_token) {
-    return e(Result.Err("缺少 TMDB_TOKEN"));
   }
   const season = await store.prisma.season.findFirst({
     where: {
@@ -43,6 +39,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           profile: true,
         },
       },
+      parsed_seasons: true,
+      parsed_episodes: true,
     },
   });
   if (season === null) {
@@ -63,6 +61,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user,
     store,
     assets: app.assets,
+    on_print(v) {
+      job.output.write(v);
+    },
   });
   if (searcher_res.error) {
     return e(searcher_res);
@@ -80,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     season: SeasonRecord & { profile: SeasonProfileRecord };
     tv: TVRecord & { profile: TVProfileRecord };
   }) {
-    const r2 = await refresher.refresh_season_profile(payload, tmdb_id ? { tmdb_id } : undefined);
+    const r2 = await refresher.refresh_season_profile(payload);
     // console.log("[API]admin/season/[season_id]/refresh_profile - after refresher.refresh_season_profile");
     if (r2.error) {
       job.output.write(
@@ -90,19 +91,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       );
       job.finish();
       return;
-    }
-    if (r2.data) {
-      const r3 = await refresher.refresh_episode_list(payload);
-      // console.log("[API]admin/season/[season_id]/refresh_profile - after refresher.refresh_episode_list");
-      if (r3.error) {
-        job.output.write(
-          new ArticleLineNode({
-            children: ["刷新剧集详情失败", r3.error.message].map((text) => new ArticleTextNode({ text })),
-          })
-        );
-        job.finish();
-        return;
-      }
     }
     // console.log("[API]admin/season/[season_id]/refresh_profile - before job.finish");
     job.finish();

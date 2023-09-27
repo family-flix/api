@@ -12,7 +12,7 @@ import { Folder } from "@/domains/folder";
 import { MediaSearcher } from "@/domains/searcher";
 import { EpisodeRecord, MovieRecord, SeasonRecord, TVRecord } from "@/domains/store/types";
 import {
-  ArticleCardNode,
+  Article,
   ArticleHeadNode,
   ArticleLineNode,
   ArticleListItemNode,
@@ -165,31 +165,23 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       this.on_error(on_error);
     }
   }
-  async run(files?: { name: string; type: string; file_id?: string }[], options: Partial<{ force: boolean }> = {}) {
+  async run(
+    files?: { name: string; type: string }[],
+    options: Partial<{ force: boolean; before_search?: () => void }> = {}
+  ) {
     const { drive, user, store } = this;
-    const { force = false } = options;
+    const { force = false, before_search } = options;
     const { client } = drive;
     if (!drive.has_root_folder()) {
       this.emit(
         Events.Print,
         new ArticleLineNode({
-          children: [
-            new ArticleCardNode({
-              value: {
-                type: "set_root_folder",
-                text: "未设置索引目录，请先设置索引目录",
-                name: this.drive.name,
-                drive_id: this.drive.id,
-              },
-            }),
-          ],
+          children: ["未设置索引目录，请先设置索引目录"].map((text) => new ArticleTextNode({ text })),
         })
       );
-      // log(`[${drive_id}]`, "未设置索引目录，中止索引");
       this.emit(Events.Error, new Error("未设置索引目录"));
       return Result.Err("请先设置索引目录");
     }
-    //     const { id: task_id } = add_async_task_res.data;
     const walker = new FolderWalker({
       filename_rules: this.user.get_filename_rules(),
       on_print: (v) => {
@@ -305,14 +297,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         }
         const sync_task = sync_task_res.data;
         if (sync_task) {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: [`[${name}]`, "已存在同名同步任务"].map((text) => {
-                return new ArticleTextNode({ text: String(text) });
-              }),
-            })
-          );
+          this.emit(Events.Print, Article.build_line([`[${name}]`, "已存在同名同步任务"]));
           return;
         }
         const save_record_res = await this.store.find_shared_file_save({
@@ -337,24 +322,10 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
           drive_id: drive.id,
         });
         if (r.error) {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: [`[${name}]`, "建立同步任务失败", r.error.message].map((text) => {
-                return new ArticleTextNode({ text: String(text) });
-              }),
-            })
-          );
+          this.emit(Events.Print, Article.build_line([`[${name}]`, "建立同步任务失败", r.error.message]));
           return;
         }
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [`[${name}]`, "建立同步任务成功"].map((text) => {
-              return new ArticleTextNode({ text: String(text) });
-            }),
-          })
-        );
+        this.emit(Events.Print, Article.build_line([`[${name}]`, "建立同步任务成功"]));
       })();
       await (async () => {
         const existing = await store.prisma.file.findFirst({
@@ -382,14 +353,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
             user_id: user.id,
           });
           if (r.error) {
-            this.emit(
-              Events.Print,
-              new ArticleLineNode({
-                children: [`[${name}]`, "新增文件失败", r.error.message].map((text) => {
-                  return new ArticleTextNode({ text: String(text) });
-                }),
-              })
-            );
+            this.emit(Events.Print, Article.build_line([`[${name}]`, "新增文件失败", r.error.message]));
           }
           return;
         }
@@ -398,14 +362,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         if (diff === null) {
           return;
         }
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [`[${name}]`, "文件已存在且有变更字段，更新"].map((text) => {
-              return new ArticleTextNode({ text: String(text) });
-            }),
-          })
-        );
+        this.emit(Events.Print, Article.build_line([`[${name}]`, "文件已存在且有变更字段，更新"]));
         await store.prisma.file.update({
           where: {
             id: existing.id,
@@ -449,23 +406,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       const k = [parsed.tv.name, parsed.tv.original_name].join("/");
       if (!added_parsed_tv_list[k]) {
         added_parsed_tv_list[k] = parsed.tv;
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: ["解析出电视剧 ", tv.name || tv.original_name].map((text) => {
-              return new ArticleTextNode({ text });
-            }),
-          })
-        );
+        this.emit(Events.Print, Article.build_line(["解析出电视剧 ", tv.name || tv.original_name]));
       }
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["解析出剧集 ", tv.name || tv.original_name, " ", episode.episode].map((text) => {
-            return new ArticleTextNode({ text });
-          }),
-        })
-      );
+      this.emit(Events.Print, Article.build_line(["解析出剧集 ", tv.name || tv.original_name, " ", episode.episode]));
       await processor.run();
       return;
     };
@@ -483,14 +426,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       if (!added_parsed_movie_list[k]) {
         added_parsed_movie_list[k] = parsed;
       }
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["解析出电影 ", movie.name || movie.original_name || ""].map((text) => {
-            return new ArticleTextNode({ text });
-          }),
-        })
-      );
+      this.emit(Events.Print, Article.build_line(["解析出电影 ", movie.name || movie.original_name || ""]));
       await processor.run();
       return;
     };
@@ -503,14 +439,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     if (!direct_search) {
       const r = await folder.profile();
       if (r.error) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: ["获取索引根目录失败", r.error.message].map((text) => {
-              return new ArticleTextNode({ text });
-            }),
-          })
-        );
+        this.emit(Events.Print, Article.build_line(["获取索引根目录失败", r.error.message]));
         this.emit(Events.Error, new Error("获取索引根目录失败"));
         // console.log("[DOMAIN]analysis/index - after 获取索引根目录失败");
         return Result.Err(r.error);
@@ -520,35 +449,15 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       await walker.run(folder);
       // console.log("[DOMAIN]analysis/index - after walker.detect");
     }
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [`[${drive.name}]`, "云盘文件查找完成"].map((text) => {
-          return new ArticleTextNode({ text });
-        }),
-      })
-    );
+    this.emit(Events.Print, Article.build_line([`[${drive.name}]`, "云盘文件查找完成"]));
     (() => {
       if (this.episode_count + this.movie_count === 0) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [`[${drive.name}]`, "遍历云盘没有查找到新增影视剧"].map((text) => {
-              return new ArticleTextNode({ text });
-            }),
-          })
-        );
+        this.emit(Events.Print, Article.build_line([`[${drive.name}]`, "遍历云盘没有查找到新增影视剧"]));
         return;
       }
       this.emit(
         Events.Print,
-        new ArticleLineNode({
-          children: [`[${drive.name}]`, "共找到", this.episode_count, "个剧集，", this.movie_count, "个电影"].map(
-            (text) => {
-              return new ArticleTextNode({ text: String(text) });
-            }
-          ),
-        })
+        Article.build_line([`[${drive.name}]`, "共找到", this.episode_count, "个剧集，", this.movie_count, "个电影"])
       );
     })();
     this.emit(
@@ -586,14 +495,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       },
     });
     if (r2.error) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [`[${drive.name}]`, "搜索剧集海报等信息失败", r2.error.message].map((text) => {
-            return new ArticleTextNode({ text });
-          }),
-        })
-      );
+      this.emit(Events.Print, Article.build_line([`[${drive.name}]`, "搜索剧集海报等信息失败", r2.error.message]));
       this.emit(Events.Error, r2.error);
       return Result.Err(r2.error);
     }
@@ -601,14 +503,22 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     const files_prepare_search = (() => {
       const names = Object.values(added_parsed_movie_list)
         .concat(Object.values(added_parsed_tv_list))
-        .map(({ name }) => ({ name }));
+        .map(({ name }) => ({ name }))
+        .filter(({ name }) => !!name);
+      const original_names = Object.values(added_parsed_movie_list)
+        .concat(Object.values(added_parsed_tv_list))
+        .map(({ original_name }) => ({ name: original_name }))
+        .filter(({ name }) => !!name);
       const extra_names = this.extra_scope
         ? this.extra_scope.map((n) => {
             return { name: n };
           })
         : [];
-      return names.concat(extra_names);
+      return [...names, ...original_names, ...extra_names];
     })();
+    if (before_search) {
+      await before_search();
+    }
     // console.log("[DOMAIN]analysis/index - before searcher.run", files_prepare_search);
     await searcher.run(files_prepare_search);
     // console.log("[DOMAIN]analysis/index - after searcher.run");

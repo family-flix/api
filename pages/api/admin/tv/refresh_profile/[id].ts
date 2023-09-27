@@ -71,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   async function run(tv: TVRecord & { profile: TVProfileRecord }) {
-    const r = await refresher.refresh_tv_profile(tv, { tmdb_id });
+    const r = await refresher.change_tv_profile(tv, { unique_id: tmdb_id });
     if (r.error) {
       job.throw(r.error);
       return;

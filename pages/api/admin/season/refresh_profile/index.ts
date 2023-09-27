@@ -12,6 +12,7 @@ import { ProfileRefresh } from "@/domains/profile_refresh";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
+import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -53,7 +54,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   async function run() {
-    await refresher.refresh_season_list();
+    await refresher.refresh_season_list({
+      async after(payload) {
+        refresher.refresh_episode_list(payload);
+        // const { season, tv } = payload;
+        // const episodes = await store.prisma.episode.findMany({
+        //   where: {
+        //     season_id: season.id,
+        //     user_id: user.id,
+        //   },
+        //   include: {
+        //     profile: true,
+        //   },
+        // });
+        // for (let i = 0; i < episodes.length; i += 1) {
+        //   await (async () => {
+        //     const episode = episodes[i];
+        //     const episode_profile_res = await refresher.client.fetch_episode_profile({
+        //       tv_id: Number(tv.profile.unique_id),
+        //       season_number: season.season_number,
+        //       episode_number: episode.episode_number,
+        //     });
+        //     if (episode_profile_res.error) {
+        //       return;
+        //     }
+        //     const profile = episode_profile_res.data;
+        //     job.output.write(
+        //       new ArticleLineNode({
+        //         children: ["刷新剧集", tv.profile.name, season.season_text, episode.episode_text].map(
+        //           (text) => new ArticleTextNode({ text: String(text) })
+        //         ),
+        //       })
+        //     );
+        //     await refresher.refresh_episode_profile(episode, profile);
+        //   })();
+        // }
+      },
+    });
     job.finish();
   }
   run();

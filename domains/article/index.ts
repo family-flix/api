@@ -19,6 +19,16 @@ type ArticleProps = {
 };
 export class Article extends BaseDomain<TheTypesOfEvents> {
   static async New() {}
+  static build_line(texts: unknown[]) {
+    return new ArticleLineNode({
+      children: texts.map(
+        (text) =>
+          new ArticleTextNode({
+            text: String(text),
+          })
+      ),
+    });
+  }
 
   lines: (ArticleLineNode | ArticleSectionNode)[] = [];
 
@@ -35,6 +45,9 @@ export class Article extends BaseDomain<TheTypesOfEvents> {
     this.lines.push(text);
     this.emit(Events.Write, text);
     return text;
+  }
+  write_line(texts: unknown[]) {
+    this.write(Article.build_line(texts));
   }
   clear() {
     this.lines = [];

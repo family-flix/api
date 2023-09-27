@@ -125,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     })[];
   }) {
     const r = await archive_season_files({
-      season_profile,
+      profile: season_profile,
       files: all_parsed_episodes_of_the_season,
       job,
       drive,

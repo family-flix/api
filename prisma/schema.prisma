@@ -26,7 +26,9 @@ model drive {
         used_size        Float?    @default(0)
         // 是否禁用
         invalid          Int?      @default(0)
-        // 最近一次索引该网盘的时间
+        hidden           Int?      @default(0)
+        order            Int?      @default(0)
+        // 最近一次索引该云盘的时间
         latest_analysis  DateTime?
         // 网盘用于存放影视剧的目录
         root_folder_name String?
@@ -280,10 +282,12 @@ model parsed_episode {
         can_search     Int?    @default(1)
         md5            String?
 
+        season_id        String?
+        season           season?       @relation(fields: [season_id], references: [id])
         episode_id       String?
         episode          episode?      @relation(fields: [episode_id], references: [id])
         parsed_tv_id     String
-        parsed_tv        parsed_tv     @relation(fields: [parsed_tv_id], references: [id], onDelete: Cascade)
+        parsed_tv        parsed_tv     @relation(fields: [parsed_tv_id], references: [id])
         parsed_season_id String
         parsed_season    parsed_season @relation(fields: [parsed_season_id], references: [id])
         drive_id         String
@@ -371,11 +375,12 @@ model season {
         user_id       String
         user          user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        parsed_season  parsed_season[]
-        play_histories play_history[]
-        episodes       episode[]
-        reports        report[]
-        sync_tasks     bind_for_parsed_tv[]
+        parsed_seasons  parsed_season[]
+        parsed_episodes parsed_episode[]
+        play_histories  play_history[]
+        episodes        episode[]
+        reports         report[]
+        sync_tasks      bind_for_parsed_tv[]
 
         @@map("Season")
 }
@@ -411,13 +416,12 @@ model movie {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        profile_id String
-        profile    movie_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
-
+        profile_id    String
+        profile       movie_profile @relation(fields: [profile_id], references: [id])
         user_id       String
-        user          user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user          user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
         collection_id String?
-        collection    collection? @relation(fields: [collection_id], references: [id])
+        collection    collection?   @relation(fields: [collection_id], references: [id])
 
         play_histories play_history[]
         parsed_movies  parsed_movie[]
@@ -437,6 +441,7 @@ model collection {
         type   Int     @default(0)
         rules  String?
         sort   Int     @default(0)
+        hidden Int     @default(0)
         // 样式配置
         styles String?
 

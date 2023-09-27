@@ -440,6 +440,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       type: string;
       size: number;
       content_hash: string;
+      mime_type: string;
       /** 缩略图 */
       thumbnail: string;
     }>(API_HOST + "/v2/file/get", {
@@ -837,6 +838,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     const share_id = matched_share_id[1];
     if (this.share_token && force === false) {
+      // 这是什么逻辑？忘记了
       return Result.Ok({
         share_id,
         share_token: this.share_token,
@@ -1535,6 +1537,10 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(null);
   }
+  /**
+   * 移动文件夹到资源盘
+   * 如果文件夹内的文件，存在 md5 相同的文件，只会保留一个
+   */
   async move_file_to_resource_drive(values: { file_ids: string[] }) {
     const { file_ids } = values;
     await this.ensure_initialized();
@@ -1871,7 +1877,10 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(next_profile);
   }
   async fetch_vip_info() {
-    await this.ensure_initialized();
+    const e = await this.ensure_initialized();
+    if (e.error) {
+      return Result.Err(e.error.message);
+    }
     const url = "/business/v1.0/users/vip/info";
     const r = await this.request.post<{
       identity: string;
@@ -1898,8 +1907,8 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
         const { name, expire, promotedAt } = vip;
         return {
           name,
-          expired_at: dayjs(expire * 1000).format("YYYY-MM-DD HH:mm:ss"),
-          started_at: dayjs(promotedAt * 1000).format("YYYY-MM-DD HH:mm:ss"),
+          expired_at: expire,
+          started_at: promotedAt,
         };
       }),
     });

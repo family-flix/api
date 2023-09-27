@@ -1,3 +1,6 @@
+/**
+ * @file 影视剧详情更新、变更
+ */
 import dayjs from "dayjs";
 import { Handler } from "mitt";
 
@@ -15,13 +18,12 @@ import {
   TVRecord,
 } from "@/domains/store/types";
 import { TMDBClient } from "@/domains/tmdb";
-import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
+import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
 import { User } from "@/domains/user";
 import { MediaSearcher } from "@/domains/searcher";
-import { EpisodeProfileFromTMDB, PartialSeasonFromTMDB, TVProfileFromTMDB } from "@/domains/tmdb/services";
+import { EpisodeProfileFromTMDB } from "@/domains/tmdb/services";
 import { walk_model_with_cursor } from "@/domains/store/utils";
-import { season_to_num } from "@/utils";
-import { Result, Unpacked } from "@/types";
+import { Result } from "@/types";
 import { MediaProfileSourceTypes } from "@/constants";
 
 import {
@@ -47,6 +49,8 @@ type ProfileRefreshProps = {
   on_finish?: () => void;
 };
 export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
+  static New() {}
+
   user: ProfileRefreshProps["user"];
   searcher: ProfileRefreshProps["searcher"];
   client: TMDBClient;
@@ -70,13 +74,8 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       this.on_finish(on_finish);
     }
   }
-  /**
-   * 读取数据库所有电视剧、季、电影详情并和 TMDB 比较是否有更新，如果有就更新数据库记录
-   */
+  /** 读取数据库所有电视剧和三方平台比较是否有更新，如果有就更新数据库记录 */
   async refresh_tv_list() {
-    const page_size = 20;
-    let page = 1;
-    let no_more = false;
     const where: ModelQuery<"season"> = {
       OR: [
         {
@@ -94,295 +93,41 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       ],
       user_id: this.user.id,
     };
-    const count = await this.store.prisma.season.count({
-      where,
-    });
-    do {
-      const list = await this.store.prisma.season.findMany({
-        where,
-        include: {
-          profile: true,
-          tv: {
-            include: {
-              profile: true,
+    const count = await this.store.prisma.tv.count({ where });
+    this.emit(Events.Print, Article.build_line(["共", count, "个电视剧"]));
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.tv.findMany({
+          where,
+          include: {
+            profile: true,
+          },
+          orderBy: {
+            profile: {
+              first_air_date: "desc",
             },
           },
-        },
-        skip: (page - 1) * page_size,
-        take: page_size,
-        orderBy: {
-          profile: {
-            air_date: "desc",
-          },
-        },
-      });
-      no_more = list.length + (page - 1) * page_size >= count;
-      page += 1;
-      for (let i = 0; i < list.length; i += 1) {
-        await (async () => {
-          const season = list[i];
-          if (
-            season.tv.profile.source &&
-            [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual].includes(season.tv.profile.source)
-          ) {
-            this.emit(
-              Events.Print,
-              new ArticleLineNode({
-                children: [
-                  season.tv.profile.name || season.tv.profile.original_name || "unknown",
-                  "已手动修改过详情，直接跳过",
-                ].map((text) => new ArticleTextNode({ text })),
-              })
-            );
-            return;
-          }
-          await this.refresh_tv_profile({
-            id: season.tv.id,
-            profile: season.tv.profile,
-          });
-        })();
-      }
-    } while (no_more === false);
+          ...extra,
+        });
+      },
+      handler: async (tv) => {
+        if (
+          tv.profile.source &&
+          [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual].includes(tv.profile.source)
+        ) {
+          this.emit(
+            Events.Print,
+            Article.build_line([tv.profile.name || tv.profile.original_name || "unknown", "已手动修改过详情，直接跳过"])
+          );
+          return;
+        }
+        // await this.refresh_season_profile({
+        //   id: season.tv.id,
+        //   profile: season.tv.profile,
+        // });
+      },
+    });
     return Result.Ok(null);
-  }
-  /**
-   * 根据数据库中的「电视剧详情」记录，刷新。如果存在新的 tmdb_id，使用该 tmdb 记录替换已存在的
-   */
-  async refresh_tv_profile(
-    payload: {
-      id: string;
-      profile: TVProfileRecord;
-    },
-    extra?: { tmdb_id: number }
-  ) {
-    const { name, original_name, unique_id } = payload.profile;
-    const correct_tmdb_id = extra ? extra.tmdb_id : Number(unique_id);
-    const prefix = `「${name || original_name}」`;
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [prefix, "刷新电视剧详情"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    const r1 = await this.client.fetch_tv_profile(correct_tmdb_id);
-    if (r1.error) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [prefix, "获取电视剧详情失败，因为", r1.error.message].map((text) => new ArticleTextNode({ text })),
-        })
-      );
-      return Result.Err(r1.error);
-    }
-    const normalized_profile = await this.searcher.normalize_tv_profile(r1.data);
-    // console.log("[DOMAIN]profile_refresh - before check_tv_profile_need_refresh");
-    // console.log(payload.profile);
-    // console.log(normalized_profile);
-    const diff = check_tv_profile_need_refresh(payload.profile, normalized_profile);
-    if (!diff) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [prefix, "内容没有变化，直接跳过"].map((text) => {
-            return new ArticleTextNode({ text: text! });
-          }),
-        })
-      );
-      return Result.Ok({
-        ...normalized_profile,
-        seasons: r1.data.seasons,
-      });
-    }
-    if (!diff.unique_id) {
-      // 仅仅更新字段，不更换内容
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleLineNode({
-              children: [prefix, "需要更新"].map((text) => {
-                return new ArticleTextNode({ text: text! });
-              }),
-            }),
-            new ArticleLineNode({
-              children: [JSON.stringify(diff)].map((text) => {
-                return new ArticleTextNode({ text: text! });
-              }),
-            }),
-            // ...Object.keys(diff).map((k) => {
-            //   // @ts-ignore
-            //   const prev_text = payload.profile[k];
-            //   // @ts-ignore
-            //   const latest_text = diff[k];
-            //   return new ArticleLineNode({
-            //     children: [`${k} 从 ${prev_text} 更新为 ${latest_text}`].map((text) => {
-            //       return new ArticleTextNode({ text });
-            //     }),
-            //   });
-            // }),
-          ],
-        })
-      );
-      const r = await this.store.update_tv_profile(payload.profile.id, diff);
-      if (r.error) {
-        this.emit(
-          Events.Print,
-          new ArticleSectionNode({
-            children: [
-              new ArticleLineNode({
-                children: ["更新失败，因为 ", r.error.message].map((text) => {
-                  return new ArticleTextNode({ text: text! });
-                }),
-              }),
-            ],
-          })
-        );
-      }
-      return Result.Ok({
-        ...normalized_profile,
-        seasons: r1.data.seasons,
-      });
-    }
-    // 详情改变了
-    this.emit(
-      Events.Print,
-      new ArticleSectionNode({
-        children: [
-          new ArticleLineNode({
-            children: [prefix, "更改为另一个详情"].map((text) => {
-              return new ArticleTextNode({ text: text! });
-            }),
-          }),
-          new ArticleLineNode({
-            children: [prefix, "新的详情是 ", normalized_profile.name].map((text) => {
-              return new ArticleTextNode({ text: text! });
-            }),
-          }),
-        ],
-      })
-    );
-    const created_res = await (async () => {
-      const r1 = await this.store.find_tv_profile({
-        unique_id: normalized_profile.unique_id,
-      });
-      if (r1.data) {
-        return Result.Ok(r1.data);
-      }
-      const r2 = await this.store.add_tv_profile({
-        ...normalized_profile,
-        source: 1,
-        sources: JSON.stringify({ tmdb_id: correct_tmdb_id }),
-      });
-      if (r2.error) {
-        return Result.Err(r2.error.message);
-      }
-      return Result.Ok(r2.data);
-    })();
-    if (created_res.error) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleLineNode({
-              children: [prefix, "获取详情失败", created_res.error.message].map((text) => {
-                return new ArticleTextNode({ text: text! });
-              }),
-            }),
-          ],
-        })
-      );
-      return Result.Err(created_res.error.message);
-    }
-    const base_tv = await this.store.prisma.tv.findFirst({
-      where: {
-        profile_id: created_res.data.id,
-      },
-    });
-    if (!base_tv) {
-      new ArticleSectionNode({
-        children: [
-          new ArticleLineNode({
-            children: [prefix, "没有同名电视剧，直接改变关联详情"].map((text) => {
-              return new ArticleTextNode({ text: text! });
-            }),
-          }),
-        ],
-      });
-      await this.store.prisma.tv.update({
-        where: {
-          id: payload.id,
-        },
-        data: {
-          profile_id: created_res.data.id,
-        },
-      });
-      return Result.Ok({
-        ...normalized_profile,
-        unique_id: created_res.data.unique_id,
-        seasons: r1.data.seasons,
-      });
-    }
-    this.emit(
-      Events.Print,
-      new ArticleSectionNode({
-        children: [
-          new ArticleLineNode({
-            children: [prefix, "已存在同名电视剧，清除关联的解析结果，不影响当前电视剧"].map((text) => {
-              return new ArticleTextNode({ text: text! });
-            }),
-          }),
-        ],
-      })
-    );
-    // 将 A 的所有季、剧集都归属到 B（合并两个季的所有
-    // 如果不这样做，也和上面一样直接更新，就会出现两个相同的 tv
-    await this.store.prisma.parsed_episode.updateMany({
-      where: {
-        episode: {
-          tv_id: payload.id,
-        },
-        user_id: this.user.id,
-      },
-      data: {
-        episode_id: null,
-      },
-    });
-    await this.store.prisma.parsed_season.updateMany({
-      where: {
-        season: {
-          tv_id: payload.id,
-        },
-        user_id: this.user.id,
-      },
-      data: {
-        season_id: null,
-      },
-    });
-    const parsed_tvs = await this.store.prisma.parsed_tv.findMany({
-      where: {
-        tv_id: payload.id,
-        user_id: this.user.id,
-      },
-    });
-    await this.store.prisma.parsed_tv.updateMany({
-      where: {
-        tv_id: payload.id,
-        user_id: this.user.id,
-      },
-      data: {
-        tv_id: base_tv.id,
-      },
-    });
-    return Result.Ok({
-      ...normalized_profile,
-      unique_id: created_res.data.unique_id,
-      seasons: r1.data.seasons,
-      scopes: parsed_tvs.map((tv) => {
-        return {
-          name: tv.name || tv.original_name,
-        };
-      }),
-    });
   }
   /** 刷新多个季详情 */
   async refresh_season_list(
@@ -413,14 +158,9 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       user_id: this.user.id,
     };
     const count = await this.store.prisma.season.count({ where });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["共", String(count), "个季需要刷新"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    await walk_model_with_cursor(
-      (extra) => {
+    this.emit(Events.Print, Article.build_line(["共", count, "个季"]));
+    await walk_model_with_cursor({
+      fn: (extra) => {
         return this.store.prisma.season.findMany({
           where,
           include: {
@@ -434,178 +174,28 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
           ...extra,
         });
       },
-      {
-        page_size: 20,
-        handler: async (season, i) => {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: [`第${i + 1}个`].map((text) => new ArticleTextNode({ text })),
-            })
-          );
-          await this.refresh_season_profile({
+      page_size: 20,
+      handler: async (season, i) => {
+        this.emit(Events.Print, Article.build_line([`第${i + 1}个`]));
+        const r = await this.refresh_season_profile({
+          season,
+          tv: season.tv,
+        });
+        if (r.error) {
+          this.emit(Events.Print, Article.build_line(["刷新失败", r.error.message]));
+          return;
+        }
+        if (after) {
+          await after({
             season,
             tv: season.tv,
           });
-          if (after) {
-            await after({
-              season,
-              tv: season.tv,
-            });
-          }
-        },
-      }
-    );
-    return Result.Ok(null);
-  }
-  async refresh_season_profile(
-    payload: {
-      season: SeasonRecord & {
-        profile: SeasonProfileRecord;
-      };
-      tv: TVRecord & { profile: TVProfileRecord };
-    },
-    extra?: { tmdb_id: number }
-  ) {
-    const { season, tv } = payload;
-    const prefix = `「${[tv.profile.name, season.season_text].join("/")}」`;
-    const r1 = await this.refresh_tv_profile({ id: tv.id, profile: tv.profile }, extra);
-    if (r1.error) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [prefix, "刷新电视剧详情失败", r1.error.message].map((text) => new ArticleTextNode({ text })),
-        })
-      );
-      return Result.Err(r1.error.message);
-    }
-    if (r1.data.unique_id === tv.profile.unique_id) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [prefix, "电视剧详情没有变化，继续刷新季详情"].map((text) => new ArticleTextNode({ text })),
-        })
-      );
-      const new_season_profile = r1.data.seasons.find((s) => {
-        return s.season_number === season.season_number;
-      });
-      if (!new_season_profile) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [prefix, "没有匹配的季详情"].map((text) => new ArticleTextNode({ text })),
-          })
-        );
-        return Result.Err("没有匹配的季详情");
-      }
-      const normalized_profile = await this.searcher.normalize_season_profile(new_season_profile);
-      const diff = check_season_profile_need_refresh(season.profile, normalized_profile);
-      if (!diff) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [prefix, "季没有变更内容，跳过"].map((text) => new ArticleTextNode({ text })),
-          })
-        );
-        return Result.Ok(null);
-      }
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleLineNode({
-              children: [prefix, "需要更新"].map((text) => {
-                return new ArticleTextNode({ text: text! });
-              }),
-            }),
-            ...Object.keys(diff).map((k) => {
-              // @ts-ignore
-              const prev_text = season.profile[k];
-              // @ts-ignore
-              const latest_text = diff[k];
-              return new ArticleLineNode({
-                children: [`${k} 从 ${prev_text} 更新为 ${latest_text}`].map((text) => {
-                  return new ArticleTextNode({ text });
-                }),
-              });
-            }),
-          ],
-        })
-      );
-      if (!diff.unique_id) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [prefix, "详情不变，只做更新操作"].map((text) => new ArticleTextNode({ text })),
-          })
-        );
-        await this.store.prisma.season_profile.update({
-          where: {
-            id: season.profile.id,
-          },
-          data: {
-            updated: dayjs().toISOString(),
-            ...diff,
-          },
-        });
-        return Result.Ok(normalized_profile);
-      }
-      const created_res = await (async () => {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [prefix, "详情变更成另一个电视剧了"].map((text) => new ArticleTextNode({ text })),
-          })
-        );
-        const existing_res = await this.store.find_season_profile({
-          unique_id: normalized_profile.unique_id,
-        });
-        if (existing_res.data) {
-          return Result.Ok(existing_res.data);
         }
-        return this.store.add_season_profile(normalized_profile);
-      })();
-      if (created_res.data) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [prefix, "绑定新的电视剧详情"].map((text) => new ArticleTextNode({ text })),
-          })
-        );
-        await this.store.prisma.season.update({
-          where: {
-            id: season.id,
-          },
-          data: {
-            updated: dayjs().toISOString(),
-            profile_id: created_res.data.id,
-          },
-        });
-      }
-      return Result.Ok(normalized_profile);
-    }
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [prefix, "电视剧详情变更了，重新搜索季详情"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    const scopes: { name: string }[] =
-      // @ts-ignore
-      r1.data.scopes ||
-      [r1.data.name, r1.data.original_name].filter(Boolean).map((name) => {
-        return { name } as { name: string };
-      });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [prefix, ...scopes.map((s) => s.name)].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    await this.searcher.process_parsed_season_list(scopes);
-    await this.searcher.process_parsed_episode_list(scopes);
+      },
+    });
     return Result.Ok(null);
   }
+  /** 刷新多个剧集记录 */
   async refresh_episode_list(payload: {
     season: SeasonRecord & { profile: SeasonProfileRecord };
     tv: TVRecord & { profile: TVProfileRecord };
@@ -616,144 +206,50 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       season_number: season.season_number,
     });
     if (r.error) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["获取季详情失败", r.error.message].map((text) => new ArticleTextNode({ text })),
-        })
-      );
+      this.emit(Events.Print, Article.build_line(["获取季详情失败", r.error.message]));
       return Result.Err(r.error.message);
     }
     const new_season_profile = r.data;
-    const episodes = await this.store.prisma.episode.findMany({
-      where: {
-        season: {
-          id: season.id,
-        },
-        user_id: this.user.id,
+    const where: ModelQuery<"episode"> = {
+      season: {
+        id: season.id,
       },
-      include: {
-        profile: true,
+      user_id: this.user.id,
+    };
+    const count = await this.store.prisma.episode.count({ where });
+    this.emit(Events.Print, Article.build_line(["共", count, "个剧集"]));
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.episode.findMany({
+          where,
+          include: {
+            profile: true,
+          },
+          ...extra,
+        });
       },
-    });
-    for (let j = 0; j < episodes.length; j += 1) {
-      await (async () => {
-        const episode = episodes[j];
+      handler: async (episode, index) => {
+        this.emit(Events.Print, Article.build_line(["第", index + 1, "个"]));
         const prefix = `「${tv.profile.name}/${season.season_text}/${episode.episode_text}」`;
         if (!episode.episode_number) {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: [prefix, "没有正确的剧集数"].map((text) => new ArticleTextNode({ text })),
-            })
-          );
+          this.emit(Events.Print, Article.build_line([prefix, "没有正确的剧集数"]));
           return;
         }
         const matched = new_season_profile.episodes.find((e) => {
           return e.episode_number === episode.episode_number;
         });
         if (!matched) {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: [prefix, "没有匹配的剧集详情"].map((text) => new ArticleTextNode({ text })),
-            })
-          );
+          this.emit(Events.Print, Article.build_line([prefix, "没有匹配的剧集详情"]));
           return;
         }
+        this.emit(Events.Print, Article.build_line([prefix, "刷新剧集", episode.episode_text]));
         await this.refresh_episode_profile(episode, matched);
-      })();
-    }
+      },
+    });
     return Result.Ok(null);
   }
-  async refresh_episode_profile(
-    episode: EpisodeRecord & {
-      profile: EpisodeProfileRecord;
-    },
-    new_profile: EpisodeProfileFromTMDB
-  ) {
-    const { name } = episode.profile;
-    const correct_tmdb_id = new_profile.id;
-    const prefix = [name, episode.episode_number].join("-");
-    const normalized_profile = await this.searcher.normalize_episode_profile(new_profile);
-    const diff = check_episode_profile_need_refresh(episode.profile, normalized_profile);
-    if (!diff) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [prefix, "没有变更内容"].map((text) => new ArticleTextNode({ text })),
-        })
-      );
-      return Result.Ok(null);
-    }
-    this.emit(
-      Events.Print,
-      new ArticleSectionNode({
-        children: [
-          new ArticleLineNode({
-            children: [prefix, "需要更新"].map((text) => {
-              return new ArticleTextNode({ text: text! });
-            }),
-          }),
-          ...Object.keys(diff).map((k) => {
-            // @ts-ignore
-            const prev_text = episode.profile[k];
-            // @ts-ignore
-            const latest_text = diff[k];
-            return new ArticleLineNode({
-              children: [`${k} 从 ${prev_text} 更新为 ${latest_text}`].map((text) => {
-                return new ArticleTextNode({ text });
-              }),
-            });
-          }),
-        ],
-      })
-    );
-    if (!diff.unique_id) {
-      await this.store.prisma.episode_profile.update({
-        where: {
-          id: episode.profile.id,
-        },
-        data: {
-          updated: dayjs().toISOString(),
-          ...diff,
-        },
-      });
-      return Result.Ok(normalized_profile);
-    }
-    const created_res = await (async () => {
-      const existing_res = await this.store.find_episode_profile({
-        unique_id: normalized_profile.unique_id,
-      });
-      if (existing_res.data) {
-        return Result.Ok(existing_res.data);
-      }
-      return this.store.add_episode_profile({
-        ...normalized_profile,
-        source: 1,
-        sources: JSON.stringify({ tmdb_id: correct_tmdb_id }),
-      });
-    })();
-    if (created_res.data) {
-      await this.store.prisma.episode.update({
-        where: {
-          id: episode.id,
-        },
-        data: {
-          updated: dayjs().toISOString(),
-          profile_id: created_res.data.id,
-        },
-      });
-    }
-    return Result.Ok(normalized_profile);
-  }
-  /**
-   * 读取数据库所有电视剧、季、电影详情并和 TMDB 比较是否有更新，如果有就更新数据库记录
-   */
-  async refresh_movies() {
-    const page_size = 20;
-    let page = 1;
-    let no_more = false;
+  /** 读取数据库所有电影，刷新详情 */
+  async refresh_movie_list() {
     const where: ModelQuery<"movie"> = {
       OR: [
         {
@@ -774,119 +270,484 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const count = await this.store.prisma.movie.count({
       where,
     });
-    do {
-      const list = await this.store.prisma.movie.findMany({
-        where,
-        include: {
-          profile: true,
-        },
-        skip: (page - 1) * page_size,
-        take: page_size,
-        orderBy: {
-          profile: {
-            air_date: "desc",
+    this.emit(Events.Print, Article.build_line(["共", count, "个电影"]));
+    walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.movie.findMany({
+          where,
+          include: {
+            profile: true,
           },
-        },
-      });
-      no_more = list.length + (page - 1) * page_size >= count;
-      page += 1;
-      for (let i = 0; i < list.length; i += 1) {
-        const movie = list[i];
+          orderBy: {
+            profile: {
+              air_date: "desc",
+            },
+          },
+          ...extra,
+        });
+      },
+      handler: async (movie, index) => {
+        this.emit(Events.Print, Article.build_line(["第", index + 1, "个"]));
         await this.refresh_movie_profile(movie);
-      }
-    } while (no_more === false);
+      },
+    });
     return Result.Ok(null);
+  }
+  /** 从三方获取最新的电视剧季详情，并更新本地记录 */
+  async refresh_tv_profile(payload: { id: string; profile: TVProfileRecord }) {
+    const { name, original_name, unique_id } = payload.profile;
+    const correct_unique_id = Number(unique_id);
+    const prefix = `「${name || original_name}」`;
+    this.emit(Events.Print, Article.build_line([prefix, "刷新电视剧详情"]));
+    const r1 = await this.client.fetch_tv_profile(correct_unique_id);
+    if (r1.error) {
+      this.emit(Events.Print, Article.build_line([prefix, "获取电视剧详情失败，因为", r1.error.message]));
+      return Result.Err(r1.error);
+    }
+    const normalized_profile = await this.searcher.normalize_tv_profile(r1.data);
+    const diff = check_tv_profile_need_refresh(payload.profile, normalized_profile);
+    if (!diff) {
+      this.emit(Events.Print, Article.build_line([prefix, "内容没有变化，直接跳过"]));
+      return Result.Ok({
+        ...normalized_profile,
+        seasons: r1.data.seasons,
+      });
+    }
+    if (diff.unique_id) {
+      return Result.Err("更换了详情，异常情况");
+    }
+    this.emit(Events.Print, Article.build_line([prefix, "需要更新"]));
+    this.emit(Events.Print, Article.build_line([JSON.stringify(diff)]));
+    const r = await this.store.update_tv_profile(payload.profile.id, diff);
+    if (r.error) {
+      this.emit(Events.Print, Article.build_line(["更新失败，因为 ", r.error.message]));
+    }
+    return Result.Ok({
+      ...normalized_profile,
+      seasons: r1.data.seasons,
+    });
+  }
+  async refresh_season_profile(payload: {
+    season: SeasonRecord & {
+      profile: SeasonProfileRecord;
+    };
+    tv: TVRecord & { profile: TVProfileRecord };
+  }) {
+    const { season, tv } = payload;
+    const prefix = `「${[tv.profile.name, season.season_text].join("/")}」`;
+    this.emit(Events.Print, Article.build_line([prefix, "刷新电视剧详情"]));
+    const r1 = await this.refresh_tv_profile({ id: tv.id, profile: tv.profile });
+    if (r1.error) {
+      return Result.Err(r1.error.message);
+    }
+    if (r1.data.unique_id !== tv.profile.unique_id) {
+      return Result.Err("详情发生了变更，异常情况");
+    }
+    this.emit(Events.Print, Article.build_line([prefix, "刷新季详情"]));
+    const new_season_profile = r1.data.seasons.find((s) => {
+      return s.season_number === season.season_number;
+    });
+    if (!new_season_profile) {
+      this.emit(Events.Print, Article.build_line([prefix, "没有匹配的季详情"]));
+      return Result.Err("没有匹配的季详情");
+    }
+    const normalized_profile = await this.searcher.normalize_season_profile(new_season_profile);
+    const diff = check_season_profile_need_refresh(season.profile, normalized_profile);
+    if (!diff) {
+      this.emit(Events.Print, Article.build_line([prefix, "季没有变更内容，跳过"]));
+      return Result.Ok(null);
+    }
+    if (diff.unique_id) {
+      return Result.Err("季详情发生了变更，异常情况");
+    }
+    this.emit(Events.Print, Article.build_line([prefix, "需要更新"]));
+    this.emit(Events.Print, Article.build_line([JSON.stringify(diff)]));
+    await this.store.prisma.season_profile.update({
+      where: {
+        id: season.profile.id,
+      },
+      data: {
+        updated: dayjs().toISOString(),
+        ...diff,
+      },
+    });
+    await this.refresh_episode_list(payload);
+    return Result.Ok(normalized_profile);
+  }
+  /** 刷新剧集详情 */
+  async refresh_episode_profile(
+    episode: EpisodeRecord & {
+      profile: EpisodeProfileRecord;
+    },
+    new_profile: EpisodeProfileFromTMDB
+  ) {
+    const { name } = episode.profile;
+    const prefix = `[${[name, episode.episode_text].join("/")}]`;
+    const normalized_profile = await this.searcher.normalize_episode_profile(new_profile);
+    const diff = check_episode_profile_need_refresh(episode.profile, normalized_profile);
+    if (!diff) {
+      this.emit(Events.Print, Article.build_line([prefix, "没有变更内容"]));
+      return Result.Ok(null);
+    }
+    this.emit(Events.Print, Article.build_line([prefix, "需要更新"]));
+    this.emit(Events.Print, Article.build_line([JSON.stringify(diff)]));
+    if (diff.unique_id) {
+      return Result.Err("详情发生变更，异常情况");
+    }
+    await this.store.prisma.episode_profile.update({
+      where: {
+        id: episode.profile.id,
+      },
+      data: {
+        updated: dayjs().toISOString(),
+        ...diff,
+      },
+    });
+    return Result.Ok(normalized_profile);
   }
   /** 刷新电影详情 */
   async refresh_movie_profile(
     movie: MovieRecord & {
       profile: MovieProfileRecord;
-    },
-    extra?: { tmdb_id: number }
+    }
   ) {
     const { name, original_name, unique_id } = movie.profile;
-    const correct_tmdb_id = extra ? extra.tmdb_id : Number(unique_id);
-    this.emit(
-      Events.Print,
-      new ArticleSectionNode({
-        children: [
-          new ArticleLineNode({
-            children: [`处理电影「${name || original_name}」`].map((text) => {
-              return new ArticleTextNode({ text: text! });
-            }),
-          }),
-        ],
-      })
-    );
-    const r = await this.client.fetch_movie_profile(correct_tmdb_id);
+    const correct_unique_id = Number(unique_id);
+    const prefix = `「${name || original_name}」`;
+    this.emit(Events.Print, Article.build_line([prefix, "获取电影详情"]));
+    const r = await this.client.fetch_movie_profile(correct_unique_id);
     if (r.error) {
+      this.emit(Events.Print, Article.build_line([prefix, "获取详情失败，因为", r.error.message]));
       return Result.Err(r.error);
     }
     const normalized_profile = await this.searcher.normalize_movie_profile(r.data);
     const diff = check_movie_need_refresh(movie.profile, normalized_profile);
     if (!diff) {
+      this.emit(Events.Print, Article.build_line([prefix, "没有要更新的内容，跳过"]));
       return Result.Ok(null);
     }
-    this.emit(
-      Events.Print,
-      new ArticleSectionNode({
-        children: [
-          new ArticleLineNode({
-            children: [`电影「${name || original_name}」`, "需要更新"].map((text) => {
-              return new ArticleTextNode({ text: text! });
-            }),
-          }),
-          ...Object.keys(diff).map((k) => {
-            // @ts-ignore
-            const prev_text = movie.profile[k];
-            // @ts-ignore
-            const latest_text = diff[k];
-            return new ArticleLineNode({
-              children: [`${k} 从 ${prev_text} 更新为 ${latest_text}`].map((text) => {
-                return new ArticleTextNode({ text });
-              }),
-            });
-          }),
-        ],
-      })
-    );
-    if (!diff.unique_id) {
-      // 仅更新数据
-      await this.store.prisma.movie_profile.update({
+    if (diff.unique_id) {
+      return Result.Err("详情变更成另一个，异常情况");
+    }
+    this.emit(Events.Print, Article.build_line([prefix, "需要更新"]));
+    this.emit(Events.Print, Article.build_line([JSON.stringify(diff)]));
+    await this.store.prisma.movie_profile.update({
+      where: {
+        id: movie.profile.id,
+      },
+      data: {
+        updated: dayjs().toISOString(),
+        ...diff,
+      },
+    });
+    return Result.Ok(diff);
+  }
+  /**
+   * 根据数据库中的「电视剧详情」记录，刷新。如果存在新的 tmdb_id，使用该 tmdb 记录替换已存在的
+   */
+  async change_tv_profile(
+    tv: {
+      id: string;
+      profile: TVProfileRecord;
+    },
+    extra: { source?: number; unique_id: string }
+  ) {
+    const { name, original_name } = tv.profile;
+    const { source = MediaProfileSourceTypes.TMDB, unique_id } = extra;
+    const correct_unique_id = (() => {
+      if (source === MediaProfileSourceTypes.TMDB) {
+        return Number(unique_id);
+      }
+      return unique_id;
+    })();
+    const prefix = `「${name || original_name}」`;
+    this.emit(Events.Print, Article.build_line([prefix, "刷新电视剧详情"]));
+    const r1 = await this.client.fetch_tv_profile(correct_unique_id);
+    if (r1.error) {
+      this.emit(Events.Print, Article.build_line([prefix, "获取电视剧详情失败，因为", r1.error.message]));
+      return Result.Err(r1.error);
+    }
+    const normalized_profile = await this.searcher.normalize_tv_profile(r1.data);
+    this.emit(Events.Print, Article.build_line([prefix, "新的详情是 ", normalized_profile.name]));
+    const profile_record_res = await (async () => {
+      const existing_tv_profile = await this.store.prisma.tv_profile.findFirst({
         where: {
-          id: movie.profile.id,
+          unique_id: normalized_profile.unique_id,
+        },
+      });
+      if (existing_tv_profile) {
+        this.emit(Events.Print, Article.build_line([prefix, "该详情已经存在"]));
+        return Result.Ok(existing_tv_profile);
+      }
+      this.emit(Events.Print, Article.build_line([prefix, "新增详情记录"]));
+      const created_tv_profile = await this.store.add_tv_profile({
+        ...normalized_profile,
+        // @todo 支持不同的详情数据源
+        source: MediaProfileSourceTypes.TMDB,
+        sources: JSON.stringify({ tmdb_id: correct_unique_id }),
+      });
+      if (created_tv_profile.error) {
+        return Result.Err(created_tv_profile.error.message);
+      }
+      return Result.Ok(created_tv_profile.data);
+    })();
+    if (profile_record_res.error) {
+      this.emit(Events.Print, Article.build_line([prefix, "获取详情失败", profile_record_res.error.message]));
+      return Result.Err(profile_record_res.error.message);
+    }
+    const same_tv = await this.store.prisma.tv.findFirst({
+      where: {
+        profile_id: profile_record_res.data.id,
+        user_id: this.user.id,
+      },
+    });
+    if (!same_tv) {
+      this.emit(Events.Print, Article.build_line([prefix, "没有同名电视剧，直接改变关联详情"]));
+      await this.store.prisma.tv.update({
+        where: {
+          id: tv.id,
+        },
+        data: {
+          profile_id: profile_record_res.data.id,
+        },
+      });
+      // 如果该次变更成一个不存在的电视剧，那么就要删除之前的季和剧集记录，然后重新索引
+      // 如果不这样做，就会存在一个没有任何剧集的空电视剧
+      await this.store.prisma.season.deleteMany({
+        where: {
+          tv_id: tv.id,
+          user_id: this.user.id,
+        },
+      });
+      await this.store.prisma.episode.deleteMany({
+        where: {
+          tv_id: tv.id,
+          user_id: this.user.id,
+        },
+      });
+      await this.store.prisma.parsed_season.updateMany({
+        where: {
+          parsed_tv: {
+            tv_id: tv.id,
+          },
+          user_id: this.user.id,
         },
         data: {
           updated: dayjs().toISOString(),
-          ...diff,
+          can_search: 1,
         },
       });
-      return Result.Ok(diff);
-    }
-    // 更换电影详情
-    const created_res = await (async () => {
-      const existing_res = await this.store.find_movie_profile({ unique_id: normalized_profile.unique_id });
-      if (existing_res.data) {
-        return Result.Ok(existing_res.data);
-      }
-      return this.store.add_movie_profile({
+      await this.store.prisma.parsed_episode.updateMany({
+        where: {
+          parsed_tv: {
+            tv_id: tv.id,
+          },
+          user_id: this.user.id,
+        },
+        data: {
+          updated: dayjs().toISOString(),
+          can_search: 1,
+        },
+      });
+      return Result.Ok({
         ...normalized_profile,
-        source: 1,
-        sources: JSON.stringify({ tmdb_id: correct_tmdb_id }),
+        unique_id: profile_record_res.data.unique_id,
+        seasons: r1.data.seasons,
+        scopes: [] as { name: string }[],
+        override: true,
+      });
+    }
+    this.emit(Events.Print, Article.build_line([prefix, "已存在同名电视剧"]));
+    // 将 A 的所有季、剧集都归属到 B（合并两个季的所有
+    // 将原先的解析结果重置掉，再重新索引
+    // 如果不这样做，也和上面一样直接更新，就会出现两个相同的 tv
+    await this.store.prisma.parsed_episode.updateMany({
+      where: {
+        episode: {
+          tv_id: tv.id,
+        },
+        user_id: this.user.id,
+      },
+      data: {
+        episode_id: null,
+        season_id: null,
+      },
+    });
+    await this.store.prisma.parsed_season.updateMany({
+      where: {
+        season: {
+          tv_id: tv.id,
+        },
+        user_id: this.user.id,
+      },
+      data: {
+        season_id: null,
+      },
+    });
+    const parsed_tvs = await this.store.prisma.parsed_tv.findMany({
+      where: {
+        tv_id: tv.id,
+        user_id: this.user.id,
+      },
+    });
+    await this.store.prisma.parsed_tv.updateMany({
+      where: {
+        tv_id: tv.id,
+        user_id: this.user.id,
+      },
+      data: {
+        tv_id: same_tv.id,
+      },
+    });
+    return Result.Ok({
+      ...normalized_profile,
+      unique_id: profile_record_res.data.unique_id,
+      seasons: r1.data.seasons,
+      scopes: parsed_tvs
+        .map((tv) => {
+          return [
+            {
+              name: tv.name,
+            },
+            {
+              original_name: tv.original_name,
+            },
+          ];
+        })
+        .reduce((total, cur) => {
+          return total.concat(cur);
+        }, [])
+        .filter((p) => p.name) as { name: string }[],
+      override: false,
+    });
+  }
+  /** 改变指定电视剧的详情为另一个（顺便更新了电视剧季和剧集？ */
+  async change_season_profile(
+    payload: {
+      season: SeasonRecord & {
+        profile: SeasonProfileRecord;
+      };
+      tv: TVRecord & { profile: TVProfileRecord };
+    },
+    extra: { source?: number; unique_id: string }
+  ) {
+    const { season, tv } = payload;
+    const prefix = `「${[tv.profile.name, season.season_text].join("/")}」`;
+    const r1 = await this.change_tv_profile({ id: tv.id, profile: tv.profile }, extra);
+    if (r1.error) {
+      // this.emit(Events.Print, Article.build_line([prefix, "改变电视剧详情失败", r1.error.message]));
+      return Result.Err(r1.error.message);
+    }
+    if (r1.data.unique_id === tv.profile.unique_id) {
+      // this.emit(Events.Print, Article.build_line([prefix, "详情没有变更，异常情况"]));
+      return Result.Err("详情没有变更，异常情况");
+    }
+    this.emit(Events.Print, Article.build_line([prefix, "重新搜索季详情"]));
+    const scopes = (() => {
+      if (r1.data.scopes) {
+        return r1.data.scopes;
+      }
+      return [r1.data.name, r1.data.original_name].filter(Boolean).map((name) => {
+        return { name } as { name: string };
       });
     })();
-    if (created_res.data) {
-      // console.log("创建电影详情成功", created_res.data);
+    this.emit(Events.Print, Article.build_line([prefix, JSON.stringify(scopes)]));
+    await this.searcher.process_parsed_season_list(scopes, { force_search_tmdb: true });
+    await this.searcher.process_parsed_episode_list(scopes, { force_search_tmdb: true });
+    return Result.Ok(null);
+  }
+  /** 变更电影详情 */
+  async change_movie_profile(
+    movie: MovieRecord & {
+      profile: MovieProfileRecord;
+    },
+    extra: { source?: number; unique_id: string }
+  ) {
+    const { name, original_name } = movie.profile;
+    const { source = MediaProfileSourceTypes.TMDB, unique_id } = extra;
+    const correct_unique_id = (() => {
+      // 根据详情数据源对唯一标志进行处理
+      if (source === MediaProfileSourceTypes.TMDB) {
+        return Number(unique_id);
+      }
+      return unique_id;
+    })();
+    const prefix = `「${name || original_name}」`;
+    const r = await this.client.fetch_movie_profile(correct_unique_id);
+    if (r.error) {
+      this.emit(Events.Print, Article.build_line([prefix, "获取详情失败", r.error.message]));
+      return Result.Err(r.error);
+    }
+    const normalized_profile = await this.searcher.normalize_movie_profile(r.data);
+    const diff = check_movie_need_refresh(movie.profile, normalized_profile);
+    if (!diff) {
+      this.emit(Events.Print, Article.build_line([prefix, "没有变更内容，跳过"]));
+      return Result.Ok(null);
+    }
+    this.emit(Events.Print, Article.build_line([prefix, "需要更新"]));
+    this.emit(Events.Print, Article.build_line([JSON.stringify(diff)]));
+    if (!diff.unique_id) {
+      this.emit(Events.Print, Article.build_line([prefix, "详情没有变更"]));
+      return Result.Err("详情没有变更，异常情况");
+    }
+    const profile_record_res = await (async () => {
+      const existing_movie_profile = await this.store.prisma.movie_profile.findFirst({
+        where: {
+          unique_id: normalized_profile.unique_id,
+        },
+      });
+      if (existing_movie_profile) {
+        this.emit(Events.Print, Article.build_line([prefix, "该详情已存在"]));
+        return Result.Ok(existing_movie_profile);
+      }
+      this.emit(Events.Print, Article.build_line([prefix, "创建电影详情记录"]));
+      return this.store.add_movie_profile({
+        ...normalized_profile,
+        source: MediaProfileSourceTypes.TMDB,
+        sources: JSON.stringify({ tmdb_id: correct_unique_id }),
+      });
+    })();
+    if (profile_record_res.error) {
+      this.emit(Events.Print, Article.build_line([prefix, "获取详情失败", profile_record_res.error.message]));
+      return Result.Err(profile_record_res.error.message);
+    }
+    const same_movie = await this.store.prisma.movie.findFirst({
+      where: {
+        profile_id: profile_record_res.data.id,
+        user_id: this.user.id,
+      },
+    });
+    if (!same_movie) {
+      this.emit(Events.Print, Article.build_line([prefix, "没有同名电影，直接改变关联详情"]));
       await this.store.prisma.movie.update({
         where: {
           id: movie.id,
         },
         data: {
-          profile_id: created_res.data.id,
+          profile_id: profile_record_res.data.id,
         },
       });
+      return Result.Ok({
+        ...normalized_profile,
+        unique_id: profile_record_res.data.unique_id,
+        override: true,
+      });
     }
-    return Result.Ok(normalized_profile);
+    this.emit(Events.Print, Article.build_line([prefix, "已存在同名电影"]));
+    await this.store.prisma.parsed_movie.updateMany({
+      where: {
+        movie_id: movie.id,
+        user_id: this.user.id,
+      },
+      data: {
+        movie_id: same_movie.id,
+      },
+    });
+    return Result.Ok({
+      ...normalized_profile,
+      unique_id: profile_record_res.data.unique_id,
+      override: false,
+    });
   }
 
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {

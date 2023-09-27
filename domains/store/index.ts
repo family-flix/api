@@ -1,4 +1,4 @@
-import { Result } from "@/types";
+import { Result, Unpacked } from "@/types";
 import { PrismaClient } from "@prisma/client";
 
 import { ModelKeys } from "./types";
@@ -432,4 +432,53 @@ export class DatabaseStore {
     // @ts-ignore
     return this.prisma[name].deleteMany({});
   };
+  async list_with_cursor<F extends (extra: { take: number }) => any>(options: {
+    fetch: F;
+    next_marker?: string;
+    page_size?: number;
+  }) {
+    const { fetch, next_marker = "", page_size = 20 } = options;
+    const extra_args = {
+      take: page_size + 1,
+      ...(() => {
+        const cursor: { id?: string } = {};
+        if (next_marker) {
+          cursor.id = next_marker;
+          return {
+            cursor,
+          };
+        }
+        return {};
+      })(),
+    };
+    const list = await fetch(extra_args);
+    // no_more = list.length < page_size + 1;
+    let new_next_marker = "";
+    if (list.length === page_size + 1) {
+      const last_record = list[list.length - 1];
+      new_next_marker = last_record.id;
+    }
+    const correct_list: Unpacked<ReturnType<F>>[number][] = list.slice(0, page_size);
+    return {
+      list: correct_list,
+      next_marker: new_next_marker,
+    };
+  }
+  async list_with_pagination<F extends (extra: { take: number; skip: number }) => any>(options: {
+    fetch: F;
+    next_marker?: string;
+    page?: number;
+    page_size?: number;
+  }) {
+    const { fetch, page = 1, page_size = 20 } = options;
+    const extra_args = {
+      skip: (page - 1) * page_size,
+      take: page_size,
+    };
+    const list = await fetch(extra_args);
+    return {
+      list,
+      // no_more: list.length + (page - 1) * page_size >= count,
+    };
+  }
 }
