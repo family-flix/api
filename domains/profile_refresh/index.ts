@@ -271,7 +271,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       where,
     });
     this.emit(Events.Print, Article.build_line(["共", count, "个电影"]));
-    walk_model_with_cursor({
+    await walk_model_with_cursor({
       fn: (extra) => {
         return this.store.prisma.movie.findMany({
           where,
