@@ -623,7 +623,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
    */
   async link_tv_profile_to_parsed_tv(body: { parsed_tv: ParsedTVRecord; profile: TVProfileRecord }) {
     const { profile, parsed_tv } = body;
-    const prefix = `「${get_prefix_from_names(parsed_tv)}」`;
+    const prefix = `[${get_prefix_from_names(parsed_tv)}]`;
     const tv_res = await (async () => {
       const existing_res = await this.store.find_tv({
         profile_id: profile.id,

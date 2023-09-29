@@ -105,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const tv_name = name || original_name;
   const job_res = await Job.New({
     unique_id: season_id,
-    desc: `归档电视剧「${tv_name}/${season_text}」`,
+    desc: `归档电视剧「${tv_name}/${season_text}]`,
     type: TaskTypes.ArchiveSeason,
     user_id: user.id,
     store,

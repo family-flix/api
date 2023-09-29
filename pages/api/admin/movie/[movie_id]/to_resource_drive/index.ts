@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const from_drive = from_drive_res.data;
-        const prefix = `「${from_drive.name}」`;
+        const prefix = `[${from_drive.name}]`;
         if (![DriveTypes.AliyunBackupDrive].includes(from_drive.type)) {
           job.output.write_line([prefix, `不是阿里云备份盘，无法移动到资源盘`]);
           return;

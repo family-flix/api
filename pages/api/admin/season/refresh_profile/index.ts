@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   async function run() {
     await refresher.refresh_season_list({
       async after(payload) {
-        refresher.refresh_episode_list(payload);
+        await refresher.refresh_episode_list(payload);
         // const { season, tv } = payload;
         // const episodes = await store.prisma.episode.findMany({
         //   where: {

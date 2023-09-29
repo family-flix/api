@@ -122,7 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           new ArticleSectionNode({
             children: [
               new ArticleLineNode({
-                children: [`「${parent_paths}/${name}」`, "是文件夹，先删除子文件夹及文件"].map(
+                children: [`[${parent_paths}/${name}]`, "是文件夹，先删除子文件夹及文件"].map(
                   (text) => new ArticleTextNode({ text })
                 ),
               }),

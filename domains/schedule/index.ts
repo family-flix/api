@@ -146,7 +146,7 @@ export class ScheduleTask {
         task.on_print((v) => {
           job.output.write(v);
         });
-        job.output.write_line([`开始更新「${name}」`]);
+        job.output.write_line([`开始更新「${name}]`]);
         await task.run();
       },
     });
@@ -174,10 +174,10 @@ export class ScheduleTask {
           },
         });
         if (tmp_folders.length === 0) {
-          job.output.write_line(["云盘", `「${drive.name}」`, "没有新增视频文件，跳过"]);
+          job.output.write_line(["云盘", `[${drive.name}]`, "没有新增视频文件，跳过"]);
           return;
         }
-        job.output.write_line(["云盘", `「${drive.name}」`, "有新增视频文件", tmp_folders.length, "个"]);
+        job.output.write_line(["云盘", `[${drive.name}]`, "有新增视频文件", tmp_folders.length, "个"]);
         const r2 = await DriveAnalysis.New({
           drive,
           store: this.store,
@@ -209,7 +209,7 @@ export class ScheduleTask {
             };
           })
         );
-        job.output.write_line(["云盘", `「${drive.name}」`, "索引完毕"]);
+        job.output.write_line(["云盘", `[${drive.name}]`, "索引完毕"]);
       },
     });
     job.output.write_line(["所有索引完成"]);
@@ -228,7 +228,7 @@ export class ScheduleTask {
       return Result.Err("请先设置索引目录", 30001);
     }
     const job_res = await Job.New({
-      desc: `[定时任务]快速索引云盘「${drive.name}」`,
+      desc: `[定时任务]快速索引云盘「${drive.name}]`,
       type: TaskTypes.DriveAnalysis,
       unique_id: drive.id,
       user_id: user.id,

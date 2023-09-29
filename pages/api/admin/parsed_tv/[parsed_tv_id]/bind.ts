@@ -118,7 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         user_id: user.id,
       },
     });
-    const prefix = `「${file?.name}」`;
+    const prefix = `[${file?.name}]`;
     for (let i = 0; i < parsed_seasons.length; i += 1) {
       const parsed_season = parsed_seasons[i];
       await searcher.process_parsed_season({ parsed_tv, parsed_season });

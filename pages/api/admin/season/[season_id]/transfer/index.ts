@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   };
   const job_res = await Job.New({
     unique_id: to_drive.id,
-    desc: `移动电视剧「${tv_name}/${season_text}」到云盘「${to_drive.name}」`,
+    desc: `移动电视剧「${tv_name}/${season_text}」到云盘「${to_drive.name}]`,
     type: TaskTypes.MoveTV,
     user_id: user.id,
     store,
@@ -163,7 +163,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const from_drive = from_drive_res.data;
-        const prefix = `「${from_drive.name}」`;
+        const prefix = `[${from_drive.name}]`;
         const archive_res = await archive_season_files({
           files: the_files_prepare_transfer,
           profile: {

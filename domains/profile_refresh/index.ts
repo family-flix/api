@@ -230,7 +230,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       },
       handler: async (episode, index) => {
         this.emit(Events.Print, Article.build_line(["第", index + 1, "个"]));
-        const prefix = `「${tv.profile.name}/${season.season_text}/${episode.episode_text}」`;
+        const prefix = `[${tv.profile.name}/${season.season_text}/${episode.episode_text}]`;
         if (!episode.episode_number) {
           this.emit(Events.Print, Article.build_line([prefix, "没有正确的剧集数"]));
           return;
@@ -297,7 +297,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   async refresh_tv_profile(payload: { id: string; profile: TVProfileRecord }) {
     const { name, original_name, unique_id } = payload.profile;
     const correct_unique_id = Number(unique_id);
-    const prefix = `「${name || original_name}」`;
+    const prefix = `[${name || original_name}]`;
     this.emit(Events.Print, Article.build_line([prefix, "刷新电视剧详情"]));
     const r1 = await this.client.fetch_tv_profile(correct_unique_id);
     if (r1.error) {
@@ -334,7 +334,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     tv: TVRecord & { profile: TVProfileRecord };
   }) {
     const { season, tv } = payload;
-    const prefix = `「${[tv.profile.name, season.season_text].join("/")}」`;
+    const prefix = `[${[tv.profile.name, season.season_text].join("/")}]`;
     this.emit(Events.Print, Article.build_line([prefix, "刷新电视剧详情"]));
     const r1 = await this.refresh_tv_profile({ id: tv.id, profile: tv.profile });
     if (r1.error) {
@@ -354,7 +354,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const normalized_profile = await this.searcher.normalize_season_profile(new_season_profile);
     const diff = check_season_profile_need_refresh(season.profile, normalized_profile);
     if (!diff) {
-      this.emit(Events.Print, Article.build_line([prefix, "季没有变更内容，跳过"]));
+      this.emit(Events.Print, Article.build_line([prefix, "没有变更内容，跳过"]));
       return Result.Ok(null);
     }
     if (diff.unique_id) {
@@ -382,7 +382,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     new_profile: EpisodeProfileFromTMDB
   ) {
     const { name } = episode.profile;
-    const prefix = `[${[name, episode.episode_text].join("/")}]`;
+    const prefix = `[${[episode.episode_text, name].join("/")}]`;
     const normalized_profile = await this.searcher.normalize_episode_profile(new_profile);
     const diff = check_episode_profile_need_refresh(episode.profile, normalized_profile);
     if (!diff) {
@@ -413,7 +413,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   ) {
     const { name, original_name, unique_id } = movie.profile;
     const correct_unique_id = Number(unique_id);
-    const prefix = `「${name || original_name}」`;
+    const prefix = `[${name || original_name}]`;
     this.emit(Events.Print, Article.build_line([prefix, "获取电影详情"]));
     const r = await this.client.fetch_movie_profile(correct_unique_id);
     if (r.error) {
@@ -460,7 +460,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       }
       return unique_id;
     })();
-    const prefix = `「${name || original_name}」`;
+    const prefix = `[${name || original_name}]`;
     this.emit(Events.Print, Article.build_line([prefix, "刷新电视剧详情"]));
     const r1 = await this.client.fetch_tv_profile(correct_unique_id);
     if (r1.error) {
@@ -632,7 +632,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     extra: { source?: number; unique_id: string }
   ) {
     const { season, tv } = payload;
-    const prefix = `「${[tv.profile.name, season.season_text].join("/")}」`;
+    const prefix = `[${[tv.profile.name, season.season_text].join("/")}]`;
     const r1 = await this.change_tv_profile({ id: tv.id, profile: tv.profile }, extra);
     if (r1.error) {
       // this.emit(Events.Print, Article.build_line([prefix, "改变电视剧详情失败", r1.error.message]));
@@ -672,7 +672,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       }
       return unique_id;
     })();
-    const prefix = `「${name || original_name}」`;
+    const prefix = `[${name || original_name}]`;
     const r = await this.client.fetch_movie_profile(correct_unique_id);
     if (r.error) {
       this.emit(Events.Print, Article.build_line([prefix, "获取详情失败", r.error.message]));

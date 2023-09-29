@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = drive_res.data;
   const task_res = await Job.New({
-    desc: `删除「${file.name}」`,
+    desc: `删除「${file.name}]`,
     unique_id: "delete_file",
     type: TaskTypes.DeleteDriveFile,
     user_id: user.id,

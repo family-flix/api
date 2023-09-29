@@ -768,7 +768,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
             new ArticleSectionNode({
               children: [
                 new ArticleLineNode({
-                  children: [`「${parent_paths}/${name}」`, "是文件夹，先删除子文件夹及字文件"].map(
+                  children: [`[${parent_paths}/${name}]`, "是文件夹，先删除子文件夹及字文件"].map(
                     (text) => new ArticleTextNode({ text })
                   ),
                 }),
@@ -781,7 +781,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
             new ArticleSectionNode({
               children: [
                 new ArticleLineNode({
-                  children: [`「${parent_paths}/${name}」`, "子文件夹及字文件删除完毕"].map(
+                  children: [`[${parent_paths}/${name}]`, "子文件夹及字文件删除完毕"].map(
                     (text) => new ArticleTextNode({ text })
                   ),
                 }),
@@ -1113,7 +1113,7 @@ export async function clear_expired_files_in_drive(values: {
       });
     },
     async handler(item, index) {
-      const prefix = `「${item.name}」`;
+      const prefix = `[${item.name}]`;
       const res = await drive.client.fetch_file(item.file_id);
       if (on_print) {
         on_print(Article.build_line([prefix, `第 ${index + 1}`]));

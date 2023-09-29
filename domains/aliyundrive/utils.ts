@@ -273,7 +273,7 @@ export async function archive_season_files(body: {
       if (file_name !== new_file_name) {
         job.output.write(
           new ArticleLineNode({
-            children: [`将文件「${file_name}」名字修改为「${new_file_name}」`].map(
+            children: [`将文件「${file_name}」名字修改为「${new_file_name}]`].map(
               (text) =>
                 new ArticleTextNode({
                   text,
@@ -372,7 +372,7 @@ export async function archive_season_files(body: {
                 }),
               }),
               new ArticleTextNode({
-                text: `到云盘文件夹「${created_folder.file_name}」`,
+                text: `到云盘文件夹「${created_folder.file_name}]`,
               }),
             ],
           }),
@@ -609,7 +609,7 @@ export async function archive_movie_files(body: {
       if (file_name !== new_file_name) {
         job.output.write(
           new ArticleLineNode({
-            children: [`将文件「${file_name}」名字修改为「${new_file_name}」`].map(
+            children: [`将文件「${file_name}」名字修改为「${new_file_name}]`].map(
               (text) =>
                 new ArticleTextNode({
                   text,
@@ -708,7 +708,7 @@ export async function archive_movie_files(body: {
                 }),
               }),
               new ArticleTextNode({
-                text: `到云盘文件夹「${created_folder.file_name}」`,
+                text: `到云盘文件夹「${created_folder.file_name}]`,
               }),
             ],
           }),

@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("没有找到可索引的转存文件"));
   }
   const job_res = await Job.New({
-    desc: `快速索引云盘「${drive.name}」`,
+    desc: `快速索引云盘「${drive.name}]`,
     type: TaskTypes.DriveAnalysis,
     unique_id: drive.id,
     user_id: user.id,
