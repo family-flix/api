@@ -22,12 +22,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     id: string;
     target_folder: string;
   }>;
-  if (!drive_id) {
-    return e(Result.Err("缺少云盘 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
+  }
+  if (!drive_id) {
+    return e(Result.Err("缺少云盘 id"));
   }
   const user = t_res.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("没有找到可索引的转存文件"));
   }
   const job_res = await Job.New({
-    desc: `快速索引云盘 '${drive.name}'`,
+    desc: `快速索引云盘「${drive.name}」`,
     type: TaskTypes.DriveAnalysis,
     unique_id: drive.id,
     user_id: user.id,
@@ -58,47 +58,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(job_res);
   }
   const job = job_res.data;
-  const r2 = await DriveAnalysis.New({
-    drive,
-    user,
-    assets: app.assets,
-    store,
-    on_print(v) {
-      job.output.write(v);
-    },
-    on_finish() {
-      job.output.write(
-        new ArticleLineNode({
-          children: [
-            new ArticleTextNode({
-              text: "索引完成",
-            }),
-          ],
-        })
-      );
+  async function run() {
+    const r2 = await DriveAnalysis.New({
+      drive,
+      user,
+      assets: app.assets,
+      store,
+      on_print(v) {
+        job.output.write(v);
+      },
+    });
+    if (r2.error) {
+      job.output.write_line(["索引失败", r2.error.message]);
       job.finish();
-    },
-    on_error() {
-      job.finish();
-    },
-  });
-  if (r2.error) {
-    return e(r2);
+      return;
+    }
+    const analysis = r2.data;
+    // console.log("[API]admin/drive/analysis_quickly/[id].ts - before await analysis.run", tmp_folders.length);
+    await analysis.run(
+      tmp_folders.map((file) => {
+        const { name, parent_paths, type } = file;
+        return {
+          name: [parent_paths, name].filter(Boolean).join("/"),
+          type: type === FileType.File ? "file" : "folder",
+        };
+      })
+    );
+    job.output.write_line(["索引完成"]);
+    job.finish();
   }
-  const analysis = r2.data;
-  // console.log("[API]admin/drive/analysis_quickly/[id].ts - before await analysis.run", tmp_folders.length);
-  analysis.run(
-    tmp_folders.map((file) => {
-      const { name, parent_paths, type } = file;
-      return {
-        name: [parent_paths, name].filter(Boolean).join("/"),
-        type: type === FileType.File ? "file" : "folder",
-      };
-    })
-  );
+  run();
   res.status(200).json({
     code: 0,
-    msg: "开始索引任务",
+    msg: "开始索引",
     data: {
       job_id: job.id,
     },

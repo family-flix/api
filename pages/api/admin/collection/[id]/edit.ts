@@ -1,5 +1,5 @@
 /**
- * @file 管理后台/创建集合
+ * @file 管理后台/编辑集合
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -7,11 +7,11 @@ import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { r_id } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
+  const { id } = req.query as Partial<{ id: string }>;
   const {
     title,
     type,
@@ -40,9 +40,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!medias?.length) {
     return e(Result.Err("缺少集合内容"));
   }
-  await store.prisma.collection.create({
+  const existing = await store.prisma.collection.findFirst({
+    where: {
+      id,
+      user_id: user.id,
+    },
+  });
+  if (!existing) {
+    return e(Result.Err("没有匹配的记录"));
+  }
+  await store.prisma.collection.update({
+    where: {
+      id: existing.id,
+    },
     data: {
-      id: r_id(),
       title,
       desc,
       sort,
@@ -68,5 +79,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: user.id,
     },
   });
-  res.status(200).json({ code: 0, msg: "创建成功", data: null });
+  res.status(200).json({ code: 0, msg: "编辑成功", data: null });
 }

@@ -1,5 +1,4 @@
 import { ParsedTVRecord, SyncTaskRecord, TVProfileRecord, TVRecord } from "@/domains/store/types";
-import { bytes_to_size } from "@/utils";
 
 export function format_number_with_3decimals(number: number) {
   let str = number.toString();

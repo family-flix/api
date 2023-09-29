@@ -1,5 +1,6 @@
 /**
  * @file 管理后台 刷新/绑定电视剧详情
+ * @deprecated
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -18,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  const { tmdb_id } = req.body as { tmdb_id: number };
+  const { unique_id } = req.body as { unique_id: string };
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -45,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     desc: `更新「${tv.profile.name}」详情、季详情`,
     unique_id: "update_tv_and_season",
-    type: TaskTypes.RefreshTVAndSeasonProfile,
+    type: TaskTypes.RefreshMedia,
     user_id: user.id,
     store,
   });
@@ -71,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   async function run(tv: TVRecord & { profile: TVProfileRecord }) {
-    const r = await refresher.change_tv_profile(tv, { unique_id: tmdb_id });
+    const r = await refresher.change_tv_profile(tv, { unique_id: unique_id });
     if (r.error) {
       job.throw(r.error);
       return;

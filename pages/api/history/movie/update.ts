@@ -4,18 +4,21 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { TV } from "@/domains/tv";
+import { MediaThumbnail } from "@/domains/media_thumbnail";
 import { Member } from "@/domains/user/member";
 import { Drive } from "@/domains/drive";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
+import { r_id } from "@/utils";
+
+const pending_unique: Record<string, unknown> = {};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
-    movie_id: movie_id,
+    movie_id,
     file_id,
     current_time = 0,
     duration = 0,
@@ -25,19 +28,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     current_time: number;
     duration: number;
   }>;
-  if (!movie_id) {
-    return e("缺少电视剧 id");
-  }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: member_id, user } = t_res.data;
-  // const existing_history_res = await store.find_history({});
+  if (!movie_id) {
+    return e("缺少电视剧 id");
+  }
+  const member = t_res.data;
+  const k = [movie_id, member.id].join("/");
+  if (pending_unique[k]) {
+    return e(Result.Err("正在创建记录"));
+  }
+  const tv_res = await MediaThumbnail.New({
+    assets: app.assets,
+  });
+  if (tv_res.error) {
+    return e(tv_res);
+  }
+  const tv = tv_res.data;
+  const file_res = await store.find_file({
+    file_id,
+  });
+  if (file_res.error) {
+    return e(file_res);
+  }
+  const file = file_res.data;
+  if (!file) {
+    return e(Result.Err("没有匹配的视频源"));
+  }
   const existing_history = await store.prisma.play_history.findFirst({
     where: {
       movie_id,
-      member_id,
+      member_id: member.id,
     },
     include: {
       movie: {
@@ -47,103 +70,80 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     },
   });
-  // if (existing_history_res.error) {
-  //   return e(existing_history_res);
-  // }
-  const tv_res = await TV.New({
-    assets: app.assets,
-  });
-  if (tv_res.error) {
-    return e(tv_res);
+  const { drive_id } = file;
+  const drive_res = await Drive.Get({ id: drive_id, user: member.user, store });
+  if (drive_res.error) {
+    return e(drive_res);
   }
-  const tv = tv_res.data;
+  const drive = drive_res.data;
   if (!existing_history) {
-    const file_res = await store.find_file({
+    const created_movie_id = r_id();
+    tv.snapshot_media({
       file_id,
+      drive,
+      cur_time: current_time,
+      store,
+      filename(time) {
+        return `${movie_id}-${time}`;
+      },
+    }).then((r) => {
+      if (r.error) {
+        return;
+      }
+      store.prisma.play_history.update({
+        where: {
+          id: created_movie_id,
+        },
+        data: {
+          thumbnail: r.data.img_path,
+        },
+      });
     });
-    if (file_res.error) {
-      return e(file_res);
-    }
-    const file = file_res.data;
-    if (!file) {
-      return e(Result.Err("没有匹配的视频源"));
-    }
-    const { drive_id } = file;
-    const drive_res = await Drive.Get({ id: drive_id, user, store });
-    if (drive_res.error) {
-      return e(drive_res);
-    }
-    const drive = drive_res.data;
-    if (!drive) {
-      return e(Result.Err("没有匹配的云盘记录"));
-    }
-    // const thumbnail_res = await tv.snapshot_media({
-    //   file_id,
-    //   drive_id: drive.profile.drive_id,
-    //   cur_time: current_time,
-    //   store,
-    // });
-    // if (thumbnail_res.error) {
-    //   return e(thumbnail_res);
-    // }
-    const adding_res = await store.add_history({
-      movie_id,
-      current_time,
-      duration,
-      member_id,
-      file_id: file_id ?? null,
-      // thumbnail: thumbnail_res.data?.img_path ?? null,
+    pending_unique[k] = true;
+    await store.prisma.play_history.create({
+      data: {
+        id: created_movie_id,
+        movie_id,
+        current_time,
+        duration,
+        member_id: member.id,
+        file_id: file_id ?? null,
+      },
     });
-    if (adding_res.error) {
-      return e(adding_res);
-    }
+    delete pending_unique[k];
     return res.status(200).json({
       code: 0,
       msg: "新增记录成功",
       data: null,
     });
   }
-  const file_res = await store.find_file({
+  tv.snapshot_media({
     file_id,
+    drive,
+    cur_time: current_time,
+    store,
+    filename(time) {
+      return `${movie_id}-${time}`;
+    },
+  }).then((r) => {
+    if (r.error) {
+      return;
+    }
+    store.prisma.play_history.update({
+      where: {
+        id: existing_history.id,
+      },
+      data: {
+        thumbnail: r.data.img_path,
+      },
+    });
   });
-  if (file_res.error) {
-    return e(file_res);
-  }
-  const file = file_res.data;
-  if (!file) {
-    return e("没有匹配的视频源");
-  }
-  const { drive_id } = file;
-  const drive_res = await Drive.Get({ id: drive_id, user, store });
-  if (drive_res.error) {
-    return e(drive_res);
-  }
-  const drive = drive_res.data;
-  if (!drive) {
-    return e("没有匹配的云盘记录");
-  }
-  // console.log("[PAGE]history/update - prepare snapshot_media", file_id, drive.drive_id, current_time);
-  // const thumbnail_res = await tv.snapshot_media({
-  //   file_id,
-  //   drive_id: drive.profile.drive_id,
-  //   cur_time: current_time,
-  //   store,
-  // });
-  // if (thumbnail_res.error) {
-  //   return e(thumbnail_res);
-  // }
-  // console.log("[PAGE]history/update - thumbnail", thumbnail_res.data);
   const update_res = await store.update_history(existing_history.id, {
     current_time,
     file_id: file_id ?? null,
-    // thumbnail: thumbnail_res.data?.img_path ?? null,
   });
   if (update_res.error) {
     return e(update_res);
-  }
-  const { thumbnail: prev_thumbnail } = existing_history;
-  if (prev_thumbnail) {
-    tv.delete_snapshot(prev_thumbnail);
   }
   res.status(200).json({
     code: 0,

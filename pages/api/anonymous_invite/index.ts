@@ -9,48 +9,39 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { User } from "@/domains/user";
+import { r_id } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const { authorization } = req.headers;
+  const { id } = req.query as Partial<{ id: string }>;
   const { remark } = req.body as Partial<{ remark: string }>;
-  const t_res = await Member.New(authorization, store);
+  if (!id) {
+    return e(Result.Err("缺少邀请人信息"));
+  }
+  const t_res = await Member.Get({ id }, store);
   if (t_res.error) {
     return e(t_res);
-  }
-  if (!remark) {
-    return e(Result.Err("缺少备注"));
   }
   const member = t_res.data;
   const existing = await store.prisma.member.findFirst({
     where: {
-      remark,
+      OR: [
+        {
+          remark,
+        },
+        {
+          name: remark,
+        },
+      ],
       inviter_id: member.id,
-      user_id: member.user.id,
-    },
-    include: {
-      member_tokens: true,
     },
   });
   if (existing) {
-    const token = existing.member_tokens[0];
-    return e(
-      Result.Err("已经邀请过同名成员了", 10000, {
-        id: existing.id,
-        token: token
-          ? [
-              {
-                id: token.id,
-                token: token.token,
-              },
-            ]
-          : null,
-      })
-    );
+    return e(Result.Err("已存在同名用户"));
   }
   const r = await store.add_member({
-    remark,
-    name: null,
+    remark: remark || r_id(),
+    name: remark,
     email: null,
     disabled: 0,
     inviter_id: member.id,
@@ -83,5 +74,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     ],
   };
-  res.status(200).json({ code: 0, msg: "新增成功", data: created_member });
+  res.status(200).json({ code: 0, msg: "注册成功", data: created_member });
 }

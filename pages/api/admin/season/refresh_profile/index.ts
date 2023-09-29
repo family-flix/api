@@ -26,9 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("缺少 TMDB_TOKEN"));
   }
   const job_res = await Job.New({
-    desc: "更新电视剧、季信息",
-    unique_id: "update_tv_and_season",
-    type: TaskTypes.RefreshTVAndSeasonProfile,
+    desc: "刷新电视剧、季信息",
+    unique_id: "update_movie_and_season",
+    type: TaskTypes.RefreshMedia,
     user_id: user.id,
     store,
   });

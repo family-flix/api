@@ -53,9 +53,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = drive_res.data;
   const job_res = await Job.New({
-    unique_id: id,
     desc: "更新未识别电视剧文件夹名称并重新索引",
-    type: TaskTypes.RefreshTVAndSeasonProfile,
+    unique_id: "update_movie_and_season",
+    type: TaskTypes.RefreshMedia,
     user_id: user.id,
     store,
   });

@@ -1,5 +1,6 @@
-import { Application } from "@/domains/application";
 import dayjs from "dayjs";
+
+import { Application } from "@/domains/application";
 
 const OUTPUT_PATH = "/apps/flix_prod";
 const DATABASE_PATH = "file://$OUTPUT_PATH/data/family-flix.db?connection_limit=1";

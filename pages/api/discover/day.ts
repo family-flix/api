@@ -1,5 +1,5 @@
 /**
- * @file 获取推荐
+ * @file 获取当天新增的影视剧
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -9,12 +9,12 @@ import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { MediaProfileSourceTypes } from "@/constants";
+import { MediaProfileSourceTypes, MediaTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { start, end } = req.query as Partial<{ start: string; end: string }>;
+  const { start, end } = req.body as Partial<{ start: string; end: string }>;
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -86,19 +86,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   type MediaPayload = {
     id: string;
-    tv_id?: string;
-    season_text?: string;
+    type: MediaTypes;
     name: string;
     poster_path: string;
-    text: string | null;
     air_date: string;
+    tv_id?: string;
+    season_text?: string;
+    text: string | null;
   };
   const medias = episodes
     .map((episode) => {
-      const { id, tv, season } = episode;
+      const { tv, season } = episode;
       return {
-        id,
-        type: 1,
+        id: season.id,
+        type: MediaTypes.Season,
         tv_id: tv.id,
         name: tv.profile.name,
         season_text: season.season_text,
@@ -106,9 +107,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         air_date: season.profile.air_date,
         text: (() => {
           if (season.profile.episode_count === episode.episode_number) {
-            return `全 ${season.profile.episode_count} 集`;
+            return `全${season.profile.episode_count}集`;
           }
-          return `更新至 ${episode.episode_number} 集`;
+          return `更新至${episode.episode_number}集`;
         })(),
       } as MediaPayload;
     })
@@ -117,7 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const { id, profile } = movie;
         return {
           id,
-          type: 2,
+          type: MediaTypes.Movie,
           name: profile.name,
           poster_path: profile.poster_path,
           air_date: profile.air_date,

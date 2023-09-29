@@ -19,10 +19,8 @@ export enum TaskTypes {
   /** 文件夹更新 */
   FilesSync,
   /** 刷新电视剧信息 */
-  RefreshTVAndSeasonProfile,
+  RefreshMedia,
   ChangeTVAndSeasonProfile,
-  /** 刷新电影信息 */
-  RefreshMovieProfile,
   ChangeMovieProfile,
   /** 转存分享资源 */
   Transfer,

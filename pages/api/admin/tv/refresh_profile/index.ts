@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job_res = await Job.New({
     desc: "更新电视剧、季信息",
     unique_id: "update_tv_and_season",
-    type: TaskTypes.RefreshTVAndSeasonProfile,
+    type: TaskTypes.RefreshMedia,
     user_id: user.id,
     store,
   });

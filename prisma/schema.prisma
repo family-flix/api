@@ -27,7 +27,7 @@ model drive {
         // 是否禁用
         invalid          Int?      @default(0)
         hidden           Int?      @default(0)
-        order            Int?      @default(0)
+        sort             Int?      @default(0)
         // 最近一次索引该云盘的时间
         latest_analysis  DateTime?
         // 网盘用于存放影视剧的目录
@@ -341,18 +341,17 @@ model tv {
         // 是否隐藏
         hidden Int? @default(0)
 
-        profile_id    String
-        profile       tv_profile  @relation(fields: [profile_id], references: [id])
-        collection_id String?
-        collection    collection? @relation(fields: [collection_id], references: [id])
-        user_id       String
-        user          user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        profile_id String
+        profile    tv_profile @relation(fields: [profile_id], references: [id])
+        user_id    String
+        user       user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         seasons        season[]
         episodes       episode[]
         play_histories play_history[]
         parsed_tvs     parsed_tv[]
         reports        report[]
+        collections    collection[]
 
         @@map("TV")
 }
@@ -366,14 +365,12 @@ model season {
         season_text   String
         season_number Int
 
-        profile_id    String
-        profile       season_profile @relation(fields: [profile_id], references: [id])
-        collection_id String?
-        collection    collection?    @relation(fields: [collection_id], references: [id])
-        tv_id         String
-        tv            tv             @relation(fields: [tv_id], references: [id], onDelete: Cascade)
-        user_id       String
-        user          user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        profile_id String
+        profile    season_profile @relation(fields: [profile_id], references: [id])
+        tv_id      String
+        tv         tv             @relation(fields: [tv_id], references: [id], onDelete: Cascade)
+        user_id    String
+        user       user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         parsed_seasons  parsed_season[]
         parsed_episodes parsed_episode[]
@@ -381,6 +378,7 @@ model season {
         episodes        episode[]
         reports         report[]
         sync_tasks      bind_for_parsed_tv[]
+        collections     collection[]
 
         @@map("Season")
 }
@@ -416,17 +414,16 @@ model movie {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        profile_id    String
-        profile       movie_profile @relation(fields: [profile_id], references: [id])
-        user_id       String
-        user          user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-        collection_id String?
-        collection    collection?   @relation(fields: [collection_id], references: [id])
+        profile_id String
+        profile    movie_profile @relation(fields: [profile_id], references: [id])
+        user_id    String
+        user       user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         play_histories play_history[]
         parsed_movies  parsed_movie[]
         reports        report[]
         subtitles      subtitle[]
+        collections    collection[]
 
         @@map("Movie")
 }
@@ -732,10 +729,12 @@ model member {
         // 软删除
         delete     Int?     @default(0)
 
-        inviter_id String?
-        inviter    member? @relation("InviterToInvitees", fields: [inviter_id], references: [id])
-        user_id    String
-        user       user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        inviter_id     String?
+        inviter        member?        @relation("InviterToInvitees", fields: [inviter_id], references: [id])
+        from_invite_id String?
+        from_invite    member_invite? @relation("FromWhiceMemberInvite", fields: [from_invite_id], references: [id])
+        user_id        String
+        user           user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         member_setting member_setting?
         member_tokens  member_token[]
@@ -743,9 +742,27 @@ model member {
         reports        report[]
         invitees       member[]              @relation("InviterToInvitees")
         notifications  member_notification[]
+        member_invites member_invite[]
 
         @@unique([user_id, inviter_id, remark])
         @@map("Member")
+}
+
+model member_invite {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        content     String?
+        expired_at  String
+        count_limit Int?
+        disabled    Int     @default(0)
+
+        member_id       String
+        member          member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        invited_members member[] @relation("FromWhiceMemberInvite")
+
+        @@map("MemberInvite")
 }
 
 model member_token {

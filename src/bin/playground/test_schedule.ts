@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 
 import { store } from "@/store";
 
-import { ping_drive_status } from "./ping_drive_status";
+// import { ping_drive_status } from "./ping_drive_status";
 
 (() => {
   // 每 2s 执行一次
@@ -30,7 +30,7 @@ import { ping_drive_status } from "./ping_drive_status";
         "执行任务 at 0 */2 * * * *",
         dayjs().format("YYYY/MM/DD HH:mm:ss")
       );
-      ping_drive_status(store);
+      // ping_drive_status(store);
     },
     null,
     true,

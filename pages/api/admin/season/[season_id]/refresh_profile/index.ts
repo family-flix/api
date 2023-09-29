@@ -47,9 +47,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("没有匹配的电视剧记录"));
   }
   const job_res = await Job.New({
-    desc: `更新「${season.tv.profile.name}/${season.season_text}」详情`,
-    unique_id: "update_tv_and_season",
-    type: TaskTypes.RefreshTVAndSeasonProfile,
+    desc: `刷新「${season.tv.profile.name}/${season.season_text}」详情`,
+    unique_id: "update_movie_and_season",
+    type: TaskTypes.RefreshMedia,
     user_id: user.id,
     store,
   });

@@ -1,50 +1,44 @@
 /**
- * @file 管理后台/获取集合列表
+ * @file 获取影视剧推荐集合列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
+import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/server";
+import { MediaTypes } from "@/constants";
 import { store } from "@/store";
+import { response_error_factory } from "@/utils/server";
 import { to_number } from "@/utils/primitive";
+
+type MediaPayload = {
+  id: string;
+  type: number;
+  tv_id?: string;
+  season_text?: string;
+  name: string;
+  poster_path: string;
+  air_date: string;
+};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const {
-    name,
-    page: page_str,
-    page_size: page_size_str,
-  } = req.query as Partial<{
-    name: string;
+  const { page: page_str, page_size: page_size_str } = req.query as Partial<{
     page: string;
     page_size: string;
   }>;
   const { authorization } = req.headers;
-  const t_res = await User.New(authorization, store);
+  const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const user = t_res.data;
-  const { id: user_id } = user;
+  const member = t_res.data;
   const page = to_number(page_str, 1);
   const page_size = to_number(page_size_str, 20);
   let queries: NonNullable<ModelQuery<"collection">>[] = [];
-  if (name) {
-    queries = queries.concat({
-      OR: [
-        {
-          title: {
-            contains: name,
-          },
-        },
-      ],
-    });
-  }
   const where: ModelQuery<"collection"> = {
-    user_id,
+    user_id: member.user.id,
   };
   if (queries.length !== 0) {
     where.AND = queries;
@@ -57,6 +51,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       seasons: {
         include: {
+          _count: true,
+          profile: true,
           tv: {
             include: {
               profile: true,
@@ -94,25 +90,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         desc,
         medias: seasons
           .map((season) => {
-            const { id, tv } = season;
+            const { id, tv, season_text } = season;
             const { name, poster_path } = tv.profile;
             return {
               id,
+              type: MediaTypes.Season,
               name,
               poster_path,
-              type: 1,
-            };
+              air_date: season.profile.air_date,
+              tv_id: tv.id,
+              cur_episode_count: season._count.episodes,
+              episode_count: season.profile.episode_count,
+              season_text,
+            } as MediaPayload;
           })
           .concat(
             movies.map((movie) => {
               const { id, profile } = movie;
-              const { name, poster_path } = profile;
+              const { name, poster_path, air_date } = profile;
               return {
                 id,
+                type: MediaTypes.Movie,
                 name,
                 poster_path,
-                type: 2,
-              };
+                air_date,
+              } as MediaPayload;
             })
           ),
       };

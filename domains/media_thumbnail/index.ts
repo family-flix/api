@@ -1,18 +1,21 @@
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
+/**
+ * @file 一个云盘文件视频截图工具
+ */
 import { ImageUploader } from "@/domains/uploader";
 import { DatabaseStore } from "@/domains/store";
+import { Drive } from "@/domains/drive";
 import { r_id } from "@/utils";
 import { Result } from "@/types";
 
 import { format_number_with_3decimals } from "./utils";
 
-export class TV {
+export class MediaThumbnail {
   static New(options: { assets?: string }) {
     const { assets } = options;
     if (!assets) {
       return Result.Err("请传入资源根目录路径");
     }
-    return Result.Ok(new TV({ assets }));
+    return Result.Ok(new MediaThumbnail({ assets }));
   }
 
   /** 资源存放根目录 */
@@ -40,23 +43,25 @@ export class TV {
       img_path: key,
     });
   }
-  async snapshot_media(body: { file_id?: string; cur_time: number; drive_id: number; store: DatabaseStore }) {
-    const { file_id, cur_time: original_cur_time, drive_id, store } = body;
+  async snapshot_media(body: {
+    file_id?: string;
+    cur_time: number;
+    drive: Drive;
+    store: DatabaseStore;
+    filename: (time: string) => string;
+  }) {
+    const { file_id, cur_time: original_cur_time, drive, store, filename } = body;
     if (!file_id) {
       return Result.Ok(null);
     }
     const cur_time = format_number_with_3decimals(original_cur_time);
-    const client_res = await AliyunBackupDriveClient.Get({ drive_id: String(drive_id), store });
-    if (client_res.error) {
-      return Result.Ok(null);
-    }
-    const client = client_res.data;
+    const client = drive.client;
     const thumbnail_res = await client.generate_thumbnail({ file_id, cur_time: cur_time.replace(".", "") });
     if (thumbnail_res.error) {
       return Result.Ok(null);
     }
-    const filename = `${r_id()}.jpg`;
-    const key = `/thumbnail/${filename}`;
+    const name = filename(cur_time);
+    const key = `/thumbnail/${name}.jpg`;
     // console.log("[DOMAIN]TV - snapshot - before download", key);
     // const filepath = path.join(this.assets, key);
     const r = await this.upload.download(thumbnail_res.data.responseUrl, key);

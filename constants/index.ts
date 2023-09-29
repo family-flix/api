@@ -22,3 +22,8 @@ export enum MediaProfileSourceTypes {
   /** 手动编辑 */
   Manual = 3,
 }
+
+export enum MediaTypes {
+  Season = 1,
+  Movie = 2,
+}

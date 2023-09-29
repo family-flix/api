@@ -1,21 +1,10 @@
 require("dotenv").config();
+import dayjs from "dayjs";
 
-import { store } from "@/store";
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
-import { TV } from "@/domains/tv";
-import { ImageUploader } from "@/domains/uploader";
-import path from "path";
-
-function formatVideoTime(currentTime: number) {
-  const totalSeconds = Math.floor(currentTime);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const formattedTime = [hours, minutes, seconds].map((timeUnit) => String(timeUnit).padStart(2, "0")).join(":");
-
-  return formattedTime;
-}
+import { app, store } from "@/store";
+import { MediaThumbnail } from "@/domains/media_thumbnail";
+import { r_id } from "@/utils";
+import { Drive } from "@/domains/drive";
 
 async function main() {
   // const upload = new ImageUploader();
@@ -48,14 +37,40 @@ async function main() {
   // console.log(img_path, formatVideoTime(curTime));
   // console.log(r.data);
   // const drive = new AliyunDriveClient({ drive_id: "HOuEKtDerEOikQG", store });
-  const client_res = await AliyunBackupDriveClient.Get({ drive_id: "123", store });
-  if (client_res.error) {
+  // const client_res = await AliyunBackupDriveClient.Get({ drive_id: "123", store });
+  // if (client_res.error) {
+  //   return;
+  // }
+  // const client = client_res.data;
+  // const r = await client.generate_thumbnail({
+  //   file_id: "646b8b7db3824acadb704145ad76010b63f0c525",
+  //   cur_time: "715030",
+  // });
+  // if (r.error) {
+  //   console.log(r.error.message);
+  //   return;
+  // }
+  // console.log(r.data);
+  const tv_res = await MediaThumbnail.New({
+    assets: app.assets,
+  });
+  if (tv_res.error) {
     return;
   }
-  const client = client_res.data;
-  const r = await client.generate_thumbnail({
-    file_id: "646b8b7db3824acadb704145ad76010b63f0c525",
-    cur_time: "715030",
+  const drive_res = await Drive.GetByUniqueId({ id: "622310670", store });
+  if (drive_res.error) {
+    return;
+  }
+  const drive = drive_res.data;
+  const tv = tv_res.data;
+  const r = await tv.snapshot_media({
+    file_id: "65157e1ee9c1491a8a894b79a0ee42b21eb5185d",
+    cur_time: 83.771793,
+    filename(time: string) {
+      return dayjs().unix().toString();
+    },
+    drive,
+    store,
   });
   if (r.error) {
     console.log(r.error.message);

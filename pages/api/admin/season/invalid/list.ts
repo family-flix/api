@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { normalize_partial_tv } from "@/domains/tv/utils";
+import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
 import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";

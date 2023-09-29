@@ -5,9 +5,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { normalize_partial_tv } from "@/domains/tv/utils";
-import { ModelQuery, SeasonProfileWhereInput, TVProfileWhereInput } from "@/domains/store/types";
-import { MediaProfileSourceTypes } from "@/constants";
+import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
+import { ModelQuery, SeasonProfileWhereInput } from "@/domains/store/types";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";

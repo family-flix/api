@@ -57,19 +57,21 @@ type DriveProps = {
     token_id: string;
   } & AliyunDriveProfile;
   client: AliyunBackupDriveClient;
-  user: User;
+  user?: User;
   store: DatabaseStore;
 };
 
 export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** create drive */
-  static async Get(values: { id: string; user: User; store: DatabaseStore }) {
+  static async Get(values: { id: string; user?: User; store: DatabaseStore }) {
     const { id, user, store } = values;
-    const drive_res = await store.find_drive({ id, user_id: user.id });
-    if (drive_res.error) {
-      return Result.Err(drive_res.error);
+    const where: ModelQuery<"drive"> = {
+      id,
+    };
+    if (user) {
+      where.user_id = user.id;
     }
-    const drive_record = drive_res.data;
+    const drive_record = await store.prisma.drive.findFirst({ where });
     if (drive_record === null) {
       return Result.Err("没有匹配的云盘记录");
     }
@@ -110,16 +112,17 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       })
     );
   }
-  static async GetByUniqueId(values: { id?: string; user: User; store: DatabaseStore }) {
+  static async GetByUniqueId(values: { id?: string; user?: User; store: DatabaseStore }) {
     const { id, user, store } = values;
     if (!id) {
       return Result.Err("缺少云盘 unique_id");
     }
-    const drive_res = await store.find_drive({ unique_id: id, user_id: user.id });
-    if (drive_res.error) {
-      return Result.Err(drive_res.error);
-    }
-    const drive_record = drive_res.data;
+    const drive_record = await store.prisma.drive.findFirst({
+      where: {
+        unique_id: id,
+        user_id: user ? user.id : undefined,
+      },
+    });
     if (drive_record === null) {
       return Result.Err("没有匹配的云盘记录");
     }
@@ -415,7 +418,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** 云盘名称 */
   name: string;
   /** 云盘所属用户 id */
-  user_id: string;
+  // user_id: string;
   profile: DriveProps["profile"];
   client: AliyunBackupDriveClient;
   store: DatabaseStore;
@@ -428,7 +431,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     this.type = type;
     this.id = id;
     this.profile = profile;
-    this.user_id = user.id;
+    // this.user_id = user.id;
     this.store = store;
     this.client = client;
   }
@@ -1119,8 +1122,11 @@ export async function clear_expired_files_in_drive(values: {
         if (res.error.message.includes("file not exist")) {
           if (on_print) {
             on_print(Article.build_line([prefix, "删除云盘文件", item.name]));
+            on_print(Article.build_line([item.id]));
+            on_print(Article.build_line([item.file_id]));
+            on_print(Article.build_line([""]));
           }
-          await drive.delete_file({ file_id: item.file_id }, { ignore_drive_file: true });
+          // await drive.delete_file({ file_id: item.file_id }, { ignore_drive_file: true });
         }
         return;
       }

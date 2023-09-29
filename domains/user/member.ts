@@ -64,6 +64,43 @@ export class Member {
     }
     return Result.Ok(new Member({ id, remark: member.remark, permissions, user, token }));
   }
+  static async Get(body: { id: string }, store: DatabaseStore) {
+    const { id } = body;
+    const member = await store.prisma.member.findUnique({
+      where: { id },
+      include: {
+        user: {
+          include: {
+            settings: true,
+          },
+        },
+      },
+    });
+    if (!member) {
+      return Result.Err("不存在");
+    }
+    const settings = await User.parseSettings(member.user.settings);
+    const user = new User({
+      id: member.user_id,
+      settings,
+      token: "",
+      store,
+    });
+    let permissions: string[] = [];
+    const json_res = parseJSONStr(member.permission);
+    if (json_res.data) {
+      permissions = json_res.data as unknown as string[];
+    }
+    return Result.Ok(
+      new Member({
+        id,
+        remark: member.remark,
+        token: "",
+        user,
+        permissions,
+      })
+    );
+  }
   /**
    * User 类工厂函数
    * @param id

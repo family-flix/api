@@ -51,9 +51,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const searcher = searcher_res.data;
   const job_res = await Job.New({
-    unique_id: movie_id,
-    desc: "刷新电影详情",
-    type: TaskTypes.RefreshMovieProfile,
+    desc: `刷新「${movie.profile.name}」详情`,
+    unique_id: "update_movie_and_season",
+    type: TaskTypes.RefreshMedia,
     user_id: user.id,
     store,
   });

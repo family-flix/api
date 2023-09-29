@@ -4,7 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { TV } from "@/domains/tv";
+import { MediaThumbnail } from "@/domains/media_thumbnail";
 import { Member } from "@/domains/user/member";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e("没有匹配的播放记录");
   }
   if (history.thumbnail) {
-    const tv_res = await TV.New({
+    const tv_res = await MediaThumbnail.New({
       assets: app.assets,
     });
     if (tv_res.data) {

@@ -13,14 +13,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { tv_id: id, season_id } = req.query as Partial<{ tv_id: string; season_id: string }>;
-  if (!id) {
-    return e(Result.Err("缺少电视剧 id"));
-  }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: member_id } = t_res.data;
+  if (!id) {
+    return e(Result.Err("缺少电视剧 id"));
+  }
+  const member = t_res.data;
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       profile: true,
       play_histories: {
         where: {
-          member_id,
+          member_id: member.id,
           tv_id: id,
         },
       },
@@ -50,7 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (seasons.length === 0) {
     return e(Result.Err("该电视剧暂无季信息"));
   }
-  // console.log("[]seasons", seasons);
   const target_season = (() => {
     if (season_id) {
       return {
@@ -61,13 +60,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   })();
   const play_history =
     play_histories.find((p) => {
-      return p.member_id === member_id && p.tv_id === id;
+      return p.member_id === member.id && p.tv_id === id;
     }) ?? null;
   const playing_episode = await (async () => {
     if (play_history === null) {
       const episode = await store.prisma.episode.findFirst({
         where: {
           season_id: target_season.id,
+          episode_number: {
+            not: 0,
+          },
         },
         include: {
           profile: true,

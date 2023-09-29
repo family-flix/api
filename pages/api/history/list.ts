@@ -6,27 +6,29 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
 import { Member } from "@/domains/user/member";
+import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/server";
+import { MediaTypes } from "@/constants";
 import { store } from "@/store";
+import { response_error_factory } from "@/utils/server";
+import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { page: page_str = "1", page_size: page_size_str = "20" } = req.query as Partial<{
+  const { page: page_str, page_size: page_size_str } = req.query as Partial<{
     episode_id: string;
     page: string;
     page_size: string;
   }>;
-
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: member_id } = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
-  const where: NonNullable<Parameters<typeof store.prisma.play_history.findMany>[0]>["where"] = {
+  const member = t_res.data;
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
+  const where: ModelQuery<"play_history"> = {
     OR: [
       {
         AND: [
@@ -48,8 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       },
     ],
-
-    member_id,
+    member_id: member.id,
   };
   const count = await store.prisma.play_history.count({
     where,
@@ -113,7 +114,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             const has_update = latest_episode && dayjs(latest_episode.created).isAfter(updated);
             return {
               id,
+              type: MediaTypes.Season,
               tv_id: tv.id,
+              season_id: episode.season.id,
               episode_id: episode.id,
               name: name || original_name,
               poster_path: poster_path || tv.profile.poster_path,
@@ -127,7 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               cur_episode_count: episode.season._count.episodes,
               episode_count,
               has_update,
-              first_air_date: air_date,
+              air_date,
               updated,
             };
           }
@@ -135,6 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             const { name, poster_path, vote_average, original_name, air_date } = movie.profile;
             return {
               id,
+              type: MediaTypes.Movie,
               movie_id: movie.id,
               name: name || original_name,
               poster_path,

@@ -9,7 +9,7 @@ import { User } from "@/domains/user";
 import { store } from "@/store";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { normalize_partial_tv } from "@/domains/tv/utils";
+import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
 import { TVProfileWhereInput } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
