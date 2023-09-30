@@ -46,9 +46,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const count = await store.prisma.bind_for_parsed_tv.count({ where });
     job.output.write_line(["共", count, "个同步任务"]);
     await walk_model_with_cursor({
-      fn: () => {
+      fn: (extra) => {
         return store.prisma.bind_for_parsed_tv.findMany({
           where,
+          ...extra,
         });
       },
       handler: async (data, index) => {

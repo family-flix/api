@@ -280,6 +280,7 @@ export async function walk_model_with_cursor<F extends (extra: { take: number })
   const { fn, page_size = 20, handler } = options;
   let next_marker = "";
   let no_more = false;
+  let index = 0;
   // const count = await store.prisma.file.count({ where });
   do {
     const extra_args = {
@@ -305,7 +306,8 @@ export async function walk_model_with_cursor<F extends (extra: { take: number })
     const correct_list = list.slice(0, page_size);
     for (let i = 0; i < correct_list.length; i += 1) {
       const data = correct_list[i];
-      await handler(data, i);
+      await handler(data, index);
+      index += 1;
     }
   } while (no_more === false);
 }

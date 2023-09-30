@@ -196,17 +196,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     }
   }
   async run() {
-    // this.emit(
-    //   Events.Print,
-    //   new ArticleLineNode({
-    //     children: [
-    //       new ArticleHeadNode({
-    //         level: 3,
-    //         text: "开始执行同步任务",
-    //       }),
-    //     ],
-    //   })
-    // );
     const { profile, client, store } = this;
     const { id, url, file_id, file_id_link_resource, file_name_link_resource, invalid } = profile;
     // const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
