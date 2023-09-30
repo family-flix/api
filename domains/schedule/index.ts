@@ -312,6 +312,9 @@ export class ScheduleTask {
       user,
       store: this.store,
       assets: this.app.assets,
+      on_print(node) {
+        job.output.write(node);
+      },
     });
     if (searcher_res.error) {
       return Result.Err(searcher_res.error.message);

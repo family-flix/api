@@ -63,9 +63,6 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     this.store = store;
     this.user = user;
     this.searcher = searcher;
-    this.searcher.on_print((node) => {
-      this.emit(Events.Print, node);
-    });
     this.client = new TMDBClient({ token: user.settings.tmdb_token });
     if (on_print) {
       this.on_print(on_print);
@@ -225,12 +222,15 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
           include: {
             profile: true,
           },
+          orderBy: {
+            episode_number: "asc",
+          },
           ...extra,
         });
       },
       handler: async (episode, index) => {
-        this.emit(Events.Print, Article.build_line(["第", index + 1, "个"]));
-        const prefix = `[${tv.profile.name}/${season.season_text}/${episode.episode_text}]`;
+        // this.emit(Events.Print, Article.build_line(["第", index + 1, "个"]));
+        const prefix = `[${episode.episode_text}/${tv.profile.name}]`;
         if (!episode.episode_number) {
           this.emit(Events.Print, Article.build_line([prefix, "没有正确的剧集数"]));
           return;
@@ -242,7 +242,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
           this.emit(Events.Print, Article.build_line([prefix, "没有匹配的剧集详情"]));
           return;
         }
-        this.emit(Events.Print, Article.build_line([prefix, "刷新剧集", episode.episode_text]));
+        // this.emit(Events.Print, Article.build_line([prefix, "刷新剧集"]));
         await this.refresh_episode_profile(episode, matched);
       },
     });
@@ -553,7 +553,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         ...normalized_profile,
         unique_id: profile_record_res.data.unique_id,
         seasons: r1.data.seasons,
-        scopes: [] as { name: string }[],
+        scopes: [{ name }, { name: original_name }] as { name: string }[],
         override: true,
       });
     }

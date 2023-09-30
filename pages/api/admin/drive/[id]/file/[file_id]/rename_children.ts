@@ -6,13 +6,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
+import { DriveAnalysis } from "@/domains/analysis";
 import { Drive } from "@/domains/drive";
 import { Folder } from "@/domains/folder";
 import { Job, TaskTypes } from "@/domains/job";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
+import { BaseApiResp, Result } from "@/types";
+import { response_error_factory } from "@/utils/server";
+import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -42,9 +42,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = drive_res.data;
   const job_res = await Job.New({
-    type: TaskTypes.RenameFiles,
-    desc: "重命名子文件列表",
     unique_id: [id, folder_id].join("/"),
+    desc: "重命名子文件列表",
+    type: TaskTypes.RenameFiles,
     user_id: user.id,
     store,
   });
@@ -55,109 +55,97 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const folder = new Folder(folder_id, {
     client: drive.client,
   });
-  async function run(values: { file_id: string; regexp: string; replace: string }) {
-    const { file_id, regexp, replace } = values;
-    job.output.write(
-      new ArticleLineNode({
-        children: ["开始重命名"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
+  async function run(parent: { file_id: string; regexp: string; replace: string }) {
+    const { file_id: parent_file_id, regexp, replace } = parent;
+    job.output.write_line(["开始重命名"]);
     let count = 0;
     do {
       if (count >= 6) {
+        // 文件列表请求失败超过6次就中断
         folder.next_marker = "";
       }
       await (async () => {
         const r = await folder.next();
-        // console.log(1, r.error);
         if (r.error) {
-          job.output.write(
-            new ArticleLineNode({
-              children: ["请求失败", r.error.message].map((text) => new ArticleTextNode({ text })),
-            })
-          );
+          job.output.write_line(["请求失败", r.error.message]);
           count += 1;
           return;
         }
         const result = r.data;
-        // console.log(2, result);
         if (!result) {
-          job.output.write(
-            new ArticleLineNode({
-              children: ["没有文件"].map((text) => new ArticleTextNode({ text })),
-            })
-          );
+          job.output.write_line(["没有文件"]);
           count += 1;
           return;
         }
         for (let i = 0; i < result.length; i += 1) {
           await (async () => {
             const file = result[i];
-            //     console.log(3, file.name);
-            job.output.write(
-              new ArticleLineNode({
-                children: ["处理文件", file.name].map((text) => new ArticleTextNode({ text })),
-              })
-            );
+            const prefix = `[${file.name}]`;
             const next_name = file.name.replace(new RegExp(regexp), replace);
-            job.output.write(
-              new ArticleLineNode({
-                children: ["新文件名是", next_name].map((text) => new ArticleTextNode({ text })),
-              })
-            );
+            job.output.write_line([prefix, "新文件名是", next_name]);
             if (file.name === next_name) {
+              job.output.write_line([prefix, "文件名已经是", next_name, "直接跳过"]);
               return;
             }
-            const r = await drive.client.rename_file(file.id, next_name);
+            const file_record = await store.prisma.file.findFirst({
+              where: {
+                file_id: file.id,
+              },
+            });
+            if (!file_record) {
+              job.output.write_line([prefix, "文件未索引，修改云盘实际文件即可"]);
+              const r = await drive.client.rename_file(file.id, next_name);
+              if (r.error) {
+                job.output.write_line([prefix, "修改云盘文件失败", r.error.message]);
+                return;
+              }
+              return;
+            }
+            job.output.write_line([prefix, "修改云盘文件及解析结果"]);
+            const r = await drive.rename_file(file_record, { name: next_name });
             if (r.error) {
-              job.output.write(
-                new ArticleLineNode({
-                  children: ["重命名失败，因为 ", r.error.message].map((text) => new ArticleTextNode({ text })),
-                })
-              );
+              job.output.write_line([prefix, "重命名失败，因为 ", r.error.message]);
               return;
             }
-            await store.prisma.file.updateMany({
-              where: {
-                file_id: file.id,
-              },
-              data: {
-                updated: dayjs().toISOString(),
-                name: next_name,
-              },
-            });
-            await store.prisma.parsed_episode.updateMany({
-              where: {
-                file_id: file.id,
-              },
-              data: {
-                updated: dayjs().toISOString(),
-                name: next_name,
-              },
-            });
-            await store.prisma.parsed_movie.updateMany({
-              where: {
-                file_id: file.id,
-              },
-              data: {
-                updated: dayjs().toISOString(),
-                name: next_name,
-              },
-            });
-            await store.prisma.bind_for_parsed_tv.updateMany({
-              where: {
-                file_id_link_resource: file.id,
-              },
-              data: {
-                updated: dayjs().toISOString(),
-                file_name_link_resource: next_name,
-              },
-            });
+            job.output.write_line([prefix, "重命名成功"]);
           })();
         }
       })();
     } while (folder.next_marker);
-    //     console.log(4);
+    const file = await store.prisma.file.findFirst({
+      where: {
+        file_id: parent_file_id,
+        user_id: user.id,
+      },
+    });
+    if (!file) {
+      job.finish();
+      return;
+    }
+    const analysis_res = await DriveAnalysis.New({
+      assets: app.assets,
+      user,
+      drive,
+      store,
+    });
+    if (analysis_res.error) {
+      job.output.write_line(["初始化云盘索引失败"]);
+      job.finish();
+      return;
+    }
+    const analysis = analysis_res.data;
+    const r2 = await analysis.run([
+      {
+        name: [file.parent_paths, file.name].join("/"),
+        type: "file",
+      },
+    ]);
+    if (r2.error) {
+      job.output.write_line(["索引失败"]);
+      job.finish();
+      return;
+    }
+    job.output.write_line(["重命名并索引成功"]);
     job.finish();
   }
   run({

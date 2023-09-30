@@ -420,7 +420,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       handler: async (parsed_season, i) => {
         const { parsed_tv, season_number } = parsed_season;
         const prefix = `${get_prefix_from_names(parsed_tv)}/${season_number}`;
-        this.emit(Events.Print, Article.build_line([prefix, `第${i + 1}个`]));
+        this.emit(Events.Print, Article.build_line([`第${i + 1}个`]));
         const r = await this.process_parsed_season({ parsed_tv, parsed_season }, { force: force_search_tmdb });
         if (r.error) {
           this.emit(Events.Print, Article.build_line([prefix, "添加电视剧季详情失败", "  ", r.error.message]));

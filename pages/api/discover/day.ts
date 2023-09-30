@@ -36,6 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             not: MediaProfileSourceTypes.Other,
           },
         },
+        episodes: {
+          every: {
+            parsed_episodes: { some: {} },
+          },
+        },
       },
       user_id: member.user.id,
     },
@@ -43,6 +48,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       season: {
         include: {
           profile: true,
+          episodes: {
+            orderBy: {
+              episode_number: "desc",
+            },
+            take: 1,
+          },
         },
       },
       tv: {
@@ -54,14 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     distinct: ["season_id"],
     orderBy: [
       {
-        season: {
-          profile: {
-            air_date: "desc",
-          },
-        },
-      },
-      {
-        episode_number: "desc",
+        created: "desc",
       },
     ],
   });
@@ -78,9 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     orderBy: [
       {
-        profile: {
-          air_date: "desc",
-        },
+        created: "desc",
       },
     ],
   });
@@ -93,10 +95,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     tv_id?: string;
     season_text?: string;
     text: string | null;
+    created: number;
   };
   const medias = episodes
     .map((episode) => {
       const { tv, season } = episode;
+      const latest_episode = season.episodes[0];
       return {
         id: season.id,
         type: MediaTypes.Season,
@@ -106,16 +110,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         poster_path: season.profile.poster_path || tv.profile.poster_path,
         air_date: season.profile.air_date,
         text: (() => {
-          if (season.profile.episode_count === episode.episode_number) {
+          if (season.profile.episode_count === latest_episode.episode_number) {
             return `全${season.profile.episode_count}集`;
           }
-          return `更新至${episode.episode_number}集`;
+          return `更新至${latest_episode.episode_number}集`;
         })(),
+        created: dayjs(latest_episode.created).unix(),
       } as MediaPayload;
     })
     .concat(
       movies.map((movie) => {
-        const { id, profile } = movie;
+        const { id, profile, created } = movie;
         return {
           id,
           type: MediaTypes.Movie,
@@ -123,9 +128,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           poster_path: profile.poster_path,
           air_date: profile.air_date,
           text: null,
+          created: dayjs(created).unix(),
         } as MediaPayload;
       })
-    );
+    )
+    .sort((a, b) => {
+      return b.created - a.created;
+    });
   res.status(200).json({
     code: 0,
     msg: "",

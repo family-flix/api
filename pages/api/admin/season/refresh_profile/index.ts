@@ -40,6 +40,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user,
     store,
     assets: app.assets,
+    on_print(node) {
+      job.output.write(node);
+    },
   });
   if (searcher_res.error) {
     return e(searcher_res);

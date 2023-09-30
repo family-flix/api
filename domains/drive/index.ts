@@ -1078,6 +1078,73 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     await this.delete_folder(file);
     return Result.Ok(null);
   }
+  /** 重命名（文件/文件夹），并重置解析结果 */
+  async rename_file(file: { file_id: string; type: FileType }, values: { name: string }) {
+    const { name } = values;
+    const r = await this.client.rename_file(file.file_id, name);
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    await this.store.prisma.file.updateMany({
+      where: {
+        id: file.file_id,
+      },
+      data: {
+        name,
+      },
+    });
+    if (file.type === FileType.File) {
+      await this.store.prisma.parsed_episode.updateMany({
+        where: {
+          file_id: file.file_id,
+        },
+        data: {
+          file_name: name,
+          can_search: 1,
+          episode_id: null,
+        },
+      });
+      await this.store.prisma.parsed_movie.updateMany({
+        where: {
+          file_id: file.file_id,
+        },
+        data: {
+          file_name: name,
+          can_search: 1,
+          movie_id: null,
+        },
+      });
+    }
+    if (file.type === FileType.Folder) {
+      await this.store.prisma.bind_for_parsed_tv.updateMany({
+        where: {
+          file_id_link_resource: file.file_id,
+        },
+        data: {
+          file_name_link_resource: name,
+        },
+      });
+      await this.store.prisma.parsed_season.updateMany({
+        where: {
+          file_id: file.file_id,
+        },
+        data: {
+          file_name: name,
+          season_id: null,
+        },
+      });
+      await this.store.prisma.parsed_tv.updateMany({
+        where: {
+          file_id: file.file_id,
+        },
+        data: {
+          file_name: name,
+          tv_id: null,
+        },
+      });
+    }
+    return Result.Ok(null);
+  }
 
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
     return this.on(Events.Print, handler);

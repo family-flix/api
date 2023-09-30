@@ -10,7 +10,6 @@ import { TaskTypes } from "@/domains/job/constants";
 import { Job } from "@/domains/job";
 import { SeasonProfileRecord, SeasonRecord, TVProfileRecord, TVRecord } from "@/domains/store/types";
 import { MediaSearcher } from "@/domains/searcher";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
