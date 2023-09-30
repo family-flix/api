@@ -86,11 +86,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       filename(time) {
         return `${movie_id}-${time}`;
       },
-    }).then((r) => {
+    }).then(async (r) => {
       if (r.error) {
         return;
       }
-      store.prisma.play_history.update({
+      await store.prisma.play_history.update({
         where: {
           id: created_movie_id,
         },
@@ -119,17 +119,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   tv.snapshot_media({
     file_id,
-    drive,
     cur_time: current_time,
-    store,
     filename(time) {
       return `${movie_id}-${time}`;
     },
-  }).then((r) => {
+    drive,
+    store,
+  }).then(async (r) => {
     if (r.error) {
       return;
     }
-    store.prisma.play_history.update({
+    await store.prisma.play_history.update({
       where: {
         id: existing_history.id,
       },
