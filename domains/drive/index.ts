@@ -23,7 +23,6 @@ import { DatabaseStore } from "@/domains/store";
 import { FileType } from "@/constants";
 import { Result, resultify } from "@/types";
 import { parseJSONStr, r_id } from "@/utils";
-import { to_number } from "@/utils/primitive";
 
 import { DriveTypes } from "./constants";
 
@@ -418,7 +417,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** 云盘名称 */
   name: string;
   /** 云盘所属用户 id */
-  // user_id: string;
+  user_id?: string;
   profile: DriveProps["profile"];
   client: AliyunBackupDriveClient;
   store: DatabaseStore;
@@ -431,7 +430,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     this.type = type;
     this.id = id;
     this.profile = profile;
-    // this.user_id = user.id;
+    if (user) {
+      this.user_id = user.id;
+    }
     this.store = store;
     this.client = client;
   }
@@ -758,279 +759,227 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         ],
       })
     );
+    this.emit(Events.Print, Article.build_line([`[${name}]`, "遍历子文件"]));
     for (let i = 0; i < child_files.length; i += 1) {
       await (async () => {
         const child = child_files[i];
         const { type, name, parent_paths } = child;
+        this.emit(Events.Print, Article.build_line([`[${parent_paths}/${name}]`]));
         if (type === FileType.Folder) {
           this.emit(
             Events.Print,
-            new ArticleSectionNode({
-              children: [
-                new ArticleLineNode({
-                  children: [`[${parent_paths}/${name}]`, "是文件夹，先删除子文件夹及字文件"].map(
-                    (text) => new ArticleTextNode({ text })
-                  ),
-                }),
-              ],
-            })
+            Article.build_line([`[${parent_paths}/${name}]`, "是文件夹，先删除子文件夹及字文件"])
           );
           await this.delete_folder(child);
-          this.emit(
-            Events.Print,
-            new ArticleSectionNode({
-              children: [
-                new ArticleLineNode({
-                  children: [`[${parent_paths}/${name}]`, "子文件夹及字文件删除完毕"].map(
-                    (text) => new ArticleTextNode({ text })
-                  ),
-                }),
-              ],
-            })
-          );
+          this.emit(Events.Print, Article.build_line([`[${parent_paths}/${name}]`, "子文件夹及字文件删除完毕"]));
           return;
         }
       })();
     }
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [`删除文件夹 「${name}」 下的所有子文件/文件`].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    await this.store.prisma.file.deleteMany({
-      where: {
+    this.emit(Events.Print, Article.build_line([`删除文件夹 「${name}」 下的所有子文件/文件`]));
+    try {
+      await this.store.prisma.file.deleteMany({
+        where: {
+          file_id: {
+            in: child_files.map((f) => f.file_id),
+          },
+        },
+      });
+      this.emit(Events.Print, Article.build_line(["删除关联的同步任务"]));
+      const sync_tasks = await this.store.prisma.bind_for_parsed_tv.findMany({
+        where: {
+          file_id_link_resource: {
+            in: child_files.map((f) => f.file_id),
+          },
+        },
+      });
+      if (sync_tasks.length) {
+        this.emit(
+          Events.Print,
+          new ArticleSectionNode({
+            children: [
+              new ArticleListNode({
+                children: sync_tasks.map(
+                  (text) =>
+                    new ArticleListItemNode({
+                      children: [text.name].map((text) => {
+                        return new ArticleTextNode({ text });
+                      }),
+                    })
+                ),
+              }),
+            ],
+          })
+        );
+      }
+      await this.store.prisma.bind_for_parsed_tv.deleteMany({
+        where: {
+          file_id_link_resource: {
+            in: [f, ...child_files].map((f) => f.file_id),
+          },
+        },
+      });
+      const where = {
         file_id: {
-          in: child_files.map((f) => f.file_id),
-        },
-      },
-    });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["删除关联的同步任务"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    const r1 = await this.store.prisma.bind_for_parsed_tv.findMany({
-      where: {
-        file_id_link_resource: {
-          in: child_files.map((f) => f.file_id),
-        },
-      },
-    });
-    if (r1.length) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: r1.map(
-                (text) =>
-                  new ArticleListItemNode({
-                    children: [text.name].map((text) => {
-                      return new ArticleTextNode({ text });
-                    }),
-                  })
-              ),
-            }),
-          ],
-        })
-      );
-    }
-    await this.store.prisma.bind_for_parsed_tv.deleteMany({
-      where: {
-        file_id_link_resource: {
           in: [f, ...child_files].map((f) => f.file_id),
         },
-      },
-    });
-    const where = {
-      file_id: {
-        in: [f, ...child_files].map((f) => f.file_id),
-      },
-    };
-    // 删除关联的剧集源
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["删除关联的剧集源"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    const r2 = await this.store.prisma.parsed_episode.findMany({
-      where,
-    });
-    if (r2.length) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: r2.map(
-                (text) =>
-                  new ArticleListItemNode({
-                    children: [text.id, "/", text.episode_number].map((text) => {
-                      return new ArticleTextNode({ text });
-                    }),
-                  })
-              ),
-            }),
-          ],
-        })
-      );
-    }
-    await this.store.prisma.parsed_episode.deleteMany({
-      where,
-    });
-    // 删除关联的季
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["删除关联的解析季"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    const r3 = await this.store.prisma.parsed_season.findMany({
-      where,
-    });
-    if (r3.length) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: r3.map(
-                (text) =>
-                  new ArticleListItemNode({
-                    children: [text.season_number].map((text) => {
-                      return new ArticleTextNode({ text });
-                    }),
-                  })
-              ),
-            }),
-          ],
-        })
-      );
-    }
-    await this.store.prisma.parsed_season.deleteMany({
-      where,
-    });
-    // 删除关联的电视剧
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["开始删除关联的解析电视剧结果"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    const r4 = await this.store.prisma.parsed_tv.findMany({
-      where,
-    });
-    if (r4.length) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: r4.map(
-                (text) =>
-                  new ArticleListItemNode({
-                    children: [text.name || ""].map((text) => {
-                      return new ArticleTextNode({ text });
-                    }),
-                  })
-              ),
-            }),
-          ],
-        })
-      );
-    }
-    await this.store.prisma.parsed_tv.deleteMany({
-      where,
-    });
-    // 删除关联的电影
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["删除关联的解析电影结果"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    const r5 = await this.store.prisma.parsed_movie.findMany({
-      where,
-    });
-    if (r5.length) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: r5.map(
-                (text) =>
-                  new ArticleListItemNode({
-                    children: [text.name].map((text) => {
-                      return new ArticleTextNode({ text });
-                    }),
-                  })
-              ),
-            }),
-          ],
-        })
-      );
-    }
-    await this.store.prisma.parsed_movie.deleteMany({
-      where,
-    });
-    const r6 = await this.store.prisma.subtitle.findMany({
-      where,
-    });
-    if (r6.length) {
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: r5.map(
-                (text) =>
-                  new ArticleListItemNode({
-                    children: [text.name].map((text) => {
-                      return new ArticleTextNode({ text });
-                    }),
-                  })
-              ),
-            }),
-          ],
-        })
-      );
-    }
-    await this.store.prisma.subtitle.deleteMany({
-      where,
-    });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["删除起始文件夹", f.name, f.file_id].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    await this.store.prisma.file.deleteMany({
-      where: {
-        file_id: {
-          in: [f.file_id],
+      };
+      // 删除关联的剧集源
+      this.emit(Events.Print, Article.build_line(["删除关联的剧集源"]));
+      const parsed_episodes = await this.store.prisma.parsed_episode.findMany({
+        where,
+      });
+      if (parsed_episodes.length) {
+        this.emit(
+          Events.Print,
+          new ArticleSectionNode({
+            children: [
+              new ArticleListNode({
+                children: parsed_episodes.map(
+                  (text) =>
+                    new ArticleListItemNode({
+                      children: [text.id, "/", text.episode_number].map((text) => {
+                        return new ArticleTextNode({ text });
+                      }),
+                    })
+                ),
+              }),
+            ],
+          })
+        );
+      }
+      await this.store.prisma.parsed_episode.deleteMany({
+        where,
+      });
+      // // 删除关联的季
+      // this.emit(Events.Print, Article.build_line(["删除关联的解析季"]));
+      // const parsed_seasons = await this.store.prisma.parsed_season.findMany({
+      //   where,
+      // });
+      // if (parsed_seasons.length) {
+      //   this.emit(
+      //     Events.Print,
+      //     new ArticleSectionNode({
+      //       children: [
+      //         new ArticleListNode({
+      //           children: parsed_seasons.map(
+      //             (text) =>
+      //               new ArticleListItemNode({
+      //                 children: [text.season_number].map((text) => {
+      //                   return new ArticleTextNode({ text });
+      //                 }),
+      //               })
+      //           ),
+      //         }),
+      //       ],
+      //     })
+      //   );
+      // }
+      // await this.store.prisma.parsed_season.deleteMany({
+      //   where,
+      // });
+      // 删除关联的电视剧
+      this.emit(Events.Print, Article.build_line(["开始删除关联的解析电视剧结果"]));
+      const parsed_tvs = await this.store.prisma.parsed_tv.findMany({
+        where,
+      });
+      if (parsed_tvs.length) {
+        this.emit(
+          Events.Print,
+          new ArticleSectionNode({
+            children: [
+              new ArticleListNode({
+                children: parsed_tvs.map(
+                  (text) =>
+                    new ArticleListItemNode({
+                      children: [text.name || ""].map((text) => {
+                        return new ArticleTextNode({ text });
+                      }),
+                    })
+                ),
+              }),
+            ],
+          })
+        );
+      }
+      await this.store.prisma.parsed_tv.deleteMany({
+        where,
+      });
+      // 删除关联的电影
+      this.emit(Events.Print, Article.build_line(["删除关联的解析电影结果"]));
+      const parsed_movies = await this.store.prisma.parsed_movie.findMany({
+        where,
+      });
+      if (parsed_movies.length) {
+        this.emit(
+          Events.Print,
+          new ArticleSectionNode({
+            children: [
+              new ArticleListNode({
+                children: parsed_movies.map(
+                  (text) =>
+                    new ArticleListItemNode({
+                      children: [text.name].map((text) => {
+                        return new ArticleTextNode({ text });
+                      }),
+                    })
+                ),
+              }),
+            ],
+          })
+        );
+      }
+      await this.store.prisma.parsed_movie.deleteMany({
+        where,
+      });
+      const subtitles = await this.store.prisma.subtitle.findMany({
+        where,
+      });
+      if (subtitles.length) {
+        this.emit(
+          Events.Print,
+          new ArticleSectionNode({
+            children: [
+              new ArticleListNode({
+                children: parsed_movies.map(
+                  (text) =>
+                    new ArticleListItemNode({
+                      children: [text.name].map((text) => {
+                        return new ArticleTextNode({ text });
+                      }),
+                    })
+                ),
+              }),
+            ],
+          })
+        );
+      }
+      await this.store.prisma.subtitle.deleteMany({
+        where,
+      });
+      this.emit(Events.Print, Article.build_line(["删除起始文件夹", f.name, f.file_id]));
+      await this.store.prisma.file.deleteMany({
+        where: {
+          file_id: {
+            in: [f.file_id],
+          },
         },
-      },
-    });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["开始删除云盘内文件"].map((text) => new ArticleTextNode({ text })),
-      })
-    );
-    const r7 = await this.client.delete_file(file_id);
-    if (r7.error) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["删除云盘文件失败，因为", r7.error.message].map((text) => new ArticleTextNode({ text })),
-        })
-      );
+      });
+      this.emit(Events.Print, Article.build_line(["开始删除云盘内文件"]));
+      const r7 = await this.client.delete_file(file_id);
+      if (r7.error) {
+        this.emit(
+          Events.Print,
+          new ArticleLineNode({
+            children: ["删除云盘文件失败，因为", r7.error.message].map((text) => new ArticleTextNode({ text })),
+          })
+        );
+      }
+      return Result.Ok(null);
+    } catch (err) {
+      const error = err as Error;
+      return Result.Err(error.message);
     }
-    return Result.Ok(null);
   }
   /**
    * 删除云盘内的指定文件
@@ -1049,24 +998,10 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           file_id,
         },
       });
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["直接删除还未索引的文件"].map((text) => {
-            return new ArticleTextNode({ text });
-          }),
-        })
-      );
+      this.emit(Events.Print, Article.build_line(["直接删除还未索引的文件"]));
       const r = await this.client.delete_file(file_id);
       if (r.error) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: ["删除失败，因为", r.error.message].map((text) => {
-              return new ArticleTextNode({ text });
-            }),
-          })
-        );
+        this.emit(Events.Print, Article.build_line(["删除失败，因为", r.error.message]));
         return Result.Err(r.error.message);
       }
       return Result.Ok(null);
@@ -1079,16 +1014,40 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   /** 重命名（文件/文件夹），并重置解析结果 */
-  async rename_file(file: { file_id: string; type: FileType }, values: { name: string }) {
+  async rename_file(file: { file_id: string; name: string; type: FileType }, values: { name: string }) {
     const { name } = values;
     const r = await this.client.rename_file(file.file_id, name);
     if (r.error) {
       return Result.Err(r.error.message);
     }
+    const f = await this.store.prisma.file.findFirst({
+      where: {
+        file_id: file.file_id,
+        user_id: this.user_id,
+      },
+    });
+    await this.store.prisma.tmp_file.updateMany({
+      where: {
+        name: file.name,
+        user_id: this.user_id,
+      },
+      data: {
+        name,
+      },
+    });
+    if (!f) {
+      return Result.Ok(null);
+    }
     await this.store.prisma.file.updateMany({
       where: {
         id: file.file_id,
       },
+      data: {
+        name,
+      },
+    });
+    await this.store.prisma.tmp_file.updateMany({
+      where: {},
       data: {
         name,
       },
@@ -1124,15 +1083,15 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           file_name_link_resource: name,
         },
       });
-      await this.store.prisma.parsed_season.updateMany({
-        where: {
-          file_id: file.file_id,
-        },
-        data: {
-          file_name: name,
-          season_id: null,
-        },
-      });
+      // await this.store.prisma.parsed_season.updateMany({
+      //   where: {
+      //     file_id: file.file_id,
+      //   },
+      //   data: {
+      //     file_name: name,
+      //     season_id: null,
+      //   },
+      // });
       await this.store.prisma.parsed_tv.updateMany({
         where: {
           file_id: file.file_id,

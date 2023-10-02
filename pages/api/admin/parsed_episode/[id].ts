@@ -13,22 +13,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  if (!id) {
-    return e("缺少剧集 id");
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
+  if (!id) {
+    return e("缺少剧集 id");
+  }
+  const user = t_res.data;
   const episode = await store.prisma.parsed_episode.findFirst({
     where: {
       id,
-      user_id,
+      user_id: user.id,
     },
     include: {
       parsed_tv: true,
-      parsed_season: true,
+      // parsed_season: true,
     },
   });
   if (episode === null) {

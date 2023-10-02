@@ -127,6 +127,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user,
       drive,
       store,
+      on_print(v) {
+        job.output.write(v);
+      },
     });
     if (analysis_res.error) {
       job.output.write_line(["初始化云盘索引失败"]);

@@ -66,13 +66,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const job = job_res.data;
   const drive_res = await Drive.Get({ id: file.drive_id, user, store });
   if (drive_res.error) {
-    job.output.write_line(["初始化云盘失败"]);
-    return;
+    return e(Result.Err(drive_res));
   }
   const drive = drive_res.data;
   const r = await drive.rename_file(file, { name });
   if (r.error) {
-    job.output.write_line(["重命名文件失败"]);
     return e(r);
   }
   async function run(file: FileRecord, name: string) {
@@ -81,6 +79,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user,
       drive,
       store,
+      on_print(v) {
+        job.output.write(v);
+      },
     });
     if (analysis_res.error) {
       job.output.write_line(["初始化云盘索引失败"]);

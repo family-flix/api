@@ -199,15 +199,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                 },
               },
             },
-            parsed_season: {
-              include: {
-                season: {
-                  include: {
-                    profile: true,
-                  },
-                },
-              },
-            },
           },
           orderBy: {
             parsed_tv: {
@@ -218,9 +209,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         });
       },
       handler: async (parsed_episode, i) => {
-        const { parsed_tv, parsed_season } = parsed_episode;
+        const { parsed_tv } = parsed_episode;
         job.output.write_line([`第${i + 1}个`]);
-        const r = await searcher.process_parsed_episode({ parsed_tv, parsed_season, parsed_episode }, { force: true });
+        const r = await searcher.process_parsed_episode({ parsed_tv, parsed_episode }, { force: true });
         if (r.error) {
           job.output.write_line(["添加电视剧剧集详情失败", "  ", r.error.message]);
           return;

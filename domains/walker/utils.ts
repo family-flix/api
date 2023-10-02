@@ -21,141 +21,142 @@ export type ExtraUserAndDriveInfo = {
 /**
  * 处理 VideoDetector 吐出来的解析信息
  * 会创建 parsed_tv、parsed_season 和 parsed_episode 记录
+ * @deprecated 使用 EpisodeProcessor
  */
 export async function add_parsed_infos_when_walk(
   data: SearchedEpisode,
   extra: ExtraUserAndDriveInfo,
   store: DatabaseStore
 ) {
-  const { tv, season, episode } = data;
-  const prefix = `${episode.parent_paths}/${episode.file_name}`;
-  // log(`[${prefix}]`, "开始处理视频文件");
-  const existing_episode_res = await store.find_parsed_episode({
-    file_id: episode.file_id,
-  });
-  if (existing_episode_res.error) {
-    // log("[ERROR]find episode request failed", existing_episode_res.error.message);
-    // log(`[${prefix}]`, "判断视频文件是否存在失败");
-    return Result.Err(existing_episode_res.error);
-  }
-  const existing_episode = existing_episode_res.data;
-  if (!existing_episode) {
-    // log(`[${prefix}]`, "是新视频文件");
-    const tv_adding_res = await add_parsed_tv(data, extra, store);
-    if (tv_adding_res.error) {
-      // log(`[${prefix}]`, "新增电视剧信息失败", tv_adding_res.error.message);
-      return Result.Err(tv_adding_res.error);
-    }
-    const season_adding_res = await add_parsed_season(
-      data,
-      {
-        parsed_tv_id: tv_adding_res.data.id,
-        ...extra,
-      },
-      store
-    );
-    if (season_adding_res.error) {
-      // log(`[${prefix}]`, "新增季信息失败", season_adding_res.error.message);
-      return Result.Err(season_adding_res.error);
-    }
-    const add_episode_res = await store.add_parsed_episode({
-      name: tv.name || tv.original_name,
-      season_number: season.season,
-      episode_number: episode.episode,
-      file_id: episode.file_id,
-      file_name: episode.file_name,
-      parent_file_id: episode.parent_file_id,
-      parent_paths: episode.parent_paths,
-      type: FileType.File,
-      size: episode.size,
-      parsed_tv_id: tv_adding_res.data.id,
-      parsed_season_id: season_adding_res.data.id,
-      user_id: extra.user_id,
-      drive_id: extra.drive_id,
-    });
-    if (add_episode_res.error) {
-      // log(`[${prefix}]`, "视频文件保存失败", add_episode_res.error.message);
-      return add_episode_res;
-    }
-    // log(`[${prefix}]`, "视频文件保存成功");
-    return Result.Ok(null);
-  }
-  const episode_payload: {
-    id: string;
-    body: Record<string, string | number>;
-  } = {
-    id: existing_episode.id,
-    body: {},
-  };
-  // log(`[${prefix}]`, "视频文件已存在，判断是否需要更新");
-  const existing_tv_res = await store.find_parsed_tv({
-    id: existing_episode.parsed_tv_id,
-  });
-  if (existing_tv_res.error) {
-    // log("[ERROR]find existing tv failed", existing_tv_res.error.message);
-    return Result.Err(existing_tv_res.error);
-  }
-  const existing_tv = existing_tv_res.data;
-  if (!existing_tv) {
-    // log(`[${prefix}]`, "视频文件没有关联的电视剧记录，属于异常数据");
-    return Result.Err("existing episode should have tv");
-  }
-  if (is_tv_changed(existing_tv, data)) {
-    // prettier-ignore
-    // log(`[${prefix}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
-    const parsed_adding_res = await add_unique_parsed_tv(data, extra, store);
-    if (parsed_adding_res.error) {
-      return Result.Err(parsed_adding_res.error);
-    }
-    existing_episode.parsed_tv_id = parsed_adding_res.data.id;
-    episode_payload.body.parsed_tv_id = parsed_adding_res.data.id;
-  }
-  const existing_season_res = await store.find_parsed_season({
-    id: existing_episode.parsed_season_id,
-  });
-  if (existing_season_res.error) {
-    // log("[ERROR]find existing tv failed", existing_tv_res.error.message);
-    return Result.Err(existing_season_res.error);
-  }
-  const existing_season = existing_season_res.data;
-  if (!existing_season) {
-    // log(`[${prefix}]`, "视频文件没有关联的季，属于异常数据");
-    return Result.Err("existing episode should have season");
-  }
-  if (is_season_changed(existing_season, data)) {
-    episode_payload.body.season = season.season;
-    const existing_season_res = await add_unique_parsed_season(
-      data,
-      {
-        parsed_tv_id: existing_episode.parsed_tv_id,
-        ...extra,
-      },
-      store
-    );
-    if (existing_season_res.error) {
-      return Result.Err(existing_season_res.error);
-    }
-    episode_payload.body.parsed_season_id = existing_season_res.data.id;
-  }
-  if (is_episode_changed(existing_episode, data)) {
-    episode_payload.body.file_name = episode.file_name;
-    episode_payload.body.parent_file_id = episode.parent_file_id;
-    episode_payload.body.parent_paths = episode.parent_paths;
-    episode_payload.body.episode = episode.episode;
-    episode_payload.body.size = episode.size;
-  }
-  if (Object.keys(episode_payload.body).length !== 0) {
-    // log(`[${prefix}]`, "该视频文件信息发生改变，变更后的内容为", episode_payload.body);
-    const update_episode_res = await store.update_parsed_episode(episode_payload.id, episode_payload.body);
-    if (update_episode_res.error) {
-      // log(`[${prefix}]`, "视频文件更新失败", update_episode_res.error.message);
-      return update_episode_res;
-    }
-    // log(`[${prefix}]`, "视频文件更新成功");
-    return Result.Ok(null);
-  }
-  // log(`[${prefix}]`, "视频文件没有变更");
-  return Result.Ok(null);
+  // const { tv, season, episode } = data;
+  // const prefix = `${episode.parent_paths}/${episode.file_name}`;
+  // // log(`[${prefix}]`, "开始处理视频文件");
+  // const existing_episode_res = await store.find_parsed_episode({
+  //   file_id: episode.file_id,
+  // });
+  // if (existing_episode_res.error) {
+  //   // log("[ERROR]find episode request failed", existing_episode_res.error.message);
+  //   // log(`[${prefix}]`, "判断视频文件是否存在失败");
+  //   return Result.Err(existing_episode_res.error);
+  // }
+  // const existing_episode = existing_episode_res.data;
+  // if (!existing_episode) {
+  //   // log(`[${prefix}]`, "是新视频文件");
+  //   const tv_adding_res = await add_parsed_tv(data, extra, store);
+  //   if (tv_adding_res.error) {
+  //     // log(`[${prefix}]`, "新增电视剧信息失败", tv_adding_res.error.message);
+  //     return Result.Err(tv_adding_res.error);
+  //   }
+  //   const season_adding_res = await add_parsed_season(
+  //     data,
+  //     {
+  //       parsed_tv_id: tv_adding_res.data.id,
+  //       ...extra,
+  //     },
+  //     store
+  //   );
+  //   if (season_adding_res.error) {
+  //     // log(`[${prefix}]`, "新增季信息失败", season_adding_res.error.message);
+  //     return Result.Err(season_adding_res.error);
+  //   }
+  //   const add_episode_res = await store.add_parsed_episode({
+  //     name: tv.name || tv.original_name,
+  //     season_number: season.season_text,
+  //     episode_number: episode.episode_text,
+  //     file_id: episode.file_id,
+  //     file_name: episode.file_name,
+  //     parent_file_id: episode.parent_file_id,
+  //     parent_paths: episode.parent_paths,
+  //     type: FileType.File,
+  //     size: episode.size,
+  //     parsed_tv_id: tv_adding_res.data.id,
+  //     parsed_season_id: season_adding_res.data.id,
+  //     user_id: extra.user_id,
+  //     drive_id: extra.drive_id,
+  //   });
+  //   if (add_episode_res.error) {
+  //     // log(`[${prefix}]`, "视频文件保存失败", add_episode_res.error.message);
+  //     return add_episode_res;
+  //   }
+  //   // log(`[${prefix}]`, "视频文件保存成功");
+  //   return Result.Ok(null);
+  // }
+  // const episode_payload: {
+  //   id: string;
+  //   body: Record<string, string | number>;
+  // } = {
+  //   id: existing_episode.id,
+  //   body: {},
+  // };
+  // // log(`[${prefix}]`, "视频文件已存在，判断是否需要更新");
+  // const existing_tv_res = await store.find_parsed_tv({
+  //   id: existing_episode.parsed_tv_id,
+  // });
+  // if (existing_tv_res.error) {
+  //   // log("[ERROR]find existing tv failed", existing_tv_res.error.message);
+  //   return Result.Err(existing_tv_res.error);
+  // }
+  // const existing_tv = existing_tv_res.data;
+  // if (!existing_tv) {
+  //   // log(`[${prefix}]`, "视频文件没有关联的电视剧记录，属于异常数据");
+  //   return Result.Err("existing episode should have tv");
+  // }
+  // if (is_tv_changed(existing_tv, data)) {
+  //   // prettier-ignore
+  //   // log(`[${prefix}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name);
+  //   const parsed_adding_res = await add_unique_parsed_tv(data, extra, store);
+  //   if (parsed_adding_res.error) {
+  //     return Result.Err(parsed_adding_res.error);
+  //   }
+  //   existing_episode.parsed_tv_id = parsed_adding_res.data.id;
+  //   episode_payload.body.parsed_tv_id = parsed_adding_res.data.id;
+  // }
+  // const existing_season_res = await store.find_parsed_season({
+  //   id: existing_episode.parsed_season_id,
+  // });
+  // if (existing_season_res.error) {
+  //   // log("[ERROR]find existing tv failed", existing_tv_res.error.message);
+  //   return Result.Err(existing_season_res.error);
+  // }
+  // const existing_season = existing_season_res.data;
+  // if (!existing_season) {
+  //   // log(`[${prefix}]`, "视频文件没有关联的季，属于异常数据");
+  //   return Result.Err("existing episode should have season");
+  // }
+  // if (is_season_changed(existing_season, data)) {
+  //   episode_payload.body.season = season.season_text;
+  //   const existing_season_res = await add_unique_parsed_season(
+  //     data,
+  //     {
+  //       parsed_tv_id: existing_episode.parsed_tv_id,
+  //       ...extra,
+  //     },
+  //     store
+  //   );
+  //   if (existing_season_res.error) {
+  //     return Result.Err(existing_season_res.error);
+  //   }
+  //   episode_payload.body.parsed_season_id = existing_season_res.data.id;
+  // }
+  // if (is_episode_changed(existing_episode, data)) {
+  //   episode_payload.body.file_name = episode.file_name;
+  //   episode_payload.body.parent_file_id = episode.parent_file_id;
+  //   episode_payload.body.parent_paths = episode.parent_paths;
+  //   episode_payload.body.episode = episode.episode_text;
+  //   episode_payload.body.size = episode.size;
+  // }
+  // if (Object.keys(episode_payload.body).length !== 0) {
+  //   // log(`[${prefix}]`, "该视频文件信息发生改变，变更后的内容为", episode_payload.body);
+  //   const update_episode_res = await store.update_parsed_episode(episode_payload.id, episode_payload.body);
+  //   if (update_episode_res.error) {
+  //     // log(`[${prefix}]`, "视频文件更新失败", update_episode_res.error.message);
+  //     return update_episode_res;
+  //   }
+  //   // log(`[${prefix}]`, "视频文件更新成功");
+  //   return Result.Ok(null);
+  // }
+  // // log(`[${prefix}]`, "视频文件没有变更");
+  // return Result.Ok(null);
 }
 
 /**
@@ -303,7 +304,7 @@ async function add_unique_parsed_season(
   const existing_season_res = await resultify(store.prisma.parsed_season.findFirst.bind(store.prisma.parsed_season))({
     where: {
       season_number: {
-        equals: season.season,
+        equals: season.season_text,
       },
       parsed_tv_id: extra.parsed_tv_id,
       user_id,
@@ -320,7 +321,7 @@ async function add_unique_parsed_season(
   // log(`[${episode.file_name}]`, "季", season.season, "不存在，新增");
   const parsed_season_adding_res = await store.add_parsed_season({
     parsed_tv_id: extra.parsed_tv_id,
-    season_number: season.season,
+    season_number: season.season_text,
     file_id: season.file_id || null,
     file_name: season.file_name || null,
     user_id: extra.user_id,
@@ -346,13 +347,13 @@ async function add_parsed_season(
   extra: ExtraUserAndDriveInfo & { parsed_tv_id: string },
   store: DatabaseStore
 ) {
-  const { season, episode } = data;
-  // log(`[${episode.file_name}]`, "准备为该视频文件新增电视剧季", season.season);
-  const season_res = await add_unique_parsed_season(data, extra, store);
-  if (season_res.error) {
-    return Result.Err(season_res.error);
-  }
-  return Result.Ok(season_res.data);
+  // const { season, episode } = data;
+  // // log(`[${episode.file_name}]`, "准备为该视频文件新增电视剧季", season.season);
+  // const season_res = await add_unique_parsed_season(data, extra, store);
+  // if (season_res.error) {
+  //   return Result.Err(season_res.error);
+  // }
+  // return Result.Ok(season_res.data);
 }
 
 /**
@@ -585,7 +586,7 @@ export function is_tv_changed(existing_tv: ParsedTVRecord, parsed: SearchedEpiso
 
 function is_season_changed(existing_season: ParsedSeasonRecord, parsed: SearchedEpisode) {
   const { season } = parsed;
-  if (existing_season.season_number !== season.season) {
+  if (existing_season.season_number !== season.season_text) {
     return true;
   }
   return false;
@@ -601,11 +602,11 @@ function is_episode_changed(existing_episode: ParsedEpisodeRecord, parsed: Searc
   const { episode } = parsed;
   const { parent_file_id, episode_number, file_name, size, parent_paths, season_number } = existing_episode;
   return !(
-    season_number === parsed.season.season &&
+    season_number === parsed.season.season_text &&
     parent_file_id &&
     parent_file_id === episode.parent_file_id &&
     parent_paths === episode.parent_paths &&
-    episode_number === episode.episode &&
+    episode_number === episode.episode_text &&
     file_name === episode.file_name
   );
 }

@@ -41,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       seasons: {
         include: {
           profile: true,
-          parsed_seasons: true,
         },
         orderBy: {
           season_number: "asc",

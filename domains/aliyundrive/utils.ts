@@ -271,42 +271,15 @@ export async function archive_season_files(body: {
         .filter(Boolean)
         .join(".");
       if (file_name !== new_file_name) {
-        job.output.write(
-          new ArticleLineNode({
-            children: [`将文件「${file_name}」名字修改为「${new_file_name}]`].map(
-              (text) =>
-                new ArticleTextNode({
-                  text,
-                })
-            ),
-          })
-        );
+        job.output.write_line([`将文件「${file_name}」名字修改为「${new_file_name}`]);
         const rename_res = await drive.client.rename_file(file_id, new_file_name, {
           check_name_mode: "auto_rename",
         });
         if (rename_res.error) {
-          job.output.write(
-            new ArticleLineNode({
-              children: ["重命名失败，因为", rename_res.error.message].map(
-                (text) =>
-                  new ArticleTextNode({
-                    text,
-                  })
-              ),
-            })
-          );
+          job.output.write_line(["重命名失败，因为", rename_res.error.message]);
           return;
         }
-        job.output.write(
-          new ArticleLineNode({
-            children: ["重命名成功，新的名字是", rename_res.data.name].map(
-              (text) =>
-                new ArticleTextNode({
-                  text,
-                })
-            ),
-          })
-        );
+        job.output.write_line(["重命名成功，新的名字是", rename_res.data.name]);
         new_file_name = rename_res.data.name;
       }
       await store.prisma.parsed_episode.updateMany({
@@ -329,25 +302,6 @@ export async function archive_season_files(body: {
           name: new_file_name,
         },
       });
-      if (need_create_parent_folder) {
-        // 旧的 parsed_tv 和 parsed_season 作废
-      }
-      // await store.prisma.parsed_tv.updateMany({
-      //   where: {
-      //     file_id: created_folder.file_id,
-      //   },
-      //   data: {
-      //     file_name: created_folder.file_name,
-      //   },
-      // });
-      // await store.prisma.parsed_season.updateMany({
-      //   where: {
-      //     file_id: created_folder.file_id,
-      //   },
-      //   data: {
-      //     file_name: created_folder.file_name,
-      //   },
-      // });
       created_folder.file_ids.push({ file_id });
     })();
   }
@@ -665,25 +619,6 @@ export async function archive_movie_files(body: {
           name: new_file_name,
         },
       });
-      if (need_create_parent_folder) {
-        // 旧的 parsed_tv 和 parsed_season 作废
-      }
-      // await store.prisma.parsed_tv.updateMany({
-      //   where: {
-      //     file_id: created_folder.file_id,
-      //   },
-      //   data: {
-      //     file_name: created_folder.file_name,
-      //   },
-      // });
-      // await store.prisma.parsed_season.updateMany({
-      //   where: {
-      //     file_id: created_folder.file_id,
-      //   },
-      //   data: {
-      //     file_name: created_folder.file_name,
-      //   },
-      // });
       created_folder.file_ids.push({ file_id });
     })();
   }

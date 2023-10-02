@@ -42,6 +42,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (movie === null) {
     return e(Result.Err("没有匹配的电影记录"));
   }
+  const job_res = await Job.New({
+    desc: `变更「${movie.profile.name}」详情`,
+    unique_id: "update_movie_and_season",
+    type: TaskTypes.RefreshMedia,
+    user_id: user.id,
+    store,
+  });
+  if (job_res.error) {
+    return e(job_res);
+  }
+  const job = job_res.data;
   const searcher_res = await MediaSearcher.New({
     user,
     store,
@@ -54,17 +65,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(searcher_res);
   }
   const searcher = searcher_res.data;
-  const job_res = await Job.New({
-    desc: `变更「${movie.profile.name}」详情`,
-    unique_id: "update_movie_and_season",
-    type: TaskTypes.RefreshMedia,
-    user_id: user.id,
-    store,
-  });
-  if (job_res.error) {
-    return e(job_res);
-  }
-  const job = job_res.data;
   const refresher = new ProfileRefresh({
     searcher,
     store,

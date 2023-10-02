@@ -41,11 +41,8 @@ export function is_season_changed(existing_season: ParsedSeasonRecord, parsed: S
     season_number: string;
   }> = {};
   const { season } = parsed;
-  if (existing_season.correct_season_number) {
-    return payload;
-  }
-  if (season.season !== null && existing_season.season_number !== season.season) {
-    payload.season_number = season.season;
+  if (season.season_text !== null && existing_season.season_number !== season.season_text) {
+    payload.season_number = season.season_text;
   }
 
   return payload;
@@ -59,13 +56,12 @@ export function is_season_changed(existing_season: ParsedSeasonRecord, parsed: S
  */
 export function is_episode_changed(existing_episode: ParsedEpisodeRecord, parsed: SearchedEpisode) {
   const { episode } = parsed;
-  const { parent_file_id, episode_number, file_name, size, parent_paths, season_number } = existing_episode;
+  const { parent_file_id, episode_number, file_name, parent_paths, season_number } = existing_episode;
   return !(
-    season_number === parsed.season.season &&
-    parent_file_id &&
+    season_number === episode.season_text &&
     parent_file_id === episode.parent_file_id &&
     parent_paths === episode.parent_paths &&
-    episode_number === episode.episode &&
+    episode_number === episode.episode_text &&
     file_name === episode.file_name
   );
 }

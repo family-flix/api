@@ -52,6 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const { content_hash, thumbnail, mime_type } = file_profile_res.data;
   const data: Record<string, unknown> = {
+    id,
     content_hash,
     thumbnail,
     mime_type,

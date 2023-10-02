@@ -1075,6 +1075,9 @@ export function parse_filename_for_video(
       .replace(/^\./g, "")
       .replace(/\.$/g, "");
   }
+  if (result.voice_type) {
+    result.voice_type = result.voice_type.replace(/^\./g, "");
+  }
   return result;
 }
 

@@ -275,12 +275,13 @@ export function folder_client(body: { drive_id: string }, store: DatabaseStore) 
 export async function walk_model_with_cursor<F extends (extra: { take: number }) => any>(options: {
   fn: F;
   page_size?: number;
-  handler: (data: Unpacked<ReturnType<F>>[number], index: number) => any;
+  handler: (data: Unpacked<ReturnType<F>>[number], index: number, finish: () => void) => any;
 }) {
   const { fn, page_size = 20, handler } = options;
   let next_marker = "";
   let no_more = false;
   let index = 0;
+  let need_break = false;
   // const count = await store.prisma.file.count({ where });
   do {
     const extra_args = {
@@ -306,7 +307,13 @@ export async function walk_model_with_cursor<F extends (extra: { take: number })
     const correct_list = list.slice(0, page_size);
     for (let i = 0; i < correct_list.length; i += 1) {
       const data = correct_list[i];
-      await handler(data, index);
+      await handler(data, index, () => {
+        need_break = true;
+        no_more = true;
+      });
+      if (need_break) {
+        return;
+      }
       index += 1;
     }
   } while (no_more === false);

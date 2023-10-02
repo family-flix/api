@@ -29,13 +29,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     include: {
       _count: true,
       profile: true,
-      parsed_seasons: {
+      parsed_episodes: {
         include: {
-          parsed_episodes: {
-            include: {
-              drive: true,
-            },
-          },
           drive: true,
         },
       },
@@ -60,30 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       backdrop_path,
       original_language,
       first_air_date,
-      folders: season.parsed_seasons.map((folder) => {
-        const { id, file_name, parsed_episodes, season_number, drive } = folder;
-        return {
-          id,
-          file_name,
-          season_number,
-          drive: {
-            id: drive.id,
-            name: drive.name,
-          },
-          files: parsed_episodes.map((file) => {
-            const { id, file_name, parent_paths, drive } = file;
-            return {
-              id,
-              file_name,
-              parent_paths,
-              drive: {
-                id: drive.id,
-                name: drive.name,
-              },
-            };
-          }),
-        };
-      }),
     };
   })();
 

@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(r1);
   }
   const r2 = await store.update_parsed_movie(parsed_movie.id, {
-    correct_name: profile_res.data.name,
+    unique_id: profile_res.data.id,
   });
   if (r2.error) {
     return e(r2);

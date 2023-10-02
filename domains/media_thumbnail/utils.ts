@@ -29,7 +29,7 @@ export function format_number_with_3decimals(number: number) {
 export function normalize_partial_tv(
   tv: TVRecord & {
     profile: TVProfileRecord;
-    parsed_tvs: ParsedTVRecord[];
+    // parsed_tvs: ParsedTVRecord[];
     sync_tasks: SyncTaskRecord[];
     _count: {
       episodes: number;

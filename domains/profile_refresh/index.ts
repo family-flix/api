@@ -470,6 +470,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     const normalized_profile = await this.searcher.normalize_tv_profile(r1.data);
     this.emit(Events.Print, Article.build_line([prefix, "新的详情是 ", normalized_profile.name]));
     const profile_record_res = await (async () => {
+      // 这个逻辑不就是 searcher.get_tv_profile_with_tmdb_id 吗？
       const existing_tv_profile = await this.store.prisma.tv_profile.findFirst({
         where: {
           unique_id: normalized_profile.unique_id,
@@ -525,18 +526,18 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
           user_id: this.user.id,
         },
       });
-      await this.store.prisma.parsed_season.updateMany({
-        where: {
-          parsed_tv: {
-            tv_id: tv.id,
-          },
-          user_id: this.user.id,
-        },
-        data: {
-          updated: dayjs().toISOString(),
-          can_search: 1,
-        },
-      });
+      // await this.store.prisma.parsed_season.updateMany({
+      //   where: {
+      //     parsed_tv: {
+      //       tv_id: tv.id,
+      //     },
+      //     user_id: this.user.id,
+      //   },
+      //   data: {
+      //     updated: dayjs().toISOString(),
+      //     can_search: 1,
+      //   },
+      // });
       await this.store.prisma.parsed_episode.updateMany({
         where: {
           parsed_tv: {
@@ -573,17 +574,17 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         season_id: null,
       },
     });
-    await this.store.prisma.parsed_season.updateMany({
-      where: {
-        season: {
-          tv_id: tv.id,
-        },
-        user_id: this.user.id,
-      },
-      data: {
-        season_id: null,
-      },
-    });
+    // await this.store.prisma.parsed_season.updateMany({
+    //   where: {
+    //     season: {
+    //       tv_id: tv.id,
+    //     },
+    //     user_id: this.user.id,
+    //   },
+    //   data: {
+    //     season_id: null,
+    //   },
+    // });
     const parsed_tvs = await this.store.prisma.parsed_tv.findMany({
       where: {
         tv_id: tv.id,
@@ -652,7 +653,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       });
     })();
     this.emit(Events.Print, Article.build_line([prefix, JSON.stringify(scopes)]));
-    await this.searcher.process_parsed_season_list(scopes, { force_search_tmdb: true });
+    // await this.searcher.process_parsed_season_list(scopes, { force_search_tmdb: true });
     await this.searcher.process_parsed_episode_list(scopes, { force_search_tmdb: true });
     return Result.Ok(null);
   }

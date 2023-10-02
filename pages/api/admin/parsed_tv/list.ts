@@ -39,9 +39,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where.can_search = to_number(can_search, 0);
   }
   if (name) {
-    where.file_name = {
-      contains: name,
-    };
+    where.OR = [
+      {
+        file_name: {
+          contains: name,
+        },
+      },
+      {
+        name: {
+          contains: name,
+        },
+      },
+    ];
   }
   const list = await store.prisma.parsed_tv.findMany({
     where,

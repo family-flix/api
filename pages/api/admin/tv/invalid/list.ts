@@ -9,12 +9,16 @@ import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { season_to_chinese_num } from "@/utils";
 import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const { page: page_str, page_size: page_size_str } = req.query as Partial<{
+  const {
+    name,
+    page: page_str,
+    page_size: page_size_str,
+  } = req.query as Partial<{
+    name: string;
     page: string;
     page_size: string;
   }>;
@@ -46,6 +50,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     ],
     user_id,
   };
+  if (name) {
+    where.profile = {
+      OR: [
+        {
+          name: {
+            contains: name,
+          },
+        },
+        {
+          original_name: {
+            contains: name,
+          },
+        },
+      ],
+    };
+  }
   const count = await store.prisma.tv.count({
     where,
   });

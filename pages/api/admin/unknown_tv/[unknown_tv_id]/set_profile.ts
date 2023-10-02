@@ -72,8 +72,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   async function run(parsed_tv: ParsedTVRecord) {
     const profile_res = await searcher.get_tv_profile_with_tmdb_id({ tmdb_id: Number(unique_id) });
     if (profile_res.error) {
+      job.output.write_line(["获取电视剧详情记录失败，因为", profile_res.error.message]);
       job.finish();
-      return e(profile_res);
+      return;
     }
     const profile = profile_res.data;
     const r2 = await searcher.link_tv_profile_to_parsed_tv({
@@ -81,12 +82,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       profile,
     });
     if (r2.error) {
+      job.output.write_line(["详情关联电视剧失败，因为", r2.error.message]);
       job.finish();
-      return e(r2);
+      return;
     }
     await store.update_parsed_tv(parsed_tv.id, {
-      correct_name: profile.name,
+      unique_id: profile.id,
     });
+    job.output.write_line(["完成"]);
     job.finish();
   }
   run(parsed_tv);

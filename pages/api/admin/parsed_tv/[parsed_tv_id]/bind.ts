@@ -129,13 +129,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       );
       const parsed_episodes = await store.prisma.parsed_episode.findMany({
         where: {
-          parsed_season_id: parsed_season.id,
+          // parsed_season_id: parsed_season.id,
           user_id: user.id,
         },
       });
       for (let i = 0; i < parsed_episodes.length; i += 1) {
         const parsed_episode = parsed_episodes[i];
-        await searcher.process_parsed_episode({ parsed_tv, parsed_season, parsed_episode });
+        await searcher.process_parsed_episode({ parsed_tv, parsed_episode });
         task.output.write(
           new ArticleLineNode({
             children: [prefix, "处理完", parsed_season.season_number, "/", parsed_episode.episode_number].map(

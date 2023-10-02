@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const list = await store.prisma.parsed_episode.findMany({
     where,
     include: {
-      parsed_season: true,
+      // parsed_season: true,
     },
     orderBy: {
       created: "desc",

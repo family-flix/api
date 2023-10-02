@@ -26,7 +26,7 @@ export type SearchedEpisode = {
     /** 文件夹/文件名，如果该 season 来自 episode，该字段就会为空 */
     file_name?: string;
     /** 第几季 */
-    season: string;
+    season_text: string;
   };
   episode: {
     /** 文件夹/文件名 */
@@ -39,10 +39,13 @@ export type SearchedEpisode = {
     parent_ids: string;
     /** 父文件夹id */
     parent_file_id: string;
+    /** 第几季 */
+    season_text: string;
     /** 第几集 */
-    episode: string;
+    episode_text: string;
     /** 大小（单位字节）*/
     size: number;
+    md5?: string;
   };
   /** 代码中走了哪个分支，方便定位问题 */
   _position?: string;
@@ -171,7 +174,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
    * 递归遍历给定的文件夹
    */
   async walk(data: Folder | File, parent: ParentFolder[] = []) {
-    const { id: file_id, type, name, size, parent_file_id } = data;
+    const { id: file_id, type, name, size, parent_file_id, md5 } = data;
     // console.log('[DOMAIN]walker - walk', file_id, name);
     const parent_paths = parent.map((p) => p.file_name).join("/");
     const parent_ids = parent.map((p) => p.file_id).join("/");
@@ -333,7 +336,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         season: {
           file_id: season.file_id,
           file_name: season.file_name,
-          season: season.season,
+          season_text: season.season,
         },
         episode: {
           file_id,
@@ -341,8 +344,10 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           parent_paths,
           parent_ids,
           file_name: name,
-          episode: episode.episode,
+          season_text: season.season,
+          episode_text: episode.episode,
           size,
+          md5,
         },
         _position,
         // _start_folder_id: start_folder_id,
