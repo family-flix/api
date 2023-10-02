@@ -26,15 +26,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     file_id: string;
     next_marker: string;
   }>;
-  if (!url) {
-    return e("缺少分享资源链接");
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const first_drive_res = await store.find_drive({ user_id });
+  if (!url) {
+    return e(Result.Err("缺少分享资源链接"));
+  }
+  const user = t_res.data;
+  const first_drive_res = await store.find_drive({ user_id: user.id });
   if (first_drive_res.error) {
     return e(first_drive_res);
   }
@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   if (r1.error) {
     if (r1.error.message.includes("share_link is cancelled by the creator")) {
-      return e("分享链接被取消");
+      return e(Result.Err("分享链接被取消"));
     }
     return e(r1);
   }
@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     store.add_shared_files_safely({
       url,
       title: share_title,
-      user_id,
+      user_id: user.id,
     });
   }
   const r2 = await client.fetch_shared_files(parent_file_id, {

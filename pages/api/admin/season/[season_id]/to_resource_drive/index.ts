@@ -51,11 +51,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           parsed_episodes: true,
         },
       },
-      parsed_seasons: {
-        orderBy: {
-          season_number: "asc",
-        },
-      },
     },
   });
   if (season === null) {

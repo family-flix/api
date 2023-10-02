@@ -37,7 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
         },
       },
-      // parsed_season: true,
     },
   });
   if (!source) {

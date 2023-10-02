@@ -39,7 +39,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           profile: true,
         },
       },
-      parsed_seasons: true,
       parsed_episodes: true,
     },
   });

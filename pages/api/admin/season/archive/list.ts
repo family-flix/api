@@ -55,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     user_id: user.id,
   };
   if (drive_ids) {
-    where.parsed_seasons = {
+    where.parsed_episodes = {
       every: {
         drive_id: {
           in: drive_ids.split("|"),

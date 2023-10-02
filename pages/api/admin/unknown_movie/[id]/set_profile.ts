@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
 import { MediaSearcher } from "@/domains/searcher";
@@ -15,16 +15,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  const body = req.body as Partial<{ id: number }>;
-  if (!id) {
-    return e("缺少电影 id");
-  }
-  if (!body.id) {
-    return e("缺少正确的电影详情");
-  }
+  const body = req.body as Partial<{ unique_id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
+  }
+  if (!id) {
+    return e(Result.Err("缺少电影 id"));
+  }
+  if (!body.unique_id) {
+    return e(Result.Err("缺少正确的电影详情"));
   }
   const user = t_res.data;
   const parsed_movie = await store.prisma.parsed_movie.findFirst({
@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (!parsed_movie) {
-    return e("没有匹配的电影");
+    return e(Result.Err("没有匹配的记录"));
   }
   const { drive_id } = parsed_movie;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const searcher = searcher_res.data;
   const profile_res = await searcher.get_movie_profile_with_tmdb_id({
-    tmdb_id: body.id,
+    tmdb_id: Number(body.unique_id),
   });
   if (profile_res.error) {
     return e(profile_res.error);

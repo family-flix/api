@@ -73,15 +73,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           episode_number: "desc",
         },
       },
-      // seasons: {
-      //   include: {
-      //     profile: true,
-      //     parsed_season: true,
-      //   },
-      //   orderBy: {
-      //     season_number: "desc",
-      //   },
-      // },
     },
     orderBy: {
       profile: { first_air_date: "desc" },

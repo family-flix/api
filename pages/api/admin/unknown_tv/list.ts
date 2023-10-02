@@ -53,7 +53,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const list = await store.prisma.parsed_tv.findMany({
     where,
     include: {
-      parsed_seasons: true,
       parsed_episodes: true,
       drive: true,
     },
@@ -72,21 +71,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       no_more: list.length + (page - 1) * page_size >= count,
       total: count,
       list: list.map((parsed_tv) => {
-        const { id, name, original_name, file_id, file_name, parsed_seasons, parsed_episodes, drive } = parsed_tv;
+        const { id, name, original_name, file_id, file_name, parsed_episodes, drive } = parsed_tv;
         return {
           id,
           name: name || original_name,
           file_id,
           file_name,
-          parsed_seasons: parsed_seasons.map((season) => {
-            const { id, season_number, file_name, season_id } = season;
-            return {
-              id,
-              season_text: season_number,
-              file_name,
-              season_id,
-            };
-          }),
+          parsed_seasons: [],
           parsed_episodes: parsed_episodes.map((episode) => {
             const { id, file_name, episode_number, parent_paths, episode_id } = episode;
             return {

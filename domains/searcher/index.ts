@@ -233,7 +233,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     //   const group = file_groups[i];
     //   await this.process_parsed_season_list(group);
     // }
-    this.emit(Events.Print, Article.build_line(["所有电视剧季搜索完成"]));
+    // this.emit(Events.Print, Article.build_line(["所有电视剧季搜索完成"]));
     for (let i = 0; i < file_groups.length; i += 1) {
       const group = file_groups[i];
       await this.process_parsed_episode_list(group);
@@ -444,7 +444,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           where,
           include: {
             parsed_tv: true,
-            // parsed_season: true,
           },
           orderBy: {
             parsed_tv: {
@@ -1185,7 +1184,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   async process_parsed_episode(
     body: {
       parsed_tv: ParsedTVRecord;
-      // parsed_season: ParsedSeasonRecord;
       parsed_episode: ParsedEpisodeRecord;
     },
     options: Partial<{ force: boolean }> = {}

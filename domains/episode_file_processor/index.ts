@@ -132,7 +132,6 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         size: episode.size,
         md5: episode.md5,
         parsed_tv_id: tv_adding_res.data.id,
-        // parsed_season_id: season_adding_res.data.id,
         user_id,
         drive_id,
       });
@@ -165,9 +164,6 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         where: {
           id: existing_episode.parsed_tv_id,
         },
-        include: {
-          // parsed_seasons: true,
-        },
       });
       if (!existing_tv) {
         // log(`[${prefix}]`, "视频文件没有关联的电视剧记录，新增电视剧");
@@ -187,7 +183,6 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
             file_name: existing_tv.file_name,
             name: existing_tv.name,
             original_name: existing_tv.original_name,
-            // parsed_seasons: existing_tv.parsed_seasons.map((s) => s.season_number),
           }),
         ])
       );

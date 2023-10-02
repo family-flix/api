@@ -28,7 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       parsed_tv: true,
-      // parsed_season: true,
     },
   });
   if (episode === null) {
