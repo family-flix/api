@@ -63,6 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     },
     distinct: ["season_id"],
+    take: 20,
     orderBy: [
       {
         created: "desc",
@@ -85,6 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         created: "desc",
       },
     ],
+    take: 20,
   });
   type MediaPayload = {
     id: string;

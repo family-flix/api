@@ -44,6 +44,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const duplicated_sync_task = await store.prisma.bind_for_parsed_tv.findFirst({
     where: {
       url,
+      OR: [
+        {
+          in_production: 1,
+        },
+        {
+          invalid: 0,
+        },
+      ],
       user_id: user.id,
     },
   });

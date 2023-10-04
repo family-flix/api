@@ -65,6 +65,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       ],
     };
+    where.parsed_tvs = {
+      some: {
+        name: {
+          contains: name,
+        },
+      },
+    };
   }
   const count = await store.prisma.tv.count({
     where,

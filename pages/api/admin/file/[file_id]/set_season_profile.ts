@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.output.write_line(["创建解析结果"]);
       const created = await store.add_parsed_tv({
         file_name: file.name,
-        unique_id,
+        unique_id: String(unique_id),
         user_id: user.id,
         drive_id: drive.id,
       });

@@ -300,10 +300,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       handler: async (parsed_tv, i) => {
         const prefix = get_prefix_from_names(parsed_tv);
         this.emit(Events.Print, Article.build_line([prefix, `第${i + 1}个`]));
-        const r = await this.process_parsed_tv({ parsed_tv });
-        if (r.error) {
-          this.emit(Events.Print, Article.build_line([prefix, "添加电视剧详情失败，因为", r.error.message]));
-          return;
+        try {
+          const r = await this.process_parsed_tv({ parsed_tv });
+          if (r.error) {
+            this.emit(Events.Print, Article.build_line([prefix, "添加电视剧详情失败，因为", r.error.message]));
+            return;
+          }
+        } catch (err) {
+          const error = err as Error;
+          this.emit(Events.Print, Article.build_line([prefix, "添加电视剧详情 catch，因为", error.message]));
         }
       },
     });

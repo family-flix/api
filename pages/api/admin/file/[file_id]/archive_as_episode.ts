@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!file) {
     return e(Result.Err("没有匹配的记录"));
   }
-  if (file.type === FileType.File) {
+  if (file.type !== FileType.File) {
     return e(Result.Err("该操作仅限文件"));
   }
   const parsed_episode = await store.prisma.parsed_episode.findFirst({
