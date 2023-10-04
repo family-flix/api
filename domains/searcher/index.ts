@@ -466,9 +466,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           this.emit(Events.Print, Article.build_line([prefix, "没有关联电视剧"]));
           return;
         }
-        const r = await this.process_parsed_episode({ parsed_tv, parsed_episode }, { force: force_search_tmdb });
-        if (r.error) {
-          this.emit(Events.Print, Article.build_line([prefix, "添加剧集详情失败", r.error.message]));
+        try {
+          const r = await this.process_parsed_episode({ parsed_tv, parsed_episode }, { force: force_search_tmdb });
+          if (r.error) {
+            this.emit(Events.Print, Article.build_line([prefix, "添加剧集详情失败", r.error.message]));
+          }
+        } catch (err) {
+          const error = err as Error;
+          this.emit(Events.Print, Article.build_line([prefix, "添加剧集详情失败 catch", error.message]));
         }
       },
     });
