@@ -315,7 +315,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     // log("[UTIL]get_tv_id_by_name start", tv.name || tv.original_name);
     const { user_id, drive_id } = this.options;
     const store = this.store;
-    const prefix = `[${tv.name}/${tv.file_name}]`;
+    const prefix = `[${tv.name}/${tv.file_name || "非文件夹"}]`;
     // console.log(`[${prefix}]`, "根据名称查找电视剧", `'${tv.name}'`, `'${tv.original_name}'`);
     const existing_tv = await store.prisma.parsed_tv.findFirst({
       where: {

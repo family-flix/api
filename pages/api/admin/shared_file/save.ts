@@ -82,28 +82,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(job_res);
   }
   const job = job_res.data;
-  job.output.write(
-    new ArticleLineNode({
-      children: ["开始转存"].map((text) => {
-        return new ArticleTextNode({ text });
-      }),
-    })
-  );
+  job.output.write_line(["开始转存"]);
   async function run(resource: { name: string; file_id: string; url: string }) {
     const { url, file_id, name } = resource;
     drive.client.on_transfer_failed((error) => {
-      job.output.write(
-        new ArticleLineNode({
-          children: [error.message].map((text) => new ArticleTextNode({ text })),
-        })
-      );
+      job.output.write_line(["转存发生错误", error.message]);
     });
     drive.client.on_transfer_finish(async () => {
-      job.output.write(
-        new ArticleLineNode({
-          children: ["添加到待索引文件l"].map((text) => new ArticleTextNode({ text })),
-        })
-      );
+      job.output.write_line(["添加到待索引文件"]);
       await store.add_tmp_file({
         name,
         type: FileType.Folder,
@@ -111,27 +97,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         drive_id,
         user_id: user.id,
       });
-      job.output.write(
-        new ArticleLineNode({
-          children: ["添加转存记录列表"].map((text) => new ArticleTextNode({ text })),
-        })
-      );
-      const r2 = await store.find_shared_file_save({
+      job.output.write_line(["添加转存记录列表"]);
+      await store.add_shared_file_save({
         url,
         file_id,
         name,
         drive_id,
         user_id: user.id,
       });
-      if (!r2.data) {
-        await store.add_shared_file_save({
-          url,
-          file_id,
-          name,
-          drive_id,
-          user_id: user.id,
-        });
-      }
     });
     const r = await drive.client.save_multiple_shared_files({
       url,

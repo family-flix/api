@@ -51,6 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const searcher_res = await MediaSearcher.New({
     user,
     store,
+    // @todo 这里不指定云盘，就会把所有的未解析结果进行搜索。所以要支持指定搜索什么？
     assets: app.assets,
     on_print(v) {
       job.output.write(v);

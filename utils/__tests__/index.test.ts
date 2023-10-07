@@ -652,4 +652,24 @@ describe("提取视频信息", () => {
       episode: "",
     });
   });
+  test("我是特种兵之利刃出鞘.Special.Arms.Ⅱ.2012.S01E38.WEB-DL.4K.HEVC.AAC-CHDWEB.mp4", () => {
+    const name = "我是特种兵之利刃出鞘.Special.Arms.Ⅱ.2012.S01E38.WEB-DL.4K.HEVC.AAC-CHDWEB.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "我是特种兵之利刃出鞘",
+      original_name: "Special.Arms",
+      season: "S01",
+      episode: "E38",
+    });
+  });
+  test("阿拉蒙之剑：阿斯达年代记 [2023][12集持续更新中]", () => {
+    const name = "阿拉蒙之剑：阿斯达年代记 [2023][12集持续更新中]";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "阿拉蒙之剑：阿斯达年代记",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

@@ -25,6 +25,7 @@ import { Result, resultify } from "@/types";
 import { parseJSONStr, r_id } from "@/utils";
 
 import { DriveTypes } from "./constants";
+import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 
 const drivePayloadSchema = Joi.object({
   app_id: Joi.string().required(),
@@ -417,7 +418,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** 云盘名称 */
   name: string;
   /** 云盘所属用户 id */
-  user_id?: string;
+  user?: User;
   profile: DriveProps["profile"];
   client: AliyunBackupDriveClient;
   store: DatabaseStore;
@@ -431,7 +432,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     this.id = id;
     this.profile = profile;
     if (user) {
-      this.user_id = user.id;
+      this.user = user;
     }
     this.store = store;
     this.client = client;
@@ -1014,7 +1015,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   /** 重命名（文件/文件夹），并重置解析结果 */
-  async rename_file(file: { file_id: string; name: string; type: FileType }, values: { name: string }) {
+  async rename_file(file: { file_id: string; type: FileType }, values: { name: string }) {
     const { name } = values;
     const r = await this.client.rename_file(file.file_id, name);
     if (r.error) {
@@ -1023,16 +1024,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const f = await this.store.prisma.file.findFirst({
       where: {
         file_id: file.file_id,
-        user_id: this.user_id,
-      },
-    });
-    await this.store.prisma.tmp_file.updateMany({
-      where: {
-        name: file.name,
-        user_id: this.user_id,
-      },
-      data: {
-        name,
+        user_id: this.user?.id,
       },
     });
     if (!f) {
@@ -1046,61 +1038,128 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         name,
       },
     });
-    await this.store.prisma.tmp_file.updateMany({
-      where: {},
-      data: {
-        name,
-      },
-    });
+    const {
+      name: parsed_tv_name,
+      original_name,
+      episode: episode_text,
+      season: season_text,
+    } = parse_filename_for_video(name, ["name", "original_name", "episode", "season"], this.user?.get_filename_rules());
     if (file.type === FileType.File) {
-      await this.store.prisma.parsed_episode.updateMany({
+      // @todo 这里非常重要，当改变一个文件的名字时，应该怎么做？
+      // 如果是电影改成了剧集，剧集改成电影，就应该删除原先的解析结果，再重新索引
+      // 如果是季、名字、集数等信息改变，
+      const existing_parsed_episode = await this.store.prisma.parsed_episode.findFirst({
         where: {
           file_id: file.file_id,
+          user_id: this.user?.id,
         },
-        data: {
-          file_name: name,
-          can_search: 1,
-          episode_id: null,
+        include: {
+          parsed_tv: true,
         },
       });
-      await this.store.prisma.parsed_movie.updateMany({
+      if (existing_parsed_episode) {
+        // 直接删掉，重新索引过程去更新它
+        await this.store.prisma.parsed_episode.delete({
+          where: {
+            id: existing_parsed_episode.id,
+          },
+        });
+        // if (!episode_text) {
+        //   // 剧集改成电影
+        //   await this.store.prisma.parsed_episode.delete({
+        //     where: {
+        //       id: existing_parsed_episode.id,
+        //     },
+        //   });
+        //   return Result.Ok(null);
+        // }
+        // // 更新剧集信息
+        // if (!existing_parsed_episode.parsed_tv.file_id) {
+        //   // 如果电视剧名字是从 file 中解析的
+        // }
+        // await this.store.prisma.parsed_episode.update({
+        //   where: {
+        //     id: existing_parsed_episode.id,
+        //   },
+        //   data: {
+        //     updated: dayjs().toISOString(),
+        //     episode_id: null,
+        //     season_id: null,
+        //     episode_number: episode_text,
+        //     season_number: season_text,
+        //     name,
+        //     can_search: 1,
+        //   },
+        // });
+        return Result.Ok(null);
+      }
+      const existing_parsed_movie = await this.store.prisma.parsed_movie.findFirst({
         where: {
           file_id: file.file_id,
-        },
-        data: {
-          file_name: name,
-          can_search: 1,
-          movie_id: null,
+          user_id: this.user?.id,
         },
       });
+      if (existing_parsed_movie) {
+        await this.store.prisma.parsed_movie.delete({
+          where: {
+            id: existing_parsed_movie.id,
+          },
+        });
+        return Result.Ok(null);
+      }
+      return Result.Ok(null);
     }
     if (file.type === FileType.Folder) {
       await this.store.prisma.bind_for_parsed_tv.updateMany({
         where: {
           file_id_link_resource: file.file_id,
+          user_id: this.user?.id,
         },
         data: {
           file_name_link_resource: name,
         },
       });
-      // await this.store.prisma.parsed_season.updateMany({
-      //   where: {
-      //     file_id: file.file_id,
-      //   },
-      //   data: {
-      //     file_name: name,
-      //     season_id: null,
-      //   },
-      // });
-      await this.store.prisma.parsed_tv.updateMany({
+      const existing_parsed_tv = await this.store.prisma.parsed_tv.findFirst({
         where: {
           file_id: file.file_id,
-        },
-        data: {
-          file_name: name,
-          tv_id: null,
+          user_id: this.user?.id,
         },
       });
+      if (existing_parsed_tv) {
+        // 重命名一个文件夹，不能直接删除关联的解析结果？
+        await this.store.prisma.parsed_episode.deleteMany({
+          where: {
+            parsed_tv_id: existing_parsed_tv.id,
+          },
+        });
+        await this.store.prisma.parsed_tv.delete({
+          where: {
+            id: existing_parsed_tv.id,
+          },
+        });
+        // await this.store.prisma.parsed_tv.update({
+        //   where: {
+        //     id: existing_parsed_tv.id,
+        //   },
+        //   data: {
+        //     name: parsed_tv_name,
+        //     original_name,
+        //     file_name: name,
+        //     tv_id: null,
+        //   },
+        // });
+        // await this.store.prisma.parsed_episode.updateMany({
+        //   where: {
+        //     parsed_tv_id: existing_parsed_tv.id,
+        //   },
+        //   data: {
+        //     updated: dayjs().toISOString(),
+        //     episode_id: null,
+        //     season_id: null,
+        //   },
+        // });
+      }
+      return Result.Ok(null);
     }
     return Result.Ok(null);
   }

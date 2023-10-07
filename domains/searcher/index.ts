@@ -526,24 +526,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       handler: async (parsed_movie, i) => {
         const { name, original_name } = parsed_movie;
         const prefix = name || original_name;
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: [prefix, `第${i + 1}个`].map((text) => {
-              return new ArticleTextNode({ text: String(text) });
-            }),
-          })
-        );
-        const r = await this.process_parsed_movie({ parsed_movie });
-        if (r.error) {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: [prefix, "添加电影详情失败", r.error.message].map((text) => {
-                return new ArticleTextNode({ text: String(text) });
-              }),
-            })
-          );
+        this.emit(Events.Print, Article.build_line([prefix, `第${i + 1}个`]));
+        try {
+          const r = await this.process_parsed_movie({ parsed_movie });
+          if (r.error) {
+            this.emit(Events.Print, Article.build_line([prefix, "添加电影详情失败", r.error.message]));
+          }
+        } catch (err) {
+          const error = err as Error;
+          this.emit(Events.Print, Article.build_line([prefix, "添加电影详情失败 catch", error.message]));
         }
       },
     });

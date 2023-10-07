@@ -85,6 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
         },
       },
+      drive: true,
     },
     skip: (page - 1) * page_size,
     take: page_size,
@@ -101,8 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       page_size,
       no_more: list.length + (page - 1) * page_size >= count,
       list: list.map((task) => {
-        const { id, file_id, name, invalid, file_id_link_resource, file_name_link_resource, url, season, drive_id } =
-          task;
+        const { id, file_id, name, invalid, file_id_link_resource, file_name_link_resource, url, season, drive } = task;
         return {
           id,
           resource_file_id: file_id,
@@ -128,7 +128,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             };
           })(),
           drive: {
-            id: drive_id,
+            id: drive.id,
+            name: drive.name,
+            avatar: drive.avatar,
           },
         };
       }),

@@ -53,17 +53,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     return e(Result.Err("没有匹配的记录"));
   }
-  const job_res = await Job.New({
-    unique_id: file.drive_id,
-    desc: `重命名文件[${file.name}]并索引`,
-    type: TaskTypes.DriveAnalysis,
-    user_id: user.id,
-    store,
-  });
-  if (job_res.error) {
-    return e(job_res);
-  }
-  const job = job_res.data;
   const drive_res = await Drive.Get({ id: file.drive_id, user, store });
   if (drive_res.error) {
     return e(Result.Err(drive_res));
@@ -73,44 +62,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(r);
   }
-  async function run(file: FileRecord, name: string) {
-    const analysis_res = await DriveAnalysis.New({
-      assets: app.assets,
-      user,
-      drive,
-      store,
-      on_print(v) {
-        job.output.write(v);
-      },
-    });
-    if (analysis_res.error) {
-      job.output.write_line(["初始化云盘索引失败"]);
-      job.finish();
-      return;
-    }
-    const analysis = analysis_res.data;
-    const r2 = await analysis.run([
-      {
-        name: [file.parent_paths, name].join("/"),
-        type: "file",
-      },
-    ]);
-    if (r2.error) {
-      job.output.write_line(["索引失败"]);
-      job.finish();
-      return;
-    }
-    job.output.write_line(["重命名并索引成功"]);
-    // await (async () => {
-    //   const parsed_episode = await store.prisma.parsed_episode.findFirst({
-    //     where: {
-    //       file_id: file.file_id,
-    //       user_id: user.id,
-    //     },
-    //   });
-    // })();
-    job.finish();
-  }
-  run(file, name);
-  res.status(200).json({ code: 0, msg: "重命名并索引", data: { job_id: job.id } });
+  res.status(200).json({ code: 0, msg: "重命名成功", data: null });
 }

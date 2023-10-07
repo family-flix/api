@@ -13,6 +13,7 @@ import { Job, TaskTypes } from "@/domains/job";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
+import { FileType } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -40,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (drive_res.error) {
     return e(drive_res);
   }
+  // 如果父文件夹是错误的 parsed_tv，重命名子文件，能重置掉错误的信息吗
   const drive = drive_res.data;
   const job_res = await Job.New({
     unique_id: [id, folder_id].join("/"),
@@ -87,27 +89,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               job.output.write_line([prefix, "文件名已经是", next_name, "直接跳过"]);
               return;
             }
-            const file_record = await store.prisma.file.findFirst({
-              where: {
+            const r = await drive.rename_file(
+              {
                 file_id: file.id,
+                type: file.type === "file" ? FileType.File : FileType.Folder,
               },
-            });
-            if (!file_record) {
-              job.output.write_line([prefix, "文件未索引，修改云盘实际文件即可"]);
-              const r = await drive.client.rename_file(file.id, next_name);
-              if (r.error) {
-                job.output.write_line([prefix, "修改云盘文件失败", r.error.message]);
-                return;
-              }
-              return;
-            }
-            job.output.write_line([prefix, "修改云盘文件及解析结果"]);
-            const r = await drive.rename_file(file_record, { name: next_name });
+              { name: next_name }
+            );
             if (r.error) {
-              job.output.write_line([prefix, "重命名失败，因为 ", r.error.message]);
+              job.output.write_line([prefix, "重命名失败，因为", r.error.message]);
               return;
             }
-            job.output.write_line([prefix, "重命名成功"]);
+            job.output.write_line([prefix, "重命名完成"]);
           })();
         }
       })();
@@ -122,33 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.finish();
       return;
     }
-    const analysis_res = await DriveAnalysis.New({
-      assets: app.assets,
-      user,
-      drive,
-      store,
-      on_print(v) {
-        job.output.write(v);
-      },
-    });
-    if (analysis_res.error) {
-      job.output.write_line(["初始化云盘索引失败"]);
-      job.finish();
-      return;
-    }
-    const analysis = analysis_res.data;
-    const r2 = await analysis.run([
-      {
-        name: [file.parent_paths, file.name].join("/"),
-        type: "file",
-      },
-    ]);
-    if (r2.error) {
-      job.output.write_line(["索引失败"]);
-      job.finish();
-      return;
-    }
-    job.output.write_line(["重命名并索引成功"]);
+    job.output.write_line(["重命名成功"]);
     job.finish();
   }
   run({

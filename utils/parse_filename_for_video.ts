@@ -40,10 +40,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("哈兰")) {
+    if (!filename.includes("05B5AE84")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -232,6 +232,10 @@ export function parse_filename_for_video(
     },
     {
       regexp: /^[tT][oO][pP][0-9]{1,}\./,
+    },
+    {
+      regexp: /(\.(?=[A-Z0-9]{1,}[0-9])[A-Z0-9]{8})\./,
+      pick: [1],
     },
     {
       regexp:
@@ -506,7 +510,6 @@ export function parse_filename_for_video(
     {
       key: k("season"),
       desc: "special season1",
-      // 一些日本动漫会有的，和「剧场版」等做区分？
       regexp: /本篇|完结篇|OVA([^编編篇]{1,}[编編篇]){0,1}|特典映像|番外篇|特辑篇|PV|泡面番/,
       before() {
         cur_filename = cur_filename.replace(/PV([0-9]{1,})/, "PV.E$1");
@@ -537,6 +540,14 @@ export function parse_filename_for_video(
       // 重复出现，不要删除
       key: k("season"),
       regexp: /第[\u4e00-\u9fa5]{1,}[季]/,
+    },
+    {
+      key: k("season"),
+      regexp: /Ⅱ/,
+    },
+    {
+      key: k("season"),
+      regexp: /II/,
     },
     {
       key: k("season"),
@@ -848,10 +859,6 @@ export function parse_filename_for_video(
     },
     {
       key: k("season"),
-      regexp: /Ⅱ/,
-    },
-    {
-      key: k("season"),
       // 2nd_season 这种情况
       regexp: /[1-9]{1,}[nN][dD]\.Season/,
     },
@@ -1115,6 +1122,9 @@ export function format_number(n: string, prefix = "S") {
   if (number === "Ⅱ") {
     return "S02";
   }
+  if (number === "II") {
+    return "S02";
+  }
   if (!number.match(/[0-9]/) && !number.match(/[零一二三四五六七八九十]/)) {
     if (number === "本篇") {
       return "S01";
@@ -1176,8 +1186,9 @@ export function format_number(n: string, prefix = "S") {
   if (number.match(/[eE][pP][0-9]{1,}/)) {
     return number.replace(/[pP]/, "");
   }
-  if (number.match(/[sS][eE][0-9]{1,}/)) {
-    return number.replace(/[eE]/, "");
+  const nn = number.match(/[sS][eE]([0-9]{1,})/);
+  if (nn) {
+    return `S${padding_zero(nn[1])}`;
   }
   if (number.charAt(0) === "e") {
     return number.replace(/^e/, "E");

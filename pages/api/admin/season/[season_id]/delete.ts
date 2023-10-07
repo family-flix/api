@@ -1,5 +1,5 @@
 /**
- * @file 删除指定季
+ * @file 管理后台/删除指定季
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -13,12 +13,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { season_id: id } = req.query as Partial<{ season_id: string }>;
-  if (!id) {
-    return e(Result.Err("缺少季 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
+  }
+  if (!id) {
+    return e(Result.Err("缺少季 id"));
   }
   const user = t_res.data;
   const season = await store.prisma.season.findFirst({

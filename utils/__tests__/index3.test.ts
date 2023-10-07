@@ -297,4 +297,44 @@ describe("动漫", () => {
       episode: "E10-11",
     });
   });
+  test("[ANi] 暴食狂戰士 - 01 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4", () => {
+    const name = "[ANi] 暴食狂戰士 - 01 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "暴食狂戰士",
+      original_name: "",
+      season: "",
+      episode: "E01",
+    });
+  });
+  test("[ANi] 哥布林殺手 II - 01 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4", () => {
+    const name = "[ANi] 哥布林殺手 II - 01 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "哥布林殺手",
+      original_name: "",
+      season: "S02",
+      episode: "E01",
+    });
+  });
+  test("[PRL][Qins_Moon_SE2][04][DVDRip][AVC_AC3][56805CCF].mkv", () => {
+    const name = "[PRL][Qins_Moon_SE2][04][DVDRip][AVC_AC3][56805CCF].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Qins.Moon",
+      season: "S02",
+      episode: "E04",
+    });
+  });
+  test("秦时明月.S03.[34][DVDRip][AVC_AC3][05B5AE84].mkv", () => {
+    const name = "秦时明月.S03.[34][DVDRip][AVC_AC3][05B5AE84].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "秦时明月",
+      original_name: "",
+      season: "S03",
+      episode: "E34",
+    });
+  });
 });

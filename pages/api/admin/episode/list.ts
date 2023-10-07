@@ -1,5 +1,5 @@
 /**
- * @file 获取影片列表
+ * @file 管理后台/获取影片列表
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";

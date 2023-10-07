@@ -396,7 +396,10 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       }
       this.emit(
         Events.Print,
-        Article.build_line(["解析出剧集 ", tv.name || tv.original_name, " ", episode.episode_text])
+        Article.build_line([
+          "解析出剧集 ",
+          [tv.name || tv.original_name, episode.season_text, episode.episode_text].join("/"),
+        ])
       );
       const r = await processor.run();
       if (r.error) {

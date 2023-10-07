@@ -35,6 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const sync_tasks = await store.prisma.bind_for_parsed_tv.findMany({
     where: {
       url,
+      in_production: 1,
       user_id: user.id,
     },
   });

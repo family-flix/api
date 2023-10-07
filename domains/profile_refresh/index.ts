@@ -654,6 +654,10 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     })();
     this.emit(Events.Print, Article.build_line([prefix, JSON.stringify(scopes)]));
     // await this.searcher.process_parsed_season_list(scopes, { force_search_tmdb: true });
+    //
+    if (scopes.length === 0) {
+      // 这里要终止吗，不然就索引全云盘了
+    }
     await this.searcher.process_parsed_episode_list(scopes, { force_search_tmdb: true });
     return Result.Ok(null);
   }
