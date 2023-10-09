@@ -337,4 +337,14 @@ describe("动漫", () => {
       episode: "E34",
     });
   });
+  test("SPY×FAMILY.S02E25 简中.mp4", () => {
+    const name = "SPY×FAMILY.S02E25 简中.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "SPY×FAMILY",
+      season: "S02",
+      episode: "E25",
+    });
+  });
 });

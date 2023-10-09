@@ -157,6 +157,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             : null,
         };
       }
+      const parsed_movie = await store.prisma.parsed_movie.findFirst({
+        where: {
+          file_id: file.file_id,
+          user_id: user.id,
+        },
+        include: {
+          movie: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+      });
+      if (parsed_movie) {
+        data.parsed_movie = {
+          id: parsed_movie.id,
+          name: parsed_movie.name,
+          file_name: parsed_movie.file_name,
+          profile: parsed_movie.movie
+            ? {
+                name: parsed_movie.movie.profile.name,
+                original_name: parsed_movie.movie.profile.original_name,
+                poster_path: parsed_movie.movie.profile.poster_path,
+                overview: parsed_movie.movie.profile.overview,
+              }
+            : null,
+        };
+      }
     }
   }
   res.status(200).json({ code: 0, msg: "", data });

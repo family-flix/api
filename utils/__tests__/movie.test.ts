@@ -293,4 +293,24 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("The.Nun.II.2023.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX.mkv", () => {
+    const name = "The.Nun.II.2023.2160p.MA.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "The.Nun",
+      season: "S02",
+      episode: "",
+    });
+  });
+  test("S三贵情史4KHQ60FPS/4K60FPS.mp4", () => {
+    const name = "S三贵情史4KHQ60FPS";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "三贵情史",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

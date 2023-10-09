@@ -274,7 +274,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         }
         const sync_task = sync_task_res.data;
         if (sync_task) {
-          this.emit(Events.Print, Article.build_line([`[${name}]`, "已存在同名同步任务"]));
+          // this.emit(Events.Print, Article.build_line([`[${name}]`, "已存在同名同步任务"]));
           return;
         }
         const save_record_res = await this.store.find_shared_file_save({

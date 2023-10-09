@@ -34,4 +34,18 @@ describe("自定义额外解析规则", () => {
       episode: "",
     });
   });
+  test("盾之勇者成名录 S1 (8).mkv", () => {
+    const name = "盾之勇者成名录 S1 (8).mkv";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["盾之勇者成名录.S1.\\(([0-9]{1,})\\).mkv", "盾之勇者成名录.S1.E$1.mkv"],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "盾之勇者成名录",
+      original_name: "",
+      season: "S01",
+      episode: "E08",
+    });
+  });
 });

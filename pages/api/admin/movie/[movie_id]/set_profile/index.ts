@@ -77,15 +77,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     movie: MovieRecord & { profile: MovieProfileRecord },
     extra: { source?: number; unique_id: string }
   ) {
-    const r = await refresher.change_movie_profile(movie, extra);
-    if (r.error) {
-      job.finish();
-      return e(r.error);
+    job.output.write_line(["开始变更详情"]);
+    try {
+      const r = await refresher.change_movie_profile(movie, extra);
+      if (r.error) {
+        job.output.write_line(["请求详情发生错误，因为", r.error.message]);
+        job.finish();
+        return;
+      }
+      if (r.data === null) {
+        job.output.write_line(["没有要更新的内容，结束"]);
+        job.finish();
+        return;
+      }
+    } catch (err) {
+      job.output.write_line(["发生错误 catch"]);
+      //
     }
-    if (r.data === null) {
-      job.finish();
-      return e(Result.Err("没有要更新的内容"));
-    }
+    job.output.write_line(["完成更新"]);
     job.finish();
   }
   run(movie, { source, unique_id });

@@ -150,8 +150,8 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
      * 视频文件已存在，判断是否需要更新
      * ----------------------------------------
      */
-    this.emit(Events.Print, Article.build_line(["\n"]));
-    this.emit(Events.Print, Article.build_line([`[${prefix}]`, "视频文件已存在，判断是否需要更新"]));
+    // this.emit(Events.Print, Article.build_line(["\n"]));
+    // this.emit(Events.Print, Article.build_line([`[${prefix}]`, "视频文件已存在，判断是否需要更新"]));
     const episode_payload: {
       id: string;
       body: Record<string, string | number>;
@@ -175,24 +175,24 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         this.emit(Events.AddTV, data.tv);
         return Result.Ok(tv_adding_res.data);
       }
-      this.emit(Events.Print, Article.build_line(["该剧集已经关联电视剧解析结果"]));
-      this.emit(
-        Events.Print,
-        Article.build_line([
-          JSON.stringify({
-            file_name: existing_tv.file_name,
-            name: existing_tv.name,
-            original_name: existing_tv.original_name,
-          }),
-        ])
-      );
+      // this.emit(Events.Print, Article.build_line(["该剧集已经关联电视剧解析结果"]));
+      // this.emit(
+      //   Events.Print,
+      //   Article.build_line([
+      //     JSON.stringify({
+      //       file_name: existing_tv.file_name,
+      //       name: existing_tv.name,
+      //       original_name: existing_tv.original_name,
+      //     }),
+      //   ])
+      // );
       return Result.Ok(existing_tv);
     })();
     if (existing_tv_res.error) {
       return Result.Err(existing_tv_res.error);
     }
     const existing_tv = existing_tv_res.data;
-    this.emit(Events.Print, Article.build_line([`[${prefix}]`, "处理关联的解析季"]));
+    // this.emit(Events.Print, Article.build_line([`[${prefix}]`, "处理关联的解析季"]));
     // const existing_season_res = await (async () => {
     //   const existing_season = await store.prisma.parsed_season.findFirst({
     //     where: {

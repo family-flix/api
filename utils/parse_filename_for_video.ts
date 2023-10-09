@@ -40,7 +40,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("05B5AE84")) {
+    if (!filename.includes("IT狂人")) {
       return;
     }
     console.log(...args);
@@ -95,6 +95,7 @@ export function parse_filename_for_video(
     .replace(/(https{0,1}:){0,1}(\/\/){0,1}[0-9a-zA-Z]{1,}\.(com|cn)/, "")
     .replace(/(\.){2,}/g, ".");
   // const special_season_regexp = /(^|[^a-zA-Z])([sS][pP])($|[^a-zA-Z])/;
+  log("before custom parse", original_name);
   for (let i = 0; i < extra_rules.length; i += 1) {
     (() => {
       const rule = extra_rules[i];
@@ -104,13 +105,14 @@ export function parse_filename_for_video(
         if (!original_name.match(regexp)) {
           return;
         }
+        log("apply custom parse", regexp, replace[1]);
         original_name = original_name.replace(regexp, replace[1]);
       } catch (err) {
         // replace[0] 可能不是合法的正则
       }
     })();
   }
-  log("original_name is", original_name);
+  log("after  custom parse", original_name);
   let cur_filename = original_name;
   log("start name", cur_filename);
   type ExtraRule = {
@@ -290,6 +292,7 @@ export function parse_filename_for_video(
        * 最前面方便排序用的 影片首字母拼音 大写英文字母。只有该字母后面跟着中文，才会被处理
        * 如 `M 魔幻手机`，会变成 `魔幻手机`
        * `A Hard Day's Night` 不会被处理，仍保留原文
+       * @todo IT狂人 中的 IT 也被处理了
        */
       regexp: /^[A-Za-z]{1}[\. -（）⌒·★]{1}(?=[\u4e00-\u9fa5]{1,})/,
       before() {
@@ -454,6 +457,9 @@ export function parse_filename_for_video(
     },
     // 分辨率
     {
+      regexp: /[hH][qQ]/,
+    },
+    {
       key: k("resolution"),
       regexp: /([hHbB][dD]){0,1}\.{0,1}[0-9]{3,4}\.{0,1}[xX×]\.{0,1}[0-9]{3,4}/,
     },
@@ -467,7 +473,7 @@ export function parse_filename_for_video(
       regexp: /（{0,1}[0-9]{1,}[pPiI]）{0,1}/,
     },
     {
-      regexp: /[0-9]{1,}(帧|FPS)/,
+      regexp: /[0-9]{1,}(帧|[fF][pP][sS])/,
     },
     {
       key: k("year"),
@@ -896,7 +902,7 @@ export function parse_filename_for_video(
       // 日文 \u0800-\u4e00 还要包含中文字符范围
       // 英文 a-zA-Z
       const name_regexp =
-        /[0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[ \.\-&!'（）：！？～0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[）0-9a-zA-Z!！？\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]/;
+        /[0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[ \.\-&!'（）：！？～×0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[）0-9a-zA-Z!！？\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]/;
       const remove_multiple_dot = () => {
         // log("[6.0]before original_name or episode name", cur_filename);
         // 后面的 ` 符号可以换成任意生僻字符，这个极度重要！！
@@ -1066,6 +1072,15 @@ export function parse_filename_for_video(
   }
   if (result.season) {
     result.season = format_number(result.season);
+    if (!result.episode) {
+      // 有季，但没有集，可能是电影续作，
+      // if (result.name) {
+      //   result.name += result.season;
+      // }
+      // if (result.original_name) {
+      //   result.original_name += result.season;
+      // }
+    }
   }
   if (result.episode !== undefined) {
     result.episode = format_number(result.episode, "E");

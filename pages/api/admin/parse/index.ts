@@ -14,13 +14,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { name, keys = VIDEO_ALL_KEYS } = req.body as Partial<{ name: string; keys: VideoKeys[] }>;
-  if (!name) {
-    return e("缺少 `name` 参数");
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const result = parse_filename_for_video(name, keys);
+  if (!name) {
+    return e("缺少 `name` 参数");
+  }
+  const user = t_res.data;
+  const result = parse_filename_for_video(name, keys, user.get_filename_rules());
   res.status(200).json({ code: 0, msg: "", data: result });
 }

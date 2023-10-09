@@ -680,6 +680,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
             {
               name,
             },
+            {
+              original_name: name,
+            },
           ],
         },
       });

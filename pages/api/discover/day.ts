@@ -72,6 +72,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const movies = await store.prisma.movie.findMany({
     where: {
+      parsed_movies: {
+        some: {},
+      },
       user_id: member.user.id,
       created: {
         gte: range[0],
