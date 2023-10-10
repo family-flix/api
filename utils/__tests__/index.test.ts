@@ -100,9 +100,9 @@ describe("提取视频信息", () => {
     const name = "还珠格格3.E40.Extended.DVDRip.x264.AC3-CMCT.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "还珠格格",
+      name: "还珠格格3",
       original_name: "",
-      season: "S03",
+      season: "",
       episode: "E40",
     });
   });
@@ -484,9 +484,9 @@ describe("提取视频信息", () => {
     const name = "暗黑者3";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "暗黑者",
+      name: "暗黑者3",
       original_name: "",
-      season: "S03",
+      season: "",
       episode: "",
     });
   });
@@ -494,9 +494,9 @@ describe("提取视频信息", () => {
     const name = "欢乐颂3_03.1080P.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "欢乐颂",
+      name: "欢乐颂3",
       original_name: "",
-      season: "S03",
+      season: "",
       episode: "E03",
     });
   });
@@ -505,9 +505,9 @@ describe("提取视频信息", () => {
     const result = parse_filename_for_video(name);
     // @todo 308 会被处理成「集数」，又不能判断已经存在「集数」，所以跳过（其他重复出现同样信息时会有问题）
     expect(result).toStrictEqual({
-      name: "暗黑者",
+      name: "暗黑者2",
       original_name: "",
-      season: "S02",
+      season: "",
       episode: "E04",
     });
   });
@@ -605,7 +605,7 @@ describe("提取视频信息", () => {
     const name = "S熟年 [2023]";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "熟年",
+      name: "S熟年",
       original_name: "",
       season: "",
       episode: "",
@@ -636,9 +636,9 @@ describe("提取视频信息", () => {
     const name = "洗冤录1-01.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "洗冤录",
+      name: "洗冤录1",
       original_name: "",
-      season: "S01",
+      season: "",
       episode: "E01",
     });
   });

@@ -97,6 +97,15 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
        * ----------------------------------------
        */
       log(`[${prefix}]`, "是新视频文件");
+      const exiting_parsed_episode = await store.prisma.parsed_episode.findFirst({
+        where: {
+          file_id,
+        },
+      });
+      if (exiting_parsed_episode) {
+        // 本来识别成电影，后来改变了解析规则或者名字，现在识别成剧集了
+        await store.prisma.parsed_episode.delete({ where: { id: exiting_parsed_episode.id } });
+      }
       const add_movie_res = await store.add_parsed_movie({
         name,
         original_name,

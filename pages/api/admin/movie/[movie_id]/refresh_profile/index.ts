@@ -73,11 +73,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const r = await refresher.refresh_movie_profile(movie);
     if (r.error) {
       job.finish();
-      return e(r.error);
+      return;
     }
     if (r.data === null) {
       job.finish();
-      return e(Result.Err("没有要更新的内容"));
+      return;
     }
     job.finish();
   }

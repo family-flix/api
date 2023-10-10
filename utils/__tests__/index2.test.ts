@@ -462,11 +462,20 @@ describe("提取视频信息", () => {
     const name = "IT狂人.The.IT.Crowd.S01E01.Chi_Eng.DVDrip.608X336-YYeTs人人影视.rmvb";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      // @todo 怎么避免 IT 被移除？
-      name: "狂人",
+      name: "IT狂人",
       original_name: "The.IT.Crowd",
       season: "S01",
       episode: "E01",
+    });
+  });
+  test("2014.Doctor异乡人.20集全.1080p", () => {
+    const name = "2014.Doctor异乡人.20集全.1080p";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "Doctor异乡人",
+      original_name: "",
+      season: "",
+      episode: "",
     });
   });
 });

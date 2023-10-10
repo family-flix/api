@@ -45,9 +45,9 @@ describe("字幕", () => {
       "银河护卫队3 (2023) - Guardians.of.the.Galaxy.Vol.3.2023.1080p.WEB-DL.DDP5.1.Atmos.H.264-CMRG.chs&eng.ass";
     const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "subtitle_lang"]);
     expect(result).toStrictEqual({
-      name: "银河护卫队",
-      original_name: "",
-      season: "S03",
+      name: "银河护卫队3",
+      original_name: "Guardians.of.the.Galaxy.Vol.3",
+      season: "",
       episode: "",
       subtitle_lang: "chs&eng",
     });

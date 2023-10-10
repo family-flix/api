@@ -1,11 +1,11 @@
 /**
- * @file 创建短链接
+ * @file
  */
 import axios from "axios";
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { Member } from "@/domains/user/member";
+import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { query_stringify } from "@/utils";
 import { response_error_factory } from "@/utils/server";
@@ -65,11 +65,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { url } = req.body as Partial<{ url: string }>;
-  const t_res = await Member.New(authorization, store);
+  const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const member = t_res.data;
+  const user = t_res.data;
   if (!url) {
     return Result.Err("缺少链接");
   }

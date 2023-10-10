@@ -307,7 +307,27 @@ describe("电影", () => {
     const name = "S三贵情史4KHQ60FPS";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "三贵情史",
+      name: "S三贵情史",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("The.Transformers.The.Movie.1986.2160p.UHD.BluRay.x265.10bit.HDR.DTS-HD.MA.5.1-6Audios.mkv", () => {
+    const name = "The.Transformers.The.Movie.1986.2160p.UHD.BluRay.x265.10bit.HDR.DTS-HD.MA.5.1-6Audios.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "The.Transformers.The.Movie",
+      season: "",
+      episode: "",
+    });
+  });
+  test("No.14｜倩女幽魂2.1990.1080P.国粤中字.mkv", () => {
+    const name = "No.14｜倩女幽魂2.1990.1080P.国粤中字.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "倩女幽魂2",
       original_name: "",
       season: "",
       episode: "",

@@ -40,10 +40,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("IT狂人")) {
+    if (!filename.includes("倩女")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -101,11 +101,12 @@ export function parse_filename_for_video(
       const rule = extra_rules[i];
       const { replace } = rule;
       try {
+        // log("before apply parse", replace[0]);
         const regexp = new RegExp(replace[0]);
         if (!original_name.match(regexp)) {
           return;
         }
-        log("apply custom parse", regexp, replace[1]);
+        // log("apply custom parse", regexp, replace[1]);
         original_name = original_name.replace(regexp, replace[1]);
       } catch (err) {
         // replace[0] 可能不是合法的正则
@@ -292,14 +293,9 @@ export function parse_filename_for_video(
        * 最前面方便排序用的 影片首字母拼音 大写英文字母。只有该字母后面跟着中文，才会被处理
        * 如 `M 魔幻手机`，会变成 `魔幻手机`
        * `A Hard Day's Night` 不会被处理，仍保留原文
-       * @todo IT狂人 中的 IT 也被处理了
+       * 如果是 S熟年 这种，仍保留原文
        */
-      regexp: /^[A-Za-z]{1}[\. -（）⌒·★]{1}(?=[\u4e00-\u9fa5]{1,})/,
-      before() {
-        if (cur_filename.match(/^[A-Za-z][\u4e00-\u9fa5]{1,}/)) {
-          cur_filename = cur_filename.replace(/(^[A-Za-z])([\u4e00-\u9fa5]{1,})/, "$1 $2");
-        }
-      },
+      regexp: /^[A-Za-z]{1}(\.| |-|（|）|⌒|·|★)(?=[\u4e00-\u9fa5]{1,})/,
     },
     {
       regexp: /含[\u4e00-\u9fa5]{1,}[0-9]{1,}部全系列/,
@@ -633,13 +629,13 @@ export function parse_filename_for_video(
       regexp: /([\u4e00-\u9fa5]{1,}[0-9]{1}\.[0-9]{1})([^0-9]|$)/,
       pick: [1],
     },
-    {
-      // 针对国产剧，有一些加在名称后面的数字表示季，如 还珠格格2、欢乐颂3_01
-      key: k("season"),
-      regexp: /[\u4e00-\u9fa5]{1,}(0{0,1}(?!0)[1-9]{1,2}[:：]{0,1})(\.|$|-)/,
-      priority: 1,
-      pick: [1],
-    },
+    // {
+    //   // 针对国产剧，有一些加在名称后面的数字表示季，如 还珠格格2、欢乐颂3_01
+    //   key: k("season"),
+    //   regexp: /[\u4e00-\u9fa5]{1,}(0{0,1}(?!0)[1-9]{1,2}[:：]{0,1})(\.|$|-)/,
+    //   priority: 1,
+    //   pick: [1],
+    // },
     {
       key: k("name"),
       regexp: /^[a-zA-Z：]{1,}[\u4e00-\u9fa5]{1,}/,
@@ -708,7 +704,11 @@ export function parse_filename_for_video(
         /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！，：·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5）])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
-        cur_filename = cur_filename.replace(/^([0-9]{4}\.{1,})([\u4e00-\u9fa5！，：·、■（）]{1,})/, "$2.$1");
+        const r1 = /^([0-9]{4}\.{1,})([\u4e00-\u9fa5A-Za-z！，：·、■（）]{1,})/;
+        if (cur_filename.match(r1)) {
+          cur_filename = cur_filename.replace(r1, "$2.$1");
+        }
+        // const r2 = /^([0-9]{4}\.{1,})([\u4e00-\u9fa5A-Za-z！，：·、■（）]{1,})/;
         // 把 老友记S02 这种情况转换成 老友记.S02
         cur_filename = cur_filename.replace(/^([\u4e00-\u9fa5]{1,})([sS][0-9]{1,})/, "$1.$2");
         // 如果名字前面有很多冗余信息，前面就会出现 ..名称 这种情况，就需要手动处理掉
@@ -720,6 +720,11 @@ export function parse_filename_for_video(
           };
         }
       },
+    },
+    {
+      key: k("name"),
+      desc: "chinese name4",
+      regexp: /^[A-Za-z]{1,}(?=[\u4e00-\u9fa5]{1,})[\u4e00-\u9fa5]{1,}/,
     },
     // 发布年，必须在「分辨率」后面，因为分辨率有 2160p 这种，为了方便处理，先把分辨率剔除，再来处理发布年
     // 也要放在 name 先后面，因为有些影视剧名称包含了年份，比如「回到1988」，如果先把 1988 处理了，名字就不对了
@@ -814,6 +819,9 @@ export function parse_filename_for_video(
     {
       key: k("voice_encode"),
       regexp: /[eE]{0,1}[aA][cC]3/,
+    },
+    {
+      regexp: /[1-9]Audios/,
     },
     {
       key: k("voice_encode"),

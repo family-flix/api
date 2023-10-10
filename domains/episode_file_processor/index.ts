@@ -109,6 +109,15 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
        * 视频文件不存在，新增电视剧、季和剧集解析记录
        * ----------------------------------------
        */
+      const exiting_parsed_movie = await store.prisma.parsed_movie.findFirst({
+        where: {
+          file_id: episode.file_id,
+        },
+      });
+      if (exiting_parsed_movie) {
+        // 本来识别成电影，后来改变了解析规则或者名字，现在识别成剧集了
+        await store.prisma.parsed_movie.delete({ where: { id: exiting_parsed_movie.id } });
+      }
       log(`[${prefix}]`, "是新视频文件");
       const tv_adding_res = await this.add_parsed_tv(data);
       if (tv_adding_res.error) {

@@ -53,9 +53,9 @@ describe("奇怪", () => {
     const name = "还珠格格3.2003.40集特别版+6部MV .繁体中字 无台标水印版";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "还珠格格",
+      name: "还珠格格3",
       original_name: "",
-      season: "S03",
+      season: "",
       episode: "",
     });
   });
