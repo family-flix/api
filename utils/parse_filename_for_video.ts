@@ -253,7 +253,7 @@ export function parse_filename_for_video(
       regexp: /[cC][hH][sS]\.{0,1}[jJ][pP][nN]/,
     },
     {
-      regexp: /repack/,
+      regexp: /repack|REMUX/,
     },
     // 来源平台
     {
@@ -802,6 +802,9 @@ export function parse_filename_for_video(
     {
       regexp: /2[Aa][Uu][Dd][Ii][Oo][Ss]/,
     },
+    {
+      regexp: /[1-9]Audios/,
+    },
     // 音频编码方式
     {
       key: "voice_encode",
@@ -821,11 +824,8 @@ export function parse_filename_for_video(
       regexp: /[eE]{0,1}[aA][cC]3/,
     },
     {
-      regexp: /[1-9]Audios/,
-    },
-    {
       key: k("voice_encode"),
-      regexp: /DTSHD-MA/,
+      regexp: /DTS-{0,1}HD([\.-]MA){0,1}(\.5\.1){0,1}/,
     },
     {
       key: k("voice_encode"),

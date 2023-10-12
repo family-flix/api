@@ -1,8 +1,10 @@
+import util from "util";
+
 import dayjs from "dayjs";
 
 import { Application } from "@/domains/application";
 
-const OUTPUT_PATH = "/apps/flix_prod";
+const OUTPUT_PATH = "/Users/litao/Documents/workspaces/family-flix/dev-output";
 const DATABASE_PATH = "file://$OUTPUT_PATH/data/family-flix.db?connection_limit=1";
 
 const app = new Application({
@@ -11,51 +13,56 @@ const app = new Application({
 const store = app.store;
 
 async function main() {
-  const start = null;
-  const end = null;
-  const range = [
-    start ? dayjs(start).toISOString() : dayjs().endOf("day").toISOString(),
-    end ? dayjs(end).toISOString() : dayjs().startOf("day").toISOString(),
-  ];
-  const episodes = await store.prisma.episode.findMany({
+  const profile = await store.prisma.season.findFirst({
     where: {
-      created: {
-        lt: range[0],
-        gte: range[1],
-      },
-      // user_id: user.id,
+      id: "oqpAtuwrFG7oQo9",
+      // episodes: {
+      //   every: {
+      //     parsed_episodes: {
+      //       some: {},
+      //     },
+      //   },
+      // },
     },
     include: {
-      season: {
-        include: {
-          profile: true,
+      episodes: {
+        where: {
+          parsed_episodes: {
+            some: {},
+          },
         },
-      },
-      tv: {
+        orderBy: {
+          episode_number: "asc",
+        },
         include: {
-          profile: true,
+          parsed_episodes: {
+            select: {
+              file_name: true,
+            },
+          },
         },
       },
     },
-    distinct: ["season_id"],
-    orderBy: [
-      {
-        created: "desc",
-      },
-    ],
   });
+  if (!profile) {
+    return;
+  }
   console.log(
-    episodes.map((episode) => {
-      const {
-        episode_text,
-        season,
-        tv: { profile },
-      } = episode;
-      return {
-        episode_text,
-        name: profile.name,
-      };
-    })
+    util.inspect(
+      {
+        ...profile,
+        episodes: profile.episodes.map((episode) => {
+          const { episode_text, parsed_episodes } = episode;
+          return {
+            episode_text,
+            parsed_episodes,
+          };
+        }),
+      },
+      {
+        depth: 5,
+      }
+    )
   );
 }
 

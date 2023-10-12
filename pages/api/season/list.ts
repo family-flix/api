@@ -9,7 +9,6 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { TVProfileWhereInput } from "@/domains/store/types";
-import { season_to_chinese_num } from "@/utils";
 import { MediaProfileSourceTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -127,8 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         tv_id: tv.id,
         name,
         overview,
-        season_number: season_text,
-        season_text: season_to_chinese_num(season_text),
+        season_text,
         episode_count: profile.episode_count,
         cur_episode_count: _count.episodes,
         poster_path: profile.poster_path || poster_path,

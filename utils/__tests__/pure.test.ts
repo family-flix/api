@@ -270,4 +270,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("______.2013.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1.mkv", () => {
+    const name = "______.2013.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

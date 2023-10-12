@@ -7,7 +7,6 @@ import { Member } from "@/domains/user/member";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { season_to_chinese_num } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -133,6 +132,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       include: {
         _count: true,
         episodes: {
+          where: {
+            parsed_episodes: {
+              some: {},
+            },
+          },
           include: {
             profile: true,
             parsed_episodes: true,
@@ -158,7 +162,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
         overview,
         season_number: season_text,
-        season_text: season_to_chinese_num(season_text),
         episode_number: episode_text,
         season_id,
         runtime,
@@ -200,30 +203,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     seasons: seasons.map((season) => {
       const { id, season_text, profile } = season;
       const { name, overview, air_date } = profile;
-      const text = season_to_chinese_num(season_text);
       const { no_more: episode_no_more, list: episodes } =
         cur_season && cur_season.id === id ? episodes_of_cur_season : { no_more: true, list: [] };
       return {
         id,
-        name: name || text,
-        season_text: text,
+        name: name || season_text,
         overview,
         air_date,
         episodes,
         episode_no_more,
       };
     }),
-    // cur_episodes: episodes_of_cur_season,
     cur_season: (() => {
       if (cur_season === null) {
         return null;
       }
       const { id, season_text, profile } = cur_season;
-      const text = season_to_chinese_num(season_text);
       return {
         id,
-        name: profile.name || text,
-        season_text: text,
+        name: profile.name || season_text,
         overview: profile.overview,
         air_date: profile.air_date,
       };
@@ -240,7 +238,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
         overview,
         season_number: season_text,
-        season_text: season_to_chinese_num(season_text),
         episode_number: episode_text,
         runtime,
         current_time,

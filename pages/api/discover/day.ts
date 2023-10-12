@@ -36,11 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             not: MediaProfileSourceTypes.Other,
           },
         },
-        episodes: {
-          every: {
-            parsed_episodes: { some: {} },
-          },
-        },
       },
       user_id: member.user.id,
     },
@@ -48,12 +43,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       season: {
         include: {
           profile: true,
-          episodes: {
-            orderBy: {
-              episode_number: "desc",
-            },
-            take: 1,
-          },
         },
       },
       tv: {
@@ -102,44 +91,76 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     text: string | null;
     created: number;
   };
-  const medias = episodes
-    .map((episode) => {
+  const episode_medias: MediaPayload[] = [];
+  const movie_media: MediaPayload[] = [];
+  for (let i = 0; i < episodes.length; i += 1) {
+    await (async () => {
+      const episode = episodes[i];
       const { tv, season } = episode;
-      const latest_episode = season.episodes[0];
-      return {
+      const latest_episode = await store.prisma.episode.findFirst({
+        where: {
+          season_id: season.id,
+          parsed_episodes: {
+            some: {},
+          },
+        },
+        orderBy: {
+          episode_number: "desc",
+        },
+        take: 1,
+      });
+      if (!latest_episode) {
+        return;
+      }
+      const media = {
         id: season.id,
         type: MediaTypes.Season,
         tv_id: tv.id,
         name: tv.profile.name,
         season_text: season.season_text,
         poster_path: season.profile.poster_path || tv.profile.poster_path,
-        air_date: season.profile.air_date,
-        text: (() => {
-          if (season.profile.episode_count === latest_episode.episode_number) {
+        air_date: dayjs(season.profile.air_date).format("YYYY/MM/DD"),
+        text: await (async () => {
+          const episode_count = await store.prisma.episode.count({
+            where: {
+              season_id: season.id,
+              parsed_episodes: {
+                some: {},
+              },
+            },
+          });
+          if (season.profile.episode_count === episode_count) {
             return `全${season.profile.episode_count}集`;
           }
-          return `更新至${latest_episode.episode_number}集`;
+          if (episode_count === latest_episode.episode_number) {
+            return `更新至${latest_episode.episode_number}集`;
+          }
+          return `收录${episode_count}集`;
         })(),
         created: dayjs(latest_episode.created).unix(),
       } as MediaPayload;
-    })
-    .concat(
-      movies.map((movie) => {
-        const { id, profile, created } = movie;
-        return {
-          id,
-          type: MediaTypes.Movie,
-          name: profile.name,
-          poster_path: profile.poster_path,
-          air_date: profile.air_date,
-          text: null,
-          created: dayjs(created).unix(),
-        } as MediaPayload;
-      })
-    )
-    .sort((a, b) => {
-      return b.created - a.created;
-    });
+      episode_medias.push(media);
+    })();
+  }
+  for (let i = 0; i < movies.length; i += 1) {
+    await (async () => {
+      const movie = movies[i];
+      const { id, profile, created } = movie;
+      const media = {
+        id,
+        type: MediaTypes.Movie,
+        name: profile.name,
+        poster_path: profile.poster_path,
+        air_date: dayjs(profile.air_date).format("YYYY/MM/DD"),
+        text: null,
+        created: dayjs(created).unix(),
+      } as MediaPayload;
+      movie_media.push(media);
+    })();
+  }
+  const medias = [...episode_medias, ...movie_media].sort((a, b) => {
+    return b.created - a.created;
+  });
   res.status(200).json({
     code: 0,
     msg: "",

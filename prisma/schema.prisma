@@ -378,6 +378,8 @@ model season {
         reports         report[]
         sync_tasks      bind_for_parsed_tv[]
         collections     collection[]
+        incomplete_tv   incomplete_tv?
+        shared_medias   shared_media[]
 
         @@map("Season")
 }
@@ -423,6 +425,7 @@ model movie {
         reports        report[]
         subtitles      subtitle[]
         collections    collection[]
+        shared_medias  shared_media[]
 
         @@map("Movie")
 }
@@ -435,11 +438,15 @@ model collection {
         title  String
         desc   String?
         type   Int     @default(0)
+        // 0草稿 1发布 2隐藏
+        status Int     @default(0)
+        extra  String?
         rules  String?
         sort   Int     @default(0)
         hidden Int     @default(0)
         // 样式配置
         styles String?
+        medias String?
 
         tvs     tv[]
         seasons season[]
@@ -648,17 +655,14 @@ model incomplete_tv {
         id            String   @id
         created       DateTime @default(now())
         updated       DateTime @default(now())
-        // 总集数
-        episode_count Float?   @default(0)
-        // 当前集数
-        cur_count     Float?   @default(0)
+        episode_count Int?     @default(0)
+        cur_count     Int?     @default(0)
+        text          String?
 
-        // searched_season_id String
-        // season_profile     season_profile @relation(fields: [searched_season_id], references: [id])
-        // tv_profile_id      String
-        // tv_profile         tv_profile     @relation(fields: [tv_profile_id], references: [id])
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        season_id String? @unique
+        season    season? @relation(fields: [season_id], references: [id], onDelete: Cascade)
+        user_id   String
+        user      user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("TVNeedComplete")
 }
@@ -735,13 +739,15 @@ model member {
         user_id        String
         user           user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        member_setting member_setting?
-        member_tokens  member_token[]
-        play_histories play_history[]
-        reports        report[]
-        invitees       member[]              @relation("InviterToInvitees")
-        notifications  member_notification[]
-        member_invites member_invite[]
+        member_setting  member_setting?
+        member_tokens   member_token[]
+        play_histories  play_history[]
+        reports         report[]
+        invitees        member[]              @relation("InviterToInvitees")
+        notifications   member_notification[]
+        member_invites  member_invite[]
+        created_medias  shared_media[]        @relation("MemberFrom")
+        received_medias shared_media[]        @relation("MemberTarget")
 
         @@unique([user_id, inviter_id, remark])
         @@map("Member")
@@ -828,6 +834,27 @@ model member_notification {
         member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
         @@map("MemberNotification")
+}
+
+model shared_media {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        url String
+
+        season_id        String?
+        season           season? @relation(fields: [season_id], references: [id], onDelete: Cascade)
+        movie_id         String?
+        movie            movie?  @relation(fields: [movie_id], references: [id], onDelete: Cascade)
+        // 创建分享的人
+        member_from_id   String
+        member_from      member  @relation("MemberFrom", fields: [member_from_id], references: [id], onDelete: Cascade)
+        // 被分享的人
+        member_target_id String
+        member_target    member  @relation("MemberTarget", fields: [member_target_id], references: [id], onDelete: Cascade)
+
+        @@map("SharedMedia")
 }
 
 model notification {

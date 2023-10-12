@@ -27,3 +27,10 @@ export enum MediaTypes {
   Season = 1,
   Movie = 2,
 }
+
+export enum CollectionTypes {
+  /** 手动创建 */
+  Manually = 0,
+  /** 每日更新 */
+  DailyUpdate = 1,
+}

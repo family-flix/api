@@ -36,12 +36,15 @@ export class Application {
   database_dir: string;
   database_name: string;
   assets: string;
+  env: Record<string, string> = {};
 
   store: DatabaseStore;
 
-  constructor(options: { root_path: string }) {
-    const { root_path } = options;
+  constructor(options: { root_path: string; env?: Record<string, string> }) {
+    const { root_path, env = {} } = options;
     this.root_path = root_path;
+    this.env = env;
+
     const database_dir = path.join(root_path, "data");
     const database_name = "family-flix.db?connection_limit=1";
     const storage_path = path.join(root_path, "storage");

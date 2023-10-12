@@ -23,15 +23,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page: string;
     page_size: string;
   }>;
-  if (!tv_id) {
-    return e("缺少电视剧 id");
-  }
-  // if (!season_id) {
-  //   return e("缺少季 id");
-  // }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
+  }
+  if (!tv_id) {
+    return e("缺少电视剧 id");
   }
   const member = t_res.data;
   const page = Number(page_str);

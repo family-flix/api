@@ -478,4 +478,14 @@ describe("提取视频信息", () => {
       episode: "",
     });
   });
+  test("西行纪.S03.20", () => {
+    const name = "西行纪.S03.20";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "西行纪",
+      original_name: "",
+      season: "S03",
+      episode: "E20",
+    });
+  });
 });

@@ -36,8 +36,10 @@ export const Result = {
           return message;
         }
         const r = message as Result<null>;
-        // @ts-ignore
-        r.error.code = code;
+        if (code) {
+          // @ts-ignore
+          r.error.code = code;
+        }
         return r.error;
       })(),
     } as Result<null>;

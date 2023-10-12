@@ -48,4 +48,18 @@ describe("自定义额外解析规则", () => {
       episode: "E08",
     });
   });
+  test("西行纪之宿命篇20[1080P][KLWNH].mp4", () => {
+    const name = "西行纪之宿命篇20[1080P][KLWNH].mp4";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["西行纪之宿命篇", "西行纪.S03."],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "西行纪",
+      original_name: "",
+      season: "S03",
+      episode: "E20",
+    });
+  });
 });

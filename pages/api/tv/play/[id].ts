@@ -8,20 +8,19 @@ import { Member } from "@/domains/user/member";
 import { BaseApiResp, Result } from "@/types";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/server";
-import { season_to_chinese_num } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id, season_id } = req.query as Partial<{ id: string; season_id: string }>;
-  if (!id) {
-    return e(Result.Err("缺少电视剧 id"));
-  }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: member_id } = t_res.data;
+  const member = t_res.data;
+  if (!id) {
+    return e(Result.Err("缺少电视剧 id"));
+  }
   const tv = await store.prisma.tv.findFirst({
     where: {
       id,
@@ -30,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       profile: true,
       play_histories: {
         where: {
-          member_id,
+          member_id: member.id,
           tv_id: id,
         },
       },
@@ -53,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const play_history =
     play_histories.find((p) => {
-      return p.member_id === member_id && p.tv_id === id;
+      return p.member_id === member.id && p.tv_id === id;
     }) ?? null;
   const playing_episode = await (async () => {
     // 第一次观看
@@ -144,7 +143,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
         overview,
         season_number: season_text,
-        season_text: season_to_chinese_num(season_text),
         episode_number: episode_text,
         season_id,
         sources: parsed_episodes.map((parsed_episode) => {
@@ -179,11 +177,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     seasons: seasons.map((season) => {
       const { id, season_text, profile } = season;
       const { name, overview, air_date } = profile;
-      const text = season_to_chinese_num(season_text);
       return {
         id,
-        name: name || text,
-        season_text: text,
+        name: name || season_text,
         overview,
         air_date,
         episodes: cur_season && cur_season.id === id ? episodes_of_cur_season : [],
@@ -194,12 +190,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (cur_season === null) {
         return null;
       }
-      const { id, season_text, profile } = cur_season;
-      const text = season_to_chinese_num(season_text);
+      const { id, season_number, season_text, profile } = cur_season;
       return {
         id,
-        name: profile.name || text,
-        season_text: text,
+        name: profile.name || season_text,
+        season_number,
         overview: profile.overview,
         air_date: profile.air_date,
       };
@@ -216,7 +211,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
         overview,
         season_number: season_text,
-        season_text: season_to_chinese_num(season_text),
         episode_number: episode_text,
         current_time,
         season_id,

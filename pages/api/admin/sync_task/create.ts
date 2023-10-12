@@ -12,6 +12,7 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { FileType } from "@/constants";
+import { r_id } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -58,20 +59,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
    * 手动选择了转存的文件夹和云盘内文件夹进行关联
    */
   if (resource_file_id && resource_file_name && drive_file_id && drive_file_name && drive_id) {
-    const r = await store.add_sync_task({
-      url,
-      file_id: resource_file_id,
-      name: resource_file_name,
-      file_id_link_resource: drive_file_id,
-      file_name_link_resource: drive_file_name,
-      in_production: 1,
-      invalid: 0,
-      user_id: user.id,
-      drive_id,
+    await store.prisma.bind_for_parsed_tv.create({
+      data: {
+        id: r_id(),
+        url,
+        file_id: resource_file_id,
+        name: resource_file_name,
+        file_id_link_resource: drive_file_id,
+        file_name_link_resource: drive_file_name,
+        in_production: 1,
+        invalid: 0,
+        user: {
+          connect: {
+            id: user.id,
+          },
+        },
+        drive: {
+          connect: {
+            id: drive_id,
+          },
+        },
+      },
     });
-    if (r.error) {
-      return e(r);
-    }
     res.status(200).json({
       code: 0,
       msg: "新增同步任务成功",
@@ -115,20 +124,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     const resource = resource_files[0];
     const { file_id: resource_file_id, name: resource_file_name } = resource;
-    const r = await store.add_sync_task({
-      url,
-      file_id: resource_file_id,
-      name: resource_file_name,
-      file_id_link_resource: drive_file_id,
-      file_name_link_resource: drive_file_name,
-      in_production: 1,
-      invalid: 0,
-      user_id: user.id,
-      drive_id,
+    await store.prisma.bind_for_parsed_tv.create({
+      data: {
+        id: r_id(),
+        url,
+        file_id: resource_file_id,
+        name: resource_file_name,
+        file_id_link_resource: drive_file_id,
+        file_name_link_resource: drive_file_name,
+        in_production: 1,
+        invalid: 0,
+        user: {
+          connect: {
+            id: user.id,
+          },
+        },
+        drive: {
+          connect: {
+            id: drive_file.drive_id,
+          },
+        },
+      },
     });
-    if (r.error) {
-      return e(r);
-    }
     res.status(200).json({
       code: 0,
       msg: "新增同步任务成功",

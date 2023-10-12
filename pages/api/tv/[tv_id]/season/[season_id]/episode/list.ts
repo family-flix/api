@@ -9,6 +9,7 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { to_number } from "@/utils/primitive";
+import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -37,8 +38,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const member = t_res.data;
   const page = to_number(page_str, 1);
   const page_size = to_number(page_size_str, 20);
-  const where: NonNullable<Parameters<typeof store.prisma.episode.findMany>[number]>["where"] = {
+  const where: ModelQuery<"episode"> = {
     tv_id,
+    parsed_episodes: {
+      some: {},
+    },
     user_id: member.user.id,
   };
   if (season_id) {

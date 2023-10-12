@@ -1,15 +1,8 @@
-/**
- * @file
- */
 import axios from "axios";
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
+import { Result } from "@/types";
 import { query_stringify } from "@/utils";
-import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
+import { app } from "@/store";
 
 const API_HOST = "http://t.funzm.com";
 const client = axios.create({
@@ -44,13 +37,16 @@ const request: RequestClient = {
   },
 };
 
+/**
+ * 创建短链接
+ */
 export async function create_link(url: string) {
   const base = "/yourls-api.php";
   const res = await request.get<{
     shorturl: string;
   }>(base, {
-    username: process.env.SHORT_LINK_USERNAME,
-    password: process.env.SHORT_LINK_PASSWORD,
+    username: app.env.SHORT_LINK_USERNAME,
+    password: app.env.SHORT_LINK_PASSWORD,
     url,
     format: "json",
     action: "shorturl",
@@ -59,30 +55,4 @@ export async function create_link(url: string) {
     return Result.Err(res.error.message);
   }
   return Result.Ok(res.data.shorturl);
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
-  const e = response_error_factory(res);
-  const { authorization } = req.headers;
-  const { url } = req.body as Partial<{ url: string }>;
-  const t_res = await User.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res);
-  }
-  const user = t_res.data;
-  if (!url) {
-    return Result.Err("缺少链接");
-  }
-  const r = await create_link(url);
-  if (r.error) {
-    return e(r);
-  }
-  const shorturl = r.data;
-  res.status(200).json({
-    code: 0,
-    msg: "",
-    data: {
-      url: shorturl,
-    },
-  });
 }

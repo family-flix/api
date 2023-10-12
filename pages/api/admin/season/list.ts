@@ -138,11 +138,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           some: {},
         },
       },
-      {
-        parsed_episodes: {
-          some: {},
-        },
-      },
     ],
     user_id: user.id,
   };
@@ -194,6 +189,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       },
       episodes: {
+        where: {
+          parsed_episodes: {
+            some: {},
+          },
+        },
         include: {
           profile: true,
           _count: true,

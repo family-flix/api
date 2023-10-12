@@ -59,36 +59,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     ],
     user_id,
   };
-  const count = await store.prisma.season.count({
+  const count = await store.prisma.incomplete_tv.count({
     where,
   });
-  const list = await store.prisma.season.findMany({
+  const list = await store.prisma.incomplete_tv.findMany({
     where,
     include: {
-      _count: true,
-      profile: true,
-      sync_tasks: true,
-      tv: {
-        include: {
-          _count: true,
-          profile: true,
-          parsed_tvs: true,
-        },
-      },
-      episodes: {
+      season: {
         include: {
           profile: true,
-          _count: true,
-          parsed_episodes: {
-            select: {
-              file_id: true,
-              file_name: true,
-              size: true,
+          tv: {
+            include: {
+              profile: true,
             },
           },
-        },
-        orderBy: {
-          episode_number: "desc",
         },
       },
     },
@@ -97,24 +81,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const data = {
     total: count,
-    list: list.map((season) => {
-      const { id, season_text, profile, tv, sync_tasks } = season;
-      const { air_date } = profile;
-      const { name, original_name, overview, poster_path, popularity } = normalize_partial_tv({
-        ...tv,
-        sync_tasks,
-      });
+    list: list.map((invalid) => {
+      if (!invalid.season) {
+        return {
+          id: invalid.id,
+        };
+      }
+      const { season, text, cur_count } = invalid;
+      const { id, season_text, profile } = season;
+      const { name, poster_path, air_date, episode_count } = profile;
       return {
         id,
-        tv_id: tv.id,
+        tv_id: season.tv.id,
         name,
-        original_name,
-        overview,
-        season_number: season_text,
-        season_text: season_to_chinese_num(season_text),
-        poster_path: profile.poster_path || poster_path,
-        first_air_date: air_date,
-        popularity,
+        season_text,
+        poster_path: poster_path || season.tv.profile.poster_path,
+        air_date,
+        text,
+        cur_count,
+        episode_count,
       };
     }),
     page,

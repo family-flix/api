@@ -20,6 +20,7 @@ type MediaPayload = {
   name: string;
   poster_path: string;
   air_date: string;
+  text: string;
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -99,9 +100,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               poster_path: season.profile.poster_path || poster_path,
               tv_id: tv.id,
               air_date: season.profile.air_date,
-              cur_episode_count: season._count.episodes,
-              episode_count: season.profile.episode_count,
               season_text,
+              text: (() => {
+                const cur_episode_count = season._count.episodes;
+                const episode_count = season.profile.episode_count;
+                if (cur_episode_count === episode_count) {
+                  return `全${episode_count}集`;
+                }
+                return `更新至${cur_episode_count}集`;
+              })(),
             } as MediaPayload;
           })
           .concat(
@@ -114,6 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                 name,
                 poster_path,
                 air_date,
+                text: "",
               } as MediaPayload;
             })
           ),
