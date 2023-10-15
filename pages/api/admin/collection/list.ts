@@ -14,10 +14,12 @@ import { to_number } from "@/utils/primitive";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const {
+    type: type_str = "0",
     name,
     page: page_str,
     page_size: page_size_str,
   } = req.query as Partial<{
+    type: string;
     name: string;
     page: string;
     page_size: string;
@@ -28,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id } = user;
+  const type = to_number(type_str, 1);
   const page = to_number(page_str, 1);
   const page_size = to_number(page_size_str, 20);
   let queries: NonNullable<ModelQuery<"collection">>[] = [];
@@ -44,7 +46,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   }
   const where: ModelQuery<"collection"> = {
-    user_id,
+    type,
+    user_id: user.id,
   };
   if (queries.length !== 0) {
     where.AND = queries;

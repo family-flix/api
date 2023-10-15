@@ -42,6 +42,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         user_id: member.user.id,
       },
       include: {
+        tv: {
+          include: {
+            profile: true,
+          },
+        },
         profile: true,
       },
     });
@@ -66,14 +71,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return e(
         Result.Err("已分享给该好友", 50000, {
           id: existing_short_link.id,
-          name: existing_season.profile.name,
-          poster_path: existing_season.profile.poster_path,
+          name: existing_season.tv.profile.name,
+          poster_path: existing_season.profile.poster_path || existing_season.tv.profile.poster_path,
           url: existing_short_link.url,
         })
       );
     }
     const url = `http://media.funzm.com/mobile/tv_play?${query_stringify({
-      tv_id: existing_season.tv_id,
+      id: existing_season.tv_id,
       season_id,
       token: valid_token.id,
       rate: 1.5,
@@ -97,8 +102,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       msg: "",
       data: {
         id: created.id,
-        name: existing_season.profile.name,
-        poster_path: existing_season.profile.poster_path,
+        name: existing_season.tv.profile.name,
+        poster_path: existing_season.profile.poster_path || existing_season.tv.profile.poster_path,
         url: r.data,
       },
     });

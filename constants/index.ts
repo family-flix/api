@@ -33,4 +33,6 @@ export enum CollectionTypes {
   Manually = 0,
   /** 每日更新 */
   DailyUpdate = 1,
+  /** 每日更新草稿 */
+  DailyUpdateDraft = 2,
 }

@@ -20,7 +20,7 @@ export async function main(values: { store: DatabaseStore }) {
       const dailyUpdateCollection = await (async () => {
         const r = await store.prisma.collection.findFirst({
           where: {
-            type: CollectionTypes.DailyUpdate,
+            type: CollectionTypes.DailyUpdateDraft,
             user_id: user.id,
           },
         });
@@ -28,8 +28,8 @@ export async function main(values: { store: DatabaseStore }) {
           return store.prisma.collection.create({
             data: {
               id: r_id(),
-              title: "今日更新",
-              type: CollectionTypes.DailyUpdate,
+              title: dayjs().unix().toString(),
+              type: CollectionTypes.DailyUpdateDraft,
               user_id: user.id,
             },
           });
@@ -171,14 +171,13 @@ export async function main(values: { store: DatabaseStore }) {
           movie_media.push(media);
         })();
       }
-      //       const medias = [...episode_medias, ...movie_media].sort((a, b) => {
-      //         return b.created - a.created;
-      //       });
       await store.prisma.collection.update({
         where: {
           id: dailyUpdateCollection.id,
         },
         data: {
+          title: dayjs().unix().toString(),
+          medias: JSON.stringify([...season_medias, movie_media]),
           seasons: {
             connect: season_medias.map((season) => {
               return {

@@ -4,7 +4,7 @@
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 
-import { JSONObject, Result } from "@/types";
+import { JSONArray, JSONObject, Result } from "@/types";
 
 import { cn as nzhcn } from "./nzh/index";
 
@@ -308,7 +308,7 @@ export function sleep(delay: number = 1000) {
 }
 
 /** 解析一段 json 字符串 */
-export function parseJSONStr<T extends JSONObject>(json: string | null) {
+export function parseJSONStr<T extends JSONObject | JSONArray>(json: string | null) {
   if (!json) {
     return Result.Err("不是合法的 json");
   }
