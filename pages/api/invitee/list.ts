@@ -9,13 +9,14 @@ import { MemberWhereInput } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
+import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const {
     remark,
-    page: page_str = "1",
-    page_size: page_size_str = "20",
+    page: page_str,
+    page_size: page_size_str,
   } = req.query as Partial<{
     remark: string;
     page: string;
@@ -27,8 +28,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const member = t_res.data;
-  const page = Number(page_str);
-  const page_size = Number(page_size_str);
+  const page = to_number(page_str, 1);
+  const page_size = to_number(page_size_str, 20);
   let queries: MemberWhereInput[] = [];
   if (remark) {
     queries = queries.concat({
@@ -58,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       member_tokens: true,
     },
     orderBy: {
-      created: "asc",
+      created: "desc",
     },
     skip: (page - 1) * page_size,
     take: page_size,
@@ -69,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     no_more: list.length + (page - 1) * page_size >= count,
     list: list.map((member) => {
-      const { id, remark, member_tokens } = member;
+      const { id, remark, member_tokens, created } = member;
       return {
         id,
         remark,
@@ -81,6 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             used,
           };
         }),
+        created,
       };
     }),
   };

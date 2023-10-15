@@ -49,25 +49,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (episode === null) {
     return e(Result.Err("没有匹配的影片记录"));
   }
-  // const play_history = await store.prisma.play_history.findFirst({
-  //   where: {
-  //     episode_id: id,
-  //     member_id,
-  //   },
-  // });
   const { season_text, episode_text, profile, parsed_episodes } = episode;
   const source = (() => {
     if (parsed_episodes.length === 0) {
       return null;
     }
-    // if (play_history && play_history.file_id) {
-    //   const matched = parsed_episodes.find((e) => {
-    //     return e.file_id === play_history.file_id;
-    //   });
-    //   if (matched) {
-    //     return matched;
-    //   }
-    // }
     const matched = parsed_episodes.find((parsed_episode) => {
       return parsed_episode.file_id === fid;
     });

@@ -155,7 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       data: {
         id: r_id(),
         url: r.data,
-        season_id,
+        movie_id,
         member_target_id: target_member_id,
         member_from_id: member.id,
       },
@@ -170,7 +170,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         url: r.data,
       },
     });
-    res.status(200).json({ code: 0, msg: "", data: null });
     return;
   }
   return e(Result.Err("缺少影视剧信息"));
