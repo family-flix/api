@@ -5,6 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
+import { CollectionTypes, MediaTypes } from "@/constants";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { r_id } from "@/utils";
@@ -46,10 +47,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       title,
       desc,
       sort,
-      type: 1,
+      type: CollectionTypes.Manually,
       seasons: {
         connect: medias
-          .filter((media) => media.type === 1)
+          .filter((media) => media.type === MediaTypes.Season)
           .map((media) => {
             return {
               id: media.id,
@@ -58,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
       movies: {
         connect: medias
-          .filter((media) => media.type === 2)
+          .filter((media) => media.type === MediaTypes.Movie)
           .map((media) => {
             return {
               id: media.id,

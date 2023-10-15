@@ -166,7 +166,7 @@ async function updateUserDailyUpdate(user: User, store: DatabaseStore) {
     },
     data: {
       title: dayjs().unix().toString(),
-      medias: JSON.stringify([...season_medias, movie_media]),
+      medias: JSON.stringify([...season_medias, ...movie_media]),
       seasons: {
         connect: season_medias.map((season) => {
           return {

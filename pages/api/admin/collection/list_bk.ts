@@ -11,7 +11,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { parseJSONStr } from "@/utils";
-import { MediaTypes } from "@/constants";
+import { CollectionTypes, MediaTypes } from "@/constants";
 
 type MediaPayload = {
   id: string;
@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page = 1,
     page_size = 20,
   } = req.body as Partial<{
-    type: number;
+    type: CollectionTypes;
     name: string;
     page: number;
     page_size: number;
@@ -100,6 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const result: {
     id: string;
+    type: CollectionTypes;
     title: string;
     desc: string | null;
     medias: MediaPayload[];
@@ -107,15 +108,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   for (let i = 0; i < list.length; i += 1) {
     (() => {
       const collection = list[i];
-      const { id, title, desc, medias, seasons, movies } = collection;
-      const r = parseJSONStr<MediaPayload[]>(medias);
-      if (r.error) {
+      const { id, type, title, desc, medias, seasons, movies } = collection;
+      function build() {
         result.push({
           id,
+          type,
           title,
           desc,
-          medias: seasons
-            .map((season) => {
+          medias: [
+            ...seasons.map((season) => {
               const { id, tv } = season;
               const { name, poster_path } = tv.profile;
               return {
@@ -129,30 +130,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                 text: "",
                 created: dayjs(season.created).unix(),
               } as MediaPayload;
-            })
-            .concat(
-              movies.map((movie) => {
-                const { id, profile } = movie;
-                const { name, poster_path } = profile;
-                return {
-                  id,
-                  type: MediaTypes.Movie,
-                  name,
-                  poster_path,
-                  air_date: movie.profile.air_date,
-                  text: "",
-                  created: dayjs(movie.created).unix(),
-                } as MediaPayload;
-              })
-            ),
+            }),
+            ...movies.map((movie) => {
+              const { id, profile } = movie;
+              const { name, poster_path } = profile;
+              return {
+                id,
+                type: MediaTypes.Movie,
+                name,
+                poster_path,
+                air_date: movie.profile.air_date,
+                text: "",
+                created: dayjs(movie.created).unix(),
+              } as MediaPayload;
+            }),
+          ],
         });
+      }
+      if (medias === null) {
+        build();
+        return;
+      }
+      const r = parseJSONStr<MediaPayload[]>(medias);
+      if (r.error) {
+        build();
         return;
       }
       result.push({
         id,
+        type,
         title,
         desc,
-        medias: r.data,
+        medias: [...r.data],
       });
     })();
   }

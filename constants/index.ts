@@ -30,9 +30,9 @@ export enum MediaTypes {
 
 export enum CollectionTypes {
   /** 手动创建 */
-  Manually = 0,
+  Manually = 1,
   /** 每日更新 */
-  DailyUpdate = 1,
+  DailyUpdate = 2,
   /** 每日更新草稿 */
-  DailyUpdateDraft = 2,
+  DailyUpdateDraft = 3,
 }
