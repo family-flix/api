@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   const data_res = await (async () => {
     if (type === DriveTypes.AliyunBackupDrive) {
-      const p_res = parseJSONStr(profile);
+      const p_res = parseJSONStr<{ app_id: string; drive_id: string; device_id: string; user_id: string }>(profile);
       if (p_res.error) {
         return Result.Err(p_res.error);
       }
@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         return Result.Err("没有匹配的云盘凭证记录");
       }
       const { data } = drive_token_res.data;
-      const d_res = parseJSONStr(data);
+      const d_res = parseJSONStr<{ access_token: string; refresh_token: string }>(data);
       if (d_res.error) {
         return Result.Err(d_res.error);
       }
