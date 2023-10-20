@@ -11,6 +11,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { parseJSONStr } from "@/utils";
+import { is_none } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -30,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const where: ModelQuery<"drive"> = {
     user_id: user.id,
   };
-  if (type !== undefined) {
+  if (!is_none(type)) {
     where.type = type;
   }
   if (name) {
@@ -38,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       contains: name,
     };
   }
-  if (hidden !== undefined) {
+  if (!is_none(hidden)) {
     where.hidden = hidden;
   }
   const count = await store.prisma.drive.count({ where });

@@ -13,7 +13,8 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id: drive_id, remark } = req.body as Partial<{
+  const { id: drive_id } = req.query as Partial<{ id: string }>;
+  const { remark } = req.body as Partial<{
     id: string;
     remark: string;
   }>;

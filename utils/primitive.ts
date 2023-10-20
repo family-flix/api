@@ -16,3 +16,10 @@ export function to_number<R extends any>(v: any, defaultValue: R): number | R {
   }
   return n;
 }
+
+export function is_none(v: unknown) {
+  if (v === undefined || v === null) {
+    return true;
+  }
+  return false;
+}
