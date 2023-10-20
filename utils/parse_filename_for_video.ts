@@ -40,10 +40,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("倩女")) {
+    if (!filename.includes("天官赐福")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -887,6 +887,12 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
+      regexp: /\.([0-9]{1,})\./,
+      pick: [1],
+      priority: -1,
+    },
+    {
+      key: k("episode"),
       regexp: /Episode\.[0-9]{1,}/,
     },
     {
@@ -1067,7 +1073,12 @@ export function parse_filename_for_video(
           continue;
         }
       }
-      if (priority) {
+      // log("[5.1]compare priority", extracted_content, priority, priorityMap);
+      if (priority === -1 && result[key]) {
+        // -1 优先级最低，如果之前匹配到了，就忽略这次匹配到的
+        continue;
+      }
+      if (priority !== undefined) {
         const prevKeyPriority = priorityMap[key];
         if (prevKeyPriority && priority <= prevKeyPriority) {
           continue;

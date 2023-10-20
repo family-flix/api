@@ -4,7 +4,7 @@
 
 import { DatabaseStore } from "@/domains/store";
 import { walk_records } from "@/domains/store/utils";
-import { TMDBClient } from "@/domains/tmdb";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 import { ImageUploader } from "@/domains/uploader";
 import { app, store } from "@/store";
 

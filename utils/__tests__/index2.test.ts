@@ -488,4 +488,14 @@ describe("提取视频信息", () => {
       episode: "E20",
     });
   });
+  test("天官赐福_9_妖道之祸.mp4", () => {
+    const name = "天官赐福_9_妖道之祸.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "天官赐福",
+      original_name: "",
+      season: "",
+      episode: "E09",
+    });
+  });
 });

@@ -17,11 +17,11 @@ import {
   TVProfileRecord,
   TVRecord,
 } from "@/domains/store/types";
-import { TMDBClient } from "@/domains/tmdb";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
+import { EpisodeProfileFromTMDB } from "@/domains/media_profile/tmdb/services";
 import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
 import { User } from "@/domains/user";
 import { MediaSearcher } from "@/domains/searcher";
-import { EpisodeProfileFromTMDB } from "@/domains/tmdb/services";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { Result } from "@/types";
 import { MediaProfileSourceTypes } from "@/constants";

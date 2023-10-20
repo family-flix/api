@@ -4,7 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { TVProfileItemInTMDB } from "@/domains/tmdb/services";
+import { TVProfileItemInTMDB } from "@/domains/media_profile/tmdb/services";
 import { User } from "@/domains/user";
 import { MediaSearcher } from "@/domains/searcher";
 import { Drive } from "@/domains/drive";

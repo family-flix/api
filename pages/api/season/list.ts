@@ -120,12 +120,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     total: count,
     list: list.map((season) => {
       const { id, season_text, profile, tv, _count } = season;
-      const { name, overview, poster_path, vote_average, genres, origin_country } = tv.profile;
+      const { name, poster_path, vote_average, genres, origin_country } = tv.profile;
       return {
         id,
         tv_id: tv.id,
         name,
-        overview,
+        // overview,
         season_text,
         episode_count: profile.episode_count,
         cur_episode_count: _count.episodes,

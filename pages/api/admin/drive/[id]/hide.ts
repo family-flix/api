@@ -13,13 +13,13 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id, hidden: hidden_str = "1" } = req.query as Partial<{ id: string; hidden: number }>;
-  if (!id) {
-    return e(Result.Err("缺少云盘 id"));
-  }
+  const { id, hidden } = req.body as Partial<{ id: string; hidden: number }>;
   const t = await User.New(authorization, store);
   if (t.error) {
     return e(t);
+  }
+  if (!id) {
+    return e(Result.Err("缺少云盘 id"));
   }
   const user = t.data;
   const drive = await store.prisma.drive.findFirst({
@@ -35,11 +35,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where: {
       id: drive.id,
     },
-    data: {},
+    data: {
+      hidden,
+    },
   });
   res.status(200).json({
     code: 0,
-    msg: "隐藏成功",
+    msg: "操作成功",
     data: null,
   });
 }

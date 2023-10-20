@@ -5,13 +5,13 @@ import type { Handler } from "mitt";
 import uniqueBy from "lodash/fp/uniqBy";
 
 import { BaseDomain } from "@/domains/base";
-import { TMDBClient } from "@/domains/tmdb";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 import {
   EpisodeProfileFromTMDB,
   MovieProfileFromTMDB,
   PartialSeasonFromTMDB,
   TVProfileFromTMDB,
-} from "@/domains/tmdb/services";
+} from "@/domains/media_profile/tmdb/services";
 import {
   Article,
   ArticleLineNode,

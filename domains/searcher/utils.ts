@@ -1,4 +1,4 @@
-import { TVProfileItemInTMDB } from "@/domains/tmdb/services";
+import { TVProfileItemInTMDB } from "@/domains/media_profile/tmdb/services";
 
 export function extra_searched_tv_field(tv: TVProfileItemInTMDB) {
   const {

@@ -1,4 +1,4 @@
-import { TMDBClient } from "@/domains/tmdb";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 
 async function main() {
   const client = new TMDBClient({

@@ -10,6 +10,7 @@ import { DriveAnalysis } from "@/domains/analysis";
 import { Drive } from "@/domains/drive";
 import { TaskTypes } from "@/domains/job/constants";
 import { User } from "@/domains/user";
+import { ScheduleTask } from "@/domains/schedule";
 import { ModelQuery } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { FileType } from "@/constants";
@@ -130,6 +131,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     });
     job.output.write_line(["索引完成"]);
+    const schedule = new ScheduleTask({ app, store });
+    schedule.update_user_daily_updated(user);
     job.finish();
   }
   run();

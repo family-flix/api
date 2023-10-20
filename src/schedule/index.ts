@@ -14,8 +14,12 @@ import { notice_push_deer } from "../notice";
  */
 
 (() => {
-  const OUTPUT_PATH = "/apps/flix_prod";
+  const OUTPUT_PATH = process.env.OUTPUT_PATH;
   //   const DATABASE_PATH = "file://$OUTPUT_PATH/data/family-flix.db?connection_limit=1";
+  if (!OUTPUT_PATH) {
+    console.error("缺少数据库文件路径");
+    return;
+  }
 
   const app = new Application({
     root_path: OUTPUT_PATH,
@@ -55,19 +59,20 @@ import { notice_push_deer } from "../notice";
         title: "资源同步",
         markdown: "执行了一次资源同步任务",
       });
-      const invalid_sync_task_list = await schedule.fetch_expired_sync_task_list();
-      notice_push_deer({
-        title: "有资源失效了",
-        markdown: [
-          ...invalid_sync_task_list.list
-            .map((task) => {
-              return task.name;
-            })
-            .join("\n"),
-          "",
-          "等更多",
-        ].join("\r\n"),
-      });
+      await schedule.update_daily_updated();
+      // const invalid_sync_task_list = await schedule.fetch_expired_sync_task_list();
+      // notice_push_deer({
+      //   title: "有资源失效了",
+      //   markdown: [
+      //     ...invalid_sync_task_list.list
+      //       .map((task) => {
+      //         return task.name;
+      //       })
+      //       .join("\n"),
+      //     "",
+      //     "等更多",
+      //   ].join("\r\n"),
+      // });
     },
     null,
     true,
@@ -88,6 +93,15 @@ import { notice_push_deer } from "../notice";
   //   "Asia/Shanghai"
   // );
 
+  new CronJob.CronJob("0 0 2 * * *", async () => {
+    console.log("执行任务 at 0 0 3 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+    await schedule.refresh_media_profile_list();
+    notice_push_deer({
+      title: "影视剧刷新",
+      markdown: "执行了一次影视剧刷新任务",
+    });
+  });
+
   // 0秒0分8时（每天8点时）执行一次
   new CronJob.CronJob(
     "0 0 8 * * *",
@@ -102,11 +116,6 @@ import { notice_push_deer } from "../notice";
             return [name, "", ...text].join("\n");
           })
           .join("\r\n"),
-      });
-      await schedule.refresh_media_profile_list();
-      notice_push_deer({
-        title: "影视剧刷新",
-        markdown: "执行了一次影视剧刷新任务",
       });
     },
     null,

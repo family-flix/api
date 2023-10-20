@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 import { Application } from "@/domains/application";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DatabaseStore } from "@/domains/store";
@@ -11,7 +13,8 @@ import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { MediaSearcher } from "@/domains/searcher";
 import { ProfileRefresh } from "@/domains/profile_refresh";
 import { Result } from "@/types";
-import { FileType } from "@/constants";
+import { CollectionTypes, FileType, MediaProfileSourceTypes, MediaTypes } from "@/constants";
+import { r_id } from "@/utils";
 
 export class ScheduleTask {
   store: DatabaseStore;
@@ -22,80 +25,78 @@ export class ScheduleTask {
     this.app = app;
     this.store = store;
   }
+
+  /** 遍历用户 */
+  async walk_user(handler: (user: User) => Promise<unknown>) {
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.user.findMany({
+          where: {},
+          ...extra,
+        });
+      },
+      handler: async (d, index) => {
+        const t_res = await User.Get({ id: d.id }, this.store);
+        if (t_res.error) {
+          return;
+        }
+        const user = t_res.data;
+        await handler(user);
+      },
+    });
+  }
+  /** 遍历云盘 */
+  async walk_drive(handler: (drive: Drive, user: User) => Promise<unknown>) {
+    await this.walk_user(async (user) => {
+      await walk_model_with_cursor({
+        fn: (extra) => {
+          return this.store.prisma.drive.findMany({
+            where: {
+              type: DriveTypes.AliyunBackupDrive,
+              user_id: user.id,
+            },
+            ...extra,
+          });
+        },
+        handler: async (data, index) => {
+          const { id } = data;
+          const drive_res = await Drive.Get({ id, user, store: this.store });
+          if (drive_res.error) {
+            return;
+          }
+          const drive = drive_res.data;
+          await handler(drive, user);
+        },
+      });
+    });
+  }
+
   /** 云盘签到 */
   async check_in() {
     const results: {
       name: string;
       text: string[];
     }[] = [];
-    await walk_model_with_cursor({
-      fn: (extra) => {
-        return this.store.prisma.user.findMany({
-          where: {},
-          ...extra,
+    await this.walk_drive(async (drive) => {
+      const r = await drive.client.checked_in();
+      if (r.error) {
+        results.push({
+          name: drive.name,
+          text: ["签到失败", r.error.message],
         });
-      },
-      handler: async (d) => {
-        const t_res = await User.Get({ id: d.id }, this.store);
-        if (t_res.error) {
-          return;
-        }
-        const user = t_res.data;
-        await walk_model_with_cursor({
-          fn: (extra) => {
-            return this.store.prisma.drive.findMany({
-              where: {
-                type: DriveTypes.AliyunBackupDrive,
-                user_id: user.id,
-              },
-              ...extra,
-            });
-          },
-          handler: async (data) => {
-            const drive_res = await Drive.Get({ id: data.id, user, store: this.store });
-            if (drive_res.error) {
-              results.push({
-                name: data.id,
-                text: ["签到失败", drive_res.error.message],
-              });
-              return;
-            }
-            const drive = drive_res.data;
-            const r = await drive.client.checked_in();
-            if (r.error) {
-              results.push({
-                name: drive.name,
-                text: ["签到失败", r.error.message],
-              });
-              return;
-            }
-            results.push({
-              name: drive.name,
-              text: ["签到成功"],
-            });
-          },
-        });
-      },
+        return;
+      }
+      results.push({
+        name: drive.name,
+        text: ["签到成功"],
+      });
     });
     return results;
   }
   /** 执行所有用户的同步任务 */
   async run_sync_task_list() {
-    await walk_model_with_cursor({
-      fn: (extra) => {
-        return this.store.prisma.user.findMany({
-          where: {},
-          ...extra,
-        });
-      },
-      handler: async (d) => {
-        const t_res = await User.Get({ id: d.id }, this.store);
-        if (t_res.error) {
-          return;
-        }
-        const user = t_res.data;
-        await this.run_sync_tasks_of_user(user);
-      },
+    await this.walk_user(async (user) => {
+      await this.run_sync_tasks_of_user(user);
     });
   }
   /** 执行指定用户所有的同步任务 */
@@ -217,7 +218,7 @@ export class ScheduleTask {
     job.finish();
     return results;
   }
-  /** 快速索引指定用户的指定云盘 */
+  /** 仅索引指定用户的指定云盘内新增的文件 */
   async analysis_drive_quickly(values: { drive_id: string; user: User }) {
     const { drive_id, user } = values;
     const drive_res = await Drive.Get({ id: drive_id, user, store: this.store });
@@ -277,21 +278,8 @@ export class ScheduleTask {
     job.finish();
   }
   async refresh_media_profile_list() {
-    await walk_model_with_cursor({
-      fn: (extra) => {
-        return this.store.prisma.user.findMany({
-          where: {},
-          ...extra,
-        });
-      },
-      handler: async (d) => {
-        const t_res = await User.Get({ id: d.id }, this.store);
-        if (t_res.error) {
-          return;
-        }
-        const user = t_res.data;
-        await this.refresh_media_profile_list_of_user({ user });
-      },
+    await this.walk_user(async (user) => {
+      await this.refresh_media_profile_list_of_user({ user });
     });
   }
   /** 刷新发布时间在近3月的所有电影详情 */
@@ -367,44 +355,12 @@ export class ScheduleTask {
     };
   }
   async validate_drive_list() {
-    await walk_model_with_cursor({
-      fn: (extra) => {
-        return this.store.prisma.user.findMany({
-          where: {},
-          ...extra,
-        });
-      },
-      handler: async (d, index) => {
-        const t_res = await User.Get({ id: d.id }, this.store);
-        if (t_res.error) {
-          return;
-        }
-        const user = t_res.data;
-        await walk_model_with_cursor({
-          fn: (extra) => {
-            return this.store.prisma.drive.findMany({
-              where: {
-                type: DriveTypes.AliyunBackupDrive,
-                user_id: user.id,
-              },
-              ...extra,
-            });
-          },
-          handler: async (data, index) => {
-            const { id } = data;
-            const drive_res = await Drive.Get({ id, user, store: this.store });
-            if (drive_res.error) {
-              return;
-            }
-            const drive = drive_res.data;
-            await this.validate_drive(drive);
-          },
-        });
-      },
+    await this.walk_drive(async (drive) => {
+      await this.validate_drive(drive);
     });
     return Result.Ok(null);
   }
-
+  /** 校验云盘有效性 */
   async validate_drive(drive: Drive) {
     const client = drive.client;
     const r = await client.refresh_profile();
@@ -430,40 +386,192 @@ export class ScheduleTask {
     }
     return Result.Ok(null);
   }
-
-  async walk_drive() {
-    await walk_model_with_cursor({
-      fn: (extra) => {
-        return this.store.prisma.user.findMany({
-          where: {},
-          ...extra,
+  async update_daily_updated() {
+    await this.walk_user(async (user) => {
+      await this.update_user_daily_updated(user);
+    });
+  }
+  async update_user_daily_updated(user: User) {
+    const store = this.store;
+    const dailyUpdateCollection = await (async () => {
+      const r = await store.prisma.collection.findFirst({
+        where: {
+          type: CollectionTypes.DailyUpdateDraft,
+          user_id: user.id,
+        },
+      });
+      if (!r) {
+        return store.prisma.collection.create({
+          data: {
+            id: r_id(),
+            title: dayjs().unix().toString(),
+            type: CollectionTypes.DailyUpdateDraft,
+            user_id: user.id,
+          },
         });
+      }
+      return r;
+    })();
+    const range = [dayjs().startOf("day").toISOString(), dayjs().endOf("day").toISOString()];
+    const episodes = await store.prisma.episode.findMany({
+      where: {
+        created: {
+          gte: range[0],
+          lt: range[1],
+        },
+        season: {
+          profile: {
+            source: {
+              not: MediaProfileSourceTypes.Other,
+            },
+          },
+        },
+        user_id: user.id,
       },
-      handler: async (d, index) => {
-        const t_res = await User.Get({ id: d.id }, this.store);
-        if (t_res.error) {
+      include: {
+        season: {
+          include: {
+            profile: true,
+          },
+        },
+        tv: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+      distinct: ["season_id"],
+      take: 20,
+      orderBy: [
+        {
+          created: "desc",
+        },
+      ],
+    });
+    const movies = await store.prisma.movie.findMany({
+      where: {
+        parsed_movies: {
+          some: {},
+        },
+        user_id: user.id,
+        created: {
+          gte: range[0],
+          lt: range[1],
+        },
+      },
+      include: {
+        profile: true,
+      },
+      orderBy: [
+        {
+          created: "desc",
+        },
+      ],
+      take: 20,
+    });
+    type MediaPayload = {
+      id: string;
+      type: MediaTypes;
+      name: string;
+      poster_path: string;
+      air_date: string;
+      tv_id?: string;
+      season_text?: string;
+      text: string | null;
+      created: number;
+    };
+    const season_medias: MediaPayload[] = [];
+    const movie_media: MediaPayload[] = [];
+    for (let i = 0; i < episodes.length; i += 1) {
+      await (async () => {
+        const episode = episodes[i];
+        const { tv, season } = episode;
+        const latest_episode = await store.prisma.episode.findFirst({
+          where: {
+            season_id: season.id,
+            parsed_episodes: {
+              some: {},
+            },
+          },
+          orderBy: {
+            episode_number: "desc",
+          },
+          take: 1,
+        });
+        if (!latest_episode) {
           return;
         }
-        const user = t_res.data;
-        await walk_model_with_cursor({
-          fn: (extra) => {
-            return this.store.prisma.drive.findMany({
+        const media = {
+          id: season.id,
+          type: MediaTypes.Season,
+          tv_id: tv.id,
+          name: tv.profile.name,
+          season_text: season.season_text,
+          poster_path: season.profile.poster_path || tv.profile.poster_path,
+          air_date: dayjs(season.profile.air_date).format("YYYY/MM/DD"),
+          text: await (async () => {
+            const episode_count = await store.prisma.episode.count({
               where: {
-                type: DriveTypes.AliyunBackupDrive,
-                user_id: user.id,
+                season_id: season.id,
+                parsed_episodes: {
+                  some: {},
+                },
               },
-              ...extra,
             });
-          },
-          handler: async (data, index) => {
-            const { id } = data;
-            const drive_res = await Drive.Get({ id, user, store: this.store });
-            if (drive_res.error) {
-              return;
+            if (season.profile.episode_count === episode_count) {
+              return `全${season.profile.episode_count}集`;
             }
-            const drive = drive_res.data;
-          },
-        });
+            if (episode_count === latest_episode.episode_number) {
+              return `更新至${latest_episode.episode_number}集`;
+            }
+            return `收录${episode_count}集`;
+          })(),
+          created: dayjs(latest_episode.created).unix(),
+        } as MediaPayload;
+        season_medias.push(media);
+      })();
+    }
+    for (let i = 0; i < movies.length; i += 1) {
+      await (async () => {
+        const movie = movies[i];
+        const { id, profile, created } = movie;
+        const media = {
+          id,
+          type: MediaTypes.Movie,
+          name: profile.name,
+          poster_path: profile.poster_path,
+          air_date: dayjs(profile.air_date).format("YYYY/MM/DD"),
+          text: null,
+          created: dayjs(created).unix(),
+        } as MediaPayload;
+        movie_media.push(media);
+      })();
+    }
+    await store.prisma.collection.update({
+      where: {
+        id: dailyUpdateCollection.id,
+      },
+      data: {
+        title: dayjs().unix().toString(),
+        medias: JSON.stringify(
+          [...season_medias, ...movie_media].sort((a, b) => {
+            return b.created - a.created;
+          })
+        ),
+        seasons: {
+          connect: season_medias.map((season) => {
+            return {
+              id: season.id,
+            };
+          }),
+        },
+        movies: {
+          connect: movie_media.map((movie) => {
+            return {
+              id: movie.id,
+            };
+          }),
+        },
       },
     });
   }

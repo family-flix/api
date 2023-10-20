@@ -5,10 +5,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
+import { ScheduleTask } from "@/domains/schedule";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { main } from "@/src/schedule/update_dayily_collection";
+import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -19,6 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  await main({ user, store });
+  const schedule = new ScheduleTask({ app, store });
+  await schedule.update_user_daily_updated(user);
   res.status(200).json({ code: 0, msg: "", data: null });
 }
