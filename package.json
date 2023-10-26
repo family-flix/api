@@ -8,7 +8,7 @@
     "build": "next build",
     "check": "tsc --noEmit",
     "start": "next start",
-    "schedule": "vite-node scripts/schedule",
+    "schedule": "vite-node src/schedule/index.ts",
     "lint": "next lint",
     "test": "vitest run",
     "pkg": "node scripts/build && node scripts/pkg",

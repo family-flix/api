@@ -186,7 +186,7 @@ describe("番外", () => {
       name: "去有风的地方",
       original_name: "",
       season: "其他",
-      episode: "彩蛋",
+      episode: "彩蛋01",
     });
   });
   test("今生也是第一次_彩蛋.mp4", () => {
@@ -196,7 +196,7 @@ describe("番外", () => {
       name: "今生也是第一次",
       original_name: "",
       season: "其他",
-      episode: "彩蛋",
+      episode: "彩蛋01",
     });
   });
   test("彩蛋.mp4", () => {
@@ -206,7 +206,7 @@ describe("番外", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "彩蛋",
+      episode: "彩蛋01",
     });
   });
   test("无间 彩蛋3 1080P(高清SDR)(1080344)_Tacit0924.mp4", () => {

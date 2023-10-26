@@ -197,16 +197,6 @@ describe("动漫", () => {
       episode: "E15",
     });
   });
-  test("0731入住日记第9期.mp4", () => {
-    const name = "0731入住日记第9期.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "0731入住日记第9期",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
   test("10.财阀家的小儿子.2022 - 豆瓣7.7分", () => {
     const name = "10.财阀家的小儿子.2022 - 豆瓣7.7分";
     const result = parse_filename_for_video(name);

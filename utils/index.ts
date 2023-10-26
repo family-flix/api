@@ -82,6 +82,10 @@ export function generate_new_video_filename(
 }
 
 export function episode_to_num(str: string) {
+  if (!str.includes("E")) {
+    return str;
+  }
+  // 主要是有 E01-02 这种奇葩合并剧集
   const regex = /(\d+)/g;
   let s = str.replace(/[eE]/g, "");
   const matches = s.match(regex);

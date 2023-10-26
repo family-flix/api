@@ -12,12 +12,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  if (!id) {
-    return e(Result.Err("缺少电视剧 id"));
-  }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
+  }
+  if (!id) {
+    return e(Result.Err("缺少电视剧 id"));
   }
   const member = t_res.data;
   const tv = await store.prisma.tv.findFirst({
