@@ -798,6 +798,36 @@ describe("提取综艺信息", () => {
       episode: "20190301",
     });
   });
+  test("奇葩说第五季20181005.mp4", () => {
+    const name = "奇葩说第五季20181005.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "奇葩说",
+      original_name: "",
+      season: "S05",
+      episode: "20181005",
+    });
+  });
+  // test("20231015.独家直拍_Tacit0924.mp4", () => {
+  //   const name = "20231015.独家直拍_Tacit0924.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "奇葩说",
+  //     original_name: "",
+  //     season: "S05",
+  //     episode: "20181005",
+  //   });
+  // });
+  // test("07.31加更_Tacit0924.mp4", () => {
+  //   const name = "07.31加更_Tacit0924.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "",
+  //     original_name: "",
+  //     season: "其他",
+  //     episode: "加更1",
+  //   });
+  // });
   // test("《早餐中国3》云林北港·煎盘粿.mkv", () => {
   //   const name = "《早餐中国3》云林北港·煎盘粿.mkv";
   //   const result = parse_filename_for_video(name);

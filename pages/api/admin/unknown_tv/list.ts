@@ -79,9 +79,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           file_name,
           parsed_seasons: [],
           parsed_episodes: parsed_episodes.map((episode) => {
-            const { id, file_name, episode_number, parent_paths, episode_id } = episode;
+            const { id, file_name, season_number, episode_number, parent_paths, episode_id } = episode;
             return {
               id,
+              season_text: season_number,
               episode_text: episode_number,
               file_name,
               parent_paths,
