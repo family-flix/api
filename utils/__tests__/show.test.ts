@@ -808,6 +808,26 @@ describe("提取综艺信息", () => {
       episode: "20181005",
     });
   });
+  test("预告_Tacit0924.mp4", () => {
+    const name = "预告_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "预告01",
+    });
+  });
+  test("第20210319期 THE9安崎上官喜爱“神仙姐妹”潇洒炸场，音乐合伙人上演大型抢人现场.ts", () => {
+    const name = "第20210319期 THE9安崎上官喜爱“神仙姐妹”潇洒炸场，音乐合伙人上演大型抢人现场.ts";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20210319",
+    });
+  });
   // test("20231015.独家直拍_Tacit0924.mp4", () => {
   //   const name = "20231015.独家直拍_Tacit0924.mp4";
   //   const result = parse_filename_for_video(name);
