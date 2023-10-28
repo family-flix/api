@@ -738,4 +738,74 @@ describe("提取综艺信息", () => {
       episode: "20180922",
     });
   });
+  test("中国好声音.第四季.The.Voice.Of.China.S04.20150807.HD720P.X264.AAC.CHS.Mp4Ba.mp4", () => {
+    const name = "中国好声音.第四季.The.Voice.Of.China.S04.20150807.HD720P.X264.AAC.CHS.Mp4Ba.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "中国好声音",
+      original_name: "The.Voice.Of.China",
+      season: "S04",
+      episode: "20150807",
+    });
+  });
+  test("20220430第1期plus版_Tacit0924.mp4", () => {
+    const name = "20220430第1期plus版_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20220430",
+    });
+  });
+  test("第二季_第2期：许知远对话诺兰 十三邀第二期：许知远对话诺兰 超清(720P)(1206027).mp4", () => {
+    const name = "第二季_第2期：许知远对话诺兰 十三邀第二期：许知远对话诺兰 超清(720P)(1206027).mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "许知远对话诺兰",
+      original_name: "",
+      season: "S02",
+      episode: "E02",
+    });
+  });
+  test("20201120期.mp4", () => {
+    const name = "20201120期.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20201120",
+    });
+  });
+  test("20171027MC热狗爆笑脱口秀 _Tacit0924 .mp4", () => {
+    const name = "20171027MC热狗爆笑脱口秀 _Tacit0924 .mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20171027",
+    });
+  });
+  test("最强大脑20190301.mp4", () => {
+    const name = "最强大脑20190301.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "最强大脑",
+      original_name: "",
+      season: "",
+      episode: "20190301",
+    });
+  });
+  // test("《早餐中国3》云林北港·煎盘粿.mkv", () => {
+  //   const name = "《早餐中国3》云林北港·煎盘粿.mkv";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "早餐中国",
+  //     original_name: "",
+  //     season: "",
+  //     episode: "",
+  //   });
+  // });
 });

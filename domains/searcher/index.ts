@@ -1454,11 +1454,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
             const d = dayjs(air_date);
             const episode_month_and_day = d.format("MMDD");
             const episode_year_and_month_and_day = d.format("YYYYMMDD");
+            const episode_short_year_and_month_and_day = d.format("YYMMDD");
             // console.log(episode_text, air_date, episode_month_and_day, episode_year_and_month_and_day);
             if (episode_text.match(/^[0-9]{4}$/)) {
               // this.emit(Events.Print, Article.build_line([`[${episode_text}]`, "按月日匹配", episode_month_and_day]));
               // 1004
               if (episode_month_and_day === episode_text) {
+                return true;
+              }
+            }
+            if (episode_text.match(/^[0-9]{6}$/)) {
+              // 210702
+              if (episode_short_year_and_month_and_day === episode_text) {
                 return true;
               }
             }

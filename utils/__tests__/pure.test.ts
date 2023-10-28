@@ -280,4 +280,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("前5季", () => {
+    const name = "前5季";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

@@ -51,10 +51,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("番外篇")) {
+    if (!filename.includes("全43集")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -252,10 +252,8 @@ export function parse_filename_for_video(
     {
       key: k("episode"),
       // 20190503 完整年月日视为综艺剧集数
-      regexp: /\.[123][0-9]{3}[01][0-9][123][0-9]\./,
-      before() {
-        cur_filename = cur_filename.replace(/(\.[123][0-9]{3}[01][0-9][123][0-9]\.)/, "$1.");
-      },
+      regexp: /\.[123][0-9]{3}[01][0-9][0123][0-9]\./,
+      placeholder: ".",
     },
     {
       regexp: /(\.(?=[A-Z0-9]{1,}[0-9])[A-Z0-9]{8})\./,
@@ -428,7 +426,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("extra2"),
-      regexp: /加长版/,
+      regexp: /加长版|plus版/,
     },
     {
       regexp: /\({0,1}[0-9]{1,}版\){0,1}/,
@@ -465,7 +463,7 @@ export function parse_filename_for_video(
     },
     // 总大小信息
     {
-      regexp: /【{0,1}[0-9]{1,}(\.[0-9]{1,}){0,1}([gG]|[mM])[bB]{0,1}】{0,1}/,
+      regexp: /【{0,1}[0-9]{1,5}(\.[0-9]{1,5}){0,1}([gG]|[mM])[bB]{0,1}】{0,1}\.{0,1}$/,
     },
     {
       regexp: /[nN][oO]\.[0-9]{1,}｜/,
@@ -604,6 +602,9 @@ export function parse_filename_for_video(
       regexp: /([1-9]{1,}[-+][1-9]{1,})[季部]/,
     },
     {
+      regexp: /前[1-9]{1,2}季/,
+    },
+    {
       // 重复出现，不要删除，是为了移除和中文名连在一起的「第n季」
       key: k("season"),
       desc: "总季数2",
@@ -710,13 +711,17 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
+      regexp: /第{0,1}[12][0-9]{3}[012][0-9][0123][0-9]期/,
+    },
+    {
+      key: k("episode"),
       // 2012.05.01 05.01  和下面的区别就是 月，这里匹配 1-9 月下面的匹配 10-12 月
-      regexp: /^([123][0-9]{1,3}[-.]{0,1}){0,1}0[1-9][-.]{0,1}[0-3][0-9][期局场]{0,1}-{0,1}\.{0,1}[上下]{0,1}/,
+      regexp: /^([123][0-9]{1,4}[-.]{0,1}){0,1}0[1-9][-.]{0,1}[0-3][0-9][期局场]{0,1}-{0,1}\.{0,1}[上下]{0,1}/,
     },
     {
       key: k("episode"),
       // 2012.10.01 12.10.01 10.01
-      regexp: /^([123][0-9]{1,3}[-.]{0,1}){0,1}1[0-2][-.]{0,1}[0-3][0-9][期局场]{0,1}-{0,1}\.{0,1}[上下]{0,1}/,
+      regexp: /^([123][0-9]{1,4}[-.]{0,1}){0,1}1[0-2][-.]{0,1}[0-3][0-9][期局场]{0,1}-{0,1}\.{0,1}[上下]{0,1}/,
     },
     {
       key: k("episode"),
@@ -804,7 +809,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
-      regexp: /[123][0-9]{1,3}[01][0-9][0123][0-9]$/,
+      regexp: /[123][0-9]{1,3}[01][0-9][0123][0-9][局期]{0,1}/,
     },
     // 电视剧
     {
@@ -1586,12 +1591,17 @@ export function format_episode_number(n: string, options: { log: (...args: unkno
       return `${r[1]}${r[2]}${r[3]}`;
     }
   }
+  log("[]format_episode_number - before ^[0-1][0-9][-.]{0,1}[0-3][0-9]", number);
   if (number.match(/^[0-1][0-9][-.]{0,1}[0-3][0-9]/)) {
     // 月.日 变成 月日
     const r = number.match(/^([0-1][0-9])[-.]{0,1}([0-3][0-9])/);
     if (r) {
       return `${r[1]}${r[2]}`;
     }
+  }
+  log("[]format_episode_number - before [0-9]{8}", number);
+  if (number.match(/[0-9]{8}/)) {
+    return number;
   }
   if (number.match(/彩蛋/)) {
     if (!number.match(/[0-9]{1,}/)) {

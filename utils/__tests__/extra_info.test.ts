@@ -52,4 +52,16 @@ describe("额外文件信息", () => {
       extra2: "加长版",
     });
   });
+  test("20220430第1期plus版_Tacit0924.mp4", () => {
+    const name = "20220430第1期plus版_Tacit0924.mp4";
+    const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "extra1", "extra2"]);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20220430",
+      extra1: "",
+      extra2: "plus版",
+    });
+  });
 });

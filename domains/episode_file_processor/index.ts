@@ -231,14 +231,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     if (Object.keys(tv_changed).length !== 0) {
       this.emit(
         Events.Print,
-        Article.build_line([
-          `[${prefix}]`,
-          "视频文件所属电视剧信息改变，之前为",
-          existing_tv.name,
-          "，改变为",
-          tv.name,
-          data.tv.name,
-        ])
+        Article.build_line([`[${prefix}]`, "视频文件所属电视剧信息改变，之前为", existing_tv.name, "，改变为", tv.name])
       );
       const add_tv_res = await this.add_parsed_tv(data);
       if (add_tv_res.error) {

@@ -2,6 +2,7 @@
  * @file 工具方法
  */
 import { describe, expect, test } from "vitest";
+import dayjs from "dayjs";
 
 import { season_to_chinese_num } from "..";
 
@@ -35,5 +36,13 @@ describe("季 转中文描述", () => {
     const name = "S110";
     const result = season_to_chinese_num(name);
     expect(result).toStrictEqual("第一百一十季");
+  });
+});
+
+describe("时间格式化", () => {
+  test("年月日", () => {
+    const time = "2021-02-03";
+    const r = dayjs(time).format("YYMMDD");
+    expect(r).toBe("210203");
   });
 });
