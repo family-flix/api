@@ -298,8 +298,8 @@ describe("电影", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "The.Nun",
-      season: "S02",
+      original_name: "The.Nun2",
+      season: "",
       episode: "",
     });
   });
@@ -333,4 +333,44 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("[电锯惊魂8：竖锯]Jigsaw.2017.BluRay.2160p.HDR.H265.Atmos.TrueHD.7.1.BOBO.mkv", () => {
+    const name = "[电锯惊魂8：竖锯]Jigsaw.2017.BluRay.2160p.HDR.H265.Atmos.TrueHD.7.1.BOBO.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "电锯惊魂8：竖锯",
+      original_name: "Jigsaw",
+      season: "",
+      episode: "",
+    });
+  });
+  test("Saw IV 2007 Tw Blu-ray 1080p AVC DTS-HD MA 7.1.mkv", () => {
+    const name = "Saw IV 2007 Tw Blu-ray 1080p AVC DTS-HD MA 7.1.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Saw4",
+      season: "",
+      episode: "",
+    });
+  });
+  test("悬吧猪栏2367电锯惊魂10.SAW X.2023.1080p.x265.yc.mkv", () => {
+    const name = "悬吧猪栏2367电锯惊魂10.SAW X.2023.1080p.x265.yc.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "悬吧猪栏2367电锯惊魂10",
+      original_name: "SAW10",
+      season: "",
+      episode: "",
+    });
+  });
+  // test("电锯惊魂7.mkv", () => {
+  //   const name = "电锯惊魂7.mkv";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "电锯惊魂7",
+  //     original_name: "",
+  //     season: "",
+  //     episode: "",
+  //   });
+  // });
 });

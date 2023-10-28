@@ -13,8 +13,8 @@ describe("英语影视剧", () => {
     expect(result).toStrictEqual({
       name: "天鹅挽歌",
       original_name: "House.M.D",
-      season: "S08",
-      episode: "",
+      season: "其他",
+      episode: "SP1",
     });
   });
 });

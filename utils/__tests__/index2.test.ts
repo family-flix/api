@@ -498,4 +498,54 @@ describe("提取视频信息", () => {
       episode: "E09",
     });
   });
+  test("盾之勇者成名录 S1 (14).mkv", () => {
+    const name = "盾之勇者成名录 S1 (14).mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "盾之勇者成名录",
+      original_name: "",
+      season: "S01",
+      episode: "E14",
+    });
+  });
+  test("《镇魂街 第二季》第2话 慷慨悲歌_高清 1080P+.mp4", () => {
+    const name = "《镇魂街 第二季》第2话 慷慨悲歌_高清 1080P+.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "镇魂街",
+      original_name: "",
+      season: "S02",
+      episode: "E02",
+    });
+  });
+  test("重制版第8话_高清 1080P+.mp4", () => {
+    const name = "重制版第8话_高清 1080P+.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E08",
+    });
+  });
+  test("镇魂街 第三季_01_1080P高码率_Tacit0924.mp4", () => {
+    const name = "镇魂街 第三季_01_1080P高码率_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "镇魂街",
+      original_name: "",
+      season: "S03",
+      episode: "E01",
+    });
+  });
+  test("7-天府十三区.mp4", () => {
+    const name = "7-天府十三区.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E07",
+    });
+  });
 });

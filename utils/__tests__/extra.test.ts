@@ -57,6 +57,17 @@ describe("番外", () => {
       episode: "续集",
     });
   });
+  test("[公众号：SS的笔记/腹肌崩坏太郎番外/星空][假面骑士01 番外][奇迹的身份改变！？或人VS腹肌崩坏太郎 宿命的段子对决].mp4", () => {
+    const name =
+      "[公众号：SS的笔记/腹肌崩坏太郎番外/星空][假面骑士01 番外][奇迹的身份改变！？或人VS腹肌崩坏太郎 宿命的段子对决].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "番外01",
+    });
+  });
   test("[1080P][DBD制作组&离谱Sub][龙珠GT][特典映像][01][HEVC-10bit][AC3].mkv", () => {
     const name = "[1080P][DBD制作组&离谱Sub][龙珠GT][特典映像][01][HEVC-10bit][AC3].mkv";
     const result = parse_filename_for_video(name);
@@ -217,6 +228,16 @@ describe("番外", () => {
       original_name: "",
       season: "其他",
       episode: "彩蛋3",
+    });
+  });
+  test("番外篇.mp4", () => {
+    const name = "番外篇.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
     });
   });
   // test("月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4", () => {

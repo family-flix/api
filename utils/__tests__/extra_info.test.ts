@@ -39,4 +39,17 @@ describe("额外文件信息", () => {
       extra1: "纯享版",
     });
   });
+
+  test("奔跑吧黄河篇 - S01E06 - WEB1080P.20210110.新年派对.加长版.mp4", () => {
+    const name = "奔跑吧黄河篇 - S01E06 - WEB1080P.20210110.新年派对.加长版.mp4";
+    const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "extra1", "extra2"]);
+    expect(result).toStrictEqual({
+      name: "奔跑吧黄河篇",
+      original_name: "",
+      season: "S01",
+      episode: "E06",
+      extra1: "",
+      extra2: "加长版",
+    });
+  });
 });

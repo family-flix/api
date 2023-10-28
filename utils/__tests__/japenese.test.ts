@@ -24,7 +24,7 @@ describe("动漫", () => {
       name: "犬夜叉",
       original_name: "",
       season: "OVA",
-      episode: "",
+      episode: "20100129",
     });
   });
   test("犬夜叉 SP", () => {
@@ -179,17 +179,6 @@ describe("动漫", () => {
       original_name: "Made.in.Abyss.Dawn.of.the.Deep.Soul",
       season: "SP",
       episode: "E04",
-    });
-  });
-  test("[公众号：SS的笔记/腹肌崩坏太郎番外/星空][假面骑士01 番外][奇迹的身份改变！？或人VS腹肌崩坏太郎 宿命的段子对决].mp4", () => {
-    const name =
-      "[公众号：SS的笔记/腹肌崩坏太郎番外/星空][假面骑士01 番外][奇迹的身份改变！？或人VS腹肌崩坏太郎 宿命的段子对决].mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "假面骑士",
-      original_name: "",
-      season: "",
-      episode: "E01",
     });
   });
   test("【蓝色狂想制作】数码宝贝1：大冒险第48集-轰炸指令！无限龙兽1080P.mkv", () => {

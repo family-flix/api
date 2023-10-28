@@ -171,7 +171,6 @@ describe("提取视频信息", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "知否知否应是绿肥红瘦",
-      // @todo 这种真没办法，同一个信息出现多次
       original_name: "1080",
       season: "",
       episode: "",
@@ -649,7 +648,7 @@ describe("提取视频信息", () => {
       name: "封神榜I",
       original_name: "",
       season: "",
-      episode: "",
+      episode: "E34",
     });
   });
   test("我是特种兵之利刃出鞘.Special.Arms.Ⅱ.2012.S01E38.WEB-DL.4K.HEVC.AAC-CHDWEB.mp4", () => {

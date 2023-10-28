@@ -415,7 +415,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "加更1",
+      episode: "20230722加更版",
     });
   });
   test("20230730-独家直拍第1期_Tacit0924.mp4", () => {
@@ -425,7 +425,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "独家直拍1",
+      episode: "直拍1",
     });
   });
   test("20231024先导片_Tacit0924.mp4", () => {
@@ -476,6 +476,266 @@ describe("提取综艺信息", () => {
       original_name: "",
       season: "",
       episode: "170709",
+    });
+  });
+  test("0806.2022中国好声音 第1期：刘德华和四导师隔空合唱_Tacit0924.mp4", () => {
+    const name = "0806.2022中国好声音 第1期：刘德华和四导师隔空合唱_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20220806",
+    });
+  });
+  test("中国好声音.第四季.The.Voice.Of.China.S04.20150927.HD720P.X264.AAC.CHS.Mp4Ba.mp4", () => {
+    const name = "中国好声音.第四季.The.Voice.Of.China.S04.20150927.HD720P.X264.AAC.CHS.Mp4Ba.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "中国好声音",
+      original_name: "The.Voice.Of.China",
+      season: "S04",
+      episode: "20150927",
+    });
+  });
+  test("Sing.China.S02SP07.20171008.HD1080P.X264.AAC.CHS.MF.mp4", () => {
+    const name = "Sing.China.S02SP07.20171008.HD1080P.X264.AAC.CHS.MF.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Sing.China",
+      season: "S02",
+      episode: "E07",
+    });
+  });
+  test("第07.22期.The.Voice.of.China.2018.1080P.WEB-DL.X264.AAC.mp4", () => {
+    const name = "第07.22期.The.Voice.of.China.2018.1080P.WEB-DL.X264.AAC.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "0722",
+    });
+  });
+  test("JSTV_最强大脑_2022-02-25_720p.mp4", () => {
+    const name = "JSTV_最强大脑_2022-02-25_720p.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "最强大脑",
+      original_name: "",
+      season: "",
+      episode: "20220225",
+    });
+  });
+  test("最强大脑20190426.mp4", () => {
+    const name = "最强大脑20190426.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "最强大脑",
+      original_name: "",
+      season: "",
+      episode: "20190426",
+    });
+  });
+  test("最强大脑第八季全集.The.Brain.2021.S08E09.1080P.WEB-DL.H264.AAC.115WiKi.mp4", () => {
+    const name = "最强大脑第八季全集.The.Brain.2021.S08E09.1080P.WEB-DL.H264.AAC.115WiKi.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "最强大脑",
+      original_name: "The.Brain",
+      season: "S08",
+      episode: "E09",
+    });
+  });
+  test("江苏卫视《最强大脑·第三季》（全十三集）.2016.第03集.HD720P.国语中字.mkv", () => {
+    const name = "江苏卫视《最强大脑·第三季》（全十三集）.2016.第03集.HD720P.国语中字.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "最强大脑",
+      original_name: "",
+      season: "S03",
+      episode: "E03",
+    });
+  });
+  test("1120直拍第6期_Tacit0924.mp4", () => {
+    const name = "1120直拍第6期_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "直拍6",
+    });
+  });
+  test("1119Plus第12期_Tacit0924.mp4", () => {
+    const name = "1119Plus第12期_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "Plus12",
+    });
+  });
+  test("0917Plus+第6期_Tacit0924.mp4", () => {
+    const name = "0917Plus+第6期_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "Plus6",
+    });
+  });
+  test("20230929-特别企划_Tacit0924.mp4", () => {
+    const name = "20230929-特别企划_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "特别企划",
+    });
+  });
+  test("中国诗词大会 第三季 20180325 第三场.mp4", () => {
+    const name = "中国诗词大会 第三季 20180325 第三场.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "中国诗词大会",
+      original_name: "",
+      season: "S03",
+      episode: "E03",
+    });
+  });
+  test("20230507慢直播第2期：陈赫做菜大翻车_Tacit0924.mp4", () => {
+    const name = "20230507慢直播第2期：陈赫做菜大翻车_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "直播2",
+    });
+  });
+  test("第20210122期 孟美岐钢琴弹唱首秀.ts", () => {
+    const name = "第20210122期 孟美岐钢琴弹唱首秀.ts";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20210122",
+    });
+  });
+  test("先导片：杨迪庞博被困待解救.mp4", () => {
+    const name = "先导片：杨迪庞博被困待解救.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "先导片：杨迪庞博被困待解救",
+    });
+  });
+  test("06期：校车花絮大放送.mp4", () => {
+    const name = "06期：校车花絮大放送.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E06",
+    });
+  });
+  test("20230322第14期：收官特别彩蛋！南波万reaction复盘大会集体笑翻_Tacit0924.mp4", () => {
+    const name = "20230322第14期：收官特别彩蛋！南波万reaction复盘大会集体笑翻_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20230322",
+    });
+  });
+  test("20230302学院普拉斯第12期：学长们玩五亩棋与六子棋的趣事+齐思钧蒲熠星挑战狐狸先生_Tacit0924.mp4", () => {
+    const name = "20230302学院普拉斯第12期：学长们玩五亩棋与六子棋的趣事+齐思钧蒲熠星挑战狐狸先生_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20230302",
+    });
+  });
+  test("20230207学院小屋日记第9期：蒲熠星唐九洲再现校园名场面+周峻纬惊喜回归超有梗_Tacit0924.mp4", () => {
+    const name = "20230207学院小屋日记第9期：蒲熠星唐九洲再现校园名场面+周峻纬惊喜回归超有梗_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20230207",
+    });
+  });
+  test("1006加更第2期_Tacit0924.mp4", () => {
+    const name = "1006加更第2期_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "加更2",
+    });
+  });
+  test("奔跑吧黄河篇 - S01E06 - WEB1080P.20210110.新年派对.加长版.mp4", () => {
+    const name = "奔跑吧黄河篇 - S01E06 - WEB1080P.20210110.新年派对.加长版.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "奔跑吧黄河篇",
+      original_name: "",
+      season: "S01",
+      episode: "E06",
+    });
+  });
+  test("0825彩蛋第11期_Tacit0924.mp4", () => {
+    const name = "0825彩蛋第11期_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "彩蛋11",
+    });
+  });
+  test("典籍里的中国 第二季_第一期-永乐大典.mp4", () => {
+    const name = "典籍里的中国 第二季_第一期-永乐大典.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "典籍里的中国",
+      original_name: "",
+      season: "S02",
+      episode: "E01",
+    });
+  });
+  test("超前企划：吴昕“套路”学长团.mp4", () => {
+    const name = "超前企划：吴昕“套路”学长团.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "超前企划",
+    });
+  });
+  test("奇葩说第五季20180922.mp4", () => {
+    const name = "奇葩说第五季20180922.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "奇葩说",
+      original_name: "",
+      season: "S05",
+      episode: "20180922",
     });
   });
 });
