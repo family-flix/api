@@ -182,6 +182,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }
         job.output.write_line([prefix, "创建分享并转存至目标云盘"]);
         const folder_in_from_drive = archive_res.data;
+        const existing_res = await to_drive.client.existing(
+          to_drive.profile.root_folder_id!,
+          folder_in_from_drive.file_name
+        );
+        if (existing_res.data !== null) {
+          job.output.write_line([prefix, folder_in_from_drive.file_name, "已经在目标盘"]);
+          return;
+        }
         const transfer_res = await from_drive.client.move_files_to_drive({
           file_ids: [folder_in_from_drive.file_id],
           target_drive_client: to_drive.client,
@@ -230,6 +238,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               if (!folder_in_to_drive) {
                 return;
               }
+              // 直接给新盘的文件夹，关联一个电视剧
               const parsed_tv_in_to_drive = await store.prisma.parsed_tv.findFirst({
                 where: {
                   file_id: folder_in_to_drive.file_id,

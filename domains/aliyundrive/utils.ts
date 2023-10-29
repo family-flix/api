@@ -271,7 +271,7 @@ export async function archive_season_files(body: {
         .filter(Boolean)
         .join(".");
       if (file_name !== new_file_name) {
-        job.output.write_line([`将文件「${file_name}」名字修改为「${new_file_name}`]);
+        job.output.write_line([`将文件「${file_name}」名字修改为「${new_file_name}」`]);
         const rename_res = await drive.client.rename_file(file_id, new_file_name, {
           check_name_mode: "auto_rename",
         });

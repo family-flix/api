@@ -383,6 +383,9 @@ export function parse_filename_for_video(
       regexp: /会员plus版/,
     },
     {
+      regexp: /[pP][aA][rR][tT]\.{0,1}[1-9]{1}/,
+    },
+    {
       regexp: /高码[率]{0,1}|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
     },
     {

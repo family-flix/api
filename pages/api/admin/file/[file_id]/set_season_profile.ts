@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!file) {
     return e(Result.Err("没有匹配的记录"));
   }
-  if (file.type === FileType.File) {
+  if (file.type !== FileType.Folder) {
     return e(Result.Err("只有文件夹可以关联电视剧"));
   }
   const job_res = await Job.New({

@@ -1074,7 +1074,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       return ![200, 202].includes(resp.status);
     });
     if (error_body) {
-      const err = new Error(`存在转存失败的记录，第 ${error_body.index} 个，因为 ${error_body.body.message}`);
+      const err = new Error(`存在转存失败的记录，第 ${error_body.index} 个，因为 ${JSON.stringify(error_body)}`);
       this.emit(Events.TransferFailed, err);
       return Result.Err(err);
     }
@@ -1361,21 +1361,22 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
   async move_files_to_drive(body: {
     file_ids: string[];
     target_drive_client: AliyunDriveClient;
-    target_folder_id: string;
+    target_folder_id?: string;
   }) {
-    const { file_ids, target_drive_client: other_drive } = body;
+    const { file_ids, target_drive_client: other_drive, target_folder_id } = body;
     // console.log("[DOMAIN]move_files_to_drive - file_ids is", file_ids);
     const r = await this.create_shared_resource(file_ids);
     if (r.error) {
-      return Result.Err(r.error);
+      return Result.Err(r.error.message);
     }
     const { share_url, file_id, file_name } = r.data;
     await sleep(file_ids.length * 500);
     const r2 = await other_drive.save_multiple_shared_files({
       url: share_url,
+      target_file_id: target_folder_id || other_drive.root_folder_id || undefined,
     });
     if (r2.error) {
-      return Result.Err(r2.error);
+      return Result.Err(r2.error.message);
     }
     return Result.Ok({ file_id, file_name });
   }
@@ -1541,8 +1542,8 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
    * 移动文件夹到资源盘
    * 如果文件夹内的文件，存在 md5 相同的文件，只会保留一个
    */
-  async move_file_to_resource_drive(values: { file_ids: string[] }) {
-    const { file_ids } = values;
+  async move_file_to_resource_drive(values: { file_ids: string[]; parent_id?: string }) {
+    const { file_ids, parent_id } = values;
     await this.ensure_initialized();
     if (!this.resource_drive_id) {
       return Result.Err("请先初始化资源盘信息");
@@ -1568,7 +1569,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }>(API_HOST + url, {
       from_drive_id: String(this.drive_id),
       from_file_ids: file_ids,
-      to_parent_fileId: resource_client.root_folder_id,
+      to_parent_fileId: parent_id || resource_client.root_folder_id,
       to_drive_id: this.resource_drive_id,
     });
     if (r.error) {

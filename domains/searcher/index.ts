@@ -1501,10 +1501,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
             const { episode: backup_episode_text } = parse_filename_for_video(
               parsed_episode.file_name.replace(episode_text, "")
             );
-            this.emit(
-              Events.Print,
-              Article.build_line([`[${episode_text}]`, "移除发布时间，尝试重新解析剧集数的结果，", backup_episode_text])
-            );
+            // this.emit(
+            //   Events.Print,
+            //   Article.build_line([`[${episode_text}]`, "移除发布时间，尝试重新解析剧集数的结果，", backup_episode_text])
+            // );
             if (backup_episode_text === parsed_episode_text) {
               return true;
             }

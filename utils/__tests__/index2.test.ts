@@ -548,4 +548,14 @@ describe("提取视频信息", () => {
       episode: "E07",
     });
   });
+  test("01.Cracking.Case.S02E01.2022.1080p.WEB-DL.H265.AAC-CatWEB.mp4", () => {
+    const name = "01.Cracking.Case.S02E01.2022.1080p.WEB-DL.H265.AAC-CatWEB.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "01.Cracking.Case",
+      season: "S02",
+      episode: "E01",
+    });
+  });
 });

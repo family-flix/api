@@ -64,4 +64,15 @@ describe("额外文件信息", () => {
       extra2: "plus版",
     });
   });
+  test("无痛杀手.S01E03.HD1080P.官方中字.mp4", () => {
+    const name = "无痛杀手.S01E03.HD1080P.官方中字.mp4";
+    const result = parse_filename_for_video(name, ["name", "original_name", "season", "episode", "type"]);
+    expect(result).toStrictEqual({
+      name: "无痛杀手",
+      original_name: "",
+      season: "S01",
+      episode: "E03",
+      type: ".mp4",
+    });
+  });
 });

@@ -290,4 +290,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("PART.1", () => {
+    const name = "PART.1";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });
