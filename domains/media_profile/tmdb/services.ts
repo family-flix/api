@@ -6,7 +6,8 @@ import axios from "@/modules/axios";
 import { Result, Unpacked, UnpackedResult } from "@/types";
 import { query_stringify } from "@/utils";
 
-const API_HOST = "https://proxy.funzm.com/api/tmdb/3";
+// const API_HOST = "https://proxy.funzm.com/api/tmdb/3";
+const API_HOST = "https://proxy.f1x.fun/api/tmdb/3";
 export type Language = "zh-CN" | "en-US";
 export type TMDBRequestCommentPart = {
   /** tmdb api key */

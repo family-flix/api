@@ -828,6 +828,16 @@ describe("提取综艺信息", () => {
       episode: "20210319",
     });
   });
+  // test("慢直播第01期 _Tacit0924.mp4", () => {
+  //   const name = "慢直播第01期 _Tacit0924.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "慢直播",
+  //     original_name: "",
+  //     season: "",
+  //     episode: "E01",
+  //   });
+  // });
   // test("20231015.独家直拍_Tacit0924.mp4", () => {
   //   const name = "20231015.独家直拍_Tacit0924.mp4";
   //   const result = parse_filename_for_video(name);
