@@ -286,7 +286,7 @@ export class ScheduleTask {
   async refresh_media_profile_list_of_user(values: { user: User }) {
     const { user } = values;
     const job_res = await Job.New({
-      desc: "更新电视剧、电影信息",
+      desc: "[定时任务]更新电视剧、电影信息",
       unique_id: "update_movie_and_season",
       type: TaskTypes.RefreshMedia,
       user_id: user.id,

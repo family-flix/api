@@ -1455,6 +1455,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
             const episode_month_and_day = d.format("MMDD");
             const episode_year_and_month_and_day = d.format("YYYYMMDD");
             const episode_short_year_and_month_and_day = d.format("YYMMDD");
+            this.emit(
+              Events.Print,
+              Article.build_line([
+                `[${episode_text}]`,
+                episode_month_and_day,
+                episode_year_and_month_and_day,
+                episode_short_year_and_month_and_day,
+              ])
+            );
             // console.log(episode_text, air_date, episode_month_and_day, episode_year_and_month_and_day);
             if (episode_text.match(/^[0-9]{4}$/)) {
               // this.emit(Events.Print, Article.build_line([`[${episode_text}]`, "按月日匹配", episode_month_and_day]));
@@ -1462,12 +1471,14 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               if (episode_month_and_day === episode_text) {
                 return true;
               }
+              return false;
             }
             if (episode_text.match(/^[0-9]{6}$/)) {
               // 210702
               if (episode_short_year_and_month_and_day === episode_text) {
                 return true;
               }
+              return false;
             }
             if (episode_text.match(/^[0-9]{8}$/)) {
               // this.emit(
@@ -1478,6 +1489,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               if (episode_year_and_month_and_day === episode_text) {
                 return true;
               }
+              return false;
             }
             if (episode_text.match(/^[0-9]{4,8}@([上下])/)) {
               const [, dd, secondary] = episode_text.match(/(^[0-9]{4,8})@([上下])/)!;
@@ -1487,6 +1499,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               if (dd === episode_year_and_month_and_day) {
                 return true;
               }
+              return false;
             }
             // E01@上
             const { episode: parsed_episode_text } = parse_filename_for_video(name, ["episode"]);
@@ -1511,7 +1524,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
             return false;
           })
           .sort((a, b) => a.episode_number - b.episode_number);
-        this.emit(Events.Print, Article.build_line([`[${episode_text}]`, JSON.stringify(matched_episodes)]));
+        this.emit(Events.Print, Article.build_line([`[${episode_text}]匹配结果`, JSON.stringify(matched_episodes)]));
         if (matched_episodes.length === 0) {
           return null;
         }

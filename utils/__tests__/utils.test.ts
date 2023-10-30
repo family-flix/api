@@ -45,4 +45,14 @@ describe("时间格式化", () => {
     const r = dayjs(time).format("YYMMDD");
     expect(r).toBe("210203");
   });
+  test("短年", () => {
+    const air_date = "2017-05-07";
+    const d = dayjs(air_date);
+    const episode_month_and_day = d.format("MMDD");
+    const episode_year_and_month_and_day = d.format("YYYYMMDD");
+    const episode_short_year_and_month_and_day = d.format("YYMMDD");
+    expect(episode_month_and_day).toBe("0507");
+    expect(episode_year_and_month_and_day).toBe("20170507");
+    expect(episode_short_year_and_month_and_day).toBe("170507");
+  });
 });
