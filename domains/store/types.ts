@@ -11,6 +11,8 @@ import {
   parsed_movie,
   parsed_season,
   parsed_tv,
+  person_in_media,
+  person_profile,
   PrismaClient,
   report,
   season,
@@ -36,6 +38,8 @@ export type EpisodeRecord = episode;
 export type EpisodeProfileRecord = episode_profile;
 export type MovieRecord = movie;
 export type MovieProfileRecord = movie_profile;
+export type PersonProfileRecord = person_profile;
+export type PersonRecord = person_in_media;
 
 export type ReportRecord = report;
 export type AsyncTaskRecord = async_task;

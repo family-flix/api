@@ -1,6 +1,6 @@
 {
   "name": "@family-flix/api",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "private": true,
   "scripts": {
     "dev": "node static.js & next dev --port 3200",

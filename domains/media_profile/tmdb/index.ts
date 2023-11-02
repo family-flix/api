@@ -10,6 +10,9 @@ import {
   Language,
   search_tv_in_tmdb,
   search_movie_in_tmdb,
+  fetch_persons_of_season,
+  fetch_person_profile,
+  fetch_persons_of_movie,
 } from "./services";
 
 export class TMDBClient {
@@ -133,6 +136,45 @@ export class TMDBClient {
       api_key: token,
       language,
     });
+    return result;
+  }
+  /** 获取电视剧季参与的演员、导演等工作人员 */
+  async fetch_persons_of_season(values: { tv_id: number | string; season_number: number }) {
+    const { token, language } = this.options;
+    const { tv_id, season_number } = values;
+    const result = await fetch_persons_of_season(
+      { tv_id, season_number },
+      {
+        api_key: token,
+        language,
+      }
+    );
+    return result;
+  }
+  /** 获取电影参与的演员、导演等工作人员 */
+  async fetch_persons_of_movie(values: { movie_id: number | string }) {
+    const { token, language } = this.options;
+    const { movie_id } = values;
+    const result = await fetch_persons_of_movie(
+      { movie_id },
+      {
+        api_key: token,
+        language,
+      }
+    );
+    return result;
+  }
+  /** 获取工作人员详情 */
+  async fetch_person_profile(values: { person_id: number | string }) {
+    const { token, language } = this.options;
+    const { person_id } = values;
+    const result = await fetch_person_profile(
+      { person_id },
+      {
+        api_key: token,
+        language,
+      }
+    );
     return result;
   }
 }

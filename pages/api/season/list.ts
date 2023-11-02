@@ -103,7 +103,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where,
     include: {
       _count: true,
-      profile: true,
+      profile: {
+        include: {
+          persons: {
+            take: 5,
+            include: {
+              profile: true,
+            },
+            orderBy: {
+              order: "asc",
+            },
+          },
+        },
+      },
       tv: {
         include: {
           profile: true,
@@ -120,21 +132,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     total: count,
     list: list.map((season) => {
       const { id, season_text, profile, tv, _count } = season;
-      const { name, poster_path, vote_average, genres, origin_country } = tv.profile;
+      const { name, poster_path, genres, origin_country } = tv.profile;
       return {
         id,
         tv_id: tv.id,
         name,
-        // overview,
         season_text,
         episode_count: profile.episode_count,
         cur_episode_count: _count.episodes,
         poster_path: profile.poster_path || poster_path,
-        first_air_date: profile.air_date,
+        air_date: profile.air_date,
         genres,
         origin_country,
-        popularity: vote_average,
-        vote_average,
+        vote_average: profile.vote_average,
+        actors: profile.persons.map((p) => {
+          const { profile } = p;
+          return {
+            id: profile.id,
+            name: profile.name,
+            avatar: profile.profile_path,
+          };
+        }),
       };
     }),
     page,

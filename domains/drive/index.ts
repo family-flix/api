@@ -969,13 +969,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       this.emit(Events.Print, Article.build_line(["开始删除云盘内文件"]));
       const r7 = await this.client.delete_file(file_id);
       if (r7.error) {
-        this.emit(
-          Events.Print,
-          new ArticleLineNode({
-            children: ["删除云盘文件失败，因为", r7.error.message].map((text) => new ArticleTextNode({ text })),
-          })
-        );
+        this.emit(Events.Print, Article.build_line(["删除云盘文件失败，因为", r7.error.message]));
       }
+      this.emit(Events.Print, Article.build_line(["完成删除"]));
       return Result.Ok(null);
     } catch (err) {
       const error = err as Error;

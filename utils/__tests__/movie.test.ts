@@ -363,6 +363,16 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("Saw III 2006 US Blu-ray 1080p MPEG2 DTS-HD HR 6.1.mkv", () => {
+    const name = "Saw III 2006 US Blu-ray 1080p MPEG2 DTS-HD HR 6.1.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Saw3",
+      season: "",
+      episode: "",
+    });
+  });
   // test("电锯惊魂7.mkv", () => {
   //   const name = "电锯惊魂7.mkv";
   //   const result = parse_filename_for_video(name);

@@ -51,7 +51,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("神仙姐妹")) {
+    if (!filename.includes("天鹅挽歌")) {
       return;
     }
     console.log(...args);
@@ -332,7 +332,7 @@ export function parse_filename_for_video(
     {
       key: k("voice_type"),
       regexp:
-        /[国粤日][语配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码/,
+        /[英国粤日][语配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码/,
     },
     {
       regexp: /中字|双字/,
@@ -655,7 +655,12 @@ export function parse_filename_for_video(
     },
     {
       key: k("season"),
-      regexp: /Ⅱ|II|IV/,
+      regexp: /（[一二三四五六七]{1,}）/,
+      placeholder: ".",
+    },
+    {
+      key: k("season"),
+      regexp: /IV|III|Ⅱ|II/,
     },
     {
       key: k("season"),
@@ -828,10 +833,14 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
-      regexp: /^[0-9]{1,4}(-|$)/,
+      regexp: /^[01][0-9][0123][0-9](-|$)/,
       before() {
         cur_filename = cur_filename.replace(/^\.{2,}/, "").replace(/\.{1,}$/, "");
       },
+    },
+    {
+      key: k("episode"),
+      regexp: /^[0-9]{1,3}(-|$)/,
     },
     {
       key: k("episode"),
@@ -1431,6 +1440,9 @@ export function format_season_number(n: string, prefix = "S") {
   }
   if (number === "II") {
     return "S02";
+  }
+  if (number === "III") {
+    return "S03";
   }
   if (number === "IV") {
     return "S04";

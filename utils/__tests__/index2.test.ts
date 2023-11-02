@@ -558,4 +558,34 @@ describe("提取视频信息", () => {
       episode: "E01",
     });
   });
+  test("康熙微服私访记（二） 01.ts", () => {
+    const name = "康熙微服私访记（二） 01.ts";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "康熙微服私访记",
+      original_name: "",
+      season: "S02",
+      episode: "E01",
+    });
+  });
+  test("康熙微服私访记（一）29.ts", () => {
+    const name = "康熙微服私访记（一）29.ts";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "康熙微服私访记",
+      original_name: "",
+      season: "S01",
+      episode: "E29",
+    });
+  });
+  test("觀世音傳奇1(國語).mp4", () => {
+    const name = "觀世音傳奇1(國語).mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "觀世音傳奇1",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

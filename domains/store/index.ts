@@ -432,12 +432,8 @@ export class DatabaseStore {
     // @ts-ignore
     return this.prisma[name].deleteMany({});
   };
-  async list_with_cursor<F extends (extra: { take: number }) => any>(options: {
-    fetch: F;
-    next_marker?: string;
-    page_size?: number;
-  }) {
-    const { fetch, next_marker = "", page_size = 20 } = options;
+  build_extra_args(body: { next_marker?: string; page_size?: number }) {
+    const { next_marker, page_size = 20 } = body;
     const extra_args = {
       take: page_size + 1,
       ...(() => {
@@ -451,17 +447,29 @@ export class DatabaseStore {
         return {};
       })(),
     };
-    const list = await fetch(extra_args);
-    // no_more = list.length < page_size + 1;
-    let new_next_marker = "";
+    return extra_args;
+  }
+  get_next_marker<T extends { id: string }>(list: T[], body: { page_size: number }) {
+    const { page_size = 20 } = body;
+    let new_next_marker = null;
     if (list.length === page_size + 1) {
       const last_record = list[list.length - 1];
       new_next_marker = last_record.id;
     }
+    return new_next_marker;
+  }
+  async list_with_cursor<F extends (extra: { take: number }) => any>(options: {
+    fetch: F;
+    next_marker?: string;
+    page_size?: number;
+  }) {
+    const { fetch, next_marker = "", page_size = 20 } = options;
+    const extra_args = this.build_extra_args({ next_marker, page_size });
+    const list = await fetch(extra_args);
     const correct_list: Unpacked<ReturnType<F>>[number][] = list.slice(0, page_size);
     return {
+      next_marker: this.get_next_marker(list, { page_size }),
       list: correct_list,
-      next_marker: new_next_marker,
     };
   }
   async list_with_pagination<F extends (extra: { take: number; skip: number }) => any>(options: {

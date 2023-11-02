@@ -18,22 +18,29 @@ export type TMDBRequestCommentPart = {
 function fix_TMDB_image_path({
   backdrop_path,
   poster_path,
+  profile_path,
 }: Partial<{
   backdrop_path: null | string;
-  poster_path: string | null;
+  poster_path: null | string;
+  profile_path: null | string;
 }>) {
   const result: {
     backdrop_path: string | null;
     poster_path: string | null;
+    profile_path: string | null;
   } = {
     backdrop_path: null,
     poster_path: null,
+    profile_path: null,
   };
   if (backdrop_path) {
     result.backdrop_path = `https://proxy.funzm.com/api/tmdb_site/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
   }
   if (poster_path) {
     result.poster_path = `https://proxy.funzm.com/api/tmdb_image/t/p/w600_and_h900_bestv2${poster_path}`;
+  }
+  if (profile_path) {
+    result.profile_path = `https://proxy.funzm.com/api/tmdb_image/t/p/w600_and_h900_bestv2${profile_path}`;
   }
   return result;
 }
@@ -635,3 +642,243 @@ export async function fetch_movie_profile(
   });
 }
 export type MovieProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_movie_profile>>>;
+
+type DepartmentTypes =
+  | "Acting"
+  | "Directing"
+  | "Camera"
+  | "Crew"
+  | "Production"
+  | "Sound"
+  | "Writing"
+  | "Creator"
+  | "Art"
+  | "Visual Effects";
+
+export async function fetch_persons_of_season(
+  body: {
+    tv_id: number | string;
+    season_number: number | string | undefined;
+  },
+  option: {
+    api_key: string;
+    language?: Language;
+  }
+) {
+  const { tv_id, season_number } = body;
+  if (season_number === undefined) {
+    return Result.Err("请传入季数");
+  }
+  const endpoint = `/tv/${tv_id}/season/${season_number}/credits`;
+  const { api_key, language } = option;
+  const result = await request.get<{
+    /** 演员列表 */
+    cast: {
+      adult: boolean;
+      /** 性别 */
+      gender: 1 | 2;
+      id: number;
+      /** 演员/导演等 */
+      known_for_department: DepartmentTypes;
+      /** 名称 */
+      name: string;
+      /** 英文名称 */
+      original_name: string;
+      popularity: number;
+      /** 头像地址 */
+      profile_path: string;
+      /** 剧中角色名称 */
+      character: string;
+      credit_id: string;
+      /** 顺序 */
+      order: number;
+    }[];
+    /** 其他工作人员 */
+    crew: {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: DepartmentTypes;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      credit_id: string;
+      /** 部门 */
+      department: string;
+      /** 工作内容 */
+      job: string;
+      order: number;
+    }[];
+    id: number;
+  }>(endpoint, {
+    api_key,
+    language,
+  });
+  if (result.error) {
+    return Result.Err(result.error);
+  }
+  const { id, cast, crew } = result.data;
+  return Result.Ok(
+    [...cast, ...crew].map((person) => {
+      const { id, name, gender, known_for_department, profile_path, order = 9999 } = person;
+      return {
+        id,
+        name,
+        gender,
+        profile_path,
+        known_for_department,
+        order,
+      };
+    })
+  );
+}
+
+export async function fetch_persons_of_movie(
+  body: {
+    movie_id: number | string;
+  },
+  option: {
+    api_key: string;
+    language?: Language;
+  }
+) {
+  const { movie_id } = body;
+  const endpoint = `/movie/${movie_id}/credits`;
+  const { api_key, language } = option;
+  const result = await request.get<{
+    /** 演员列表 */
+    cast: {
+      adult: boolean;
+      /** 性别 */
+      gender: 1 | 2;
+      id: number;
+      /** 演员/导演等 */
+      known_for_department: DepartmentTypes;
+      /** 名称 */
+      name: string;
+      /** 英文名称 */
+      original_name: string;
+      popularity: number;
+      /** 头像地址 */
+      profile_path: string;
+      /** 剧中角色名称 */
+      character: string;
+      credit_id: string;
+      /** 顺序 */
+      order: number;
+    }[];
+    /** 其他工作人员 */
+    crew: {
+      adult: boolean;
+      gender: number;
+      id: number;
+      known_for_department: DepartmentTypes;
+      name: string;
+      original_name: string;
+      popularity: number;
+      profile_path: string;
+      credit_id: string;
+      /** 部门 */
+      department: string;
+      /** 工作内容 */
+      job: string;
+      order: number;
+    }[];
+    id: number;
+  }>(endpoint, {
+    api_key,
+    language,
+  });
+  if (result.error) {
+    return Result.Err(result.error);
+  }
+  const { id, cast, crew } = result.data;
+  return Result.Ok(
+    [...cast, ...crew].map((person) => {
+      const { id, name, gender, known_for_department, profile_path, order = 9999 } = person;
+      return {
+        id,
+        name,
+        gender,
+        profile_path,
+        known_for_department,
+        order,
+      };
+    })
+  );
+}
+
+export async function fetch_person_profile(
+  body: {
+    person_id: number | string;
+  },
+  option: {
+    api_key: string;
+    language?: Language;
+  }
+) {
+  const { person_id } = body;
+  if (person_id === undefined) {
+    return Result.Err("请传入 person_id");
+  }
+  const endpoint = `/person/${person_id}`;
+  const { api_key, language } = option;
+  const result = await request.get<{
+    adult: boolean;
+    also_known_as: DepartmentTypes[];
+    biography: string;
+    birthday: string;
+    deathday: null;
+    gender: number;
+    homepage: null;
+    id: number;
+    imdb_id: string;
+    known_for_department: DepartmentTypes;
+    name: string;
+    place_of_birth: string;
+    popularity: number;
+    profile_path: string;
+  }>(endpoint, {
+    api_key,
+    language,
+  });
+  if (result.error) {
+    return Result.Err(result.error);
+  }
+  const { id, name, also_known_as, known_for_department, biography, profile_path, place_of_birth, birthday } =
+    result.data;
+  console.log(also_known_as);
+  return Result.Ok({
+    id,
+    name: (() => {
+      const find_chinese = (() => {
+        if (!place_of_birth) {
+          return false;
+        }
+        if (place_of_birth.match(/China|中国|Hong Kong|Taiwan/)) {
+          return true;
+        }
+      })();
+      if (!find_chinese) {
+        return name;
+      }
+      const chinese_name = also_known_as
+        .map((n) => n.trim())
+        .find((n) => {
+          if (n.match(/^[\u4e00-\u9fa5]{1,}$/)) {
+            return true;
+          }
+        });
+      if (chinese_name) {
+        return chinese_name;
+      }
+      return name;
+    })(),
+    biography,
+    profile_path: fix_TMDB_image_path({ profile_path }).profile_path,
+    place_of_birth,
+    birthday,
+    known_for_department,
+  });
+}

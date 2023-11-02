@@ -1777,7 +1777,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       file_id,
     });
     if (r.error) {
-      return r;
+      return Result.Err(r.error.message);
     }
     return Result.Ok(null);
   }

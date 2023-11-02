@@ -133,6 +133,7 @@ model season_profile {
         vote_average  Float?  @default(0)
 
         seasons season[]
+        persons person_in_media[]
 
         @@map("SeasonProfile")
 }
@@ -177,7 +178,49 @@ model movie_profile {
         genres            String? @default("")
         runtime           Int?    @default(0)
 
-        movies movie[]
+        movies  movie[]
+        persons person_in_media[]
+}
+
+model person_profile {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        unique_id            String
+        source               Int?              @default(0)
+        sources              String?           @default("")
+        name                 String
+        profile              String?           @default("")
+        biography            String?
+        profile_path         String?
+        birthday             String?
+        place_of_birth       String?
+        known_for_department String?
+        persons_in_media     person_in_media[]
+
+        @@map("PersonProfile")
+}
+
+model person_in_media {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        name                 String
+        // 顺序
+        order                Int
+        // 在剧中的职位
+        known_for_department String?
+
+        profile_id String
+        profile    person_profile  @relation(fields: [profile_id], references: [id])
+        season_id  String?
+        season     season_profile? @relation(fields: [season_id], references: [id])
+        movie_id   String?
+        movie      movie_profile?  @relation(fields: [movie_id], references: [id])
+
+        @@map("Person")
 }
 
 model subtitle {
@@ -197,6 +240,25 @@ model subtitle {
         drive      drive    @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         user_id    String
         user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model tv_live {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        name       String
+        url        String
+        detail     String?
+        logo       String?
+        group_name String?
+        order      Int     @default(9999)
+        hidden     Int     @default(0)
+
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("TVLive")
 }
 
 // 根据 parsed_episode 创建的电视剧
@@ -992,6 +1054,7 @@ model user {
         collections             collection[]
         subtitles               subtitle[]
         permission              permission[]
+        tv_lives                tv_live[]
 
         @@map("User")
 }

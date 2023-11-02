@@ -13,8 +13,6 @@ export function extra_searched_tv_field(tv: TVProfileItemInTMDB) {
     first_air_date,
     vote_average,
     vote_count,
-    // number_of_episodes,
-    // number_of_seasons,
   } = tv;
   return {
     tmdb_id,
