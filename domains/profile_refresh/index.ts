@@ -90,38 +90,46 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
       ],
       user_id: this.user.id,
     };
-    const count = await this.store.prisma.tv.count({ where });
+    const count = await this.store.prisma.season.count({ where });
     this.emit(Events.Print, Article.build_line(["共", count, "个电视剧"]));
     await walk_model_with_cursor({
       fn: (extra) => {
-        return this.store.prisma.tv.findMany({
+        return this.store.prisma.season.findMany({
           where,
           include: {
             profile: true,
+            tv: {
+              include: {
+                profile: true,
+              },
+            },
           },
           orderBy: {
             profile: {
-              first_air_date: "desc",
+              air_date: "desc",
             },
           },
           ...extra,
         });
       },
-      handler: async (tv) => {
+      handler: async (season) => {
         if (
-          tv.profile.source &&
-          [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual].includes(tv.profile.source)
+          season.profile.source &&
+          [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual].includes(season.profile.source)
         ) {
           this.emit(
             Events.Print,
-            Article.build_line([tv.profile.name || tv.profile.original_name || "unknown", "已手动修改过详情，直接跳过"])
+            Article.build_line([
+              season.tv.profile.name || season.tv.profile.original_name || "unknown",
+              "已手动修改过详情，直接跳过",
+            ])
           );
           return;
         }
-        // await this.refresh_season_profile({
-        //   id: season.tv.id,
-        //   profile: season.tv.profile,
-        // });
+        await this.refresh_season_profile({
+          season,
+          tv: season.tv,
+        });
       },
     });
     return Result.Ok(null);
