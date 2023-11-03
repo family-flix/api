@@ -51,14 +51,14 @@ import { notice_push_deer } from "../notice";
 
   // 0秒30分*小时（每个小时的30分时） 执行一次
   new CronJob.CronJob(
-    "0 30 * * * *",
+    "0 30 8-23 * * *",
     async () => {
       console.log("执行任务 at 0 30 * * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
       await schedule.run_sync_task_list();
-      notice_push_deer({
-        title: "资源同步",
-        markdown: "执行了一次资源同步任务",
-      });
+      // notice_push_deer({
+      //   title: "资源同步",
+      //   markdown: "执行了一次资源同步任务",
+      // });
       await schedule.update_daily_updated();
       // const invalid_sync_task_list = await schedule.fetch_expired_sync_task_list();
       // notice_push_deer({

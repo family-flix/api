@@ -56,7 +56,7 @@ async function walk_season() {
           return;
         }
         console.log(season.tv.profile.name, season.season_number);
-        if (season.profile.persons) {
+        if (season.profile.persons.length) {
           return;
         }
         await searcher.insert_persons_of_season(season);
@@ -85,7 +85,7 @@ async function walk_season() {
           return;
         }
         console.log(movie.profile.name);
-        if (movie.profile.persons) {
+        if (movie.profile.persons.length) {
           return;
         }
         await searcher.insert_persons_of_movie(movie);
