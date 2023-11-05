@@ -588,4 +588,34 @@ describe("提取视频信息", () => {
       episode: "",
     });
   });
+  test("泰剧《他不是我》第13集中字版@喜翻译制组.mp4", () => {
+    const name = "泰剧《他不是我》第13集中字版@喜翻译制组.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "他不是我",
+      original_name: "",
+      season: "",
+      episode: "E13",
+    });
+  });
+  test("2023.CODE-愿望的代价-.10集全", () => {
+    const name = "2023.CODE-愿望的代价-.10集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "CODE-愿望的代价-",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("BASTARD！！暗黑破坏神.BASTARD!!－暗黒の破壊神－.S02E01.2023.1080p.WEB-DL.x264.DDP2.0.mkv", () => {
+    const name = "BASTARD！！暗黑破坏神.BASTARD!!－暗黒の破壊神－.S02E01.2023.1080p.WEB-DL.x264.DDP2.0.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "BASTARD！！暗黑破坏神",
+      original_name: "",
+      season: "S02",
+      episode: "E01",
+    });
+  });
 });

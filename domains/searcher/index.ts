@@ -561,8 +561,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("没有搜索到电视剧详情");
     }
     const profile = profile_res.data;
-    this.emit(Events.Print, Article.build_line(["before link_tv_profile_to_parsed_tv"]));
-    return this.link_tv_profile_to_parsed_tv({
+    // this.emit(Events.Print, Article.build_line(["before link_tv_profile_to_parsed_tv", profile.name]));
+    return await this.link_tv_profile_to_parsed_tv({
       parsed_tv,
       profile,
     });
@@ -582,6 +582,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         return Result.Err(existing_res.error);
       }
       if (existing_res.data) {
+        // this.emit(Events.Print, Article.build_line([prefix, "已存在"]));
         return Result.Ok(existing_res.data);
       }
       const adding_res = await this.store.add_tv({
@@ -622,6 +623,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     // log("[](search_tv_in_tmdb)start search", tv.name || tv.original_name);
     const tv_profile_res = await (async () => {
       /** 如果解析结果已经有了关联的电视剧直接返回（什么场景会走到这里？ */
+      // this.emit(Events.Print, Article.build_line([prefix, "before parsed_tv.tv_id"]));
       if (parsed_tv.tv_id) {
         this.emit(Events.Print, Article.build_line([prefix, "解析结果已经关联了电视剧"]));
         const tv = await this.store.prisma.tv.findFirst({
@@ -637,6 +639,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           return Result.Ok(tv.profile);
         }
       }
+      // this.emit(Events.Print, Article.build_line([prefix, "before parsed_tv.unique_id"]));
       if (parsed_tv.unique_id) {
         const profile_record = await this.store.prisma.tv_profile.findFirst({
           where: {
@@ -649,6 +652,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           return Result.Ok(profile_record);
         }
       }
+      // this.emit(Events.Print, Article.build_line([prefix, "before parsed_tv.findFirst"]));
       const r1 = await this.store.prisma.parsed_tv.findFirst({
         where: {
           AND: [
@@ -674,10 +678,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           },
         },
       });
+      // this.emit(Events.Print, Article.build_line([prefix, "before r1 && r1.tv"]));
       if (r1 && r1.tv) {
         this.emit(Events.Print, Article.build_line([prefix, "根据文件名找到了同名且有关联电视剧的解析结果"]));
         return Result.Ok(r1.tv.profile);
       }
+      // this.emit(Events.Print, Article.build_line([prefix, "before tv_profile.findFirst"]));
       const r2 = await this.store.prisma.tv_profile.findFirst({
         where: {
           OR: [
@@ -696,20 +702,26 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
       const year = (() => {
         if (file_name) {
-          return parse_filename_for_video(file_name, ["year"]).year;
+          const y = parse_filename_for_video(file_name, ["year"]).year;
+          if (y) {
+            return y;
+          }
         }
         return null;
       })();
+      // this.emit(Events.Print, Article.build_line([prefix, "before if(name)"]));
       if (name) {
         // console.log(`[${prefix}]`, "使用", name, "搜索");
         const r = await this.search_tv_in_tmdb(name, {
           year,
         });
         if (r.error) {
+          // this.emit(Events.Print, Article.build_line([prefix, "search by name failed, because", r.error.message]));
           return Result.Err(r.error);
         }
         return Result.Ok(r.data);
       }
+      // this.emit(Events.Print, Article.build_line([prefix, "before if(original_name)"]));
       if (original_name) {
         // console.log(`[${prefix}]`, "使用", original_name, "搜索");
         const processed_original_name = original_name.split(".").join(" ");
@@ -717,6 +729,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           year,
         });
         if (r.error) {
+          // this.emit(
+          //   Events.Print,
+          //   Article.build_line([prefix, "search by original name failed, because", r.error.message])
+          // );
           return Result.Err(r.error);
         }
         return Result.Ok(r.data);
@@ -724,9 +740,11 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Ok(null);
     })();
     if (tv_profile_res.error) {
+      // this.emit(Events.Print, Article.build_line([prefix, "查询电视剧详情失败", tv_profile_res.error.message]));
       return Result.Err(tv_profile_res.error);
     }
     let tv_profile = tv_profile_res.data;
+    // this.emit(Events.Print, Article.build_line([prefix, "没有查询到电视剧详情"]));
     if (tv_profile === null) {
       return Result.Ok(null);
     }
@@ -739,16 +757,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   /** 使用名字在 tmdb 搜索并返回 tv_profile 记录 */
   async search_tv_in_tmdb(name: string, extra: Partial<{ year: string | null }> = {}) {
     await sleep(800);
+    // this.emit(Events.Print, Article.build_line(["before client.search_tv"]));
     const r1 = await this.client.search_tv(name);
     if (r1.error) {
-      return Result.Err(
-        ["[ERROR]tmdbClient.search_tv failed, param is", name, ", because ", r1.error.message].join(" ")
-      );
+      // this.emit(Events.Print, Article.build_line(["search_tv failed, because", r1.error.message, "params is", name]));
+      return Result.Err(r1.error.message);
     }
     const { list } = r1.data;
+    // this.emit(Events.Print, Article.build_line(["search_tv result length", list.length]));
     if (list.length === 0) {
       return Result.Ok(null);
     }
+    // this.emit(Events.Print, Article.build_line(["before extra_searched_tv_field"]));
     const tv_item = extra_searched_tv_field(
       (() => {
         const matched = list.find((tv) => {
@@ -767,10 +787,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       })()
     );
     // console.log("search_tv_in_tmdb", tv_item, list, name);
+    // this.emit(Events.Print, Article.build_line(["before get_tv_profile_with_tmdb_id"]));
     const r = await this.get_tv_profile_with_tmdb_id({
       tmdb_id: tv_item.tmdb_id,
     });
     if (r.error) {
+      // this.emit(Events.Print, Article.build_line(["获取详情记录失败", r.error.message]));
       return Result.Err(r.error);
     }
     return Result.Ok(r.data);
@@ -800,6 +822,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     } = profile;
     const { poster_path: uploaded_poster_path, backdrop_path: uploaded_backdrop_path } = await (async () => {
       // console.log("check need upload images", upload_image);
+      // this.emit(Events.Print, Article.build_line(["before check need upload image", upload_image]));
       if (upload_image) {
         return this.upload_tmdb_images({
           tmdb_id: id,
@@ -812,6 +835,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         backdrop_path: backdrop_path ?? null,
       });
     })();
+    // this.emit(Events.Print, Article.build_line(["before build body"]));
     const body = {
       unique_id: String(id),
       name: name || null,
@@ -849,6 +873,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (this.cached_tv_profile[unique_id]) {
       return Result.Ok(this.cached_tv_profile[unique_id]);
     }
+    // this.emit(Events.Print, Article.build_line(["before store.find_tv_profile"]));
     const existing_res = await this.store.find_tv_profile({
       unique_id,
     });
@@ -856,11 +881,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       this.cached_tv_profile[unique_id] = existing_res.data;
       return Result.Ok(existing_res.data);
     }
+    // this.emit(Events.Print, Article.build_line(["before client.fetch_tv_profile"]));
     const profile_res = await this.client.fetch_tv_profile(tmdb_id);
     if (profile_res.error) {
       return Result.Err(profile_res.error);
     }
     const profile = profile_res.data;
+    // this.emit(Events.Print, Article.build_line(["before normalize_tv_profile(profile)"]));
     const body = await this.normalize_tv_profile(profile);
     const id = r_id();
     this.cached_tv_profile[unique_id] = {
@@ -872,6 +899,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       source: 1,
       sources: JSON.stringify({ tmdb_id }),
     };
+    // this.emit(Events.Print, Article.build_line(["before tv_profile.create"]));
     await this.store.prisma.tv_profile.create({
       data: this.cached_tv_profile[unique_id],
     });
@@ -1035,6 +1063,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (parsed_tv.tv_id === null) {
       return Result.Err("电视剧缺少匹配的详情");
     }
+    // this.emit(Events.Print, Article.build_line(["before tv.findUnique", parsed_tv.tv_id]));
     const tv = await this.store.prisma.tv.findUnique({
       where: {
         id: parsed_tv.tv_id,
@@ -1060,8 +1089,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         return Result.Ok(same_season.profile);
       }
     }
+    // this.emit(Events.Print, Article.build_line(["before season_to_num", parsed_season.season_text]));
     const s_n = season_to_num(parsed_season.season_text);
     if (typeof s_n === "number") {
+      // this.emit(Events.Print, Article.build_line(["before this.client.fetch_partial_season_profile", s_n]));
       const r = await this.client.fetch_partial_season_profile({
         tv_id: Number(tv.profile.unique_id),
         season_number: s_n,
@@ -1219,6 +1250,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("缺少关联电视剧详情");
     }
     if (!parsed_episode.season_id) {
+      // this.emit(Events.Print, Article.build_line(["before get_season_profile_with_tmdb"]));
       const season_profile_res = await this.get_season_profile_with_tmdb(
         {
           parsed_tv,
@@ -1227,18 +1259,21 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         options
       );
       if (season_profile_res.error) {
+        // this.emit(Events.Print, Article.build_line(["获取季详情失败", season_profile_res.error.message]));
         return Result.Err(season_profile_res.error, "10001");
       }
       if (season_profile_res.data === null) {
         return Result.Err("没有搜索到季详情");
       }
       const season_profile = season_profile_res.data;
+      // this.emit(Events.Print, Article.build_line(["before link_season_profile_to_parsed_episode"]));
       const r = await this.link_season_profile_to_parsed_episode({
         profile: season_profile,
         parsed_tv,
         parsed_episode,
       });
       if (r.error) {
+        // this.emit(Events.Print, Article.build_line(["关联季详情失败", r.error.message]));
         return Result.Err(r.error);
       }
       if (!r.data) {
@@ -2124,6 +2159,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     const name = `${tmdb_id}.jpg`;
     if (poster_path) {
       const key = `/poster/${name}`;
+      // this.emit(Events.Print, Article.build_line(["before upload.download poster", poster_path]));
       const r = await this.upload.download(poster_path, key);
       if (r.error) {
         // console.log("download image failed 1", r.error.message);
@@ -2134,6 +2170,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     }
     if (backdrop_path) {
       const key = `/backdrop/${name}`;
+      // this.emit(Events.Print, Article.build_line(["before upload.download backdrop", backdrop_path]));
       const r = await this.upload.download(backdrop_path, key);
       if (r.error) {
         // console.log("download image failed 2", r.error.message);
@@ -2143,6 +2180,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
     }
     // console.log("check need upload images result", result);
+    this.emit(Events.Print, Article.build_line(["before before return result"]));
     return result;
   }
 

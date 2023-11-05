@@ -34,13 +34,14 @@ function fix_TMDB_image_path({
     profile_path: null,
   };
   if (backdrop_path) {
-    result.backdrop_path = `https://proxy.funzm.com/api/tmdb_site/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
+    // result.backdrop_path = `https://proxy.funzm.com/api/tmdb_site/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
+    result.backdrop_path = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
   }
   if (poster_path) {
-    result.poster_path = `https://proxy.funzm.com/api/tmdb_image/t/p/w600_and_h900_bestv2${poster_path}`;
+    result.poster_path = `https://www.themoviedb.org/t/p/w600_and_h900_bestv2${poster_path}`;
   }
   if (profile_path) {
-    result.profile_path = `https://proxy.funzm.com/api/tmdb_image/t/p/w600_and_h900_bestv2${profile_path}`;
+    result.profile_path = `https://www.themoviedb.org/t/p/w600_and_h900_bestv2${profile_path}`;
   }
   return result;
 }

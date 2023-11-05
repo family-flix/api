@@ -51,7 +51,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("天鹅挽歌")) {
+    if (!filename.includes("暗黑破坏神")) {
       return;
     }
     console.log(...args);
@@ -207,6 +207,7 @@ export function parse_filename_for_video(
     "艺声译影",
     "推しの子",
     "傅艺伟",
+    "人人影视",
     "Shimazu",
     "BOBO",
     "VCB-Studio",
@@ -451,6 +452,9 @@ export function parse_filename_for_video(
     },
     {
       regexp: /国漫|[0-9]{1,}年日剧\.{0,1}/,
+    },
+    {
+      regexp: /[泰]剧\.{0,}/,
     },
     {
       regexp: /[0-9]{1,}集特别版/,
@@ -989,7 +993,7 @@ export function parse_filename_for_video(
         /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！，：·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5）])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
-        const r1 = /^([0-9]{4}\.{1,})([\u4e00-\u9fa5A-Za-z！，：·、■（）]{1,})/;
+        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z！，：·、■（）-]{1,})/;
         if (cur_filename.match(r1)) {
           cur_filename = cur_filename.replace(r1, "$2.$1");
         }
@@ -1012,7 +1016,7 @@ export function parse_filename_for_video(
           if (v) {
             const name_index = filename.indexOf(v);
             const episode_index = filename.indexOf(result.episode);
-            log("need skip extracted chinese name3", name_index, episode_index);
+            log("[3.2]need skip extracted chinese name3", name_index, episode_index);
             if (name_index !== -1 && episode_index !== -1 && name_index > episode_index) {
               return {
                 skip: true,
@@ -1025,7 +1029,8 @@ export function parse_filename_for_video(
     {
       key: k("name"),
       desc: "chinese name4",
-      regexp: /^[A-Za-z]{1,}(?=[\u4e00-\u9fa5]{1,})[\u4e00-\u9fa5]{1,}/,
+      // 字母开头，如 Doctor异乡人
+      regexp: /^[A-Za-z]{1,}(?=[\u4e00-\u9fa5！-]{1,})[\u4e00-\u9fa5！-]{1,}/,
       after(matched) {
         const episode_index = result.episode ? original_name.indexOf(result.episode) : -1;
         const name_index = matched ? original_name.indexOf(matched) : -1;
@@ -1169,7 +1174,7 @@ export function parse_filename_for_video(
       // 日文 \u0800-\u4e00 还要包含中文字符范围
       // 英文 a-zA-Z
       const name_regexp =
-        /[0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[ \.\-&!'（）：！？～×0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[）0-9a-zA-Z!！？\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]/;
+        /[0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[ \.\-&!'（）：！？～×－0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[）0-9a-zA-Z!！？－\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]/;
       const remove_multiple_dot = () => {
         // log("[6.0]before original_name or episode name", cur_filename);
         // 后面的 ` 符号可以换成任意生僻字符，这个极度重要！！
@@ -1191,6 +1196,20 @@ export function parse_filename_for_video(
               return undefined;
             }
             const include_chinese = !!matched_content.match(/[\u4e00-\u9fa5]/);
+            // const include_japanese = matched_content.match(/[\u0800-\u4e00]/);
+            // const include_korean = matched_content.match(/[\uAC00-\uD7A3]/);
+            // if (include_japanese) {
+            //   log("[3.11]include_japanese");
+            //   return {
+            //     skip: false,
+            //   };
+            // }
+            // if (include_korean) {
+            //   log("[3.12]include_korean");
+            //   return {
+            //     skip: false,
+            //   };
+            // }
             if (include_chinese) {
               // 存在「一」，判断不了是中文还是日文？
               return {
@@ -1318,7 +1337,7 @@ export function parse_filename_for_video(
         cur_filename = remove_str(cur_filename, from, c.length, placeholder);
       }
     }
-    log("[5]extracted content for", unique, "is", extracted_content, key, priority);
+    log("[5]extracted content for", unique, "is", extracted_content, `key: ${key}`, `priority: ${priority}`);
     if (key && VIDEO_ALL_KEYS.includes(key)) {
       // log("[6]replace value with priority", priority, priorityMap);
       if (!priority) {

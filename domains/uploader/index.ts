@@ -4,7 +4,8 @@
 import { ReadStream, createWriteStream, writeFileSync, unlink } from "fs";
 import { join } from "path";
 
-import axios from "@/modules/axios";
+import axios from "axios";
+
 import { Result } from "@/types";
 
 export class ImageUploader {
@@ -19,6 +20,7 @@ export class ImageUploader {
     try {
       const { data } = (await axios.get(url, {
         responseType: "stream",
+        timeout: 6000,
       })) as { data: ReadStream };
       return Result.Ok(data);
     } catch (err) {
@@ -43,25 +45,33 @@ export class ImageUploader {
   upload(url: string, name: string) {}
   /** 下载网络图片到本地 */
   async download(url: string, key: string): Promise<Result<string>> {
-    const response = await axios({
-      url,
-      method: "GET",
-      responseType: "stream",
-    });
-    const filepath = join(this.root, key);
-    // console.log("[DOMAIN]Uploader - download", filepath);
-    return new Promise((resolve) => {
-      response.data
-        .pipe(createWriteStream(filepath))
-        .on("error", (err: Error) => {
-          // console.log("[DOMAIN]Uploader - download failed", err.message);
-          resolve(Result.Err(err.message));
-        })
-        .once("close", () => {
-          // console.log("[DOMAIN]Uploader - download success", key);
-          resolve(Result.Ok(key));
-        });
-    });
+    try {
+      // console.log("[DOMAIN]Uploader - before request");
+      const response = await axios({
+        url,
+        method: "GET",
+        responseType: "stream",
+        timeout: 6000,
+      });
+      const filepath = join(this.root, key);
+      // console.log("[DOMAIN]Uploader - download", filepath);
+      return new Promise((resolve) => {
+        response.data
+          .pipe(createWriteStream(filepath))
+          .on("error", (err: Error) => {
+            // console.log("[DOMAIN]Uploader - download failed", err.message);
+            resolve(Result.Err(err.message));
+          })
+          .once("close", () => {
+            // console.log("[DOMAIN]Uploader - download success", key);
+            resolve(Result.Ok(key));
+          });
+      });
+    } catch (err) {
+      const e = err as Error;
+      // console.log("[DOMAIN]Uploader - request failed", e.message);
+      return Promise.resolve(Result.Err(e.message));
+    }
   }
   /** 删除本地图片 */
   async delete(key: string) {
