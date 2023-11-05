@@ -171,8 +171,8 @@ describe("提取综艺信息", () => {
       "MULTISUB【了不起！舞社 Great Dance Crew】EP01上 - 搞笑女制霸舞社 苏有朋太难 - 苏有朋_王霏霏_程潇_李永钦TEN_赞多 - 优酷综艺 YOUKU SHOW.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
+      name: "MULTISUB.了不起！舞社",
+      original_name: "Great.Dance.Crew",
       season: "",
       episode: "E01@上",
     });

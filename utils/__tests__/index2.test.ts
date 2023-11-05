@@ -618,4 +618,104 @@ describe("提取视频信息", () => {
       episode: "E01",
     });
   });
+  test("2023.Pending Train-8点23分，明天和你.10集全", () => {
+    const name = "2023.Pending Train-8点23分，明天和你.10集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "Pending.Train-8点23分，明天和你",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("2023.1840~两个人的梦想与恋爱~.10集全", () => {
+    const name = "2023.1840~两个人的梦想与恋爱~.10集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "1840~两个人的梦想与恋爱~",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("2023.4月的东京….8集全", () => {
+    const name = "2023.4月的东京….8集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "4月的东京",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("2023.局中人 第二季 Fixer 第二季.5集全", () => {
+    const name = "2023.局中人 第二季 Fixer 第二季.5集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "局中人",
+      original_name: "",
+      season: "S02",
+      episode: "",
+    });
+  });
+  test("2023.测试名称第二季第 5 集.mp4", () => {
+    const name = "2023.测试名称第二季第 5 集.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "测试名称",
+      original_name: "",
+      season: "S02",
+      episode: "E05",
+    });
+  });
+  test("2023.Stealer：七个朝鲜通宝.12集全", () => {
+    const name = "2023.Stealer：七个朝鲜通宝.12集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "Stealer：七个朝鲜通宝",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("2023.69两头勾.6集全", () => {
+    const name = "2023.69两头勾.6集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "69两头勾",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("2012.雾都.36集全", () => {
+    const name = "2012.雾都.36集全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "雾都",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("03 [23歲]_2001..mp4", () => {
+    const name = "03 [23歲]_2001..mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E03",
+    });
+  });
+  // test("louie.0402.mp4", () => {
+  //   const name = "louie.0402.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "",
+  //     original_name: "louie",
+  //     season: "S04",
+  //     episode: "E02",
+  //   });
+  // });
 });

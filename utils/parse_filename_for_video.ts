@@ -51,7 +51,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("暗黑破坏神")) {
+    if (!filename.includes("歲")) {
       return;
     }
     console.log(...args);
@@ -74,6 +74,8 @@ export function parse_filename_for_video(
     .replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
     .replace(/^\[[^\]]{1,}\](?=\[)/, "")
     .replace(/^【[^】0-9]{1,}】/, "")
+    // 移除零宽空格
+    .replace(/\u200B/g, "")
     .replace(/_([0-9]{1,})_/, ".E$1.");
   const special_season_with_number_regexp = /(^|[^a-zA-Z])([sS][pP])([0-9]{1,})($|[^a-zA-Z])/;
   if (original_name.match(special_season_with_number_regexp)) {
@@ -83,6 +85,7 @@ export function parse_filename_for_video(
   original_name = original_name
     .replace(/^\./, "")
     .replace(/ - /g, ".")
+    .replace(/第 {1,}([0-9]{1,}) {1,}[集話话]/, "第$1集")
     .replace(/[ _丨]/g, ".")
     .replace(/\]\[/, ".")
     .replace(/[【】《》「」\[\]]{1,}/g, ".")
@@ -872,7 +875,7 @@ export function parse_filename_for_video(
     {
       key: k("episode"),
       // 这里之所以可能出现 第.55.集 这种情况是最开始将「空格」替换成了 . 符号
-      regexp: /第{0,1}[\.]{0,1}[0-9]{1,}[\.]{0,1}[集話话期局场]/,
+      regexp: /第{0,1}[0-9]{1,}[集話话期局场]/,
       priority: 1,
     },
     {
@@ -993,7 +996,7 @@ export function parse_filename_for_video(
         /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！，：·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5）])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
-        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z！，：·、■（）-]{1,})/;
+        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z0-9！：（），~·、■.-]{1,})/;
         if (cur_filename.match(r1)) {
           cur_filename = cur_filename.replace(r1, "$2.$1");
         }
@@ -1030,7 +1033,8 @@ export function parse_filename_for_video(
       key: k("name"),
       desc: "chinese name4",
       // 字母开头，如 Doctor异乡人
-      regexp: /^[A-Za-z]{1,}(?=[\u4e00-\u9fa5！-]{1,})[\u4e00-\u9fa5！-]{1,}/,
+      regexp: /^[A-Za-z]{1,}\.{0,1}[A-Za-z0-9\u4e00-\u9fa5：！，~-]{1,}[\u4e00-\u9fa5！，~-]{1,}/,
+      // regexp: /^[A-Za-z]{1,}[0-9\u4e00-\u9fa5！，.-]{1,}[\u4e00-\u9fa5-]{1,}/,
       after(matched) {
         const episode_index = result.episode ? original_name.indexOf(result.episode) : -1;
         const name_index = matched ? original_name.indexOf(matched) : -1;
@@ -1041,6 +1045,12 @@ export function parse_filename_for_video(
           };
         }
       },
+    },
+    {
+      key: k("name"),
+      desc: "chinese name4",
+      // 数字开头，如 1840~两个人的梦想与恋爱~
+      regexp: /^[0-9]{1,}[A-Za-z0-9\u4e00-\u9fa5！，~-]{1,}[\u4e00-\u9fa5！，~-]{1,}/,
     },
     // 发布年，必须在「分辨率」后面，因为分辨率有 2160p 这种，为了方便处理，先把分辨率剔除，再来处理发布年
     // 也要放在 name 先后面，因为有些影视剧名称包含了年份，比如「回到1988」，如果先把 1988 处理了，名字就不对了
@@ -1709,8 +1719,8 @@ export function format_episode_number(n: string, options: { log: (...args: unkno
   }
   // console.log("[UTILS]format_number before 第01-02话");
   // 第01-02话
-  if (number.match(/第[0-9]{1,}-[0-9]{1,}[话集]/)) {
-    const matched = number.match(/第([0-9]{1,})-([0-9]{1,})[集话]/);
+  if (number.match(/第[0-9]{1,}-[0-9]{1,}[集話话]/)) {
+    const matched = number.match(/第([0-9]{1,})-([0-9]{1,})[集話话]/);
     if (!matched) {
       return number;
     }

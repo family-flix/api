@@ -196,8 +196,8 @@ describe("提取视频信息", () => {
       episode: "",
     });
   });
-  test("一起同过窗 第三季 第30集 4K(超高清SDR)(8798117)", () => {
-    const name = "一起同过窗 第三季 第30集 4K(超高清SDR)(8798117)";
+  test("一起同过窗 第三季 第30集 4K(超高清SDR)(8298117)", () => {
+    const name = "一起同过窗 第三季 第30集 4K(超高清SDR)(8298117)";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "一起同过窗",

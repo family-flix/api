@@ -1273,7 +1273,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         parsed_episode,
       });
       if (r.error) {
-        // this.emit(Events.Print, Article.build_line(["关联季详情失败", r.error.message]));
+        this.emit(Events.Print, Article.build_line(["关联季详情失败", r.error.message]));
         return Result.Err(r.error);
       }
       if (!r.data) {
@@ -1281,7 +1281,10 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
       parsed_episode.season_id = r.data.id;
     }
-    this.emit(Events.Print, Article.build_line(["before get_episode_profile_with_tmdb"]));
+    if (!parsed_episode.season_id) {
+      return Result.Err("没有关联到季详情");
+    }
+    // this.emit(Events.Print, Article.build_line(["before get_episode_profile_with_tmdb"]));
     const profile_res = await this.get_episode_profile_with_tmdb(
       {
         parsed_tv,
@@ -1290,6 +1293,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       options
     );
     if (profile_res.error) {
+      this.emit(Events.Print, Article.build_line(["获取剧集详情失败", profile_res.error.message]));
       return Result.Err(profile_res.error, "10001");
     }
     if (profile_res.data === null) {
@@ -1298,7 +1302,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Err("没有搜索到剧集详情");
     }
-    this.emit(Events.Print, Article.build_line(["before link_episode_profile_to_parsed_episode"]));
+    // this.emit(Events.Print, Article.build_line(["before link_episode_profile_to_parsed_episode"]));
     return this.link_episode_profile_to_parsed_episode({
       profile: profile_res.data,
       parsed_tv,
@@ -2180,7 +2184,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       }
     }
     // console.log("check need upload images result", result);
-    this.emit(Events.Print, Article.build_line(["before before return result"]));
+    // this.emit(Events.Print, Article.build_line(["before return result"]));
     return result;
   }
 

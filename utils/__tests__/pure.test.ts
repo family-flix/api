@@ -310,4 +310,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("79​.rmvb", () => {
+    const name = "79​.rmvb";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E79",
+    });
+  });
 });
