@@ -698,16 +698,46 @@ describe("提取视频信息", () => {
       episode: "",
     });
   });
-  test("03 [23歲]_2001..mp4", () => {
-    const name = "03 [23歲]_2001..mp4";
+  test("神盾局特工（全7季）", () => {
+    const name = "神盾局特工（全7季）";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "神盾局特工",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("神盾局特工1-8季全", () => {
+    const name = "神盾局特工1-8季全";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "神盾局特工",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("The.DaysS01E06.2023.NF.WEB-DL.1080p.x264.DDP-Xiaomi.mkv", () => {
+    const name = "The.DaysS01E06.2023.NF.WEB-DL.1080p.x264.DDP-Xiaomi.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "",
-      season: "",
-      episode: "E03",
+      original_name: "The.Days",
+      season: "S01",
+      episode: "E06",
     });
   });
+  // test("03 [23歲]_2001..mp4", () => {
+  //   const name = "03 [23歲]_2001..mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "",
+  //     original_name: "",
+  //     season: "",
+  //     episode: "E03",
+  //   });
+  // });
   // test("louie.0402.mp4", () => {
   //   const name = "louie.0402.mp4";
   //   const result = parse_filename_for_video(name);

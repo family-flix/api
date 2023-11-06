@@ -10,7 +10,8 @@ type ChannelGroup = {
   }[];
 };
 
-export const source_url = "https://live.fanmingming.com/tv/m3u/global.m3u";
+export const source_url1 = "https://live.fanmingming.com/tv/m3u/global.m3u";
+const source_url2 = "https://iptv-org.github.io/iptv/index.nsfw.m3u";
 export function fetchTVLiveGroups(data: string) {
   const lines = data.split("\n");
   const groups: Record<
@@ -72,8 +73,8 @@ function parse_M3U_info_line(line: string) {
   return info;
 }
 
-async function main() {
-  const r = await axios.get<string>(source_url);
+async function main(url: string) {
+  const r = await axios.get<string>(url);
   const { data } = r;
   const groups = fetchTVLiveGroups(data);
   const channels = Object.keys(groups)
@@ -85,4 +86,4 @@ async function main() {
     }, []);
   console.log(channels);
 }
-main();
+main(source_url2);

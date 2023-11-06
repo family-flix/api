@@ -51,10 +51,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("歲")) {
+    if (!filename.includes("The.Days")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -76,6 +76,8 @@ export function parse_filename_for_video(
     .replace(/^【[^】0-9]{1,}】/, "")
     // 移除零宽空格
     .replace(/\u200B/g, "")
+    // 在 小谢尔顿S01E01 这种 S01E01 紧跟着名字后面的场景，前面加一个符号来分割
+    .replace(/(?=[sS][0-9]{2}[eE][0-9]{2})([sS][0-9]{2}[eE][0-9]{2})/, ".$1")
     .replace(/_([0-9]{1,})_/, ".E$1.");
   const special_season_with_number_regexp = /(^|[^a-zA-Z])([sS][pP])([0-9]{1,})($|[^a-zA-Z])/;
   if (original_name.match(special_season_with_number_regexp)) {
@@ -609,7 +611,7 @@ export function parse_filename_for_video(
     {
       desc: "总季数1",
       // 1-3 季
-      regexp: /([1-9]{1,}[-+][1-9]{1,})[季部]/,
+      regexp: /([1-9]{1,}[-+][1-9]{1,})[季部][全]{0,1}/,
     },
     {
       regexp: /前[1-9]{1,2}季/,
