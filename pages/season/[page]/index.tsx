@@ -42,39 +42,44 @@ function SeasonListPage(props: {
   );
 }
 export async function getStaticProps(context: GetStaticPropsContext) {
-  const { params } = context;
-  const data = await store.prisma.season.findMany({
-    include: {
-      tv: {
-        include: {
-          profile: true,
-        },
-      },
-      profile: {
-        include: {
-          persons: {
-            include: {
-              profile: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  // const { params } = context;
+  // const data = await store.prisma.season.findMany({
+  //   include: {
+  //     tv: {
+  //       include: {
+  //         profile: true,
+  //       },
+  //     },
+  //     profile: {
+  //       include: {
+  //         persons: {
+  //           include: {
+  //             profile: true,
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
+  // return {
+  //   props: {
+  //     data: data.map((season) => {
+  //       const { id, tv, profile } = season;
+  //       return {
+  //         id,
+  //         name: tv.profile.name,
+  //         poster_path: profile.poster_path || tv.profile.poster_path,
+  //         overview: profile.overview || tv.profile.overview,
+  //         air_date: profile.air_date || tv.profile.first_air_date,
+  //         season_text: season.season_text,
+  //       };
+  //     }),
+  //     params,
+  //   },
+  // };
   return {
     props: {
-      data: data.map((season) => {
-        const { id, tv, profile } = season;
-        return {
-          id,
-          name: tv.profile.name,
-          poster_path: profile.poster_path || tv.profile.poster_path,
-          overview: profile.overview || tv.profile.overview,
-          air_date: profile.air_date || tv.profile.first_air_date,
-          season_text: season.season_text,
-        };
-      }),
-      params,
+      data: [],
     },
   };
 }
