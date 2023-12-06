@@ -891,6 +891,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     this.cached_tv_profile[unique_id] = {
       ...body,
       id,
+      alias: null,
       created: new Date(),
       updated: new Date(),
       unique_id,
@@ -1949,6 +1950,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       id: r_id(),
       created: new Date(),
       updated: new Date(),
+      alias: null,
       source: 1,
       sources: JSON.stringify({ tmdb_id }),
     };
