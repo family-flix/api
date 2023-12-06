@@ -85,44 +85,48 @@ export async function getStaticProps(context: GetStaticPropsContext) {
 }
 
 export async function getStaticPaths() {
-  const data = await store.prisma.season.findMany({
-    include: {
-      tv: {
-        include: {
-          profile: true,
-        },
-      },
-      profile: {
-        include: {
-          persons: {
-            include: {
-              profile: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  const totalItems = data.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const paths = Array.from({ length: totalPages }, (_, i) => ({
-    params: { page: (i + 1).toString() },
-  }));
+  // const data = await store.prisma.season.findMany({
+  //   include: {
+  //     tv: {
+  //       include: {
+  //         profile: true,
+  //       },
+  //     },
+  //     profile: {
+  //       include: {
+  //         persons: {
+  //           include: {
+  //             profile: true,
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
+  // const totalItems = data.length;
+  // const totalPages = Math.ceil(totalItems / itemsPerPage);
+  // const paths = Array.from({ length: totalPages }, (_, i) => ({
+  //   params: { page: (i + 1).toString() },
+  // }));
+  // return {
+  //   // data: data.map((season) => {
+  //   //   const { id, tv, profile } = season;
+  //   //   return {
+  //   //     id,
+  //   //     name: tv.profile.name,
+  //   //     poster_path: profile.poster_path || tv.profile.poster_path,
+  //   //     overview: profile.overview || tv.profile.overview,
+  //   //     air_date: profile.air_date || tv.profile.first_air_date,
+  //   //     season_text: season.season_text,
+  //   //   };
+  //   // }),
+  //   paths,
+  //   fallback: false,
+  // };
   return {
-    // data: data.map((season) => {
-    //   const { id, tv, profile } = season;
-    //   return {
-    //     id,
-    //     name: tv.profile.name,
-    //     poster_path: profile.poster_path || tv.profile.poster_path,
-    //     overview: profile.overview || tv.profile.overview,
-    //     air_date: profile.air_date || tv.profile.first_air_date,
-    //     season_text: season.season_text,
-    //   };
-    // }),
-    paths,
+    paths: [],
     fallback: false,
-  };
+  }
 }
 
 export default SeasonListPage;
