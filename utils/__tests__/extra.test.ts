@@ -240,6 +240,16 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("0617彩蛋第1期_Tacit0924.mp4", () => {
+    const name = "0617彩蛋第1期_Tacit0924.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "彩蛋01",
+    });
+  });
   // test("月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4", () => {
   //   const name = "月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4";
   //   const result = parse_filename_for_video(name);

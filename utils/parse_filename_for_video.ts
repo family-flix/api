@@ -1,11 +1,4 @@
-import {
-  video_file_type_regexp,
-  normalize_episode_text,
-  remove_str,
-  chinese_num_to_num,
-  padding_zero,
-  season_to_num,
-} from "./index";
+import { video_file_type_regexp, remove_str, chinese_num_to_num, padding_zero, season_to_num } from "./index";
 import { get_first_letter } from "./pinyin";
 
 export const VIDEO_KEY_NAME_MAP = {
@@ -51,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("The.Days")) {
+    if (!filename.includes("觀世音傳奇")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -74,6 +67,7 @@ export function parse_filename_for_video(
     .replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
     .replace(/^\[[^\]]{1,}\](?=\[)/, "")
     .replace(/^【[^】0-9]{1,}】/, "")
+    .replace(/\.[1-9]{1}[+-][1-9]{1,}\./, ".")
     // 移除零宽空格
     .replace(/\u200B/g, "")
     // 在 小谢尔顿S01E01 这种 S01E01 紧跟着名字后面的场景，前面加一个符号来分割
@@ -160,7 +154,9 @@ export function parse_filename_for_video(
     when?: () => boolean;
   };
   const priorityMap: Partial<Record<VideoKeys, number>> = {};
+  // 制作组
   const publishers = [
+    "-Huawei",
     "FRDS",
     "￡{0,1}cXcY@FRDS",
     "MediaClub",
@@ -169,13 +165,17 @@ export function parse_filename_for_video(
     "-HotWEB",
     "-SeeWEB",
     "-HDSWEB",
+    "-HDCTV",
+    "-HaresWEB",
+    "-PTerWEB",
+    "-BtsTV",
     "-Vampire",
     "-NGB",
-    "-Huawei",
     "-DHTCLUB",
     "-OurTV",
     "-TrollHD",
     "-CtrlHD",
+    "rartv",
     "-NiXON",
     "-NTb",
     "-SHORTBREHD",
@@ -191,23 +191,14 @@ export function parse_filename_for_video(
     "Mp4Ba",
     "-Amber",
     "-HeiGuo",
-    "-HDCTV",
-    "-HaresWEB",
-    "-BtsTV",
     "-Nanzhi",
-    "-PTerWEB",
     "-SciSurf",
     "-orpheus",
     "-BS666",
     "GM-Team",
-    "-{0,1}SuperMiao",
     "-52KHD",
     "-SXG",
-    "Tacit0924",
     "BDE4",
-    "蓝色狂想",
-    "蓝色狂想制作",
-    "tv综合吧",
     "DBD制作组&离谱Sub.",
     "艺声译影",
     "推しの子",
@@ -223,12 +214,25 @@ export function parse_filename_for_video(
     "BeanSub&FZSD&LoliHouse",
     "BeanSub&FZSD",
     "BeanSub",
-    "tvzongheba",
   ]
     .map((s) => `${s}`)
     .join("|");
-  // 这里会和 publishers2 同时出现导致无法一起移除，所以会和上面一起出现的单独列出来
-  const publishers2 = ["MyTVSuper", "SS的笔记", "FLTTH", "BOBO", "rartv", "Prof", "CYW", "Ma10p"]
+  // 分发
+  const publishers2 = [
+    "Tacit0924",
+    "-{0,1}SuperMiao",
+    "蓝色狂想",
+    "蓝色狂想制作",
+    "tv综合吧",
+    "tvzongheba",
+    "MyTVSuper",
+    "SS的笔记",
+    "FLTTH",
+    "BOBO",
+    "Prof",
+    "CYW",
+    "Ma10p",
+  ]
     .map((s) => `${s}`)
     .join("|");
   const extra: ExtraRule[] = [
@@ -247,7 +251,7 @@ export function parse_filename_for_video(
     },
     // 奇怪的冗余信息
     {
-      regexp: /超前点映|超前完结|点映礼|B站logo/,
+      regexp: /超前点映|超前完结|点映礼|[bB]站logo/,
     },
     {
       regexp: /（[^）]{1,}）$/,
@@ -279,10 +283,9 @@ export function parse_filename_for_video(
     {
       regexp: /repack|REMUX/,
     },
-    // 来源平台
+    // 流媒体平台
     {
-      // 亚马逊、奈飞、迪士尼、爱奇艺、湖南TV
-      regexp: /AMZN|NF|Netflix|DSNP|iQIYI|HunanTV|YYeTs|陕艺|JSTV\.{0,1}|江苏卫视\.{0,1}/,
+      regexp: /AMZN|NF|Netflix|DSNP|iQIYI|HunanTV|YYeTs|陕艺|JSTV\.{0,1}|江苏卫视\.{0,1}|[bB]站/,
     },
     // 文件后缀
     {
@@ -338,13 +341,16 @@ export function parse_filename_for_video(
     {
       key: k("voice_type"),
       regexp:
-        /[英国粤日][语配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码/,
+        /[英国國粤日][语語配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码/,
     },
     {
       regexp: /中字|双字/,
     },
     {
-      regexp: /[官繁]中/,
+      regexp: /[简官繁]中/,
+    },
+    {
+      regexp: /[简繁]体/,
     },
     {
       regexp: /\([0-9]{4,}\)/,
@@ -386,10 +392,13 @@ export function parse_filename_for_video(
       regexp: /(压缩|会员|宝藏)版本{0,1}/,
     },
     {
-      regexp: /会员plus版/,
+      regexp: /会员plus版|高内存版/,
     },
     {
-      regexp: /[pP][aA][rR][tT]\.{0,1}[1-9]{1}/,
+      regexp: /CCTV\.Version/,
+    },
+    {
+      regexp: /[pP][aA][rR][tT]\.{0,1}[1-9]{1}(\.|$)/,
     },
     {
       regexp: /高码[率]{0,1}|修复版{0,1}|[0-9]{1,}重[置制]版\.{0,1}/,
@@ -525,10 +534,14 @@ export function parse_filename_for_video(
     {
       key: k("encode"),
       // 能处理 HD4K、HD265 这种异常数据
-      regexp: /[xX]{0,1}[hH]{0,1}[dD]{0,1}\.{0,1}26[45]{1}(_FLAC){0,1}/,
+      regexp: /[xX]{0,1}[hH]{0,1}[dD]{0,1}\.26[45]{1}(_FLAC){0,1}/,
       before() {
         cur_filename = cur_filename.replace(/([xX]26[45])\.(FLAC)/, "$1_$2");
       },
+    },
+    {
+      key: k("encode"),
+      regexp: /[xXhH]26[45]{1}/,
     },
     // AVC 是编解码器，8位深度
     {
@@ -558,9 +571,9 @@ export function parse_filename_for_video(
        * DDP    这是什么？
        */
       regexp: /D[dD]([pP]|\+){0,1}(\.){0,1}([25]\.[01]){0,1}(\.Atmos){0,1}/,
-      // before() {
-      //   log("before voice_encode", latestFilename);
-      // },
+    },
+    {
+      regexp: /[dD]olby/,
     },
     {
       key: k("voice_encode"),
@@ -599,13 +612,26 @@ export function parse_filename_for_video(
       regexp: /全([0-9]{1,})[集話话]/,
     },
     {
+      desc: "总集数4",
+      regexp: /[0-9]{1,}-[0-9]{1,}[集話话]全/,
+    },
+    {
       desc: "总集数3",
       regexp: /([0-9]{1,})[集話话]全/,
     },
     {
       key: k("episode"),
-      desc: "多集合并场景",
+      // 第1-20集
       regexp: /第[0-9]{1,}-[0-9]{1,}[集話话]/,
+    },
+    {
+      regexp: /^[0-9]{1,}-[1-9][0-9]{0,}$/,
+      after() {
+        // @todo 这里很纠结，存在 综艺剧集数 01-20.mp4 这种情况，所以只有是文件夹时才将 01-20 视为剧集总数，否则就忽略
+        if (result.type) {
+          return { skip: true };
+        }
+      },
     },
     // 总季数，要放在「中文名称」前面
     {
@@ -617,10 +643,8 @@ export function parse_filename_for_video(
       regexp: /前[1-9]{1,2}季/,
     },
     {
-      // 重复出现，不要删除，是为了移除和中文名连在一起的「第n季」
       key: k("season"),
-      desc: "总季数2",
-      regexp: /第[1-9]{1,}[季]/,
+      regexp: /第[0-9]{1,}[季]/,
       before() {
         cur_filename = cur_filename.replace(/(第[1-9]{1,}[季])([0-9]{1,})/, "$1.E$2");
       },
@@ -833,7 +857,7 @@ export function parse_filename_for_video(
     {
       key: k("episode"),
       // NCOP 表示片头曲？NCED 表示片尾曲？
-      regexp: /[nN][cC]([oO][pP]|[eE][dD])[0-9]{1,}/,
+      regexp: /[nN][cC]([oO][pP]|[eE][dD])[0-9]{0,}/,
     },
     {
       key: k("episode"),
@@ -995,10 +1019,10 @@ export function parse_filename_for_video(
       desc: "chinese name3",
       // 中文开头，中间可以包含数字，以中文结尾
       regexp:
-        /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！，：·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5）])\]{0,1}/,
+        /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！：，（）～,·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5！：，（）～])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
-        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z0-9！：（），~·、■.-]{1,})/;
+        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z0-9！：，（）～~·、■.-]{1,})/;
         if (cur_filename.match(r1)) {
           cur_filename = cur_filename.replace(r1, "$2.$1");
         }
@@ -1035,7 +1059,7 @@ export function parse_filename_for_video(
       key: k("name"),
       desc: "chinese name4",
       // 字母开头，如 Doctor异乡人
-      regexp: /^[A-Za-z]{1,}\.{0,1}[A-Za-z0-9\u4e00-\u9fa5：！，~-]{1,}[\u4e00-\u9fa5！，~-]{1,}/,
+      regexp: /^[A-Za-z]{1,}\.{0,1}[A-Za-z0-9\u4e00-\u9fa5！：，（）～~-]{1,}[\u4e00-\u9fa5！：，（）～~-]{1,}/,
       // regexp: /^[A-Za-z]{1,}[0-9\u4e00-\u9fa5！，.-]{1,}[\u4e00-\u9fa5-]{1,}/,
       after(matched) {
         const episode_index = result.episode ? original_name.indexOf(result.episode) : -1;
@@ -1052,7 +1076,13 @@ export function parse_filename_for_video(
       key: k("name"),
       desc: "chinese name4",
       // 数字开头，如 1840~两个人的梦想与恋爱~
-      regexp: /^[0-9]{1,}[A-Za-z0-9\u4e00-\u9fa5！，~-]{1,}[\u4e00-\u9fa5！，~-]{1,}/,
+      regexp: /^[0-9]{1,}[A-Za-z0-9\u4e00-\u9fa5！：，（）～~-]{1,}[\u4e00-\u9fa5！：，（）～~-]{1,}/,
+      // after() {
+      //   if (cur_filename.match(/\.[0-9]{1,}\./)) {
+      //     // 提取到名字后，可能剩下 .8.mp4 这种，可以将 8 视为集数
+      //     cur_filename = cur_filename.replace(/^\.([0-9]{1,})\./, ".E$1.");
+      //   }
+      // },
     },
     // 发布年，必须在「分辨率」后面，因为分辨率有 2160p 这种，为了方便处理，先把分辨率剔除，再来处理发布年
     // 也要放在 name 先后面，因为有些影视剧名称包含了年份，比如「回到1988」，如果先把 1988 处理了，名字就不对了
@@ -1155,12 +1185,11 @@ export function parse_filename_for_video(
       key: k("episode"),
       regexp: /[_-][0-9]{1,}/,
     },
-    // {
-    //   key: k("episode"),
-    //   regexp: /\.([0-9]{1,})\./,
-    //   pick: [1],
-    //   priority: -1,
-    // },
+    {
+      key: k("episode"),
+      regexp: /^\.([0-9]{1,})\./,
+      pick: [1],
+    },
     {
       key: k("episode"),
       regexp: /Episode\.[0-9]{1,}/,
@@ -1186,7 +1215,7 @@ export function parse_filename_for_video(
       // 日文 \u0800-\u4e00 还要包含中文字符范围
       // 英文 a-zA-Z
       const name_regexp =
-        /[0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[ \.\-&!'（）：！？～×－0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[）0-9a-zA-Z!！？－\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]/;
+        /[0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[ \.\-&!,'（）：！？～×－0-9a-zA-Z\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]{1,}[）0-9a-zA-Z!！？－\u4e00-\u9fa5\u0400-\u04FF\uAC00-\uD7A3\u0800-\u4e00]/;
       const remove_multiple_dot = () => {
         // log("[6.0]before original_name or episode name", cur_filename);
         // 后面的 ` 符号可以换成任意生僻字符，这个极度重要！！
@@ -1262,6 +1291,14 @@ export function parse_filename_for_video(
                 skip: true,
               };
             }
+          },
+        },
+        {
+          key: k("original_name"),
+          regexp: /^([a-zA-Z-!]{1,}\.{1}){1,}[a-zA-Z-!]{1,}(\.|$)/,
+          priority: -1,
+          before() {
+            cur_filename = cur_filename.replace(/`$/, "");
           },
         },
         {
@@ -1380,6 +1417,9 @@ export function parse_filename_for_video(
     result.episode = format_episode_number(result.episode, {
       log,
     });
+  }
+  if (result.original_name && result.original_name.match(/\.$/)) {
+    result.original_name = result.original_name.replace(/\.$/, "");
   }
   // log("[------]update name with season number", result.season, `[${result.episode}]`, `[${result.type}]`);
   if (result.season && !result.episode && result.type) {
@@ -1552,54 +1592,54 @@ export function format_episode_number(n: string, options: { log: (...args: unkno
     if (number.match(/第([0-9]{1,})期/)) {
       const r = number.match(/第([0-9]{1,})期/);
       if (r) {
-        return `加更${r[1]}`;
+        return `加更${padding_zero(r[1])}`;
       }
-      return "加更1";
+      return "加更01";
     }
   }
   if (number.match(/(独家){0,1}直拍/)) {
     if (number.match(/第([0-9]{1,})期/)) {
       const r = number.match(/第([0-9]{1,})期/);
       if (r) {
-        return `直拍${r[1]}`;
+        return `直拍${padding_zero(r[1])}`;
       }
-      return "直拍1";
+      return "直拍01";
     }
   }
   if (number.match(/直播/)) {
     if (number.match(/第([0-9]{1,})期/)) {
       const r = number.match(/第([0-9]{1,})期/);
       if (r) {
-        return `直播${r[1]}`;
+        return `直播${padding_zero(r[1])}`;
       }
-      return "直播1";
+      return "直播01";
     }
   }
   if (number.match(/Plus/)) {
     if (number.match(/第([0-9]{1,})期/)) {
       const r = number.match(/第([0-9]{1,})期/);
       if (r) {
-        return `Plus${r[1]}`;
+        return `Plus${padding_zero(r[1])}`;
       }
-      return "Plus1";
+      return "Plus01";
     }
   }
   if (number.match(/超前营业/)) {
     if (number.match(/第([0-9]{1,})期/)) {
       const r = number.match(/第([0-9]{1,})期/);
       if (r) {
-        return `超前营业${r[1]}`;
+        return `超前营业${padding_zero(r[1])}`;
       }
-      return "超前营业1";
+      return "超前营业01";
     }
   }
   if (number.match(/彩蛋/)) {
     if (number.match(/第([0-9]{1,})期/)) {
       const r = number.match(/第([0-9]{1,})期/);
       if (r) {
-        return `彩蛋${r[1]}`;
+        return `彩蛋${padding_zero(r[1])}`;
       }
-      return "彩蛋1";
+      return "彩蛋01";
     }
   }
   if (number.match(/集结篇|企划|先导片/)) {
@@ -1805,4 +1845,18 @@ export function build_media_name(values: { name: string | null; original_name: s
   })().replace(/ /, "");
   const name_with_pin_yin = [n, original_n].filter(Boolean).join(".").replace(/:/, "：");
   return name_with_pin_yin;
+}
+
+/**
+ * 各种奇怪的集数信息正常化
+ * @param filename
+ * @returns
+ */
+function normalize_episode_text(filename: string) {
+  let name = filename;
+  // if there only two number, use as episode number.
+  if (/(\.|^)[-_]{0,1}([0-9]{2,3})(\.|$)/.test(name)) {
+    name = name.replace(/(\.|^)[-_]{0,1}([0-9]{2,3})(\.|$)/, ".E$2.");
+  }
+  return name.replace(/\b([0-9]{1})([0-9]{2})\b/g, "S$1.E$2");
 }

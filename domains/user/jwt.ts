@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
 
-import { v4 as uuid } from "@/modules/uuid";
-import { EncryptJWT, jwtDecrypt } from "@/modules/jose";
-import { hkdf } from "@/modules/@panva/hkdf";
+import { v4 as uuid } from "uuid";
+import { EncryptJWT, jwtDecrypt } from "jose";
+import { hkdf } from "@panva/hkdf";
 
 import { JWTDecodeParams, JWTEncodeParams, JWT, Secret, JWTOptions } from "./types";
 
@@ -16,7 +16,7 @@ const now = () => dayjs().unix();
  * @param {string} params.secret
  * @param {number} params.maxAge
  */
-export async function encode_token({ token = {}, secret, maxAge = DEFAULT_MAX_AGE }: JWTEncodeParams) {
+export async function encode_token({ token = {}, secret, maxAge = DEFAULT_MAX_AGE }: JWTEncodeParams): Promise<string> {
   const encryptionSecret = await get_derived_encryption_key(secret);
   return await new EncryptJWT(token)
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })

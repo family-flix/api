@@ -2,7 +2,8 @@
  * @file TMDB api
  * @doc https://developer.themoviedb.org/reference/intro/getting-started
  */
-import axios from "@/modules/axios";
+import axios from "axios";
+
 import { Result, Unpacked, UnpackedResult } from "@/types";
 import { query_stringify } from "@/utils";
 

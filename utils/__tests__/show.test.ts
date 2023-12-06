@@ -254,7 +254,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "加更2",
+      episode: "加更02",
     });
   });
   test("20200812 黄圣依回应被骂：对不起 _Tacit0924 .mp4", () => {
@@ -274,7 +274,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "加更6",
+      episode: "加更06",
     });
   });
   test("20190728Ella回应生产后遗症 _Tacit0924 .mp4", () => {
@@ -354,7 +354,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "加更1",
+      episode: "加更01",
     });
   });
   test("20230503第3期加更：极挑男团夺金大战各出奇招_Tacit0924.mp4", () => {
@@ -364,7 +364,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "加更3",
+      episode: "加更03",
     });
   });
   test("第1期上_Tacit0924.mp4", () => {
@@ -405,7 +405,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "加更2",
+      episode: "加更02",
     });
   });
   test("20230722加更版_Tacit0924.mp4", () => {
@@ -425,7 +425,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "直拍1",
+      episode: "直拍01",
     });
   });
   test("20231024先导片_Tacit0924.mp4", () => {
@@ -445,7 +445,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "超前营业1",
+      episode: "超前营业01",
     });
   });
   test("花儿与少年第一季20140606期：花儿们抵达马德里_Tacit0924.mp4", () => {
@@ -513,7 +513,7 @@ describe("提取综艺信息", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "",
+      original_name: "The.Voice.of.China",
       season: "",
       episode: "0722",
     });
@@ -558,6 +558,7 @@ describe("提取综艺信息", () => {
       episode: "E03",
     });
   });
+  // 向往的生活
   test("1120直拍第6期_Tacit0924.mp4", () => {
     const name = "1120直拍第6期_Tacit0924.mp4";
     const result = parse_filename_for_video(name);
@@ -565,7 +566,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "直拍6",
+      episode: "直拍06",
     });
   });
   test("1119Plus第12期_Tacit0924.mp4", () => {
@@ -585,7 +586,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "Plus6",
+      episode: "Plus06",
     });
   });
   test("20230929-特别企划_Tacit0924.mp4", () => {
@@ -615,7 +616,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "直播2",
+      episode: "直播02",
     });
   });
   test("第20210122期 孟美岐钢琴弹唱首秀.ts", () => {
@@ -685,7 +686,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "其他",
-      episode: "加更2",
+      episode: "加更02",
     });
   });
   test("奔跑吧黄河篇 - S01E06 - WEB1080P.20210110.新年派对.加长版.mp4", () => {

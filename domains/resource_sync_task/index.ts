@@ -2,6 +2,7 @@
  * @file 电视剧资源同步任务
  */
 import type { Handler } from "mitt";
+import dayjs from "dayjs";
 
 import { BaseDomain } from "@/domains/base";
 import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";
@@ -456,6 +457,99 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     // }
     //     log("完成同步");
 
+    return Result.Ok(null);
+  }
+  /**
+   * 使用新的资源链接覆盖旧的
+   */
+  async override(values: { url: string; resource_file_id?: string; resource_file_name?: string }) {
+    const store = this.store;
+    const user = this.user;
+    const { url, resource_file_id, resource_file_name } = values;
+    const duplicated_sync_task = await store.prisma.bind_for_parsed_tv.findFirst({
+      where: {
+        url,
+        OR: [
+          {
+            in_production: 1,
+          },
+          {
+            invalid: 0,
+          },
+        ],
+        user_id: user.id,
+      },
+    });
+    if (duplicated_sync_task) {
+      return Result.Err(`该分享资源已关联文件夹`, 40001, {
+        id: duplicated_sync_task.id,
+      });
+    }
+    /**
+     * 手动指定了要关联的分享资源
+     */
+    if (resource_file_id && resource_file_name) {
+      await store.prisma.bind_for_parsed_tv.update({
+        where: {
+          id: this.profile.id,
+        },
+        data: {
+          updated: dayjs().toISOString(),
+          invalid: 0,
+          url,
+          file_id: resource_file_id,
+          name: resource_file_name,
+        },
+      });
+      return Result.Ok(null);
+    }
+    const drive_res = await Drive.Get({ id: this.profile.drive_id, user, store });
+    if (drive_res.error) {
+      return Result.Err(drive_res.error.message);
+    }
+    const drive = drive_res.data;
+    const r1 = await drive.client.fetch_share_profile(url);
+    if (r1.error) {
+      return Result.Err(r1.error.message);
+    }
+    const { share_id } = r1.data;
+    const files_res = await drive.client.fetch_shared_files("root", {
+      share_id,
+    });
+    if (files_res.error) {
+      return Result.Err(files_res.error.message);
+    }
+    const resource_files = files_res.data.items;
+    if (resource_files.length === 0) {
+      return Result.Err("该分享没有包含文件夹");
+    }
+    if (resource_files.length !== 1) {
+      return Result.Err(
+        "该分享包含多个文件夹，请手动选择要转存的文件夹",
+        40004,
+        resource_files.map((file) => {
+          const { name, file_id, type } = file;
+          return {
+            name,
+            file_id,
+            type,
+          };
+        })
+      );
+    }
+    const resource = resource_files[0];
+    await store.prisma.bind_for_parsed_tv.update({
+      where: {
+        id: this.profile.id,
+      },
+      data: {
+        updated: dayjs().toISOString(),
+        invalid: 0,
+        url,
+        file_id: resource.file_id,
+        name: resource.name,
+      },
+    });
     return Result.Ok(null);
   }
 

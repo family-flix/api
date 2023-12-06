@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (existing_member) {
-    return e("已存在相同备注的成员了");
+    return e(Result.Err("已存在相同备注的成员了"));
   }
   const r = await store.add_member({
     remark,

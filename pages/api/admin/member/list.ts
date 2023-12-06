@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const list = await store.prisma.member.findMany({
     where,
     include: {
-      member_tokens: {
+      tokens: {
         select: {
           id: true,
           token: true,
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     msg: "",
     data: {
       list: list.map((member) => {
-        const { id, inviter, remark, member_tokens } = member;
+        const { id, inviter, remark, tokens } = member;
         return {
           id,
           remark,
@@ -72,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                 remark: inviter.remark,
               }
             : null,
-          tokens: member_tokens,
+          tokens,
         };
       }),
       total: count,

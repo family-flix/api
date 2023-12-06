@@ -3,7 +3,7 @@
  * @doc https://www.yuque.com/aliyundrive/zpfszx
  */
 import { Handler } from "mitt";
-import axios from "@/modules/axios";
+import axios from "axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
 
@@ -98,7 +98,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (!drive) {
       return Result.Err("没有匹配的云盘记录");
     }
-    const { id, profile: p, root_folder_id, drive_token_id } = drive;
+    const { id, profile: p, root_folder_id } = drive;
     const r = parseJSONStr<AliyunDriveProfile>(p);
     if (r.error) {
       return Result.Err(r.error);
@@ -2684,6 +2684,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     const { result } = data;
     return Result.Ok(result);
   }
+  /** 福利码兑换 */
   async receive_awards_form_code(code: string) {
     await this.ensure_initialized();
     const { error, data } = await this.request.post<{

@@ -2,18 +2,14 @@
  * 注册的监听器
  */
 import type { EventType, Handler } from "mitt";
-
-import mitt from "@/modules/mitt";
-// import { Result } from "@/types";
-
-// import { Log } from './log';
+import mitt from "mitt";
 
 let _uid = 0;
 function uid() {
   _uid += 1;
   return _uid;
 }
-// 这里必须给 Tip 显示声明值，否则默认为 0，会和其他地方声明的 Events 第一个 Key 冲突
+// 这里必须给 Tip 显式声明值，否则默认为 0，会和其他地方声明的 Events 第一个 Key 冲突
 enum BaseEvents {
   Tip = "__tip",
   Destroy = "__destroy",
@@ -115,7 +111,9 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
     return this.on(BaseEvents.Destroy, handler);
   }
 
-  get [Symbol.toStringTag]() {
-    return "Domain";
-  }
+  // get [Symbol.toStringTag]() {
+  //   return "Domain";
+  // }
 }
+
+export { Handler };

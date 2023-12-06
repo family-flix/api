@@ -24,13 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const today = dayjs();
   const target_day = today.subtract(Number(n), "day").toDate();
-  // const count = await store.prisma.output_line.count({
-  //   where: {
-  //     created: {
-  //       lte: target_day,
-  //     },
-  //   },
-  // });
   await store.prisma.output_line.deleteMany({
     where: {
       created: {

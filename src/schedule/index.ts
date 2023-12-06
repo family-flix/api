@@ -5,6 +5,9 @@ import { Application } from "@/domains/application";
 import { ScheduleTask } from "@/domains/schedule";
 
 import { notice_push_deer } from "../notice";
+import { walk_model_with_cursor } from "@/domains/store/utils";
+import { TencentDoc } from "@/domains/tencent_doc";
+import { ResourceSyncTask } from "@/domains/resource_sync_task";
 
 /**
  * 理解方式就是，每秒，都会检查是否要执行对应任务
@@ -48,6 +51,74 @@ import { notice_push_deer } from "../notice";
   //   true,
   //   "Asia/Shanghai"
   // );
+
+  new CronJob.CronJob(
+    "0 0 8-23 * * *",
+    async () => {
+      console.log("执行任务 at 0 0 * * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+      const doc = new TencentDoc({
+        url: "https://docs.qq.com/dop-api/opendoc?u=&id=DQmx1WEdTRXpGeEZ6&normal=1&outformat=1&noEscape=1&commandsFormat=1&preview_token=&doc_chunk_flag=1",
+      });
+      const r = await doc.fetch();
+      if (r.error) {
+        console.log(r.error.message);
+        return;
+      }
+      const resources = r.data;
+      await schedule.walk_user(async (user) => {
+        await walk_model_with_cursor({
+          fn(extra) {
+            return store.prisma.bind_for_parsed_tv.findMany({
+              where: {
+                season_id: { not: null },
+                invalid: 1,
+                user_id: user.id,
+              },
+              include: {
+                season: {
+                  include: {
+                    tv: {
+                      include: {
+                        profile: true,
+                      },
+                    },
+                  },
+                },
+              },
+              ...extra,
+            });
+          },
+          async handler(data, index) {
+            const { season } = data;
+            if (!season) {
+              return;
+            }
+            const { name } = season.tv.profile;
+            const matched_resource = resources.find((e) => e.name === name);
+            if (!matched_resource) {
+              console.log("资源失效但没有找到匹配的有效资源", name);
+              return;
+            }
+            const r = await ResourceSyncTask.Get({ id: data.id, user, store });
+            if (r.error) {
+              console.log(r.error.message);
+              return;
+            }
+            const task = r.data;
+            const r2 = await task.override({ url: matched_resource.link });
+            if (r2.error) {
+              console.log(r2.error.message);
+              return;
+            }
+            console.log(name, "更新成功");
+          },
+        });
+      });
+    },
+    null,
+    true,
+    "Asia/Shanghai"
+  );
 
   // 0秒30分*小时（每个小时的30分时） 执行一次
   new CronJob.CronJob(

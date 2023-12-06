@@ -14,12 +14,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id: drive_id } = req.query as Partial<{ id: string }>;
-  if (!drive_id) {
-    return e(Result.Err("缺少云盘 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
+  }
+  if (!drive_id) {
+    return e(Result.Err("缺少云盘 id"));
   }
   const user = t_res.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });

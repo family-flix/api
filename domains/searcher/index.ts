@@ -49,7 +49,7 @@ import { episode_to_num, r_id, season_to_num, sleep } from "@/utils";
 import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { MediaProfileSourceTypes } from "@/constants";
 
-import { extra_searched_tv_field } from "./utils";
+import { extra_searched_tv_field as extra_tv_profile_field } from "./utils";
 
 enum Events {
   TVAdded,
@@ -561,7 +561,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("没有搜索到电视剧详情");
     }
     const profile = profile_res.data;
-    // this.emit(Events.Print, Article.build_line(["before link_tv_profile_to_parsed_tv", profile.name]));
+    this.emit(Events.Print, Article.build_line(["before link_tv_profile_to_parsed_tv", profile.name]));
     return await this.link_tv_profile_to_parsed_tv({
       parsed_tv,
       profile,
@@ -769,7 +769,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Ok(null);
     }
     // this.emit(Events.Print, Article.build_line(["before extra_searched_tv_field"]));
-    const tv_item = extra_searched_tv_field(
+    const tv_item = extra_tv_profile_field(
       (() => {
         const matched = list.find((tv) => {
           if (tv.name === name || tv.original_name === name) {
@@ -852,8 +852,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       season_count: number_of_seasons,
       status,
       in_production: Number(in_production),
-      // number_of_episodes,
-      // number_of_seasons,
       genres: genres
         .map((g) => {
           return g.name;

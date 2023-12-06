@@ -8,12 +8,15 @@
 # testing
 /coverage
 /mock
+**/*/mock
 domains/__tests__/output
 
 # next.js
 /.next/
 /production/
 /out/
+/dist
+
 
 # production
 /build

@@ -3,6 +3,7 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
+import dayjs from "dayjs";
 
 import { MediaThumbnail } from "@/domains/media_thumbnail";
 import { Member } from "@/domains/user/member";
@@ -21,6 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     tv_id,
     season_id,
     episode_id,
+    movie_id,
     file_id,
     current_time = 0,
     duration = 0,
@@ -28,6 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     tv_id: string;
     season_id: string;
     episode_id: string;
+    movie_id: string;
     /** 剧集可能有多个源，这里还要传入具体播放的是哪个源 */
     file_id: string;
     current_time: number;
@@ -47,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("缺少电视剧季 id"));
   }
   if (!episode_id) {
-    return e(Result.Err("缺少影片 id"));
+    return e(Result.Err("缺少剧集 id"));
   }
   const k = [season_id, member.id].join("/");
   if (pending_unique[k]) {
@@ -77,6 +80,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(drive_res);
   }
   const drive = drive_res.data;
+  (async () => {
+    const diary = await store.prisma.member_diary.findFirst({
+      where: {
+        episode_id,
+        day: dayjs().format("YYYY-MM-DD"),
+        member_id: member.id,
+      },
+    });
+    if (diary) {
+      return;
+    }
+    await store.prisma.member_diary.create({
+      data: {
+        id: r_id(),
+        episode_id,
+        day: dayjs().format("YYYY-MM-DD"),
+        member_id: member.id,
+      },
+    });
+  })();
   const existing_history = await store.prisma.play_history.findFirst({
     where: {
       tv_id,

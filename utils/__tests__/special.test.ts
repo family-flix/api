@@ -126,8 +126,7 @@ describe("奇怪", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "魔幻手机",
-      // @todo
-      original_name: "1.2",
+      original_name: "",
       season: "",
       episode: "",
     });

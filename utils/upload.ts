@@ -1,9 +1,10 @@
 import { ReadStream } from "fs";
 
 import qiniu from "qiniu";
-import axios from "@/modules/axios";
+import axios from "axios";
 
 import { Result } from "@/types";
+
 import { random_string } from ".";
 
 async function request_online_url_to_stream(url: string) {

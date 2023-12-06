@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file 获取重复的电视剧详情记录
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";

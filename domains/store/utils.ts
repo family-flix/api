@@ -275,9 +275,10 @@ export function folder_client(body: { drive_id: string }, store: DatabaseStore) 
 export async function walk_model_with_cursor<F extends (extra: { take: number }) => any>(options: {
   fn: F;
   page_size?: number;
-  handler: (data: Unpacked<ReturnType<F>>[number], index: number, finish: () => void) => any;
+  handler?: (data: Unpacked<ReturnType<F>>[number], index: number, finish: () => void) => any;
+  batch_handler?: (list: Unpacked<ReturnType<F>>[number][], index: number) => any;
 }) {
-  const { fn, page_size = 20, handler } = options;
+  const { fn, page_size = 20, handler, batch_handler } = options;
   let next_marker = "";
   let no_more = false;
   let index = 0;
@@ -305,14 +306,19 @@ export async function walk_model_with_cursor<F extends (extra: { take: number })
       next_marker = last_record.id;
     }
     const correct_list = list.slice(0, page_size);
+    if (batch_handler) {
+      await batch_handler(correct_list, index);
+    }
     for (let i = 0; i < correct_list.length; i += 1) {
       const data = correct_list[i];
-      await handler(data, index, () => {
-        need_break = true;
-        no_more = true;
-      });
-      if (need_break) {
-        return;
+      if (handler) {
+        await handler(data, index, () => {
+          need_break = true;
+          no_more = true;
+        });
+        if (need_break) {
+          return;
+        }
       }
       index += 1;
     }

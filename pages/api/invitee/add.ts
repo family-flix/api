@@ -29,11 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: member.user.id,
     },
     include: {
-      member_tokens: true,
+      tokens: true,
     },
   });
   if (existing) {
-    const token = existing.member_tokens[0];
+    const token = existing.tokens[0];
     return e(
       Result.Err("已经邀请过同名成员了", 10000, {
         id: existing.id,

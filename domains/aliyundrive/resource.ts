@@ -3,7 +3,7 @@
  * @doc https://www.yuque.com/aliyundrive/zpfszx
  */
 import { Handler } from "mitt";
-import axios from "@/modules/axios";
+import axios from "axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
 

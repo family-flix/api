@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 
@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   if (!tv_id) {
-    return e("缺少电视剧 id");
+    return e(Result.Err("缺少电视剧 id"));
   }
   const member = t_res.data;
   const page = Number(page_str);
@@ -55,7 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   const count = await store.prisma.episode.count({ where });
-
   res.status(200).json({
     code: 0,
     msg: "",

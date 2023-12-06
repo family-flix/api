@@ -3,6 +3,7 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
+import dayjs from "dayjs";
 
 import { MediaThumbnail } from "@/domains/media_thumbnail";
 import { Member } from "@/domains/user/member";
@@ -57,6 +58,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!file) {
     return e(Result.Err("没有匹配的视频源"));
   }
+  (async () => {
+    const diary = await store.prisma.member_diary.findFirst({
+      where: {
+        movie_id,
+        day: dayjs().format("YYYY-MM-DD"),
+        member_id: member.id,
+      },
+    });
+    if (diary) {
+      return;
+    }
+    await store.prisma.member_diary.create({
+      data: {
+        id: r_id(),
+        movie_id,
+        day: dayjs().format("YYYY-MM-DD"),
+        member_id: member.id,
+      },
+    });
+  })();
   const existing_history = await store.prisma.play_history.findFirst({
     where: {
       movie_id,

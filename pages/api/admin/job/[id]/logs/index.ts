@@ -8,7 +8,7 @@ import { User } from "@/domains/user";
 import { Job } from "@/domains/job";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/server";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size: string;
   }>;
   if (!id) {
-    return e("缺少任务 id");
+    return e(Result.Err("缺少任务 id"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {

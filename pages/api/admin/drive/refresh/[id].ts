@@ -15,12 +15,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id: drive_id } = req.query as Partial<{ id: string }>;
-  if (!drive_id) {
-    return e(Result.Err("缺少云盘 id"));
-  }
   const t = await User.New(authorization, store);
   if (t.error) {
-    return e(t);
+    return e(Result.Err(t.error.message));
+  }
+  if (!drive_id) {
+    return e(Result.Err("缺少云盘 id"));
   }
   const user = t.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const drive = drive_res.data;
   const r = await drive.refresh_profile();
   if (r.error) {
-    return e(r);
+    return e(Result.Err(r.error.message));
   }
   const { used_size, total_size } = r.data;
   res.status(200).json({

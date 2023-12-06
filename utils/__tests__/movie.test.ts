@@ -14,7 +14,6 @@ describe("电影", () => {
       original_name: "Everything.Everywhere.All.At.Once",
       season: "",
       episode: "",
-      // @todo 这个是什么意义
     });
   });
 
@@ -36,6 +35,7 @@ describe("电影", () => {
       name: "玩具总动员",
       original_name: "",
       season: "",
+      // @todo 怎么办？难道要分成 电视剧索引 和 电影索引 吗？
       episode: "E04",
     });
   });
@@ -373,14 +373,34 @@ describe("电影", () => {
       episode: "",
     });
   });
-  // test("电锯惊魂7.mkv", () => {
-  //   const name = "电锯惊魂7.mkv";
-  //   const result = parse_filename_for_video(name);
-  //   expect(result).toStrictEqual({
-  //     name: "电锯惊魂7",
-  //     original_name: "",
-  //     season: "",
-  //     episode: "",
-  //   });
-  // });
+  test("Shrek.Thriller.史莱克的恐怖片.双语字幕.HR-HDTV.AC3.1024X576-人人影视制作(1).mkv", () => {
+    const name = "Shrek.Thriller.史莱克的恐怖片.双语字幕.HR-HDTV.AC3.1024X576-人人影视制作(1).mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Shrek.Thriller",
+      season: "",
+      episode: "",
+    });
+  });
+  test("The.Lego.Movie.2.The.Second.Part.2019.mkv", () => {
+    const name = "The.Lego.Movie.2.The.Second.Part.2019.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "The.Lego.Movie.2.The.Second.Part",
+      season: "",
+      episode: "",
+    });
+  });
+  test("电锯惊魂7.mkv", () => {
+    const name = "电锯惊魂7.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "电锯惊魂",
+      original_name: "",
+      season: "",
+      episode: "E07",
+    });
+  });
 });

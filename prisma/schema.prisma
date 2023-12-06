@@ -78,6 +78,7 @@ model tv_profile {
         unique_id         String
         source            Int?    @default(0)
         sources           String? @default("")
+        alias             String?
         // 电视剧名称
         name              String?
         // 电视剧原始名称/外文名称
@@ -166,6 +167,7 @@ model movie_profile {
         sources           String? @default("")
         name              String?
         original_name     String?
+        alias             String?
         overview          String?
         poster_path       String?
         backdrop_path     String?
@@ -192,6 +194,7 @@ model person_profile {
         sources              String?           @default("")
         name                 String
         profile              String?           @default("")
+        alias                String?
         biography            String?
         profile_path         String?
         birthday             String?
@@ -228,6 +231,7 @@ model subtitle {
         created DateTime @default(now())
         updated DateTime @default(now())
 
+        type     Int    @default(1)
         file_id  String
         name     String
         language String
@@ -442,6 +446,7 @@ model season {
         collections     collection[]
         incomplete_tv   incomplete_tv?
         shared_medias   shared_media[]
+        member_favorite member_favorite[]
 
         @@map("Season")
 }
@@ -468,6 +473,7 @@ model episode {
         play_histories  play_history[]
         reports         report[]
         subtitles       subtitle[]
+        member_diaries  member_diary[]
 
         @@map("Episode")
 }
@@ -482,12 +488,14 @@ model movie {
         user_id    String
         user       user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        play_histories play_history[]
-        parsed_movies  parsed_movie[]
-        reports        report[]
-        subtitles      subtitle[]
-        collections    collection[]
-        shared_medias  shared_media[]
+        play_histories  play_history[]
+        parsed_movies   parsed_movie[]
+        reports         report[]
+        subtitles       subtitle[]
+        collections     collection[]
+        shared_medias   shared_media[]
+        member_favorite member_favorite[]
+        member_diaries  member_diary[]
 
         @@map("Movie")
 }
@@ -510,12 +518,13 @@ model collection {
         styles String?
         medias String?
 
-        tvs     tv[]
-        seasons season[]
-        movies  movie[]
-
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        tvs             tv[]
+        seasons         season[]
+        movies          movie[]
+        member_favorite member_favorite[]
 
         @@map("Collection")
 }
@@ -545,12 +554,15 @@ model output {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        lines output_line[]
+        filepath String?
 
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         async_task async_task?
+        lines      output_line[]
+
+        @@map("Output")
 }
 
 model output_line {
@@ -562,7 +574,7 @@ model output_line {
         content String
 
         output_id String?
-        output    output? @relation(fields: [output_id], references: [id])
+        output    output? @relation(fields: [output_id], references: [id], onDelete: Cascade)
 }
 
 model play_history {
@@ -801,15 +813,18 @@ model member {
         user_id        String
         user           user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        member_setting  member_setting?
-        member_tokens   member_token[]
+        setting         member_setting?
+        tokens          member_token[]
         play_histories  play_history[]
         reports         report[]
-        invitees        member[]              @relation("InviterToInvitees")
+        invitees        member[]                @relation("InviterToInvitees")
         notifications   member_notification[]
-        member_invites  member_invite[]
-        created_medias  shared_media[]        @relation("MemberFrom")
-        received_medias shared_media[]        @relation("MemberTarget")
+        invited_members member_invite[]
+        created_medias  shared_media[]          @relation("MemberFrom")
+        received_medias shared_media[]          @relation("MemberTarget")
+        authentications member_authentication[]
+        favorites       member_favorite[]
+        diaries         member_diary[]
 
         @@unique([user_id, inviter_id, remark])
         @@map("Member")
@@ -832,6 +847,22 @@ model member_invite {
         @@map("MemberInvite")
 }
 
+model member_authentication {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        provider      String
+        provider_id   String
+        provider_arg1 String?
+        provider_arg2 String?
+
+        member_id String
+        member    member @relation(fields: [member_id], references: [id])
+
+        @@map("MemberAuthentication")
+}
+
 model member_token {
         id      String   @id
         created DateTime @default(now())
@@ -849,6 +880,45 @@ model member_token {
         member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
         @@map("MemberToken")
+}
+
+model member_favorite {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        unique_id  String?
+        type       Int
+        // season_id     String?
+        season     season?     @relation(fields: [unique_id], references: [id], onDelete: Cascade)
+        // movie_id      String?
+        movie      movie?      @relation(fields: [unique_id], references: [id], onDelete: Cascade)
+        // collection_id String?
+        collection collection? @relation(fields: [unique_id], references: [id], onDelete: Cascade)
+
+        member_id String
+        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+        @@map("MemberFavorite")
+}
+
+model member_diary {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        day        String
+        content    String?
+        profile    String?
+        episode_id String?
+        episode    episode? @relation(fields: [episode_id], references: [id], onDelete: Cascade)
+        movie_id   String?
+        movie      movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
+
+        member_id String
+        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+        @@map("MemberDiary")
 }
 
 // 成员配置

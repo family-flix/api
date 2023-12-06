@@ -2,6 +2,7 @@ import {
   async_task,
   bind_for_parsed_tv,
   drive,
+  drive_token,
   episode,
   episode_profile,
   file,
@@ -23,6 +24,7 @@ import {
 } from "@prisma/client";
 
 export type DriveRecord = drive;
+export type DriveTokenRecord = drive_token;
 export type FileRecord = file;
 
 export type ParsedTVRecord = parsed_tv;

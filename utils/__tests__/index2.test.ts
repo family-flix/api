@@ -133,7 +133,7 @@ describe("提取视频信息", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "",
+      original_name: "A.No-Rough-Stuff-Type.Deal",
       season: "S01",
       episode: "E07",
     });
@@ -343,7 +343,7 @@ describe("提取视频信息", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "",
+      original_name: "M.Night.Shaym-Aliens!",
       season: "S01",
       episode: "E04",
     });
@@ -726,6 +726,36 @@ describe("提取视频信息", () => {
       original_name: "The.Days",
       season: "S01",
       episode: "E06",
+    });
+  });
+  test("IT狂人.The.IT.Crowd.S01E06.END.Chi_Eng.DVDrip.608X336-YYeTs人人影视.rmvb", () => {
+    const name = "IT狂人.The.IT.Crowd.S01E06.END.Chi_Eng.DVDrip.608X336-YYeTs人人影视.rmvb";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "IT狂人",
+      original_name: "The.IT.Crowd",
+      season: "S01",
+      episode: "E06",
+    });
+  });
+  test("[ANi] LV1魔王與獨居廢勇者 - 09 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4", () => {
+    const name = "[ANi] LV1魔王與獨居廢勇者 - 09 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "LV1魔王與獨居廢勇者",
+      original_name: "",
+      season: "",
+      episode: "E09",
+    });
+  });
+  test("[破烂熊][是,大臣.Yes,Minister.S01E03].mp4", () => {
+    const name = "[破烂熊][是,大臣.Yes,Minister.S01E03].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "是,大臣",
+      original_name: "Yes,Minister",
+      season: "S01",
+      episode: "E03",
     });
   });
   // test("03 [23歲]_2001..mp4", () => {

@@ -310,6 +310,86 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("B站S3", () => {
+    const name = "B站S3";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "S03",
+      episode: "",
+    });
+  });
+  test("轻音少女高内存版", () => {
+    const name = "轻音少女高内存版";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "轻音少女",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("NCOP.mp4", () => {
+    const name = "NCOP.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "其他",
+      episode: "NCOP",
+    });
+  });
+  test("[VCB-Studio] Kakegurui×× [NCOP][Ma10p_1080p][x265_flac].mkv", () => {
+    const name = "[VCB-Studio] Kakegurui×× [NCOP][Ma10p_1080p][x265_flac].mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Kakegurui",
+      season: "其他",
+      episode: "NCOP",
+    });
+  });
+  test("[官中 简体][1-12集全]", () => {
+    const name = "[官中 简体][1-12集全]";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("干物妹！小埋R 8 小埋与小光.flv", () => {
+    const name = "干物妹！小埋R 8 小埋与小光.flv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "干物妹！小埋R",
+      original_name: "",
+      season: "",
+      episode: "E08",
+    });
+  });
+  test("【海绵宝宝】.SpongeBob CCTV Version", () => {
+    const name = "【海绵宝宝】.SpongeBob CCTV Version";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "SpongeBob",
+      season: "",
+      episode: "",
+    });
+  });
+  test("79.官中简体.mp4", () => {
+    const name = "79.官中简体.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E79",
+    });
+  });
   test("79​.rmvb", () => {
     const name = "79​.rmvb";
     const result = parse_filename_for_video(name);
@@ -318,6 +398,56 @@ describe("番外", () => {
       original_name: "",
       season: "",
       episode: "E79",
+    });
+  });
+  test("第10季", () => {
+    const name = "第10季";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "S10",
+      episode: "",
+    });
+  });
+  test("4K&HDR&60FPS&Dolby&国日双语.mkv", () => {
+    const name = "4K&HDR&60FPS&Dolby&国日双语.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("001-100", () => {
+    const name = "001-100";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("901-1000", () => {
+    const name = "901-1000";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("1001-1004", () => {
+    const name = "1001-1004";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
     });
   });
 });

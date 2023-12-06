@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+
 import { throttle } from "lodash";
 import dayjs from "dayjs";
 
@@ -6,6 +9,8 @@ import { Article, ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { DatabaseStore } from "@/domains/store";
 import { AsyncTaskRecord } from "@/domains/store/types";
 import { Result } from "@/types";
+import { app } from "@/store";
+import { ensure } from "@/utils/fs";
 import { r_id } from "@/utils";
 
 import { TaskStatus, TaskTypes } from "./constants";
@@ -85,6 +90,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (existing) {
       return Result.Err("有运行中的任务", "40001", { job_id: existing.id });
     }
+    const output_unique_id = r_id();
     const res = await store.prisma.async_task.create({
       data: {
         id: r_id(),
@@ -93,7 +99,8 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         status: TaskStatus.Running,
         output: {
           create: {
-            id: r_id(),
+            id: output_unique_id,
+            filepath: `${dayjs().format("YYYYMMDD")}-${output_unique_id}.txt`,
             user_id,
           },
         },
@@ -163,20 +170,22 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (output === null) {
       return;
     }
-    for (let i = 0; i < content.length; i += 1) {
-      const c = content[i];
-      await this.store.prisma.output_line.create({
-        data: {
-          id: r_id(),
-          output_id: this.profile.output_id,
-          content: JSON.stringify(c),
-          created: dayjs(c.created).toISOString(),
-          updated: dayjs(c.created).toISOString(),
-        },
-      });
+    const { filepath } = output;
+    if (!filepath) {
+      return;
     }
+    const p = path.resolve(app.root_path, "logs", filepath);
+    await ensure(p);
+    fs.appendFileSync(
+      p,
+      [
+        "",
+        ...content.map((c) => {
+          return JSON.stringify(c);
+        }),
+      ].join("\n")
+    );
   }, 5000);
-  /** check need pause the task */
   check_need_pause = throttle(async () => {
     const r = await this.store.find_task({ id: this.id });
     if (r.error) {
@@ -205,17 +214,38 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("没有匹配的任务记录");
     }
     const { desc, unique_id, created, status, output, error } = r1;
-    // const { lines, _count } = output;
+    const { filepath } = output;
+    if (!filepath) {
+      return Result.Ok({
+        status,
+        desc,
+        unique_id,
+        created,
+        lines: [],
+        more_line: false,
+        error,
+      });
+    }
+    let content = "";
+    try {
+      const p = path.resolve(app.root_path, "logs", filepath);
+      content = fs.readFileSync(p, "utf-8");
+    } catch (err) {
+      // ...
+    }
     return Result.Ok({
       status,
       desc,
       unique_id,
       created,
-      // lines,
-      // more_line: _count.lines > 20,
+      lines: content.split("\n").filter(Boolean),
+      more_line: false,
       error,
     });
   }
+  /**
+   * @deprecated
+   */
   async fetch_lines_of_output(params: { page: number; page_size: number }) {
     const { page, page_size } = params;
     const where: NonNullable<Parameters<typeof this.store.prisma.output_line.findMany>[number]>["where"] = {
@@ -245,22 +275,37 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       need_stop: 1,
       status: force ? TaskStatus.Paused : undefined,
     });
-    const content = this.output
-      .write(
-        new ArticleLineNode({
-          children: [
-            new ArticleTextNode({
-              text: "主动中止索引任务",
-            }),
-          ],
-        })
-      )
-      .to_json();
-    const output_id = this.profile.output_id;
-    await this.store.add_output_line({
-      output_id,
-      content: JSON.stringify(content),
+    const output = await this.store.prisma.output.findUnique({
+      where: {
+        id: this.profile.output_id,
+      },
     });
+    if (!output) {
+      return;
+    }
+    const { filepath } = output;
+    if (!filepath) {
+      return;
+    }
+    const p = path.resolve(app.root_path, "logs", filepath);
+    await ensure(p);
+    fs.appendFileSync(
+      p,
+      [
+        "",
+        [
+          new ArticleLineNode({
+            children: [
+              new ArticleTextNode({
+                text: "主动中止索引任务",
+              }),
+            ],
+          }).to_json(),
+        ].map((c) => {
+          return JSON.stringify(c);
+        }),
+      ].join("\n")
+    );
   }
   /** tag the task is finished */
   async finish() {
