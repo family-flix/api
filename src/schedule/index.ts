@@ -5,9 +5,6 @@ import { Application } from "@/domains/application";
 import { ScheduleTask } from "@/domains/schedule";
 
 import { notice_push_deer } from "../notice";
-import { walk_model_with_cursor } from "@/domains/store/utils";
-import { TencentDoc } from "@/domains/tencent_doc";
-import { ResourceSyncTask } from "@/domains/resource_sync_task";
 
 /**
  * 理解方式就是，每秒，都会检查是否要执行对应任务
@@ -52,128 +49,44 @@ import { ResourceSyncTask } from "@/domains/resource_sync_task";
   //   "Asia/Shanghai"
   // );
 
-  new CronJob.CronJob(
-    "0 0 8-23 * * *",
-    async () => {
-      console.log("执行任务 at 0 0 * * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      const doc = new TencentDoc({
-        url: "https://docs.qq.com/dop-api/opendoc?u=&id=DQmx1WEdTRXpGeEZ6&normal=1&outformat=1&noEscape=1&commandsFormat=1&preview_token=&doc_chunk_flag=1",
-      });
-      const r = await doc.fetch();
-      if (r.error) {
-        console.log(r.error.message);
-        return;
-      }
-      const resources = r.data;
-      await schedule.walk_user(async (user) => {
-        await walk_model_with_cursor({
-          fn(extra) {
-            return store.prisma.bind_for_parsed_tv.findMany({
-              where: {
-                season_id: { not: null },
-                invalid: 1,
-                user_id: user.id,
-              },
-              include: {
-                season: {
-                  include: {
-                    tv: {
-                      include: {
-                        profile: true,
-                      },
-                    },
-                  },
-                },
-              },
-              ...extra,
-            });
-          },
-          async handler(data, index) {
-            const { season } = data;
-            if (!season) {
-              return;
-            }
-            const { name } = season.tv.profile;
-            const matched_resource = resources.find((e) => e.name === name);
-            if (!matched_resource) {
-              console.log("资源失效但没有找到匹配的有效资源", name);
-              return;
-            }
-            const r = await ResourceSyncTask.Get({ id: data.id, user, store });
-            if (r.error) {
-              console.log(r.error.message);
-              return;
-            }
-            const task = r.data;
-            const r2 = await task.override({ url: matched_resource.link });
-            if (r2.error) {
-              console.log(r2.error.message);
-              return;
-            }
-            console.log(name, "更新成功");
-          },
-        });
-      });
-    },
-    null,
-    true,
-    "Asia/Shanghai"
-  );
-
-  // 0秒30分*小时（每个小时的30分时） 执行一次
-  new CronJob.CronJob(
-    "0 30 8-23 * * *",
-    async () => {
-      console.log("执行任务 at 0 30 * * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      await schedule.run_sync_task_list();
-      // notice_push_deer({
-      //   title: "资源同步",
-      //   markdown: "执行了一次资源同步任务",
-      // });
-      await schedule.update_daily_updated();
-      // const invalid_sync_task_list = await schedule.fetch_expired_sync_task_list();
-      // notice_push_deer({
-      //   title: "有资源失效了",
-      //   markdown: [
-      //     ...invalid_sync_task_list.list
-      //       .map((task) => {
-      //         return task.name;
-      //       })
-      //       .join("\n"),
-      //     "",
-      //     "等更多",
-      //   ].join("\r\n"),
-      // });
-    },
-    null,
-    true,
-    "Asia/Shanghai"
-  );
-
   // new CronJob.CronJob(
-  //   "0 50 * * * *",
+  //   "0 0 8-23 * * *",
   //   async () => {
-  //     console.log(
-  //       "执行任务 at 0 50 * * * *",
-  //       dayjs().format("YYYY/MM/DD HH:mm:ss")
-  //     );
-  //     find_tv_need_complete(store);
+  //     console.log("执行任务 at 0 0 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+  //     notice_push_deer({
+  //       title: "资源同步",
+  //       markdown: "更新了失效的资源",
+  //     });
   //   },
   //   null,
   //   true,
   //   "Asia/Shanghai"
   // );
-
-  new CronJob.CronJob("0 0 2 * * *", async () => {
-    console.log("执行任务 at 0 0 3 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-    await schedule.refresh_media_profile_list();
-    notice_push_deer({
-      title: "影视剧刷新",
-      markdown: "执行了一次影视剧刷新任务",
-    });
-  });
-
-  // 0秒0分8时（每天8点时）执行一次
+  new CronJob.CronJob(
+    "0 15 8-23 * * *",
+    async () => {
+      console.log("执行任务 at 0 15 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+      await schedule.update_sync_task_resources(
+        "https://docs.qq.com/dop-api/opendoc?u=&id=DQmx1WEdTRXpGeEZ6&normal=1&outformat=1&noEscape=1&commandsFormat=1&preview_token=&doc_chunk_flag=1"
+      );
+      await schedule.run_sync_task_list();
+      await schedule.update_daily_updated();
+      await schedule.update_stats();
+      await schedule.update_duplicated_medias();
+    },
+    null,
+    true,
+    "Asia/Shanghai"
+  );
+  // new CronJob.CronJob(
+  //   "0 50 8-23 * * *",
+  //   async () => {
+  //     console.log("执行任务 at 0 50 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+  //   },
+  //   null,
+  //   true,
+  //   "Asia/Shanghai"
+  // );
   new CronJob.CronJob(
     "0 0 8 * * *",
     async () => {
@@ -193,7 +106,7 @@ import { ResourceSyncTask } from "@/domains/resource_sync_task";
     true,
     "Asia/Shanghai"
   );
-
+  // 0秒0分8时（每天8点时）执行一次
   new CronJob.CronJob(
     "0 0 20 * * *",
     async () => {
@@ -213,5 +126,27 @@ import { ResourceSyncTask } from "@/domains/resource_sync_task";
     true,
     "Asia/Shanghai"
   );
+  new CronJob.CronJob(
+    "0 30 23 * * *",
+    async () => {
+      console.log("执行任务 at 0 0 23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+      await schedule.archive_daily_update_collection();
+      notice_push_deer({
+        title: "归档",
+        markdown: "归档了当天更新",
+      });
+    },
+    null,
+    true,
+    "Asia/Shanghai"
+  );
+  new CronJob.CronJob("0 0 2 * * *", async () => {
+    console.log("执行任务 at 0 0 2 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+    await schedule.refresh_media_profile_list();
+    notice_push_deer({
+      title: "影视剧刷新",
+      markdown: "执行了一次影视剧刷新任务",
+    });
+  });
   console.log("\nThe Cron jobs is running");
 })();

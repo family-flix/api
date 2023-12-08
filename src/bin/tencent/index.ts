@@ -9,7 +9,13 @@ async function main() {
     console.log(r.error.message);
     return;
   }
-  console.log(r.data);
+  const resources = r.data;
+  const name = "一念关山";
+  const matched_resource = resources.find((e) => {
+    return e.name === name;
+  });
+  // console.log(resources.slice(0, 20));
+  // console.log(matched_resource);
 }
 
 main();

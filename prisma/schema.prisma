@@ -429,6 +429,7 @@ model season {
 
         season_text   String
         season_number Int
+        tip           String?
 
         profile_id String
         profile    season_profile @relation(fields: [profile_id], references: [id])
@@ -444,7 +445,6 @@ model season {
         reports         report[]
         sync_tasks      bind_for_parsed_tv[]
         collections     collection[]
-        incomplete_tv   incomplete_tv?
         shared_medias   shared_media[]
         member_favorite member_favorite[]
 
@@ -459,6 +459,7 @@ model episode {
         episode_text   String
         season_text    String
         episode_number Int
+        tip            String?
 
         profile_id String
         profile    episode_profile @relation(fields: [profile_id], references: [id])
@@ -483,6 +484,8 @@ model movie {
         created DateTime @default(now())
         updated DateTime @default(now())
 
+        tip String?
+
         profile_id String
         profile    movie_profile @relation(fields: [profile_id], references: [id])
         user_id    String
@@ -498,6 +501,21 @@ model movie {
         member_diaries  member_diary[]
 
         @@map("Movie")
+}
+
+model media_error_need_process {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        unique_id String
+        type      Int    @default(1)
+        profile   String
+
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("MediaErrorNeedProcess")
 }
 
 model collection {
@@ -725,6 +743,7 @@ model tmp_file {
         @@map("TmpFile")
 }
 
+// @deprecated
 model incomplete_tv {
         id            String   @id
         created       DateTime @default(now())
@@ -733,10 +752,8 @@ model incomplete_tv {
         cur_count     Int?     @default(0)
         text          String?
 
-        season_id String? @unique
-        season    season? @relation(fields: [season_id], references: [id], onDelete: Cascade)
-        user_id   String
-        user      user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("TVNeedComplete")
 }
@@ -1006,6 +1023,28 @@ model notification {
         @@map("Notification")
 }
 
+model statistics {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        drive_count             Int @default(0)
+        drive_total_size_count  Int @default(0)
+        drive_used_size_count   Int @default(0)
+        movie_count             Int @default(0)
+        season_count            Int @default(0)
+        tv_count                Int @default(0)
+        episode_count           Int @default(0)
+        sync_task_count         Int @default(0)
+        invalid_sync_task_count Int @default(0)
+        invalid_season_count    Int @default(0)
+
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("Statistics")
+}
+
 model report {
         id      String   @id
         created DateTime @default(now())
@@ -1015,7 +1054,7 @@ model report {
         // json
         data   String
         // json
-        answer String
+        answer String?
 
         tv_id      String?
         tv         tv?      @relation(fields: [tv_id], references: [id], onDelete: Cascade)
@@ -1125,6 +1164,8 @@ model user {
         subtitles               subtitle[]
         permission              permission[]
         tv_lives                tv_live[]
+        statistics              statistics[]
+        media_errors            media_error_need_process[]
 
         @@map("User")
 }

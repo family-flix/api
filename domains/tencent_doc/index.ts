@@ -105,6 +105,7 @@ export class TencentDoc {
                 origin_name: n,
                 name: n
                   .replace(/\[[0-9]{4}\]$/, "")
+                  .replace(/\([0-9]{4}\)$/, "")
                   .replace(/第[一二三四五六七八九十]季/, "")
                   .trim(),
                 link: link[1],

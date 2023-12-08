@@ -42,6 +42,7 @@ type ResourceSyncTaskProps = {
   TMDB_TOKEN?: string;
   assets?: string;
   wait_complete?: boolean;
+  ignore_invalid?: boolean;
   on_file?: (v: { name: string; parent_paths: string; type: FileType }) => void;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
   on_finish?: () => void;
@@ -53,9 +54,23 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     options: { id: string } & {
       user: User;
       store: DatabaseStore;
-    } & Pick<ResourceSyncTaskProps, "assets" | "wait_complete" | "on_file" | "on_print" | "on_finish" | "on_error">
+    } & Pick<
+        ResourceSyncTaskProps,
+        "assets" | "wait_complete" | "ignore_invalid" | "on_file" | "on_print" | "on_finish" | "on_error"
+      >
   ) {
-    const { id, user, store, assets, wait_complete, on_file, on_finish, on_print, on_error } = options;
+    const {
+      id,
+      user,
+      store,
+      assets,
+      wait_complete,
+      ignore_invalid = false,
+      on_file,
+      on_finish,
+      on_print,
+      on_error,
+    } = options;
     if (!user.settings.tmdb_token) {
       return Result.Err("缺少 TMDB_TOKEN");
     }
@@ -71,7 +86,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     if (sync_task === null) {
       return Result.Err("没有匹配的同步任务记录");
     }
-    if (sync_task.invalid) {
+    if (!ignore_invalid && sync_task.invalid) {
       const tip = "该更新已失效，请重新绑定更新";
       return Result.Err(tip);
     }

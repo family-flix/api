@@ -52,7 +52,7 @@ type TheTypesOfEvents = {
 type DriveProps = {
   id: string;
   type: DriveTypes;
-  profile: Pick<DriveRecord, "name" | "type" | "root_folder_id" | "root_folder_name"> & {
+  profile: Pick<DriveRecord, "name" | "type" | "root_folder_id" | "root_folder_name" | "total_size" | "used_size"> & {
     drive_id: string;
     token_id: string;
   } & AliyunDriveProfile;
@@ -75,7 +75,8 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (drive_record === null) {
       return Result.Err("没有匹配的云盘记录");
     }
-    const { type, name, profile, root_folder_id, root_folder_name, drive_token_id } = drive_record;
+    const { type, name, profile, used_size, total_size, root_folder_id, root_folder_name, drive_token_id } =
+      drive_record;
     const r = parseJSONStr<AliyunDriveProfile>(profile);
     if (r.error) {
       return Result.Err(r.error);
@@ -104,6 +105,8 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           token_id: drive_token_id,
           root_folder_id,
           root_folder_name,
+          used_size,
+          total_size,
           ...rest,
         },
         client: client_res.data,
@@ -126,7 +129,8 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (drive_record === null) {
       return Result.Err("没有匹配的云盘记录");
     }
-    const { type, name, profile, root_folder_id, root_folder_name, drive_token_id } = drive_record;
+    const { type, name, profile, total_size, used_size, root_folder_id, root_folder_name, drive_token_id } =
+      drive_record;
     const r = parseJSONStr<AliyunDriveProfile>(profile);
     if (r.error) {
       return Result.Err(r.error);
@@ -155,6 +159,8 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           token_id: drive_token_id,
           root_folder_id,
           root_folder_name,
+          total_size,
+          used_size,
           ...rest,
         },
         client: client_res.data,
@@ -372,7 +378,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     }
     const {
       client,
-      drive: { id, name, root_folder_id, root_folder_name, drive_token_id, profile },
+      drive: { id, name, root_folder_id, root_folder_name, used_size, total_size, drive_token_id, profile },
     } = created_drive_res.data;
     const json_res = await parseJSONStr<AliyunDriveProfile>(profile);
     if (json_res.error) {
@@ -388,6 +394,8 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           token_id: drive_token_id,
           root_folder_id: root_folder_id,
           root_folder_name: root_folder_name,
+          used_size,
+          total_size,
           ...json_res.data,
         },
         client,

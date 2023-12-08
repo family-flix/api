@@ -8,7 +8,7 @@ import { User } from "@/domains/user";
 import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
+import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!url) {
     return e(Result.Err("缺少资源 url"));
   }
-  const t_r1 = await ResourceSyncTask.Get({ id, user, store });
+  const t_r1 = await ResourceSyncTask.Get({ id, assets: app.assets, user, store });
   if (t_r1.error) {
     return e(Result.Err(t_r1.error.message));
   }

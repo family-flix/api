@@ -35,4 +35,17 @@ export enum CollectionTypes {
   DailyUpdate = 2,
   /** 每日更新草稿 */
   DailyUpdateDraft = 3,
+  /** 每日更新存档 */
+  DailyUpdateArchive = 4,
+}
+
+export enum MediaErrorTypes {
+  TVProfile = 1,
+  SeasonProfile = 2,
+  EpisodeProfile = 3,
+  MovieProfile = 4,
+  TV = 5,
+  Season = 6,
+  Episode = 7,
+  Movie = 8,
 }

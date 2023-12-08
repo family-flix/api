@@ -12,8 +12,17 @@ import { DriveAnalysis } from "@/domains/analysis";
 import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { MediaSearcher } from "@/domains/searcher";
 import { ProfileRefresh } from "@/domains/profile_refresh";
+import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
+import { TencentDoc } from "@/domains/tencent_doc";
 import { Result } from "@/types";
-import { CollectionTypes, FileType, MediaProfileSourceTypes, MediaTypes } from "@/constants";
+import {
+  CollectionTypes,
+  FileType,
+  MediaErrorTypes,
+  MediaProfileSourceTypes,
+  MediaTypes,
+  ReportTypes,
+} from "@/constants";
 import { r_id } from "@/utils";
 
 export class ScheduleTask {
@@ -574,5 +583,740 @@ export class ScheduleTask {
         },
       },
     });
+  }
+  /** 获取重复的电影详情 */
+  async duplicated_movies(options: { store: DatabaseStore; user: User }) {
+    const { user, store } = options;
+    const duplicate_movie_profiles = await store.prisma.movie_profile.groupBy({
+      by: ["unique_id"],
+      where: {},
+      having: {
+        unique_id: {
+          _count: {
+            gt: 1,
+          },
+        },
+      },
+    });
+    const records: {
+      index: number;
+      unique_id: string;
+      profiles: {}[];
+    }[] = [];
+    for (let i = 0; i < duplicate_movie_profiles.length; i += 1) {
+      const { unique_id } = duplicate_movie_profiles[i];
+      const payload = {
+        index: i,
+        type: MediaErrorTypes.MovieProfile,
+        unique_id,
+        profiles: [],
+      } as (typeof records)[number];
+      await (async () => {
+        console.log(unique_id);
+        const profiles = await store.prisma.season_profile.findMany({
+          where: {
+            unique_id,
+          },
+          include: {
+            seasons: {
+              where: {
+                user_id: user.id,
+              },
+              include: {
+                _count: true,
+                profile: true,
+                tv: {
+                  include: {
+                    profile: true,
+                  },
+                },
+                episodes: true,
+              },
+              orderBy: {
+                profile: {
+                  unique_id: "asc",
+                },
+              },
+            },
+          },
+        });
+        if (profiles.length === 0) {
+          return;
+        }
+        for (let j = 0; j < profiles.length; j += 1) {
+          const { id, name, season_number, seasons } = profiles[j];
+          const profile_payload = {
+            id,
+            name: (() => {
+              if (seasons.length === 0) {
+                return name;
+              }
+              const season = seasons[0];
+              return season.tv.profile.name || season.tv.profile.original_name;
+            })(),
+            poster_path: (() => {
+              if (seasons.length === 0) {
+                return null;
+              }
+              const season = seasons[0];
+              return season.profile.poster_path || season.tv.profile.poster_path;
+            })(),
+            season_number,
+            season_count: seasons.length,
+            seasons: seasons.map((s) => {
+              const {
+                tv: { profile },
+                episodes,
+              } = s;
+              return {
+                poster: s.profile.poster_path || profile.poster_path,
+                episode_count: episodes.length,
+              };
+            }),
+          };
+          payload.profiles.push(profile_payload);
+        }
+        const existing = await store.prisma.media_error_need_process.findFirst({
+          where: {
+            unique_id,
+            type: MediaErrorTypes.MovieProfile,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          await store.prisma.media_error_need_process.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              profile: JSON.stringify(payload),
+              updated: dayjs().toISOString(),
+            },
+          });
+          return;
+        }
+        await store.prisma.media_error_need_process.create({
+          data: {
+            id: r_id(),
+            unique_id,
+            type: MediaErrorTypes.MovieProfile,
+            profile: JSON.stringify(payload),
+            user_id: user.id,
+          },
+        });
+      })();
+    }
+  }
+  // async update_duplicated_season() {
+  //   walk_model_with_cursor({
+  //     fn: (extra) => {
+  //       return this.store.prisma.media_error_need_process.findMany({
+  //         where: {
+  //           type: MediaErrorTypes.SeasonProfile,
+  //         },
+  //         ...extra,
+  //       });
+  //     },
+  //     handler(data, index) {
+  //       const { profile } = data;
+  //       if (!profile) {
+  //         return;
+  //       }
+  //       const d = JSON.parse(profile);
+  //     },
+  //   });
+  // }
+  async update_duplicated_medias() {
+    await this.walk_user(async (user) => {
+      await this.duplicated_episode({ user });
+      await this.duplicated_season({ user });
+    });
+  }
+  /** 获取重复的季详情 */
+  async duplicated_season(options: { user: User }) {
+    const { user } = options;
+    const store = this.store;
+    const duplicate_season_profiles = await store.prisma.season_profile.groupBy({
+      by: ["unique_id"],
+      where: {},
+      having: {
+        unique_id: {
+          _count: {
+            gt: 1,
+          },
+        },
+      },
+    });
+    const records: {
+      index: number;
+      unique_id: string;
+      profiles: {}[];
+    }[] = [];
+    for (let i = 0; i < duplicate_season_profiles.length; i += 1) {
+      const { unique_id } = duplicate_season_profiles[i];
+      const payload = {
+        index: i,
+        type: MediaErrorTypes.SeasonProfile,
+        unique_id,
+        profiles: [],
+      } as (typeof records)[number];
+      await (async () => {
+        console.log(unique_id);
+        const profiles = await store.prisma.season_profile.findMany({
+          where: {
+            unique_id,
+          },
+          include: {
+            seasons: {
+              where: {
+                user_id: user.id,
+              },
+              include: {
+                _count: true,
+                profile: true,
+                tv: {
+                  include: {
+                    profile: true,
+                  },
+                },
+                episodes: true,
+              },
+              orderBy: {
+                profile: {
+                  unique_id: "asc",
+                },
+              },
+            },
+          },
+        });
+        if (profiles.length === 0) {
+          return;
+        }
+        for (let j = 0; j < profiles.length; j += 1) {
+          const { id, name, season_number, seasons } = profiles[j];
+          const profile_payload = {
+            id,
+            name: (() => {
+              if (seasons.length === 0) {
+                return name;
+              }
+              const season = seasons[0];
+              return season.tv.profile.name || season.tv.profile.original_name;
+            })(),
+            poster_path: (() => {
+              if (seasons.length === 0) {
+                return null;
+              }
+              const season = seasons[0];
+              return season.profile.poster_path || season.tv.profile.poster_path;
+            })(),
+            season_number,
+            season_count: seasons.length,
+            seasons: seasons.map((s) => {
+              const {
+                tv: { profile },
+                episodes,
+              } = s;
+              return {
+                poster: s.profile.poster_path || profile.poster_path,
+                episode_count: episodes.length,
+              };
+            }),
+          };
+          payload.profiles.push(profile_payload);
+        }
+        const existing = await store.prisma.media_error_need_process.findFirst({
+          where: {
+            unique_id,
+            type: MediaErrorTypes.SeasonProfile,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          await store.prisma.media_error_need_process.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              profile: JSON.stringify(payload),
+              updated: dayjs().toISOString(),
+            },
+          });
+          return;
+        }
+        await store.prisma.media_error_need_process.create({
+          data: {
+            id: r_id(),
+            unique_id,
+            type: MediaErrorTypes.SeasonProfile,
+            profile: JSON.stringify(payload),
+            user_id: user.id,
+          },
+        });
+      })();
+    }
+  }
+  /** 获取重复的剧集详情 */
+  async duplicated_episode(options: { user: User }) {
+    const { user } = options;
+    const store = this.store;
+    const duplicate_episode_profiles = await store.prisma.episode_profile.groupBy({
+      by: ["unique_id"],
+      where: {},
+      having: {
+        unique_id: {
+          _count: {
+            gt: 1,
+          },
+        },
+      },
+    });
+    const records: {
+      index: number;
+      unique_id: string;
+      profiles: {}[];
+    }[] = [];
+    for (let i = 0; i < duplicate_episode_profiles.length; i += 1) {
+      const { unique_id } = duplicate_episode_profiles[i];
+      const payload = {
+        index: i,
+        unique_id,
+        type: MediaErrorTypes.EpisodeProfile,
+        profiles: [],
+      } as (typeof records)[number];
+      await (async () => {
+        console.log(unique_id);
+        const profiles = await store.prisma.episode_profile.findMany({
+          where: {
+            unique_id,
+          },
+          include: {
+            episodes: {
+              where: {
+                user_id: user.id,
+              },
+              include: {
+                season: {
+                  include: {
+                    profile: true,
+                    tv: {
+                      include: {
+                        profile: true,
+                      },
+                    },
+                  },
+                },
+                parsed_episodes: true,
+              },
+            },
+          },
+        });
+        if (profiles.length === 0) {
+          return;
+        }
+        for (let j = 0; j < profiles.length; j += 1) {
+          const { id, name, season_number, episode_number, episodes } = profiles[j];
+          const profile_payload = {
+            id,
+            name: (() => {
+              if (episodes.length === 0) {
+                return name;
+              }
+              const season = episodes[0].season;
+              return season.tv.profile.name || season.tv.profile.original_name;
+            })(),
+            poster_path: (() => {
+              if (episodes.length === 0) {
+                return null;
+              }
+              const season = episodes[0].season;
+              return season.profile.poster_path || season.tv.profile.poster_path;
+            })(),
+            season_number,
+            episode_number,
+            episode_count: episodes.length,
+            episodes: episodes.map((s) => {
+              const { parsed_episodes } = s;
+              return {
+                sources_count: parsed_episodes.length,
+              };
+            }),
+          };
+          payload.profiles.push(profile_payload);
+        }
+        const existing = await store.prisma.media_error_need_process.findFirst({
+          where: {
+            unique_id,
+            type: MediaErrorTypes.EpisodeProfile,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          await store.prisma.media_error_need_process.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              profile: JSON.stringify(payload),
+              updated: dayjs().toISOString(),
+            },
+          });
+          return;
+        }
+        await store.prisma.media_error_need_process.create({
+          data: {
+            id: r_id(),
+            unique_id,
+            type: MediaErrorTypes.EpisodeProfile,
+            profile: JSON.stringify(payload),
+            user_id: user.id,
+          },
+        });
+      })();
+    }
+    // console.log(records);
+  }
+
+  async update_stats() {
+    const store = this.store;
+    await this.walk_user(async (user) => {
+      const payload = {
+        drive_count: 0,
+        drive_total_size_count: 0,
+        drive_used_size_count: 0,
+        movie_count: await store.prisma.movie.count({
+          where: {
+            user_id: user.id,
+          },
+        }),
+        season_count: 0,
+        tv_count: await store.prisma.tv.count({
+          where: {
+            user_id: user.id,
+          },
+        }),
+        episode_count: await store.prisma.episode.count({
+          where: {
+            user_id: user.id,
+          },
+        }),
+        sync_task_count: await store.prisma.bind_for_parsed_tv.count({
+          where: {
+            season_id: {
+              not: null,
+            },
+            invalid: 0,
+            in_production: 1,
+            user_id: user.id,
+          },
+        }),
+        invalid_sync_task_count: await store.prisma.bind_for_parsed_tv.count({
+          where: {
+            invalid: 1,
+            user_id: user.id,
+          },
+        }),
+        invalid_season_count: 0,
+        question_count: await store.prisma.report.count({
+          where: {
+            type: {
+              in: [ReportTypes.Movie, ReportTypes.TV, ReportTypes.Question],
+            },
+            answer: null,
+            user_id: user.id,
+          },
+        }),
+        media_request_count: await store.prisma.report.count({
+          where: {
+            type: ReportTypes.Want,
+            answer: null,
+            user_id: user.id,
+          },
+        }),
+      };
+      await this.walk_drive(async (drive, user) => {
+        const { total_size, used_size } = drive.profile;
+        payload.drive_used_size_count += used_size || 0;
+        payload.drive_total_size_count += total_size || 0;
+        return Result.Ok(null);
+      });
+      await walk_model_with_cursor({
+        fn(extra) {
+          return store.prisma.season.findMany({
+            where: {},
+            include: {
+              _count: true,
+              profile: true,
+              sync_tasks: true,
+              tv: {
+                include: {
+                  _count: true,
+                  profile: true,
+                },
+              },
+              episodes: {
+                where: {
+                  parsed_episodes: {
+                    some: {},
+                  },
+                },
+                include: {
+                  profile: true,
+                  _count: true,
+                },
+                orderBy: {
+                  episode_number: "desc",
+                },
+              },
+              parsed_episodes: true,
+            },
+            orderBy: {
+              profile: { air_date: "desc" },
+            },
+            ...extra,
+          });
+        },
+        async batch_handler(list, index) {
+          for (let i = 0; i < list.length; i += 1) {
+            payload.season_count += 1;
+            await (async () => {
+              const season = list[i];
+              const { profile, tv, sync_tasks, _count } = season;
+              const { episode_count } = profile;
+              const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
+              const { binds } = normalize_partial_tv({
+                ...tv,
+                sync_tasks,
+              });
+              const tips: string[] = [];
+              if (tv.profile.in_production && incomplete && binds.length === 0) {
+                tips.push("未完结但缺少更新任务");
+              }
+              if (!tv.profile.in_production && incomplete) {
+                tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
+              }
+              if (tips.length === 0) {
+                return;
+              }
+              payload.invalid_season_count += 1;
+              await store.prisma.season.update({
+                where: {
+                  id: season.id,
+                },
+                data: {
+                  tip: tips.join("\n"),
+                },
+              });
+            })();
+          }
+        },
+      });
+      const e = await store.prisma.statistics.findFirst({
+        where: {
+          user_id: user.id,
+        },
+      });
+      const {
+        drive_count,
+        drive_total_size_count,
+        drive_used_size_count,
+        movie_count,
+        tv_count,
+        season_count,
+        episode_count,
+        sync_task_count,
+        invalid_season_count,
+        invalid_sync_task_count,
+      } = payload;
+      if (!e) {
+        await store.prisma.statistics.create({
+          data: {
+            id: r_id(),
+            drive_count,
+            drive_total_size_count,
+            drive_used_size_count,
+            movie_count,
+            tv_count,
+            season_count,
+            episode_count,
+            sync_task_count,
+            invalid_season_count,
+            invalid_sync_task_count,
+            user_id: user.id,
+          },
+        });
+        return;
+      }
+      await store.prisma.statistics.update({
+        where: {
+          id: e.id,
+        },
+        data: {
+          drive_count,
+          drive_total_size_count,
+          drive_used_size_count,
+          movie_count,
+          tv_count,
+          season_count,
+          episode_count,
+          sync_task_count,
+          invalid_season_count,
+          invalid_sync_task_count,
+          updated: dayjs().toISOString(),
+        },
+      });
+    });
+  }
+  /** 更新同步资源链接 */
+  async update_sync_task_resources(url: string) {
+    const doc = new TencentDoc({
+      url,
+    });
+    const r = await doc.fetch();
+    if (r.error) {
+      console.log("fetch doc profile failed, because", r.error.message);
+      return;
+    }
+    const resources = r.data;
+    await this.walk_user(async (user) => {
+      await walk_model_with_cursor({
+        fn: (extra) => {
+          return this.store.prisma.bind_for_parsed_tv.findMany({
+            where: {
+              season_id: { not: null },
+              invalid: 1,
+              user_id: user.id,
+            },
+            include: {
+              season: {
+                include: {
+                  tv: {
+                    include: {
+                      profile: true,
+                    },
+                  },
+                },
+              },
+            },
+            ...extra,
+          });
+        },
+        handler: async (data, index) => {
+          const { season } = data;
+          if (!season) {
+            return;
+          }
+          const { name } = season.tv.profile;
+          const matched_resource = resources.find((e) => e.name === name);
+          if (!matched_resource) {
+            console.log("the resource is expired but there no valid resource, ", name);
+            return;
+          }
+          const r = await ResourceSyncTask.Get({
+            id: data.id,
+            ignore_invalid: true,
+            assets: this.app.assets,
+            user,
+            store: this.store,
+          });
+          if (r.error) {
+            console.log("fetch sync task failed, because", r.error.message);
+            return;
+          }
+          const task = r.data;
+          const r2 = await task.override({ url: matched_resource.link });
+          if (r2.error) {
+            console.log("override resource failed, because", r2.error.message);
+            return;
+          }
+          console.log(name, "override resource success");
+        },
+      });
+    });
+  }
+  /**
+   * 将每日更新草稿归档 start
+   */
+  async archive_daily_update_collection() {
+    const store = this.store;
+    const list = await store.prisma.collection.findMany({
+      where: {
+        type: CollectionTypes.DailyUpdateDraft,
+      },
+      include: {
+        seasons: true,
+        movies: true,
+      },
+      orderBy: [
+        {
+          sort: "desc",
+        },
+        {
+          created: "desc",
+        },
+      ],
+      skip: 0,
+      take: 10,
+    });
+    for (let i = 0; i < list.length; i += 1) {
+      await (async () => {
+        const draft = list[i];
+        const t = dayjs().format("YYYY-MM-DD");
+        const e = await store.prisma.collection.findFirst({
+          where: {
+            title: t,
+            user_id: draft.user_id,
+          },
+        });
+        if (e) {
+          await store.prisma.collection.update({
+            where: {
+              id: e.id,
+            },
+            data: {
+              medias: draft.medias,
+              seasons: {
+                connect: draft.seasons.map((season) => {
+                  return {
+                    id: season.id,
+                  };
+                }),
+              },
+              movies: {
+                connect: draft.movies.map((movie) => {
+                  return {
+                    id: movie.id,
+                  };
+                }),
+              },
+            },
+          });
+          return;
+        }
+        await store.prisma.collection.create({
+          data: {
+            id: r_id(),
+            title: t,
+            type: CollectionTypes.DailyUpdateArchive,
+            medias: draft.medias,
+            seasons: {
+              connect: draft.seasons.map((season) => {
+                return {
+                  id: season.id,
+                };
+              }),
+            },
+            movies: {
+              connect: draft.movies.map((movie) => {
+                return {
+                  id: movie.id,
+                };
+              }),
+            },
+            user_id: draft.user_id,
+          },
+        });
+      })();
+    }
   }
 }
