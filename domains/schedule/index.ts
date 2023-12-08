@@ -1022,12 +1022,11 @@ export class ScheduleTask {
         const { profile, tv, sync_tasks, _count, episodes } = season;
         const { episode_count } = profile;
         const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
-        const { binds } = normalize_partial_tv({
+        const { name, poster_path, binds } = normalize_partial_tv({
           ...tv,
           sync_tasks,
         });
         const tips: string[] = [];
-
         if (tv.profile.in_production && incomplete && binds.length === 0) {
           tips.push("未完结但缺少更新任务");
         }
@@ -1037,16 +1036,17 @@ export class ScheduleTask {
         const invalid_episodes = episodes.filter((e) => {
           return e.parsed_episodes.length === 0;
         });
-        if (invalid_episodes) {
+        if (invalid_episodes.length !== 0) {
           tips.push(`存在${invalid_episodes.length}个没有视频源的剧集`);
         }
         if (tips.length === 0) {
           return;
         }
         const payload = {
-          index,
           unique_id: season.id,
           type: MediaErrorTypes.Season,
+          name,
+          poster_path,
           profile: tips,
         };
         const existing = await this.store.prisma.media_error_need_process.findFirst({
@@ -1085,7 +1085,11 @@ export class ScheduleTask {
     const store = this.store;
     await this.walk_user(async (user) => {
       const payload = {
-        drive_count: 0,
+        drive_count: await store.prisma.drive.count({
+          where: {
+            user_id: user.id,
+          },
+        }),
         drive_total_size_count: 0,
         drive_used_size_count: 0,
         movie_count: await store.prisma.movie.count({
