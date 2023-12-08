@@ -135,7 +135,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     AND: [
       {
         episodes: {
-          some: {},
+          some: {
+            parsed_episodes: {
+              some: {},
+            },
+          },
         },
       },
     ],

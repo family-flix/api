@@ -976,6 +976,110 @@ export class ScheduleTask {
     }
     // console.log(records);
   }
+  async walk_season() {
+    await this.walk_user(async (user) => {
+      await this.find_season_errors({ user });
+    });
+  }
+  async find_season_errors(options: { user: User }) {
+    const { user } = options;
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.season.findMany({
+          where: {
+            user_id: user.id,
+          },
+          include: {
+            _count: true,
+            profile: true,
+            sync_tasks: true,
+            tv: {
+              include: {
+                _count: true,
+                profile: true,
+              },
+            },
+            episodes: {
+              include: {
+                parsed_episodes: true,
+                profile: true,
+                _count: true,
+              },
+              orderBy: {
+                episode_number: "desc",
+              },
+            },
+            parsed_episodes: true,
+          },
+          orderBy: {
+            profile: { air_date: "desc" },
+          },
+          ...extra,
+        });
+      },
+      handler: async (data, index) => {
+        const season = data;
+        const { profile, tv, sync_tasks, _count, episodes } = season;
+        const { episode_count } = profile;
+        const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
+        const { binds } = normalize_partial_tv({
+          ...tv,
+          sync_tasks,
+        });
+        const tips: string[] = [];
+
+        if (tv.profile.in_production && incomplete && binds.length === 0) {
+          tips.push("未完结但缺少更新任务");
+        }
+        if (!tv.profile.in_production && incomplete) {
+          tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
+        }
+        const invalid_episodes = episodes.filter((e) => {
+          return e.parsed_episodes.length === 0;
+        });
+        if (invalid_episodes) {
+          tips.push(`存在${invalid_episodes.length}个没有视频源的剧集`);
+        }
+        if (tips.length === 0) {
+          return;
+        }
+        const payload = {
+          index,
+          unique_id: season.id,
+          type: MediaErrorTypes.Season,
+          profile: tips,
+        };
+        const existing = await this.store.prisma.media_error_need_process.findFirst({
+          where: {
+            unique_id: season.id,
+            type: MediaErrorTypes.Season,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          await this.store.prisma.media_error_need_process.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              profile: JSON.stringify(payload),
+              updated: dayjs().toISOString(),
+            },
+          });
+          return;
+        }
+        await this.store.prisma.media_error_need_process.create({
+          data: {
+            id: r_id(),
+            unique_id: season.id,
+            type: MediaErrorTypes.Season,
+            profile: JSON.stringify(payload),
+            user_id: user.id,
+          },
+        });
+      },
+    });
+  }
 
   async update_stats() {
     const store = this.store;
@@ -989,7 +1093,11 @@ export class ScheduleTask {
             user_id: user.id,
           },
         }),
-        season_count: 0,
+        season_count: await store.prisma.season.count({
+          where: {
+            user_id: user.id,
+          },
+        }),
         tv_count: await store.prisma.tv.count({
           where: {
             user_id: user.id,
@@ -1016,8 +1124,13 @@ export class ScheduleTask {
             user_id: user.id,
           },
         }),
-        invalid_season_count: 0,
-        question_count: await store.prisma.report.count({
+        invalid_season_count: await store.prisma.media_error_need_process.count({
+          where: {
+            type: MediaErrorTypes.Season,
+            user_id: user.id,
+          },
+        }),
+        report_count: await store.prisma.report.count({
           where: {
             type: {
               in: [ReportTypes.Movie, ReportTypes.TV, ReportTypes.Question],
@@ -1040,77 +1153,6 @@ export class ScheduleTask {
         payload.drive_total_size_count += total_size || 0;
         return Result.Ok(null);
       });
-      await walk_model_with_cursor({
-        fn(extra) {
-          return store.prisma.season.findMany({
-            where: {},
-            include: {
-              _count: true,
-              profile: true,
-              sync_tasks: true,
-              tv: {
-                include: {
-                  _count: true,
-                  profile: true,
-                },
-              },
-              episodes: {
-                where: {
-                  parsed_episodes: {
-                    some: {},
-                  },
-                },
-                include: {
-                  profile: true,
-                  _count: true,
-                },
-                orderBy: {
-                  episode_number: "desc",
-                },
-              },
-              parsed_episodes: true,
-            },
-            orderBy: {
-              profile: { air_date: "desc" },
-            },
-            ...extra,
-          });
-        },
-        async batch_handler(list, index) {
-          for (let i = 0; i < list.length; i += 1) {
-            payload.season_count += 1;
-            await (async () => {
-              const season = list[i];
-              const { profile, tv, sync_tasks, _count } = season;
-              const { episode_count } = profile;
-              const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
-              const { binds } = normalize_partial_tv({
-                ...tv,
-                sync_tasks,
-              });
-              const tips: string[] = [];
-              if (tv.profile.in_production && incomplete && binds.length === 0) {
-                tips.push("未完结但缺少更新任务");
-              }
-              if (!tv.profile.in_production && incomplete) {
-                tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
-              }
-              if (tips.length === 0) {
-                return;
-              }
-              payload.invalid_season_count += 1;
-              await store.prisma.season.update({
-                where: {
-                  id: season.id,
-                },
-                data: {
-                  tip: tips.join("\n"),
-                },
-              });
-            })();
-          }
-        },
-      });
       const e = await store.prisma.statistics.findFirst({
         where: {
           user_id: user.id,
@@ -1125,6 +1167,8 @@ export class ScheduleTask {
         season_count,
         episode_count,
         sync_task_count,
+        report_count,
+        media_request_count,
         invalid_season_count,
         invalid_sync_task_count,
       } = payload;
@@ -1132,16 +1176,18 @@ export class ScheduleTask {
         await store.prisma.statistics.create({
           data: {
             id: r_id(),
-            drive_count,
-            drive_total_size_count,
-            drive_used_size_count,
-            movie_count,
-            tv_count,
-            season_count,
-            episode_count,
-            sync_task_count,
-            invalid_season_count,
-            invalid_sync_task_count,
+            drive_count: String(drive_count),
+            drive_total_size_count: String(drive_total_size_count),
+            drive_used_size_count: String(drive_used_size_count),
+            movie_count: String(movie_count),
+            tv_count: String(tv_count),
+            season_count: String(season_count),
+            episode_count: String(episode_count),
+            sync_task_count: String(sync_task_count),
+            report_count: String(report_count),
+            media_request_count: String(media_request_count),
+            invalid_season_count: String(invalid_season_count),
+            invalid_sync_task_count: String(invalid_sync_task_count),
             user_id: user.id,
           },
         });
@@ -1152,16 +1198,18 @@ export class ScheduleTask {
           id: e.id,
         },
         data: {
-          drive_count,
-          drive_total_size_count,
-          drive_used_size_count,
-          movie_count,
-          tv_count,
-          season_count,
-          episode_count,
-          sync_task_count,
-          invalid_season_count,
-          invalid_sync_task_count,
+          drive_count: String(drive_count),
+          drive_total_size_count: String(drive_total_size_count),
+          drive_used_size_count: String(drive_used_size_count),
+          movie_count: String(movie_count),
+          tv_count: String(tv_count),
+          season_count: String(season_count),
+          episode_count: String(episode_count),
+          sync_task_count: String(sync_task_count),
+          invalid_season_count: String(invalid_season_count),
+          invalid_sync_task_count: String(invalid_sync_task_count),
+          report_count: String(report_count),
+          media_request_count: String(media_request_count),
           updated: dayjs().toISOString(),
         },
       });

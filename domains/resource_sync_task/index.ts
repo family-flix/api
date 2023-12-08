@@ -15,7 +15,7 @@ import { SyncTaskRecord } from "@/domains/store/types";
 import { AliyunDriveClient } from "@/domains/aliyundrive/types";
 import { folder_client } from "@/domains/store/utils";
 import { Result } from "@/types";
-import { is_video_file } from "@/utils";
+import { is_video_file, sleep } from "@/utils";
 import { FileType } from "@/constants";
 
 enum Events {
@@ -523,6 +523,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(drive_res.error.message);
     }
     const drive = drive_res.data;
+    await sleep(1000);
     const r1 = await drive.client.fetch_share_profile(url);
     if (r1.error) {
       return Result.Err(r1.error.message);
