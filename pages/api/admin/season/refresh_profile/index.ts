@@ -3,6 +3,7 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
+import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
 import { Job } from "@/domains/job";
@@ -12,7 +13,6 @@ import { ProfileRefresh } from "@/domains/profile_refresh";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   async function run() {
-    await refresher.refresh_season_list({
+    await refresher.refresh_season_list(dayjs().subtract(3, "month").toISOString(), {
       async after(payload) {
         await refresher.refresh_episode_list(payload);
         // const { season, tv } = payload;

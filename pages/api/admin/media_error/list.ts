@@ -37,6 +37,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     fetch: (args) => {
       return store.prisma.media_error_need_process.findMany({
         where,
+        orderBy: [
+          {
+            type: "asc",
+          },
+          {
+            unique_id: "desc",
+          },
+        ],
         ...args,
       });
     },

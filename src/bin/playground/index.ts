@@ -1,9 +1,14 @@
 import { Application } from "@/domains/application";
 import { ScheduleTask } from "@/domains/schedule";
-import { DriveTypes } from "@/domains/drive/constants";
-import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
+import { parse_argv } from "@/utils/server";
+
+/**
+ * yarn vite-node playground.ts -- -- -a 1 -b
+ * { a: '1', b: true }
+ */
 
 async function main() {
+  const args = process.argv.slice(2);
   const OUTPUT_PATH = process.env.OUTPUT_PATH;
   if (!OUTPUT_PATH) {
     console.error("缺少数据库文件路径");
@@ -14,104 +19,31 @@ async function main() {
   });
   const store = app.store;
   const schedule = new ScheduleTask({ app, store });
-
-  const page = 1;
-  const page_size = 10;
-  const list = await store.prisma.season.findMany({
-    where: {
-      AND: [
-        {
-          tv: {
-            profile: {
-              name: {
-                contains: "狂赌之渊",
-              },
-            },
-          },
-        },
-        {
-          episodes: {
-            every: {
-              parsed_episodes: {
-                some: {},
-              },
-            },
-          },
-        },
-      ],
-    },
-    include: {
-      _count: true,
-      profile: true,
-      sync_tasks: true,
-      tv: {
-        include: {
-          _count: true,
-          profile: true,
-        },
-      },
-      episodes: {
-        where: {
-          parsed_episodes: {
-            some: {},
-          },
-        },
-        include: {
-          profile: true,
-          _count: true,
-        },
-        orderBy: {
-          episode_number: "desc",
-        },
-      },
-      parsed_episodes: true,
-    },
-    orderBy: {
-      profile: { air_date: "desc" },
-    },
-    skip: (page - 1) * page_size,
-    take: page_size,
-  });
-  console.log(
-    list.map((season) => {
-      const { id, season_text, profile, tv, sync_tasks, _count } = season;
-      const { air_date, episode_count } = profile;
-      const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
-      const { name, original_name, overview, poster_path, popularity, need_bind, sync_task, valid_bind, binds } =
-        normalize_partial_tv({
-          ...tv,
-          sync_tasks,
-        });
-      const tips: string[] = [];
-      if (binds.length !== 0 && valid_bind === null && tv.profile.in_production) {
-        tips.push("更新任务已失效");
-      }
-      if (tv.profile.in_production && incomplete && binds.length === 0) {
-        tips.push("未完结但缺少更新任务");
-      }
-      if (!tv.profile.in_production && incomplete) {
-        tips.push(`已完结但集数不完整，总集数 ${episode_count}，当前集数 ${_count.episodes}`);
-      }
-      return {
-        id,
-        tv_id: tv.id,
-        name: name || original_name,
-        original_name,
-        overview,
-        season_number: season_text,
-        season_text,
-        poster_path: profile.poster_path || poster_path,
-        first_air_date: air_date,
-        popularity,
-        cur_episode_count: _count.episodes,
-        episode_count,
-        incomplete,
-        need_bind,
-        sync_task,
-        tips,
-      };
-    })
-  );
+  const options = parse_argv(args);
+  const { action } = options as { action: string };
+  if (!action) {
+    console.error("未知的参数，请使用 --action xxx 来执行该脚本");
+    return;
+  }
+  const actions = {
+    find_duplicated_medias: schedule.find_duplicated_medias,
+    find_media_errors: schedule.find_media_errors,
+    run_sync_task_list: schedule.run_sync_task_list,
+    update_daily_updated: schedule.update_daily_updated,
+    update_stats: schedule.update_stats,
+    check_in: schedule.check_in,
+    refresh_media_profile_list: schedule.refresh_media_profile_list,
+  };
+  const allow_actions = Object.keys(actions);
+  if (!allow_actions.includes(action)) {
+    return;
+  }
+  const a = action as keyof typeof actions;
+  const fn = schedule[a];
+  if (typeof fn !== "function") {
+    return;
+  }
+  await fn();
 }
 
 main();

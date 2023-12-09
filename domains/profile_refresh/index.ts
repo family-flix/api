@@ -72,13 +72,13 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     }
   }
   /** 读取数据库所有电视剧和三方平台比较是否有更新，如果有就更新数据库记录 */
-  async refresh_tv_list() {
+  async refresh_tv_list(gte = dayjs().subtract(6, "month").toISOString()) {
     const where: ModelQuery<"season"> = {
       OR: [
         {
           profile: {
             air_date: {
-              gte: dayjs().subtract(6, "month").toISOString(),
+              gte,
             },
           },
         },
@@ -136,6 +136,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   }
   /** 刷新多个季详情 */
   async refresh_season_list(
+    gte = dayjs().subtract(3, "month").toISOString(),
     lifetimes: Partial<{
       after: (payload: {
         season: SeasonRecord & { profile: SeasonProfileRecord };
@@ -150,15 +151,17 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
           notIn: [MediaProfileSourceTypes.Other, MediaProfileSourceTypes.Manual],
         },
         OR: [
-          {
-            air_date: {
-              gte: dayjs().subtract(3, "month").toISOString(),
-            },
-          },
+          gte
+            ? {
+                air_date: {
+                  gte,
+                },
+              }
+            : {},
           {
             air_date: null,
           },
-        ],
+        ].filter((v) => Object.keys(v).length > 0),
       },
       user_id: this.user.id,
     };

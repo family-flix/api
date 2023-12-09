@@ -71,10 +71,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err(origin_error_profiles_r.error.message));
   }
   const origin_profile = origin_error_profiles_r.data;
-  origin_profile.profiles = origin_profile.profiles.filter((p) => {
+  const profiles = origin_profile.profiles || origin_profile;
+  const next_profiles = profiles.filter((p) => {
     return p.id === profile_id;
   });
-  if (origin_profile.profiles.length === 1) {
+  if (next_profiles.length === 1) {
     await store.prisma.media_error_need_process.delete({
       where: {
         id: error_record.id,
@@ -89,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     data: {
       id: error_record.id,
       type: error_record.type,
-      profile: JSON.stringify(origin_profile),
+      profile: JSON.stringify(next_profiles),
     },
   });
 }

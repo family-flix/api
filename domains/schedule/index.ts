@@ -25,6 +25,61 @@ import {
 } from "@/constants";
 import { r_id } from "@/utils";
 
+type TVProfileError = {
+  id: string;
+  name: string | null;
+  poster_path: string | null;
+  tv_count: number;
+  tvs: {
+    id: string;
+    name: string | null;
+    poster_path: string | null;
+    season_count: number;
+    episode_count: number;
+  }[];
+};
+type EpisodeProfileError = {
+  id: string;
+  name: string | null;
+  poster_path: string | null;
+  season_number: number | null;
+  episode_number: number | null;
+  episode_count: number;
+  episodes: {
+    id: string;
+    tv_id: string;
+    name: string | null;
+    poster_path: string | null;
+    season_id: string;
+    source_count: number;
+  }[];
+};
+type SeasonProfileError = {
+  id: string;
+  name: string | null;
+  poster_path: string | null;
+  season_number: number | null;
+  season_count: number;
+  seasons: {
+    id: string;
+    tv_id: string;
+    name: string | null;
+    poster_path: string | null;
+    episode_count: number;
+  }[];
+};
+type MovieProfileError = {
+  id: string;
+  name: string | null;
+  poster_path: string | null;
+  movies: {
+    id: string;
+    name: string | null;
+    poster_path: string | null;
+    source_count: number;
+  }[];
+};
+
 export class ScheduleTask {
   store: DatabaseStore;
   app: Application;
@@ -584,9 +639,19 @@ export class ScheduleTask {
       },
     });
   }
+  /** 更新重复的影视剧详情记录 */
+  async find_duplicated_medias() {
+    await this.walk_user(async (user) => {
+      await this.find_duplicated_episode({ user });
+      await this.find_duplicated_season({ user });
+      await this.find_duplicated_tv({ user });
+      await this.find_duplicated_movie({ user });
+    });
+  }
   /** 获取重复的电影详情 */
-  async duplicated_movies(options: { store: DatabaseStore; user: User }) {
-    const { user, store } = options;
+  async find_duplicated_movie(options: { user: User }) {
+    const { user } = options;
+    const store = this.store;
     const duplicate_movie_profiles = await store.prisma.movie_profile.groupBy({
       by: ["unique_id"],
       where: {},
@@ -598,83 +663,61 @@ export class ScheduleTask {
         },
       },
     });
-    const records: {
-      index: number;
-      unique_id: string;
-      profiles: {}[];
-    }[] = [];
     for (let i = 0; i < duplicate_movie_profiles.length; i += 1) {
       const { unique_id } = duplicate_movie_profiles[i];
-      const payload = {
-        index: i,
-        type: MediaErrorTypes.MovieProfile,
-        unique_id,
-        profiles: [],
-      } as (typeof records)[number];
+      const payload: MovieProfileError[] = [];
       await (async () => {
-        console.log(unique_id);
-        const profiles = await store.prisma.season_profile.findMany({
+        const profiles = await store.prisma.movie_profile.findMany({
           where: {
             unique_id,
           },
           include: {
-            seasons: {
+            movies: {
               where: {
                 user_id: user.id,
               },
               include: {
-                _count: true,
                 profile: true,
-                tv: {
-                  include: {
-                    profile: true,
-                  },
-                },
-                episodes: true,
-              },
-              orderBy: {
-                profile: {
-                  unique_id: "asc",
-                },
+                parsed_movies: true,
               },
             },
+          },
+          orderBy: {
+            unique_id: "asc",
           },
         });
         if (profiles.length === 0) {
           return;
         }
         for (let j = 0; j < profiles.length; j += 1) {
-          const { id, name, season_number, seasons } = profiles[j];
-          const profile_payload = {
+          const { id, name, movies } = profiles[j];
+          const profile_payload: MovieProfileError = {
             id,
             name: (() => {
-              if (seasons.length === 0) {
+              if (movies.length === 0) {
                 return name;
               }
-              const season = seasons[0];
-              return season.tv.profile.name || season.tv.profile.original_name;
+              const movie = movies[0];
+              return movie.profile.name || movie.profile.original_name;
             })(),
             poster_path: (() => {
-              if (seasons.length === 0) {
+              if (movies.length === 0) {
                 return null;
               }
-              const season = seasons[0];
-              return season.profile.poster_path || season.tv.profile.poster_path;
+              const movie = movies[0];
+              return movie.profile.poster_path;
             })(),
-            season_number,
-            season_count: seasons.length,
-            seasons: seasons.map((s) => {
-              const {
-                tv: { profile },
-                episodes,
-              } = s;
+            movies: movies.map((s) => {
+              const { id, profile, parsed_movies } = s;
               return {
-                poster: s.profile.poster_path || profile.poster_path,
-                episode_count: episodes.length,
+                id,
+                name: profile.name,
+                poster_path: profile.poster_path,
+                source_count: parsed_movies.length,
               };
             }),
           };
-          payload.profiles.push(profile_payload);
+          payload.push(profile_payload);
         }
         const existing = await store.prisma.media_error_need_process.findFirst({
           where: {
@@ -707,33 +750,116 @@ export class ScheduleTask {
       })();
     }
   }
-  // async update_duplicated_season() {
-  //   walk_model_with_cursor({
-  //     fn: (extra) => {
-  //       return this.store.prisma.media_error_need_process.findMany({
-  //         where: {
-  //           type: MediaErrorTypes.SeasonProfile,
-  //         },
-  //         ...extra,
-  //       });
-  //     },
-  //     handler(data, index) {
-  //       const { profile } = data;
-  //       if (!profile) {
-  //         return;
-  //       }
-  //       const d = JSON.parse(profile);
-  //     },
-  //   });
-  // }
-  async update_duplicated_medias() {
-    await this.walk_user(async (user) => {
-      await this.duplicated_episode({ user });
-      await this.duplicated_season({ user });
+  /** 获取重复的电视剧详情 */
+  async find_duplicated_tv(options: { user: User }) {
+    const { user } = options;
+    const store = this.store;
+    const duplicate_tv_profiles = await store.prisma.tv_profile.groupBy({
+      by: ["unique_id"],
+      where: {},
+      having: {
+        unique_id: {
+          _count: {
+            gt: 1,
+          },
+        },
+      },
     });
+    for (let i = 0; i < duplicate_tv_profiles.length; i += 1) {
+      const { unique_id } = duplicate_tv_profiles[i];
+      const payload: TVProfileError[] = [];
+      await (async () => {
+        const profiles = await store.prisma.tv_profile.findMany({
+          where: {
+            unique_id,
+          },
+          include: {
+            tvs: {
+              where: {
+                user_id: user.id,
+              },
+              include: {
+                _count: true,
+                profile: true,
+                seasons: true,
+                episodes: true,
+              },
+              orderBy: {
+                profile: {
+                  unique_id: "asc",
+                },
+              },
+            },
+          },
+        });
+        if (profiles.length === 0) {
+          return;
+        }
+        for (let j = 0; j < profiles.length; j += 1) {
+          const { id, name, tvs } = profiles[j];
+          const profile_payload: TVProfileError = {
+            id,
+            name: (() => {
+              if (tvs.length === 0) {
+                return name;
+              }
+              const tv = tvs[0];
+              return tv.profile.name || tv.profile.original_name;
+            })(),
+            poster_path: (() => {
+              if (tvs.length === 0) {
+                return null;
+              }
+              const tv = tvs[0];
+              return tv.profile.poster_path;
+            })(),
+            tv_count: tvs.length,
+            tvs: tvs.map((s) => {
+              const { id, seasons, episodes } = s;
+              return {
+                id,
+                name: s.profile.name,
+                poster_path: s.profile.poster_path,
+                season_count: seasons.length,
+                episode_count: episodes.length,
+              };
+            }),
+          };
+          payload.push(profile_payload);
+        }
+        const existing = await store.prisma.media_error_need_process.findFirst({
+          where: {
+            unique_id,
+            type: MediaErrorTypes.TVProfile,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          await store.prisma.media_error_need_process.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              profile: JSON.stringify(payload),
+              updated: dayjs().toISOString(),
+            },
+          });
+          return;
+        }
+        await store.prisma.media_error_need_process.create({
+          data: {
+            id: r_id(),
+            unique_id,
+            type: MediaErrorTypes.TVProfile,
+            profile: JSON.stringify(payload),
+            user_id: user.id,
+          },
+        });
+      })();
+    }
   }
   /** 获取重复的季详情 */
-  async duplicated_season(options: { user: User }) {
+  async find_duplicated_season(options: { user: User }) {
     const { user } = options;
     const store = this.store;
     const duplicate_season_profiles = await store.prisma.season_profile.groupBy({
@@ -747,21 +873,10 @@ export class ScheduleTask {
         },
       },
     });
-    const records: {
-      index: number;
-      unique_id: string;
-      profiles: {}[];
-    }[] = [];
     for (let i = 0; i < duplicate_season_profiles.length; i += 1) {
       const { unique_id } = duplicate_season_profiles[i];
-      const payload = {
-        index: i,
-        type: MediaErrorTypes.SeasonProfile,
-        unique_id,
-        profiles: [],
-      } as (typeof records)[number];
+      const payload: SeasonProfileError[] = [];
       await (async () => {
-        console.log(unique_id);
         const profiles = await store.prisma.season_profile.findMany({
           where: {
             unique_id,
@@ -794,7 +909,7 @@ export class ScheduleTask {
         }
         for (let j = 0; j < profiles.length; j += 1) {
           const { id, name, season_number, seasons } = profiles[j];
-          const profile_payload = {
+          const profile_payload: SeasonProfileError = {
             id,
             name: (() => {
               if (seasons.length === 0) {
@@ -814,16 +929,20 @@ export class ScheduleTask {
             season_count: seasons.length,
             seasons: seasons.map((s) => {
               const {
-                tv: { profile },
+                id,
+                tv: { id: tv_id, profile },
                 episodes,
               } = s;
               return {
-                poster: s.profile.poster_path || profile.poster_path,
+                id,
+                tv_id,
+                name: profile.name,
+                poster_path: s.profile.poster_path || profile.poster_path,
                 episode_count: episodes.length,
               };
             }),
           };
-          payload.profiles.push(profile_payload);
+          payload.push(profile_payload);
         }
         const existing = await store.prisma.media_error_need_process.findFirst({
           where: {
@@ -857,7 +976,7 @@ export class ScheduleTask {
     }
   }
   /** 获取重复的剧集详情 */
-  async duplicated_episode(options: { user: User }) {
+  async find_duplicated_episode(options: { user: User }) {
     const { user } = options;
     const store = this.store;
     const duplicate_episode_profiles = await store.prisma.episode_profile.groupBy({
@@ -871,21 +990,10 @@ export class ScheduleTask {
         },
       },
     });
-    const records: {
-      index: number;
-      unique_id: string;
-      profiles: {}[];
-    }[] = [];
     for (let i = 0; i < duplicate_episode_profiles.length; i += 1) {
       const { unique_id } = duplicate_episode_profiles[i];
-      const payload = {
-        index: i,
-        unique_id,
-        type: MediaErrorTypes.EpisodeProfile,
-        profiles: [],
-      } as (typeof records)[number];
+      const payload: EpisodeProfileError[] = [];
       await (async () => {
-        console.log(unique_id);
         const profiles = await store.prisma.episode_profile.findMany({
           where: {
             unique_id,
@@ -896,14 +1004,9 @@ export class ScheduleTask {
                 user_id: user.id,
               },
               include: {
-                season: {
+                tv: {
                   include: {
                     profile: true,
-                    tv: {
-                      include: {
-                        profile: true,
-                      },
-                    },
                   },
                 },
                 parsed_episodes: true,
@@ -916,33 +1019,38 @@ export class ScheduleTask {
         }
         for (let j = 0; j < profiles.length; j += 1) {
           const { id, name, season_number, episode_number, episodes } = profiles[j];
-          const profile_payload = {
+          const profile_payload: EpisodeProfileError = {
             id,
             name: (() => {
               if (episodes.length === 0) {
                 return name;
               }
-              const season = episodes[0].season;
-              return season.tv.profile.name || season.tv.profile.original_name;
+              const tv = episodes[0].tv;
+              return tv.profile.name || tv.profile.original_name;
             })(),
             poster_path: (() => {
               if (episodes.length === 0) {
                 return null;
               }
-              const season = episodes[0].season;
-              return season.profile.poster_path || season.tv.profile.poster_path;
+              const tv = episodes[0].tv;
+              return tv.profile.poster_path || tv.profile.poster_path;
             })(),
             season_number,
             episode_number,
             episode_count: episodes.length,
             episodes: episodes.map((s) => {
-              const { parsed_episodes } = s;
+              const { id, season_id, tv, tv_id, parsed_episodes } = s;
               return {
-                sources_count: parsed_episodes.length,
+                id,
+                tv_id,
+                name: tv.profile.name,
+                poster_path: tv.profile.poster_path,
+                season_id,
+                source_count: parsed_episodes.length,
               };
             }),
           };
-          payload.profiles.push(profile_payload);
+          payload.push(profile_payload);
         }
         const existing = await store.prisma.media_error_need_process.findFirst({
           where: {
@@ -974,9 +1082,8 @@ export class ScheduleTask {
         });
       })();
     }
-    // console.log(records);
   }
-  async walk_season() {
+  async find_media_errors() {
     await this.walk_user(async (user) => {
       await this.find_season_errors({ user });
     });
