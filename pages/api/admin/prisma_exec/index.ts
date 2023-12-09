@@ -12,9 +12,10 @@ import { Drive } from "@/domains/drive";
 import { Member } from "@/domains/user/member";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { BaseApiResp, Result } from "@/types";
-import { MediaProfileSourceTypes, MediaTypes, CollectionTypes } from "@/constants";
+import { MediaProfileSourceTypes, MediaTypes, CollectionTypes, ReportTypes, MediaErrorTypes } from "@/constants";
 import { response_error_factory } from "@/utils/server";
 import { store, app } from "@/store";
+import { ScheduleTask } from "@/domains/schedule";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -28,6 +29,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("缺少代码"));
   }
   const user = t_res.data;
+  const schedule = new ScheduleTask({
+    app,
+    store,
+  });
   try {
     const result: unknown[] = [];
     const context = {
@@ -43,9 +48,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       walk_model_with_cursor,
       CollectionTypes,
       MediaProfileSourceTypes,
+      ReportTypes,
       MediaTypes,
+      MediaErrorTypes,
       store,
       app,
+      user,
+      schedule,
     };
     const sandbox = vm.createContext(context);
     await vm.runInNewContext(
