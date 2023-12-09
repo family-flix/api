@@ -136,7 +136,7 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
   }
   /** 刷新多个季详情 */
   async refresh_season_list(
-    gte = dayjs().subtract(3, "month").toISOString(),
+    gte?: string,
     lifetimes: Partial<{
       after: (payload: {
         season: SeasonRecord & { profile: SeasonProfileRecord };
@@ -260,22 +260,24 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   /** 读取数据库所有电影，刷新详情 */
-  async refresh_movie_list() {
+  async refresh_movie_list(gte?: string) {
     const where: ModelQuery<"movie"> = {
       OR: [
-        {
-          profile: {
-            air_date: {
-              gte: dayjs().subtract(3, "month").toISOString(),
-            },
-          },
-        },
+        gte
+          ? {
+              profile: {
+                air_date: {
+                  gte,
+                },
+              },
+            }
+          : {},
         {
           profile: {
             air_date: null,
           },
         },
-      ],
+      ].filter((v) => Object.keys(v).length > 0),
       user_id: this.user.id,
     };
     const count = await this.store.prisma.movie.count({

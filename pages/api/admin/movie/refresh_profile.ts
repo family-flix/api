@@ -3,6 +3,7 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
+import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
 import { Job } from "@/domains/job";
@@ -56,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   async function run() {
-    await refresher.refresh_movie_list();
+    await refresher.refresh_movie_list(dayjs().subtract(6, "month").toISOString());
     job.finish();
   }
   run();

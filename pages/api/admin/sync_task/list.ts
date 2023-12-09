@@ -18,12 +18,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name,
     in_production: in_production_str,
     invalid: invalid_str,
+    wait_link: wait_link_str,
     page: page_str,
     page_size: page_size_str,
   } = req.query as Partial<{
     name: string;
     in_production: string;
     invalid: string;
+    wait_link: string;
     page: string;
     page_size: string;
   }>;
@@ -45,6 +47,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     queries.push({
       invalid,
     });
+  }
+  if (wait_link_str !== undefined) {
+    const wait_link = to_number(wait_link_str, 1);
+    if (wait_link === 1) {
+      queries.push({
+        season_id: null,
+      });
+    }
+    if (wait_link === 0) {
+      queries.push({
+        season_id: {
+          not: null,
+        },
+      });
+    }
   }
   if (name) {
     queries.push({

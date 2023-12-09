@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const error_record = await store.prisma.media_error_need_process.findFirst({
     where: {
       id,
-      type: MediaErrorTypes.EpisodeProfile,
+      type: MediaErrorTypes.MovieProfile,
       user_id: user.id,
     },
   });

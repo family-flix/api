@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const error_record = await store.prisma.media_error_need_process.findFirst({
     where: {
       id,
-      type: MediaErrorTypes.SeasonProfile,
+      type: MediaErrorTypes.TVProfile,
       user_id: user.id,
     },
   });
@@ -34,13 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!error_record.profile) {
     return e(Result.Err("没有 profile 值"));
   }
-  const profile = await store.prisma.season_profile.findFirst({
+  const profile = await store.prisma.tv_profile.findFirst({
     where: {
       id: profile_id,
-    },
-    include: {
-      seasons: true,
-      persons: true,
     },
   });
   if (!profile) {

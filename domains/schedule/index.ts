@@ -378,7 +378,6 @@ export class ScheduleTask {
       await this.refresh_media_profile_list_of_user({ user });
     });
   }
-  /** 刷新发布时间在近3月的所有电影详情 */
   async refresh_media_profile_list_of_user(values: { user: User }) {
     const { user } = values;
     const job_res = await Job.New({
@@ -1119,7 +1118,10 @@ export class ScheduleTask {
   }
   async find_media_errors() {
     await this.walk_user(async (user) => {
+      await this.find_tv_errors({ user });
       await this.find_season_errors({ user });
+      await this.find_episode_errors({ user });
+      await this.find_movie_errors({ user });
     });
   }
   async find_tv_errors(options: { user: User }) {
@@ -1495,14 +1497,28 @@ export class ScheduleTask {
             type: {
               in: [ReportTypes.Movie, ReportTypes.TV, ReportTypes.Question],
             },
-            answer: null,
+            OR: [
+              {
+                answer: null,
+              },
+              {
+                answer: "",
+              },
+            ],
             user_id: user.id,
           },
         }),
         media_request_count: await store.prisma.report.count({
           where: {
             type: ReportTypes.Want,
-            answer: null,
+            OR: [
+              {
+                answer: null,
+              },
+              {
+                answer: "",
+              },
+            ],
             user_id: user.id,
           },
         }),

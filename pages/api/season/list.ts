@@ -85,7 +85,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     },
     episodes: {
-      some: {},
+      some: {
+        parsed_episodes: {
+          some: {},
+        },
+      },
     },
     user_id: member.user.id,
   };

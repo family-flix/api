@@ -132,17 +132,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         not: MediaProfileSourceTypes.Other,
       },
     },
-    AND: [
-      {
-        episodes: {
-          some: {
-            parsed_episodes: {
-              some: {},
-            },
-          },
-        },
-      },
-    ],
     user_id: user.id,
   };
   if (queries.length !== 0) {
