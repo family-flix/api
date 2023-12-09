@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file 删除重复电影
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const error_record = await store.prisma.media_error_need_process.findFirst({
     where: {
       id,
-      type: MediaErrorTypes.SeasonProfile,
+      type: MediaErrorTypes.EpisodeProfile,
       user_id: user.id,
     },
   });
@@ -34,38 +34,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!error_record.profile) {
     return e(Result.Err("没有 profile 值"));
   }
-  const profile = await store.prisma.season_profile.findFirst({
+  const profile = await store.prisma.movie_profile.findFirst({
     where: {
       id: profile_id,
     },
     include: {
-      seasons: true,
-      persons: true,
+      movies: true,
     },
   });
   if (!profile) {
     return e(Result.Err("没有匹配的记录"));
   }
-  await store.prisma.episode.deleteMany({
-    where: {
-      season: {
-        profile_id: profile.id,
-      },
-      user_id: user.id,
-    },
-  });
-  await store.prisma.season.deleteMany({
+  await store.prisma.movie.deleteMany({
     where: {
       profile_id: profile.id,
       user_id: user.id,
     },
   });
-  await store.prisma.person_in_media.deleteMany({
-    where: {
-      season_id: profile.id,
-    },
-  });
-  await store.prisma.season_profile.delete({
+  await store.prisma.movie_profile.delete({
     where: {
       id: profile.id,
     },
@@ -79,10 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       name: string;
       poster_path: string | null;
       season_number: number;
-      season_count: number;
-      seasons: {
-        poster_path: string;
-        episode_count: number;
+      episode_number: number;
+      episode_count: number;
+      episodes: {
+        source_count: number;
       };
     }[];
   }>(error_record.profile);

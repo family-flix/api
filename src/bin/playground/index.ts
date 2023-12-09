@@ -39,7 +39,7 @@ async function main() {
     return;
   }
   const a = action as keyof typeof actions;
-  const fn = schedule[a];
+  const fn = schedule[a].bind(schedule);
   if (typeof fn !== "function") {
     return;
   }

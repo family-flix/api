@@ -1,5 +1,5 @@
 /**
- * @file
+ * @file 删除电视剧详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   await store.prisma.episode.deleteMany({
     where: {
-      season: {
+      tv: {
         profile_id: profile.id,
       },
       user_id: user.id,
@@ -56,7 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   await store.prisma.season.deleteMany({
     where: {
-      profile_id: profile.id,
+      tv: {
+        profile_id: profile.id,
+      },
       user_id: user.id,
     },
   });

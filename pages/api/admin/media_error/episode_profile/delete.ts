@@ -45,7 +45,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!profile) {
     return e(Result.Err("没有匹配的记录"));
   }
-  await store.prisma.episode.delete({
+  await store.prisma.episode.deleteMany({
+    where: {
+      profile_id: profile.id,
+      user_id: user.id,
+    },
+  });
+  await store.prisma.episode_profile.delete({
     where: {
       id: profile.id,
     },

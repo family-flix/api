@@ -51,6 +51,8 @@ type EpisodeProfileError = {
     name: string | null;
     poster_path: string | null;
     season_id: string;
+    season_text: string;
+    episode_text: string;
     source_count: number;
   }[];
 };
@@ -78,6 +80,36 @@ type MovieProfileError = {
     poster_path: string | null;
     source_count: number;
   }[];
+};
+type TVError = {
+  id: string;
+  name: string | null;
+  poster_path: string | null;
+  texts: string[];
+};
+type SeasonError = {
+  id: string;
+  name: string | null;
+  poster_path: string | null;
+  tv_id: string;
+  season_text: string;
+  texts: string[];
+};
+type EpisodeError = {
+  id: string;
+  name: string | null;
+  poster_path: string | null;
+  tv_id: string;
+  season_id: string;
+  season_text: string;
+  episode_text: string;
+  texts: string[];
+};
+type MovieError = {
+  id: string;
+  name: string | null;
+  poster_path: string | null;
+  texts: string[];
 };
 
 export class ScheduleTask {
@@ -1046,6 +1078,8 @@ export class ScheduleTask {
                 name: tv.profile.name,
                 poster_path: tv.profile.poster_path,
                 season_id,
+                episode_text: s.episode_text,
+                season_text: s.season_text,
                 source_count: parsed_episodes.length,
               };
             }),
@@ -1088,6 +1122,77 @@ export class ScheduleTask {
       await this.find_season_errors({ user });
     });
   }
+  async find_tv_errors(options: { user: User }) {
+    const { user } = options;
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.tv.findMany({
+          where: {
+            user_id: user.id,
+          },
+          include: {
+            profile: true,
+            seasons: true,
+            episodes: true,
+          },
+          orderBy: {
+            profile: { first_air_date: "desc" },
+          },
+          ...extra,
+        });
+      },
+      handler: async (data, index) => {
+        const tv = data;
+        const { id, seasons, episodes } = tv;
+        const profile = tv.profile;
+        const tips: string[] = [];
+        if (episodes.length === 0) {
+          tips.push("关联的剧集数为 0");
+        }
+        if (seasons.length === 0) {
+          tips.push("关联的季数为 0");
+        }
+        if (tips.length === 0) {
+          return;
+        }
+        const payload: TVError = {
+          id,
+          name: profile.name,
+          poster_path: profile.poster_path,
+          texts: tips,
+        };
+        const existing = await this.store.prisma.media_error_need_process.findFirst({
+          where: {
+            unique_id: tv.id,
+            type: MediaErrorTypes.TV,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          await this.store.prisma.media_error_need_process.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              type: MediaErrorTypes.TV,
+              profile: JSON.stringify(payload),
+              updated: dayjs().toISOString(),
+            },
+          });
+          return;
+        }
+        await this.store.prisma.media_error_need_process.create({
+          data: {
+            id: r_id(),
+            unique_id: tv.id,
+            type: MediaErrorTypes.TV,
+            profile: JSON.stringify(payload),
+            user_id: user.id,
+          },
+        });
+      },
+    });
+  }
   async find_season_errors(options: { user: User }) {
     const { user } = options;
     await walk_model_with_cursor({
@@ -1126,7 +1231,7 @@ export class ScheduleTask {
       },
       handler: async (data, index) => {
         const season = data;
-        const { profile, tv, sync_tasks, _count, episodes } = season;
+        const { id, tv_id, profile, season_text, tv, sync_tasks, _count, episodes } = season;
         const { episode_count } = profile;
         const incomplete = episode_count !== 0 && episode_count !== _count.episodes;
         const { name, poster_path, binds } = normalize_partial_tv({
@@ -1149,12 +1254,13 @@ export class ScheduleTask {
         if (tips.length === 0) {
           return;
         }
-        const payload = {
-          unique_id: season.id,
-          type: MediaErrorTypes.Season,
+        const payload: SeasonError = {
+          id,
           name,
           poster_path,
-          profile: tips,
+          season_text,
+          tv_id,
+          texts: tips,
         };
         const existing = await this.store.prisma.media_error_need_process.findFirst({
           where: {
@@ -1169,6 +1275,7 @@ export class ScheduleTask {
               id: existing.id,
             },
             data: {
+              type: MediaErrorTypes.Season,
               profile: JSON.stringify(payload),
               updated: dayjs().toISOString(),
             },
@@ -1180,6 +1287,148 @@ export class ScheduleTask {
             id: r_id(),
             unique_id: season.id,
             type: MediaErrorTypes.Season,
+            profile: JSON.stringify(payload),
+            user_id: user.id,
+          },
+        });
+      },
+    });
+  }
+  async find_episode_errors(options: { user: User }) {
+    const { user } = options;
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.episode.findMany({
+          where: {
+            user_id: user.id,
+          },
+          include: {
+            profile: true,
+            parsed_episodes: true,
+            tv: {
+              include: {
+                profile: true,
+              },
+            },
+          },
+          orderBy: {
+            profile: { air_date: "desc" },
+          },
+          ...extra,
+        });
+      },
+      handler: async (data, index) => {
+        const episode = data;
+        const { id, episode_text, season_text, tv_id, season_id, tv, parsed_episodes } = episode;
+        const profile = tv.profile;
+        const tips: string[] = [];
+        if (parsed_episodes.length === 0) {
+          tips.push("视频源数量为 0");
+        }
+        if (tips.length === 0) {
+          return;
+        }
+        const payload: EpisodeError = {
+          id,
+          name: profile.name,
+          poster_path: profile.poster_path,
+          episode_text,
+          season_text,
+          tv_id,
+          season_id,
+          texts: tips,
+        };
+        const existing = await this.store.prisma.media_error_need_process.findFirst({
+          where: {
+            unique_id: episode.id,
+            type: MediaErrorTypes.Episode,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          await this.store.prisma.media_error_need_process.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              type: MediaErrorTypes.Episode,
+              profile: JSON.stringify(payload),
+              updated: dayjs().toISOString(),
+            },
+          });
+          return;
+        }
+        await this.store.prisma.media_error_need_process.create({
+          data: {
+            id: r_id(),
+            unique_id: episode.id,
+            type: MediaErrorTypes.Episode,
+            profile: JSON.stringify(payload),
+            user_id: user.id,
+          },
+        });
+      },
+    });
+  }
+  async find_movie_errors(options: { user: User }) {
+    const { user } = options;
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.movie.findMany({
+          where: {
+            user_id: user.id,
+          },
+          include: {
+            profile: true,
+            parsed_movies: true,
+          },
+          orderBy: {
+            profile: { air_date: "desc" },
+          },
+          ...extra,
+        });
+      },
+      handler: async (data, index) => {
+        const movie = data;
+        const { id, profile, parsed_movies } = movie;
+        const tips: string[] = [];
+        if (parsed_movies.length === 0) {
+          tips.push("视频源数量为 0");
+        }
+        if (tips.length === 0) {
+          return;
+        }
+        const payload: MovieError = {
+          id,
+          name: profile.name,
+          poster_path: profile.poster_path,
+          texts: tips,
+        };
+        const existing = await this.store.prisma.media_error_need_process.findFirst({
+          where: {
+            unique_id: movie.id,
+            type: MediaErrorTypes.Movie,
+            user_id: user.id,
+          },
+        });
+        if (existing) {
+          await this.store.prisma.media_error_need_process.update({
+            where: {
+              id: existing.id,
+            },
+            data: {
+              type: MediaErrorTypes.Movie,
+              profile: JSON.stringify(payload),
+              updated: dayjs().toISOString(),
+            },
+          });
+          return;
+        }
+        await this.store.prisma.media_error_need_process.create({
+          data: {
+            id: r_id(),
+            unique_id: movie.id,
+            type: MediaErrorTypes.Movie,
             profile: JSON.stringify(payload),
             user_id: user.id,
           },
