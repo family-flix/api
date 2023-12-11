@@ -3,17 +3,14 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
-import { FileRecord, ParsedEpisodeRecord, ParsedMovieRecord, ParsedTVRecord } from "@/domains/store/types";
-import { archive_movie_files, archive_season_files } from "@/domains/aliyundrive/utils";
-import { MediaSearcher } from "@/domains/searcher";
+import { ParsedMovieRecord } from "@/domains/store/types";
+import { archive_movie_files } from "@/domains/aliyundrive/utils";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
-import { Folder } from "@/domains/folder";
 import { Drive } from "@/domains/drive";
 import { FileType } from "@/constants";
 import { DriveAnalysis } from "@/domains/analysis";

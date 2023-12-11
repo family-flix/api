@@ -1713,9 +1713,23 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
    * 根据 parsed_movie 搜索电视剧详情
    */
   async search_movie_profile_with_parsed_movie(movie: ParsedMovieRecord) {
-    const { name, original_name, unique_id } = movie;
+    const { name, original_name, unique_id, movie_id } = movie;
     const prefix = [name, original_name].filter(Boolean).join("/");
     const movie_profile_in_tmdb_res = await (async () => {
+      if (movie_id) {
+        const r = await this.store.prisma.movie.findFirst({
+          where: {
+            id: movie_id,
+            user_id: this.user.id,
+          },
+          include: {
+            profile: true,
+          },
+        });
+        if (r) {
+          return Result.Ok(r.profile);
+        }
+      }
       if (unique_id) {
         const r = await this.store.prisma.movie_profile.findFirst({
           where: {

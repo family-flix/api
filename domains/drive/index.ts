@@ -890,7 +890,12 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       // 删除关联的电视剧
       this.emit(Events.Print, Article.build_line(["开始删除关联的解析电视剧结果"]));
       const parsed_tvs = await this.store.prisma.parsed_tv.findMany({
-        where,
+        where: {
+          ...where,
+          parsed_episodes: {
+            none: {},
+          },
+        },
       });
       if (parsed_tvs.length) {
         this.emit(

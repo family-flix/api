@@ -125,8 +125,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     for (let i = 0; i < all_parsed_episodes_of_the_season.length; i += 1) {
       (() => {
         const parsed_episode = all_parsed_episodes_of_the_season[i];
-        const { id, file_id, file_name, parent_file_id, parent_paths, episode_number, season_number, drive_id } =
-          parsed_episode;
+        const {
+          id,
+          file_id,
+          file_name,
+          parent_file_id,
+          parent_paths,
+          episode_number,
+          parsed_tv_id,
+          season_number,
+          drive_id,
+        } = parsed_episode;
         const payload = {
           id,
           file_id,

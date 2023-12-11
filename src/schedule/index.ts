@@ -141,13 +141,19 @@ import { notice_push_deer } from "../notice";
     true,
     "Asia/Shanghai"
   );
-  new CronJob.CronJob("0 0 2 * * *", async () => {
-    console.log("执行任务 at 0 0 2 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-    await schedule.refresh_media_profile_list();
-    notice_push_deer({
-      title: "影视剧刷新",
-      markdown: "执行了一次影视剧刷新任务",
-    });
-  });
+  new CronJob.CronJob(
+    "0 0 2 * * *",
+    async () => {
+      console.log("执行任务 at 0 0 2 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+      await schedule.refresh_media_profile_list();
+      notice_push_deer({
+        title: "影视剧刷新",
+        markdown: "执行了一次影视剧刷新任务",
+      });
+    },
+    null,
+    true,
+    "Asia/Shanghai"
+  );
   console.log("\nThe Cron jobs is running");
 })();

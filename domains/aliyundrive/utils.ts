@@ -117,9 +117,13 @@ export async function archive_season_files(body: {
   const season_folder_name = [tv_name_with_pinyin, season_text, air_date_of_year].join(".");
   const new_folder_parent_path = [drive.profile.root_folder_name, season_folder_name].join("/");
   const parents: Record<string, { file_id: string; file_name: string }> = {};
+  const parent_file_ids: string[] = [];
   for (let i = 0; i < files.length; i += 1) {
     const { parent_file_id, parent_paths } = files[i];
     const paths = parent_paths.split("/");
+    if (!parent_file_ids.includes(parent_file_id)) {
+      parent_file_ids.push(parent_file_id);
+    }
     parents[parent_paths] = {
       file_id: parent_file_id,
       file_name: paths[paths.length - 1],
@@ -239,6 +243,19 @@ export async function archive_season_files(body: {
     file_name: created_folder_res.data.file_name,
     file_ids: [],
   } as CreatedFolder;
+  for (let i = 0; i < parent_file_ids.length; i += 1) {
+    const file_id = parent_file_ids[i];
+    await store.prisma.parsed_tv.updateMany({
+      where: {
+        file_id,
+        user_id: user.id,
+      },
+      data: {
+        file_id: created_folder.file_id,
+        file_name: created_folder.file_name,
+      },
+    });
+  }
   const errors: {
     file_id: string;
     tip: string;

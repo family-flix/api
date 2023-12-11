@@ -1833,7 +1833,13 @@ export function is_korean(text: string) {
 export function build_media_name(values: { name: string | null; original_name: string | null }) {
   const { name, original_name } = values;
   const first_char_pin_yin = get_first_letter(name);
-  const n = [first_char_pin_yin, name].filter(Boolean).join(" ");
+  const nn = name
+    ? name
+        .split(" ")
+        .map((t) => t.trim())
+        .join("")
+    : null;
+  const n = [first_char_pin_yin, nn].filter(Boolean).join(" ");
   const original_n = (() => {
     if (name && name === original_name) {
       return "";
@@ -1841,7 +1847,13 @@ export function build_media_name(values: { name: string | null; original_name: s
     if (!original_name) {
       return "";
     }
-    return original_name;
+    return original_name
+      .split(" ")
+      .map((t) => t.trim())
+      .map((t) => {
+        return t.replace(/\.{1,}$/, "").replace(/^\.{1,}/, "");
+      })
+      .join(".");
   })().replace(/ /, "");
   const name_with_pin_yin = [n, original_n].filter(Boolean).join(".").replace(/:/, "：");
   return name_with_pin_yin;

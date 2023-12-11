@@ -148,7 +148,7 @@ export class ScheduleTask {
         fn: (extra) => {
           return this.store.prisma.drive.findMany({
             where: {
-              type: DriveTypes.AliyunBackupDrive,
+              // type: DriveTypes.AliyunBackupDrive,
               user_id: user.id,
             },
             ...extra,
@@ -174,6 +174,9 @@ export class ScheduleTask {
       text: string[];
     }[] = [];
     await this.walk_drive(async (drive) => {
+      if (drive.type === DriveTypes.AliyunResourceDrive) {
+        return;
+      }
       const r = await drive.client.checked_in();
       if (r.error) {
         results.push({
@@ -451,6 +454,9 @@ export class ScheduleTask {
   }
   async validate_drive_list() {
     await this.walk_drive(async (drive) => {
+      if (drive.type === DriveTypes.AliyunResourceDrive) {
+        return;
+      }
       await this.validate_drive(drive);
     });
     return Result.Ok(null);
@@ -1524,6 +1530,9 @@ export class ScheduleTask {
         }),
       };
       await this.walk_drive(async (drive, user) => {
+        if (drive.type === DriveTypes.AliyunBackupDrive) {
+          return;
+        }
         const { total_size, used_size } = drive.profile;
         payload.drive_used_size_count += used_size || 0;
         payload.drive_total_size_count += total_size || 0;
@@ -1631,6 +1640,7 @@ export class ScheduleTask {
             return;
           }
           const { name } = season.tv.profile;
+          console.log(name);
           const matched_resource = resources.find((e) => e.name === name);
           if (!matched_resource) {
             console.log("the resource is expired but there no valid resource, ", name);

@@ -79,9 +79,10 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   }
 
   static async New(body: JobNewProps) {
-    const { desc, unique_id, user_id, store } = body;
+    const { desc, type, unique_id, user_id, store } = body;
     const existing = await store.prisma.async_task.findFirst({
       where: {
+        type,
         unique_id,
         status: TaskStatus.Running,
         user_id,
@@ -96,6 +97,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         id: r_id(),
         unique_id,
         desc,
+        type,
         status: TaskStatus.Running,
         output: {
           create: {
@@ -111,12 +113,12 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         },
       },
     });
-    const { id, status, type, output_id, created } = res;
+    const { id, status, type: t, output_id, created } = res;
     const output = new Article({});
     const job = new Job({
       id,
       profile: {
-        type,
+        type: t,
         status,
         desc,
         unique_id,
