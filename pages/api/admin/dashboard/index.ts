@@ -3,6 +3,7 @@
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
+import dayjs from "dayjs";
 
 import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
@@ -59,6 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     media_request_count,
     invalid_season_count,
     invalid_sync_task_count,
+    updated,
   } = record;
   res.status(200).json({
     code: 0,
@@ -78,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       media_request_count,
       invalid_season_count,
       invalid_sync_task_count,
+      updated_at: dayjs(updated).format("YYYY-MM-DD MM:HH:ss"),
     },
   });
 }

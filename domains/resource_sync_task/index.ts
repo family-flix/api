@@ -300,10 +300,18 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         },
       },
     });
+    const ignore_files = this.user.get_ignore_files();
     const differ = new FolderDiffer({
       folder,
       prev_folder,
       unique_key: "name",
+      filter(file) {
+        const file_paths = [file.parent_paths, file.name].join("/");
+        if (ignore_files.includes(file_paths)) {
+          return false;
+        }
+        return true;
+      },
       on_print: (node) => {
         this.emit(Events.Print, node);
       },

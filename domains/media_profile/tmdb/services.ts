@@ -92,6 +92,7 @@ export type PartialSearchedTV = Omit<TVProfileItemInTMDB, "id" | "search_tv_in_t
  * @param keyword
  */
 export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCommentPart & { page?: number }) {
+  console.log("[SERVICE]search_tv_in_tmdb ", keyword);
   const endpoint = `/search/tv`;
   const { page, api_key, language } = options;
   const query = {
@@ -161,6 +162,7 @@ export type TVProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof sear
  * @param keyword
  */
 export async function search_movie_in_tmdb(keyword: string, options: TMDBRequestCommentPart & { page?: number }) {
+  console.log("[SERVICE]search_movie_in_tmdb ", keyword);
   const endpoint = `/search/movie`;
   const { page, api_key, language } = options;
   const query = {
@@ -230,6 +232,7 @@ export async function fetch_tv_profile(
     language?: Language;
   }
 ) {
+  console.log("[SERVICE]fetch_tv_profile ", id);
   if (id === undefined) {
     return Result.Err("请传入电视剧 id");
   }
@@ -384,6 +387,7 @@ export async function fetch_season_profile(
     language?: Language;
   }
 ) {
+  console.log("[SERVICE]fetch_season_profile ", body);
   const { tv_id, season_number } = body;
   if (season_number === undefined) {
     return Result.Err("请传入季数");
@@ -490,6 +494,7 @@ export async function fetch_episode_profile(
     language?: Language;
   }
 ) {
+  console.log("[SERVICE]fetch_episode_profile ", body);
   const { tv_id, season_number, episode_number } = body;
   if (season_number === undefined) {
     return Result.Err("请传入季数");
@@ -548,6 +553,7 @@ export async function fetch_movie_profile(
     language?: Language;
   }
 ) {
+  console.log("[SERVICE]fetch_movie_profile ", id);
   if (id === undefined) {
     return Result.Err("请传入电影 id");
   }
@@ -667,6 +673,7 @@ export async function fetch_persons_of_season(
     language?: Language;
   }
 ) {
+  console.log("[SERVICE]fetch_persons_of_season ", body);
   const { tv_id, season_number } = body;
   if (season_number === undefined) {
     return Result.Err("请传入季数");
@@ -745,6 +752,7 @@ export async function fetch_persons_of_movie(
     language?: Language;
   }
 ) {
+  console.log("[SERVICE]fetch_persons_of_movie ", body);
   const { movie_id } = body;
   const endpoint = `/movie/${movie_id}/credits`;
   const { api_key, language } = option;
@@ -820,6 +828,7 @@ export async function fetch_person_profile(
     language?: Language;
   }
 ) {
+  console.log("[SERVICE]fetch_person_profile ", body);
   const { person_id } = body;
   if (person_id === undefined) {
     return Result.Err("请传入 person_id");
@@ -850,7 +859,6 @@ export async function fetch_person_profile(
   }
   const { id, name, also_known_as, known_for_department, biography, profile_path, place_of_birth, birthday } =
     result.data;
-  console.log(also_known_as);
   return Result.Ok({
     id,
     name: (() => {

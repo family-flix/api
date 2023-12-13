@@ -14,12 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const {
     name,
-    duplicated = "0",
     page: page_str = "1",
     page_size: page_size_str = "20",
   } = req.query as Partial<{
     name: string;
-    duplicated: string;
     page: string;
     page_size: string;
   }>;
@@ -55,33 +53,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       ],
     });
   }
-  if (Number(duplicated) === 1) {
-    const duplicate_movie_profiles = await store.prisma.movie_profile.groupBy({
-      by: ["unique_id"],
-      where: {
-        movies: {
-          every: {
-            user_id: user.id,
-          },
-        },
-      },
-      having: {
-        unique_id: {
-          _count: {
-            gt: 1,
-          },
-        },
-      },
-    });
-    queries = queries.concat({
-      unique_id: {
-        in: duplicate_movie_profiles.map((profile) => {
-          const { unique_id } = profile;
-          return unique_id;
-        }),
-      },
-    });
-  }
   if (queries.length !== 0) {
     where.profile = {
       AND: queries,
@@ -93,7 +64,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const list = await store.prisma.movie.findMany({
     where,
     include: {
-      profile: true,
+      profile: {
+        include: {
+          persons: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+      },
       parsed_movies: true,
     },
     orderBy: {
@@ -120,6 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         popularity,
         genres,
         origin_country,
+        persons,
       } = profile;
       return {
         id,
@@ -133,6 +113,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         genres,
         origin_country,
         runtime,
+        persons: persons
+          .map((person) => {
+            const {
+              order,
+              profile: { id, name, profile_path },
+            } = person;
+            return {
+              id,
+              name,
+              profile_path,
+              order,
+            };
+          })
+          .sort((a, b) => a.order - b.order),
       };
     }),
   };

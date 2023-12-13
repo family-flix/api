@@ -450,4 +450,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("1080P俄版流媒体中字.mkv", () => {
+    const name = "1080P俄版流媒体中字.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

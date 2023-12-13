@@ -331,4 +331,14 @@ describe("动漫", () => {
       episode: "E06",
     });
   });
+  test("[HYSUB][Tenchi Souzou Design Bu][04v2][GB_MP4][1280X720].mp4", () => {
+    const name = "[HYSUB][Tenchi Souzou Design Bu][04v2][GB_MP4][1280X720].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Tenchi.Souzou.Design.Bu",
+      season: "",
+      episode: "E04",
+    });
+  });
 });

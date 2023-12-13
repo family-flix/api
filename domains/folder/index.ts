@@ -64,7 +64,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
   ) {
     super();
 
-    const { client, name, parents = [] } = options;
+    const { client = null, name, parents = [] } = options;
     if (name) {
       this.name = name;
     }
@@ -115,7 +115,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
     }
     const { items, next_marker: next_next_marker } = r.data;
     const folder_or_files = items.map((f) => {
-      const { type, file_id } = f;
+      const { type, file_id, size, md5 } = f;
       const parents = this.parents.concat({
         id: this.id,
         name: this.name,
@@ -130,6 +130,8 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
         return folder;
       }
       const file = new File(file_id, {
+        size,
+        md5,
         client: this.client,
         parents,
       });
@@ -208,7 +210,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
     const { items, next_marker } = r.data;
     this.next_marker = next_marker;
     const folder_or_files = items.map((f) => {
-      const { type, file_id } = f;
+      const { type, file_id, size, md5 } = f;
       const parents = this.parents.concat({
         id: this.id,
         name: this.name,
@@ -223,6 +225,8 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
         return folder;
       }
       const file = new File(file_id, {
+        size,
+        md5,
         client: this.client,
         parents,
       });
@@ -269,12 +273,18 @@ export class File {
   constructor(
     id: string,
     options: {
+      size?: number;
+      md5?: string | null;
       client: File["client"];
       parents: File["parents"];
     }
   ) {
-    const { client, parents } = options;
+    const { size = 0, md5, client, parents } = options;
     this.id = id;
+    this.size = size;
+    if (md5) {
+      this.md5 = md5;
+    }
     this.client = client;
     this.parents = parents;
   }

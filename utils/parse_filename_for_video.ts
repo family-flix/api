@@ -44,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("觀世音傳奇")) {
+    if (!filename.includes("Souzou")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -311,7 +311,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("subtitle_lang"),
-      regexp: /([zZ][hH]|[cC][hH][iIsStT]|[eE][nN][gG])\./,
+      regexp: /[^a-z]([zZ][hH]|[cC][hH][iIsStT]|[eE][nN][gG])\./,
       pick: [1],
     },
     // 一些国产剧影片特有的信息？
@@ -333,7 +333,7 @@ export function parse_filename_for_video(
       regexp: /([0-9]{1,}集){0,1}((持续){0,1}更新中|[已全]\.{0,1}完结)/,
     },
     {
-      regexp: /默认|付费|去除|保留|官方|公众号[:：]{0,1}/,
+      regexp: /默认|付费|去除|保留|官方|流媒体|公众号[:：]{0,1}/,
     },
     {
       regexp: /[多双粤国英]{1,}[语言音]{1,}[轨频]/,
@@ -405,6 +405,9 @@ export function parse_filename_for_video(
     },
     {
       regexp: /多语版|网络版|劇場版|合成版|连续剧版|亚马逊版|\.Extended/,
+    },
+    {
+      regexp: /[俄]版/,
     },
     {
       regexp: /([0-9]{1,}部){0,1}剧场版/,
@@ -923,6 +926,17 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
+      regexp: /([0-9]{1,})[vV][234]/,
+      pick: [1],
+      before() {
+        const r = /([0-9]{1,})[vV][234]/;
+        if (cur_filename.match(r)) {
+          cur_filename = cur_filename.replace(/[vV][234]/, "");
+        }
+      },
+    },
+    {
+      key: k("episode"),
       regexp: /[\u4e00-\u9fa5]{1,}(0[1-9]{1,2})\./,
       pick: [1],
     },
@@ -1023,6 +1037,12 @@ export function parse_filename_for_video(
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
         const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z0-9！：，（）～~·、■.-]{1,})/;
+        // 针对 1883 这个剧特殊处理？？1883.2002 这样的名字，1883 是剧名
+        // const r2 = /([12][01789][0-9]{2})\.{0,}[12][01789][0-9]{2}/;
+        // if (cur_filename.match(r2)) {
+        //   result.name = cur_filename.match(r2)![1];
+        //   return;
+        // }
         if (cur_filename.match(r1)) {
           cur_filename = cur_filename.replace(r1, "$2.$1");
         }

@@ -282,11 +282,22 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         });
       }
       if (type === DriveTypes.AliyunResourceDrive) {
-        const { drive_id } = payload as { drive_id: string };
+        const { drive_id, unique_id } = payload as { drive_id: string; unique_id: string };
         // console.log("[DOMAIN]drive/index - before store.prisma.drive.findFirst", drive_id);
         const existing_drive = await store.prisma.drive.findFirst({
           where: {
-            id: drive_id,
+            OR: [
+              drive_id
+                ? {
+                    id: drive_id,
+                  }
+                : {},
+              unique_id
+                ? {
+                    unique_id: String(unique_id),
+                  }
+                : {},
+            ].filter((v) => Object.keys(v).length > 0),
             user_id: user.id,
           },
           include: {

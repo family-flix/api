@@ -10,6 +10,7 @@ import { BaseApiResp, Result } from "@/types";
 import { parseJSONStr } from "@/utils";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
+import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -35,7 +36,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   const data_res = await (async () => {
     if (type === DriveTypes.AliyunBackupDrive) {
-      const p_res = parseJSONStr<{ app_id: string; drive_id: string; device_id: string; user_id: string }>(profile);
+      const p_res = parseJSONStr<AliyunDrivePayload>(profile);
+      if (p_res.error) {
+        return Result.Err(p_res.error);
+      }
+      const { app_id, drive_id, device_id, user_id } = p_res.data;
+      const drive_token_res = await store.find_aliyun_drive_token({
+        id: drive_record.drive_token_id,
+      });
+      if (drive_token_res.error) {
+        return Result.Err(drive_token_res.error);
+      }
+      if (!drive_token_res.data) {
+        return Result.Err("没有匹配的云盘凭证记录");
+      }
+      const { data } = drive_token_res.data;
+      const d_res = parseJSONStr<{ access_token: string; refresh_token: string }>(data);
+      if (d_res.error) {
+        return Result.Err(d_res.error);
+      }
+      const { access_token, refresh_token } = d_res.data;
+      return Result.Ok({
+        app_id,
+        drive_id,
+        device_id,
+        avatar,
+        name,
+        user_id,
+        root_folder_id,
+        total_size,
+        used_size,
+        access_token,
+        refresh_token,
+      });
+    }
+    if (type === DriveTypes.AliyunResourceDrive) {
+      const p_res = parseJSONStr<AliyunDrivePayload>(profile);
       if (p_res.error) {
         return Result.Err(p_res.error);
       }

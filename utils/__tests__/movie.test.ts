@@ -403,4 +403,15 @@ describe("电影", () => {
       episode: "E07",
     });
   });
+  // @todo
+  // test("S 三傻大闹宝莱坞.3.Idiots.2009", () => {
+  //   const name = "S 三傻大闹宝莱坞.3.Idiots.2009";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "三傻大闹宝莱坞",
+  //     original_name: "3.Idiots",
+  //     season: "",
+  //     episode: "",
+  //   });
+  // });
 });

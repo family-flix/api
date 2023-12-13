@@ -17,5 +17,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  res.status(200).json({ code: 0, msg: "", data: user.settings });
+  const { push_deer_token, ignore_files_when_sync, max_size_when_sync, extra_filename_rules } = user.settings;
+  res.status(200).json({
+    code: 0,
+    msg: "",
+    data: {
+      push_deer_token,
+      ignore_files_when_sync,
+      max_size_when_sync,
+      extra_filename_rules,
+    },
+  });
 }

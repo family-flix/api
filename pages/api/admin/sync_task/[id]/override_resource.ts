@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!url) {
     return e(Result.Err("缺少资源 url"));
   }
-  const t_r1 = await ResourceSyncTask.Get({ id, assets: app.assets, user, store });
+  const t_r1 = await ResourceSyncTask.Get({ id, assets: app.assets, ignore_invalid: true, user, store });
   if (t_r1.error) {
     return e(Result.Err(t_r1.error.message));
   }

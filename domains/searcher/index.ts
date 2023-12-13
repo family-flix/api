@@ -302,7 +302,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       },
       handler: async (parsed_tv, i) => {
         const prefix = get_prefix_from_names(parsed_tv);
-        this.emit(Events.Print, Article.build_line([prefix, `第${i + 1}个`]));
+        this.emit(Events.Print, Article.build_line([`第${i + 1}个、`, prefix]));
         try {
           const r = await this.process_parsed_tv({ parsed_tv });
           if (r.error) {
@@ -464,7 +464,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       handler: async (parsed_episode, i, finish) => {
         const { parsed_tv, season_number, episode_number } = parsed_episode;
         const prefix = `${get_prefix_from_names(parsed_tv)}/${season_number}/${episode_number}`;
-        this.emit(Events.Print, Article.build_line([prefix, `第${i + 1}个`]));
+        this.emit(Events.Print, Article.build_line([`第${i + 1}个、`, prefix]));
         if (!parsed_tv.tv_id) {
           this.emit(Events.Print, Article.build_line([prefix, "没有关联电视剧"]));
           return;
@@ -529,7 +529,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       handler: async (parsed_movie, i) => {
         const { name, original_name } = parsed_movie;
         const prefix = name || original_name;
-        this.emit(Events.Print, Article.build_line([prefix, `第${i + 1}个`]));
+        this.emit(Events.Print, Article.build_line([`第${i + 1}个、`, prefix]));
         try {
           const r = await this.process_parsed_movie({ parsed_movie });
           if (r.error) {
@@ -1713,21 +1713,26 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
    * 根据 parsed_movie 搜索电视剧详情
    */
   async search_movie_profile_with_parsed_movie(movie: ParsedMovieRecord) {
-    const { name, original_name, unique_id, movie_id } = movie;
+    const { name, original_name, file_name, parent_paths, unique_id } = movie;
     const prefix = [name, original_name].filter(Boolean).join("/");
     const movie_profile_in_tmdb_res = await (async () => {
-      if (movie_id) {
-        const r = await this.store.prisma.movie.findFirst({
+      if (file_name) {
+        const r = await this.store.prisma.parsed_movie.findFirst({
           where: {
-            id: movie_id,
+            file_name,
+            parent_paths,
             user_id: this.user.id,
           },
           include: {
-            profile: true,
+            movie: {
+              include: {
+                profile: true,
+              },
+            },
           },
         });
-        if (r) {
-          return Result.Ok(r.profile);
+        if (r && r.movie) {
+          return Result.Ok(r.movie.profile);
         }
       }
       if (unique_id) {
@@ -1800,60 +1805,58 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     const { parsed_movie, profile } = body;
     const { name, original_name } = parsed_movie;
     const prefix = `${name || original_name}`;
-    const movie = await (async () => {
-      const existing = await this.store.prisma.movie.findFirst({
-        where: {
-          profile_id: profile.id,
-        },
-        include: {
-          profile: {
-            include: {
-              persons: {
-                include: {
-                  profile: true,
-                },
+    const existing = await this.store.prisma.movie.findFirst({
+      where: {
+        profile_id: profile.id,
+      },
+      include: {
+        profile: {
+          include: {
+            persons: {
+              include: {
+                profile: true,
               },
             },
           },
         },
-      });
-      if (existing) {
-        return existing;
-      }
-      const created = await this.store.prisma.movie.create({
-        data: {
-          id: r_id(),
-          profile_id: profile.id,
-          user_id: this.user.id,
-        },
-        include: {
-          profile: {
-            include: {
-              persons: {
-                include: {
-                  profile: true,
-                },
-              },
-            },
-          },
-        },
-      });
-      this.emit(
-        Events.Print,
-        Article.build_line([`[${prefix}]`, "新增电影详情成功，匹配的电影是", ` [${profile.name}]`])
-      );
-      this.emit(Events.MovieAdded, created);
-      return created;
-    })();
-    const r2 = await this.store.update_parsed_movie(parsed_movie.id, {
-      movie_id: movie.id,
-      can_search: 0,
+      },
     });
-    if (r2.error) {
-      return Result.Err(r2.error, "10003");
+    if (existing) {
+      const r2 = await this.store.update_parsed_movie(parsed_movie.id, {
+        movie_id: existing.id,
+        can_search: 0,
+      });
+      if (r2.error) {
+        return Result.Err(r2.error.message);
+      }
+      return Result.Ok(existing);
     }
-    await this.insert_persons_of_movie(movie);
-    return Result.Ok(r2.data);
+    const created = await this.store.prisma.movie.create({
+      data: {
+        id: r_id(),
+        profile_id: profile.id,
+        user_id: this.user.id,
+      },
+      include: {
+        profile: {
+          include: {
+            persons: {
+              include: {
+                profile: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    this.emit(
+      Events.Print,
+      Article.build_line([`[${prefix}]`, "新增电影详情成功，匹配的电影是", ` [${profile.name}]`])
+    );
+    this.emit(Events.MovieAdded, created);
+    this.emit(Events.Print, Article.build_line([`[${prefix}]`, "before insert persons"]));
+    await this.insert_persons_of_movie(created);
+    return Result.Ok(created);
   }
   /** 使用名字在 tmdb 搜索电影，并返回 movie_profile 记录 */
   async search_movie_in_tmdb(name: string) {
@@ -1973,6 +1976,36 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     });
     return Result.Ok(this.cached_movie_profiles[unique_id]);
   }
+  async fetch_person_profile(unique_id: string | number) {
+    const existing = await this.store.prisma.person_profile.findFirst({
+      where: {
+        unique_id: String(unique_id),
+      },
+    });
+    if (existing) {
+      return Result.Ok(existing);
+    }
+    const r2 = await this.client.fetch_person_profile({ person_id: unique_id });
+    if (r2.error) {
+      return Result.Err(r2.error.message);
+    }
+    const profile = r2.data;
+    const { id, name, biography, birthday, place_of_birth, profile_path, known_for_department } = profile;
+    const created = await this.store.prisma.person_profile.create({
+      data: {
+        id: r_id(),
+        unique_id: String(id),
+        sources: JSON.stringify({ tmdb_id: id }),
+        name,
+        biography,
+        profile_path,
+        birthday,
+        place_of_birth,
+        known_for_department,
+      },
+    });
+    return Result.Ok(created);
+  }
   /** 获取指定季的参演人员 */
   async insert_persons_of_season(season: {
     profile: SeasonProfileRecord & { persons: (PersonRecord & { profile: PersonProfileRecord })[] };
@@ -1992,44 +2025,19 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     for (let i = 0; i < partial_persons_in_tmdb.length; i += 1) {
       await (async () => {
         const person_in_tmdb = partial_persons_in_tmdb[i];
-        console.log(person_in_tmdb.name);
+        // console.log(person_in_tmdb.name);
         if (season.profile.persons.find((p) => p.profile.unique_id === String(person_in_tmdb.id))) {
-          console.log("", person_in_tmdb.name, "已存在该季中，跳过");
+          this.emit(Events.Print, Article.build_line(["", person_in_tmdb.name, "已存在该季中，跳过"]));
           return;
         }
-        const r2 = await this.client.fetch_person_profile({ person_id: person_in_tmdb.id });
-        if (r2.error) {
-          console.log("获取演员详情失败", r2.error.message);
+        const person_profile_r = await this.fetch_person_profile(person_in_tmdb.id);
+        if (person_profile_r.error) {
+          this.emit(Events.Print, Article.build_line(["获取演员详情失败，因为", person_profile_r.error.message]));
           return;
         }
-        const profile = r2.data;
-        const { id, name, biography, birthday, place_of_birth, profile_path, known_for_department } = profile;
-        const person_profile_record = await (async () => {
-          const existing = await this.store.prisma.person_profile.findFirst({
-            where: {
-              unique_id: String(r2.data.id),
-            },
-          });
-          if (existing) {
-            return existing;
-          }
-          const created = await this.store.prisma.person_profile.create({
-            data: {
-              id: r_id(),
-              unique_id: String(id),
-              sources: JSON.stringify({ tmdb_id: id }),
-              name,
-              biography,
-              profile_path,
-              birthday,
-              place_of_birth,
-              known_for_department,
-            },
-          });
-          return created;
-        })();
+        const person_profile_record = person_profile_r.data;
         const person_record = await (async () => {
-          const e = await this.store.prisma.person_in_media.findFirst({
+          const ex = await this.store.prisma.person_in_media.findFirst({
             where: {
               id: r_id(),
               profile_id: person_profile_record.id,
@@ -2037,8 +2045,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
               season_id: season.profile.id,
             },
           });
-          if (e) {
-            return e;
+          if (ex) {
+            return ex;
           }
           const created = await this.store.prisma.person_in_media.create({
             data: {
@@ -2083,60 +2091,36 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     for (let i = 0; i < partial_persons_in_tmdb.length; i += 1) {
       await (async () => {
         const person_in_tmdb = partial_persons_in_tmdb[i];
-        console.log(person_in_tmdb.name);
+        // console.log(person_in_tmdb.name);
         if (movie.profile.persons.find((p) => p.profile.unique_id === String(person_in_tmdb.id))) {
-          console.log("", person_in_tmdb.name, "已存在该电影中，跳过");
+          this.emit(Events.Print, Article.build_line(["", person_in_tmdb.name, "已存在该电影中，跳过"]));
           return;
         }
-        const r2 = await this.client.fetch_person_profile({ person_id: person_in_tmdb.id });
-        if (r2.error) {
-          console.log("获取演员详情失败", r2.error.message);
+        const person_profile_r = await this.fetch_person_profile(person_in_tmdb.id);
+        if (person_profile_r.error) {
+          this.emit(Events.Print, Article.build_line(["获取演员详情失败，因为", person_profile_r.error.message]));
           return;
         }
-        const profile = r2.data;
-        const { id, name, biography, birthday, place_of_birth, profile_path, known_for_department } = profile;
-        const person_profile_record = await (async () => {
-          const existing = await this.store.prisma.person_profile.findFirst({
-            where: {
-              unique_id: String(r2.data.id),
-            },
-          });
-          if (existing) {
-            return existing;
-          }
-          const created = await this.store.prisma.person_profile.create({
-            data: {
-              id: r_id(),
-              unique_id: String(id),
-              sources: JSON.stringify({ tmdb_id: id }),
-              name,
-              biography,
-              profile_path,
-              birthday,
-              place_of_birth,
-              known_for_department,
-            },
-          });
-          return created;
-        })();
+        const person_profile_record = person_profile_r.data;
         const person_record = await (async () => {
-          const e = await this.store.prisma.person_in_media.findFirst({
+          const ex = await this.store.prisma.person_in_media.findFirst({
             where: {
               id: r_id(),
-              profile_id: person_profile_record.id,
               order: person_in_tmdb.order,
+              profile_id: person_profile_record.id,
               movie_id: movie.profile_id,
             },
           });
-          if (e) {
-            return e;
+          if (ex) {
+            return ex;
           }
           const created = await this.store.prisma.person_in_media.create({
             data: {
               id: r_id(),
-              profile_id: person_profile_record.id,
               name: person_in_tmdb.name,
               order: person_in_tmdb.order,
+              known_for_department: person_in_tmdb.known_for_department,
+              profile_id: person_profile_record.id,
               movie_id: movie.profile_id,
             },
           });

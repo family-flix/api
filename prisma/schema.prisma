@@ -344,8 +344,8 @@ model parsed_episode {
         type           Int
         // 文件大小
         size           Float?  @default(0)
-        can_search     Int?    @default(1)
         md5            String?
+        can_search     Int?    @default(1)
 
         season_id    String?
         season       season?   @relation(fields: [season_id], references: [id])
@@ -367,6 +367,9 @@ model parsed_movie {
         created DateTime @default(now())
         updated DateTime @default(now())
 
+        // 用户手动设置的 tmbd_id，优先使用该值索引
+        source         Int?    @default(0)
+        unique_id      String?
         // 电视剧名称
         name           String
         original_name  String?
@@ -382,10 +385,8 @@ model parsed_movie {
         type           Int
         // 文件大小
         size           Float?  @default(0)
+        // md5            String?
         can_search     Int?    @default(1)
-        // 用户手动设置的 tmbd_id，优先使用该值索引
-        source         Int?    @default(0)
-        unique_id      String?
 
         movie_id String?
         movie    movie?  @relation(fields: [movie_id], references: [id])

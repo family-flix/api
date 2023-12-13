@@ -216,15 +216,16 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       );
       // log(`[${drive_id}]`, "仅索引这些文件", files.length);
       let cloned_files = [...files];
+      const ignore_files = this.user.get_ignore_files().map((f) => [this.drive.profile.root_folder_name, f].join("/"));
+      console.log('ignore', ignore_files);
       walker.filter = async (cur_file) => {
+        if (ignore_files.includes([cur_file.parent_paths, cur_file.name].join("/"))) {
+          return true;
+        }
         let need_skip_file = true;
         for (let i = 0; i < cloned_files.length; i += 1) {
           const { name: target_file_name, type: target_file_type } = cloned_files[i];
-          // console.log(`[${drive_id}]`, "检查是否要跳过", `${cur_file.parent_paths}/${cur_file.name}`, {
-          //   target_file_name,
-          //   target_file_type,
-          //   cur_file,
-          // });
+          // console.log("检查是否要跳过", `${cur_file.parent_paths}/${cur_file.name}`);
           need_skip_file = need_skip_the_file_when_walk({
             target_file_name,
             target_file_type,

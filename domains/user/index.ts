@@ -17,13 +17,15 @@ const credentialsSchema = Joi.object({
     .message("密码必须是6-20个字符，只能包含字母、数字和标点符号（除空格），并且至少包含两种类型的字符")
     .required(),
 });
-type UserSettings = {
+export type UserSettings = {
   qiniu_access_token?: string;
   qiniu_secret_token?: string;
   qiniu_scope?: string;
   tmdb_token?: string;
   push_deer_token?: string;
   extra_filename_rules?: string;
+  ignore_files_when_sync?: string;
+  max_size_when_sync?: number;
 };
 type UserProps = {
   id: string;
@@ -277,16 +279,7 @@ export class User {
     if (r.error) {
       return {};
     }
-    const { tmdb_token, push_deer_token, extra_filename_rules, qiniu_access_token, qiniu_secret_token, qiniu_scope } =
-      r.data;
-    return {
-      qiniu_access_token,
-      qiniu_secret_token,
-      qiniu_scope,
-      tmdb_token,
-      push_deer_token,
-      extra_filename_rules,
-    };
+    return r.data;
   }
 
   /** 用户 id */
@@ -305,8 +298,16 @@ export class User {
       if (!settings) {
         return {};
       }
-      const { qiniu_access_token, qiniu_secret_token, qiniu_scope, tmdb_token, push_deer_token, extra_filename_rules } =
-        settings;
+      const {
+        qiniu_access_token,
+        qiniu_secret_token,
+        qiniu_scope,
+        tmdb_token,
+        push_deer_token,
+        extra_filename_rules,
+        ignore_files_when_sync,
+        max_size_when_sync,
+      } = settings;
       return {
         qiniu_access_token: qiniu_access_token ?? undefined,
         qiniu_secret_token: qiniu_secret_token ?? undefined,
@@ -314,6 +315,8 @@ export class User {
         tmdb_token: tmdb_token ?? "c2e5d34999e27f8e0ef18421aa5dec38",
         push_deer_token: push_deer_token ?? undefined,
         extra_filename_rules: extra_filename_rules ?? "",
+        ignore_files_when_sync,
+        max_size_when_sync,
       };
     })();
     this.store = store;
@@ -329,6 +332,15 @@ export class User {
       },
       data: {},
     });
+  }
+  get_ignore_files() {
+    const { ignore_files_when_sync = "" } = this.settings;
+    if (!ignore_files_when_sync) {
+      return [];
+    }
+    console.log(ignore_files_when_sync);
+    const rules = ignore_files_when_sync.split("\n\n").filter(Boolean);
+    return rules;
   }
   get_filename_rules() {
     const { extra_filename_rules = "" } = this.settings;

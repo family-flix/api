@@ -30,6 +30,7 @@ export type PartialAliyunDriveFile = {
   name: string;
   parent_file_id: string;
   type?: string;
+  md5?: string;
   size?: number;
   content_hash?: string;
   mime_type?: string;

@@ -337,4 +337,15 @@ describe("动漫", () => {
       episode: "E25",
     });
   });
+  // @todo 这种名字无解吧？
+  // test("1883.S01E09.2002.mp4", () => {
+  //   const name = "1883.S01E09.2002.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "1883",
+  //     original_name: "",
+  //     season: "S01",
+  //     episode: "E09",
+  //   });
+  // });
 });

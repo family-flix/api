@@ -19,8 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { file_id } = req.query as Partial<{ file_id: string }>;
-  const { type, unique_id, season_number, episode_number } = req.body as Partial<{
-    type: number;
+  const { source, unique_id, season_number, episode_number } = req.body as Partial<{
+    source: number;
     unique_id: string;
     season_number: number;
     episode_number: number;
@@ -302,5 +302,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     job.finish();
   }
   run(file, { unique_id, season_number, episode_number });
-  res.status(200).json({ code: 0, msg: "变更电视剧详情", data: { job_id: job.id } });
+  res.status(200).json({ code: 0, msg: "设置剧集详情", data: { job_id: job.id } });
 }

@@ -112,6 +112,13 @@ type FolderWalkerProps = {
   filename_rules?: {
     replace: [string, string];
   }[];
+  filter?: (options: {
+    file_id: string;
+    name: string;
+    type: string;
+    parent_file_id: string;
+    parent_paths: string;
+  }) => Promise<boolean>;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
 };
 
@@ -130,14 +137,11 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   stop = false;
   /** 每次调用列表接口后，是否需要延迟一会 */
   delay?: number;
-  /** 在访问到文件夹/文件时，判断是否要处理（解析或读取子文件夹） */
-  filter?: (options: {
-    file_id: string;
-    name: string;
-    type: string;
-    parent_file_id: string;
-    parent_paths: string;
-  }) => Promise<boolean>;
+  /**
+   * 在访问到文件夹/文件时，判断是否要处理（解析或读取子文件夹）
+   * 返回 true 表示「不处理」！
+   */
+  filter?: FolderWalkerProps["filter"];
   filename_rules: {
     replace: [string, string];
   }[] = [];
@@ -162,9 +166,11 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   constructor(options: FolderWalkerProps) {
     super();
 
-    const { filename_rules = [], on_print } = options;
+    const { filename_rules = [], filter, on_print } = options;
     this.filename_rules = filename_rules;
-
+    if (filter) {
+      this.filter = filter;
+    }
     if (on_print) {
       this.on_print(on_print);
     }

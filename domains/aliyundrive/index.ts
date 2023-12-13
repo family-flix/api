@@ -1464,6 +1464,8 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     await this.ensure_initialized();
     const token = this.access_token;
     const { name, parent_file_id = "root", drive_id } = options;
+    // 10 MB
+    let __UPLOAD_CHUNK_SIZE = 10485760;
     const existing_res = await this.existing(parent_file_id, name);
     if (existing_res.error) {
       return Result.Err(existing_res.error);
@@ -1474,6 +1476,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     const { content_hash, proof_code, size, part_info_list } = await prepare_upload_file(file_buffer, {
       token,
     });
+    const chunk_count = Math.ceil(size / __UPLOAD_CHUNK_SIZE);
     const r = await this.create_with_folder(
       {
         content_hash,
@@ -1488,55 +1491,179 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error);
     }
+    const { upload_id, file_id, file_name } = r.data;
     if (!r.data.part_info_list?.[0]) {
+      // 秒传，即官方已经有该文件，无需上传
       return Result.Ok({
-        file_id: r.data.file_id,
-        file_name: r.data.file_name,
+        file_id,
+        file_name,
       });
     }
-    const upload_url = r.data.part_info_list[0].upload_url;
-    // console.log("[DOMAIN]aliyundrive/index - before upload", upload_url);
-    try {
-      await axios.put(upload_url, file_buffer, {
-        headers: {
-          authority: "cn-beijing-data.aliyundrive.net",
-          accept: "*/*",
-          "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
-          "content-type": "",
-          origin: "https://www.aliyundrive.com",
-          referer: "https://www.aliyundrive.com/",
-          "sec-ch-ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
-          "sec-ch-ua-mobile": "?0",
-          "sec-ch-ua-platform": '"macOS"',
-          "sec-fetch-dest": "empty",
-          "sec-fetch-mode": "cors",
-          "sec-fetch-site": "cross-site",
-          "user-agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
-        },
-      });
-      return Result.Ok({
-        file_id: r.data.file_id,
-        file_name: r.data.file_name,
-      });
-    } catch (err) {
-      const error = err as AxiosError<{ code: string; message: string }>;
-      const { response, message } = error;
-      // console.log("[]upload failed", message, response?.data);
-      return Result.Err(message || response?.data.message || "unknown", response?.data?.code);
+    let part_list = r.data.part_info_list;
+    let last_part = part_list[part_list.length - 1];
+    let offset = 0;
+    let i = 0;
+    console.log('start upload');
+    while (i <= chunk_count - 1) {
+      console.log(`chunk ${i}/${chunk_count - 1}`, i);
+      const upload_url = part_list[i].upload_url;
+      // console.log("[DOMAIN]aliyundrive/index - before upload", upload_url);
+      const start = offset;
+      offset += __UPLOAD_CHUNK_SIZE;
+      console.log("buffer size", start, offset);
+      const buffer = file_buffer.subarray(start, offset);
+      try {
+        // await axios.put(upload_url, buffer, {
+        //   headers: {
+        //     authority: "cn-beijing-data.aliyundrive.net",
+        //     accept: "*/*",
+        //     "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+        //     "content-type": "",
+        //     origin: "https://www.aliyundrive.com",
+        //     referer: "https://www.aliyundrive.com/",
+        //     "sec-ch-ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
+        //     "sec-ch-ua-mobile": "?0",
+        //     "sec-ch-ua-platform": '"macOS"',
+        //     "sec-fetch-dest": "empty",
+        //     "sec-fetch-mode": "cors",
+        //     "sec-fetch-site": "cross-site",
+        //     "user-agent":
+        //       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+        //   },
+        // });
+        i += 1;
+        if (i >= chunk_count) {
+          // const r2 = await this.fetch_uploaded_file({
+          //   upload_id,
+          //   file_id,
+          // });
+          // if (r2.error) {
+          //   console.log("upload complete, but fetch result failed, because ", r2.error.message);
+          //   return Result.Err(r2.error.message, 1562);
+          // }
+          console.log("fetch result and return");
+          return Result.Ok({
+            // file_id: r2.data.file_id,
+            // file_name: r2.data.name,
+            file_id: "1",
+            file_name: "1",
+          });
+        }
+        if (i >= last_part.part_number) {
+          console.log("fetch next part list");
+          const r2 = await this.fetch_upload_url({
+            upload_id,
+            file_id,
+            part_info_list: part_list.map((p) => {
+              return {
+                part_number: p.part_number,
+              };
+            }),
+          });
+          if (r2.error) {
+            console.log("fetch next upload failed, because ", r2.error.message);
+            return Result.Err(r2.error.message, 1561);
+          }
+          part_list = part_list.concat(r2.data.part_info_list);
+          last_part = part_list[part_list.length - 1];
+        }
+      } catch (err) {
+        const error = err as AxiosError<{ code: string; message: string }>;
+        const { response, message } = error;
+        // console.log("[]upload failed", message, response?.data);
+        return Result.Err(message || response?.data.message || "unknown", response?.data?.code, 1563);
+      }
     }
   }
-  async fetch_upload_url(file_id: string) {
+  async fetch_upload_url(body: {
+    upload_id: string;
+    part_info_list: {
+      part_number: number;
+    }[];
+    file_id: string;
+  }) {
     const url = "/v2/file/get_upload_url";
     await this.ensure_initialized();
-    const r = await this.request.post(API_HOST + url, {
+    const r = await this.request.post<{
+      domain_id: string;
+      drive_id: string;
+      file_id: string;
+      part_info_list: {
+        part_number: number;
+        upload_url: string;
+        internal_upload_url: string;
+        content_type: string;
+        signature_info: {
+          auth_type: string;
+        };
+        upload_form_info: null;
+        internal_upload_form_info: null;
+      }[];
+      upload_id: string;
+      create_at: string;
+    }>(API_HOST + url, {
+      ...body,
       drive_id: String(this.drive_id),
-      file_id,
     });
     if (r.error) {
       return r;
     }
-    return Result.Ok(null);
+    return Result.Ok(r.data);
+  }
+  async fetch_uploaded_file(body: { upload_id: string; file_id: string }) {
+    const url = "/v2/file/complete";
+    await this.ensure_initialized();
+    const r = await this.request.post<{
+      drive_id: string;
+      domain_id: string;
+      file_id: string;
+      name: string;
+      type: string;
+      content_type: string;
+      created_at: string;
+      updated_at: string;
+      file_extension: string;
+      hidden: boolean;
+      size: number;
+      starred: boolean;
+      status: string;
+      user_meta: string;
+      upload_id: string;
+      parent_file_id: string;
+      crc64_hash: string;
+      content_hash: string;
+      content_hash_name: string;
+      category: string;
+      encrypt_mode: string;
+      video_media_metadata: {
+        video_media_video_stream: unknown[];
+        video_media_audio_stream: unknown[];
+      };
+      meta_name_punish_flag: number;
+      meta_name_investigation_status: number;
+      creator_type: string;
+      creator_id: string;
+      last_modifier_type: string;
+      last_modifier_id: string;
+      user_tags: {
+        channel: string;
+        client: string;
+        device_id: string;
+        device_name: string;
+        version: string;
+      };
+      revision_id: string;
+      revision_version: number;
+      location: string;
+      content_uri: string;
+    }>(API_HOST + url, {
+      ...body,
+      drive_id: String(this.drive_id),
+    });
+    if (r.error) {
+      return r;
+    }
+    return Result.Ok(r.data);
   }
   /**
    * 移动文件夹到资源盘
