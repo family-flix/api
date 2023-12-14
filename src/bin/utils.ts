@@ -54,6 +54,26 @@ function mkdir(filepath: string): Promise<Result<null>> {
     });
   });
 }
+
+export function check_path_type(file_path: string): Promise<Result<"directory" | "file">> {
+  return new Promise((resolve) => {
+    fs.stat(file_path, (err, stats) => {
+      if (err) {
+        resolve(Result.Err(err.message));
+        return;
+      }
+      if (stats.isDirectory()) {
+        resolve(Result.Ok("directory"));
+        return;
+      }
+      if (stats.isFile()) {
+        resolve(Result.Ok("file"));
+        return;
+      }
+      resolve(Result.Err("unknown"));
+    });
+  });
+}
 /**
  * 确保某个路径必然存在
  * @param filepath

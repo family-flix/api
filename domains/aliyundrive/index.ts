@@ -2,6 +2,8 @@
  * @file 阿里云盘
  * @doc https://www.yuque.com/aliyundrive/zpfszx
  */
+import fs from "fs";
+
 import { Handler } from "mitt";
 import axios from "axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
@@ -1460,12 +1462,15 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
   /**
    * 上传一个文件到指定文件夹
    */
-  async upload(file_buffer: Buffer, options: { name: string; parent_file_id: string; drive_id?: string }) {
+  async upload(
+    filepath: string,
+    options: { name: string; parent_file_id: string; drive_id?: string; on_progress?: (v: string) => void }
+  ) {
+    const { name, parent_file_id = "root", drive_id, on_progress } = options;
     await this.ensure_initialized();
     const token = this.access_token;
-    const { name, parent_file_id = "root", drive_id } = options;
     // 10 MB
-    let __UPLOAD_CHUNK_SIZE = 10485760;
+    let UPLOAD_CHUNK_SIZE = 10 * 1024 * 1024;
     const existing_res = await this.existing(parent_file_id, name);
     if (existing_res.error) {
       return Result.Err(existing_res.error);
@@ -1473,10 +1478,14 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (existing_res.data) {
       return Result.Err("文件已存在");
     }
-    const { content_hash, proof_code, size, part_info_list } = await prepare_upload_file(file_buffer, {
+    const r1 = await prepare_upload_file(filepath, {
       token,
     });
-    const chunk_count = Math.ceil(size / __UPLOAD_CHUNK_SIZE);
+    if (r1.error) {
+      return Result.Err(r1.error.message);
+    }
+    const { content_hash, proof_code, size, part_info_list } = r1.data;
+    const chunk_count = Math.ceil(size / UPLOAD_CHUNK_SIZE);
     const r = await this.create_with_folder(
       {
         content_hash,
@@ -1501,79 +1510,89 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     let part_list = r.data.part_info_list;
     let last_part = part_list[part_list.length - 1];
-    let offset = 0;
     let i = 0;
-    console.log('start upload');
+    this.debug && console.log("start upload");
     while (i <= chunk_count - 1) {
-      console.log(`chunk ${i}/${chunk_count - 1}`, i);
+      this.debug && console.log(`chunk ${i}/${chunk_count - 1}`, i);
+      if (on_progress) {
+        on_progress(`chunk ${i}/${chunk_count - 1}`);
+      }
       const upload_url = part_list[i].upload_url;
       // console.log("[DOMAIN]aliyundrive/index - before upload", upload_url);
-      const start = offset;
-      offset += __UPLOAD_CHUNK_SIZE;
-      console.log("buffer size", start, offset);
-      const buffer = file_buffer.subarray(start, offset);
-      try {
-        // await axios.put(upload_url, buffer, {
-        //   headers: {
-        //     authority: "cn-beijing-data.aliyundrive.net",
-        //     accept: "*/*",
-        //     "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
-        //     "content-type": "",
-        //     origin: "https://www.aliyundrive.com",
-        //     referer: "https://www.aliyundrive.com/",
-        //     "sec-ch-ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
-        //     "sec-ch-ua-mobile": "?0",
-        //     "sec-ch-ua-platform": '"macOS"',
-        //     "sec-fetch-dest": "empty",
-        //     "sec-fetch-mode": "cors",
-        //     "sec-fetch-site": "cross-site",
-        //     "user-agent":
-        //       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
-        //   },
-        // });
-        i += 1;
-        if (i >= chunk_count) {
-          // const r2 = await this.fetch_uploaded_file({
-          //   upload_id,
-          //   file_id,
-          // });
-          // if (r2.error) {
-          //   console.log("upload complete, but fetch result failed, because ", r2.error.message);
-          //   return Result.Err(r2.error.message, 1562);
-          // }
-          console.log("fetch result and return");
-          return Result.Ok({
-            // file_id: r2.data.file_id,
-            // file_name: r2.data.name,
-            file_id: "1",
-            file_name: "1",
-          });
-        }
-        if (i >= last_part.part_number) {
-          console.log("fetch next part list");
-          const r2 = await this.fetch_upload_url({
-            upload_id,
-            file_id,
-            part_info_list: part_list.map((p) => {
-              return {
-                part_number: p.part_number,
-              };
-            }),
-          });
-          if (r2.error) {
-            console.log("fetch next upload failed, because ", r2.error.message);
-            return Result.Err(r2.error.message, 1561);
+
+      const r: Result<null> = await new Promise(async (resolve) => {
+        const stream = fs.createReadStream(filepath, { highWaterMark: UPLOAD_CHUNK_SIZE });
+        // this.debug && console.log("buffer size", start, offset);
+        stream.on("data", async (chunk) => {
+          try {
+            const rr = await axios.put(upload_url, chunk, {
+              headers: {
+                authority: "cn-beijing-data.aliyundrive.net",
+                accept: "*/*",
+                "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+                "content-type": "",
+                origin: "https://www.aliyundrive.com",
+                referer: "https://www.aliyundrive.com/",
+                "sec-ch-ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"macOS"',
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "cross-site",
+                "user-agent":
+                  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+              },
+            });
+            this.debug && console.log(rr.data);
+            resolve(Result.Ok(null));
+          } catch (err) {
+            const error = err as AxiosError<{ code: string; message: string }>;
+            const { response, message } = error;
+            // console.log("[]upload failed", message, response?.data);
+            resolve(Result.Err(message || response?.data.message || "unknown", response?.data?.code, 1563));
           }
-          part_list = part_list.concat(r2.data.part_info_list);
-          last_part = part_list[part_list.length - 1];
+        });
+      });
+      if (r.error) {
+        this.debug && console.log("upload failed, because ", r.error.message);
+        return Result.Err(r.error.message);
+      }
+      i += 1;
+      if (i >= chunk_count) {
+        const r2 = await this.fetch_uploaded_file({
+          upload_id,
+          file_id,
+        });
+        if (r2.error) {
+          this.debug && console.log("upload complete, but fetch result failed, because ", r2.error.message);
+          return Result.Err(r2.error.message, 1562);
         }
-      } catch (err) {
-        const error = err as AxiosError<{ code: string; message: string }>;
-        const { response, message } = error;
-        // console.log("[]upload failed", message, response?.data);
-        return Result.Err(message || response?.data.message || "unknown", response?.data?.code, 1563);
+        this.debug && console.log("fetch result and return");
+        return Result.Ok({
+          file_id: r2.data.file_id,
+          file_name: r2.data.name,
+        });
+      }
+      if (i >= last_part.part_number) {
+        this.debug && console.log("fetch next part list");
+        const r2 = await this.fetch_upload_url({
+          upload_id,
+          file_id,
+          part_info_list: part_list.map((p) => {
+            return {
+              part_number: p.part_number,
+            };
+          }),
+        });
+        if (r2.error) {
+          this.debug && console.log("fetch next upload failed, because ", r2.error.message);
+          return Result.Err(r2.error.message, 1561);
+        }
+        part_list = part_list.concat(r2.data.part_info_list);
+        last_part = part_list[part_list.length - 1];
       }
     }
+    return Result.Err("未知错误");
   }
   async fetch_upload_url(body: {
     upload_id: string;

@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import fs from "fs";
 
 import dayjs from "dayjs";
 
@@ -18,6 +19,92 @@ import { Result } from "@/types";
 import { build_media_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
 
 export async function prepare_upload_file(
+  filepath: string,
+  options: {
+    token: string;
+    upload_chunk_size?: number;
+  }
+) {
+  const { token, upload_chunk_size = 10 * 1024 * 1024 } = options;
+  async function get_part_info_list(file_size: number) {
+    const num_parts = Math.ceil(file_size / upload_chunk_size);
+    const part_info_list = [];
+    for (let i = 1; i <= num_parts; i++) {
+      part_info_list.push({ part_number: i });
+    }
+    return part_info_list;
+  }
+  async function get_proof_code(filepath: string, size: number): Promise<Result<string>> {
+    return new Promise((resolve) => {
+      const md5_val = crypto.createHash("md5").update(Buffer.from(token, "utf8")).digest("hex");
+      const md5_int = BigInt(`0x${md5_val.slice(0, 16)}`);
+      const offset = parseInt((md5_int % BigInt(size)).toString(), 10);
+      const bytes_to_read = Math.min(8, size - offset);
+      const file_partial_buffer = Buffer.allocUnsafe(bytes_to_read);
+      fs.createReadStream(filepath, { start: offset, end: offset + bytes_to_read })
+        .on("data", (chunk: Buffer) => {
+          chunk.copy(file_partial_buffer);
+        })
+        .on("end", () => {
+          resolve(Result.Ok(Buffer.from(file_partial_buffer).toString("base64")));
+        })
+        .on("error", (error) => {
+          resolve(Result.Err(error.message));
+        });
+    });
+  }
+  async function get_content_hash(filepath: string): Promise<
+    Result<{
+      hash: string;
+      size: number;
+    }>
+  > {
+    return new Promise((resolve) => {
+      const content_hash = crypto.createHash("sha1");
+      const stream = fs.createReadStream(filepath, { highWaterMark: upload_chunk_size });
+      stream.on("data", (segment) => {
+        content_hash.update(segment);
+      });
+      stream.on("end", () => {
+        const result = content_hash.digest("hex").toUpperCase();
+        return resolve(
+          Result.Ok({
+            size: stream.bytesRead,
+            hash: result,
+          })
+        );
+      });
+      stream.on("error", (error) => {
+        resolve(Result.Err(error.message));
+      });
+    });
+  }
+
+  const r1 = await get_content_hash(filepath);
+  if (r1.error) {
+    return Result.Err(r1.error.message);
+  }
+  const { hash: content_hash, size } = r1.data;
+  const file_size = size;
+  const r2 = await get_proof_code(filepath, size);
+  if (r2.error) {
+    return Result.Err(r2.error.message);
+  }
+  const proof_code = r2.data;
+  const part_info_list = await get_part_info_list(file_size);
+  const body = {
+    part_info_list,
+    //     type: "file",
+    size: file_size,
+    content_hash,
+    //       content_hash_name: "sha1",
+    proof_code,
+    //     proof_version: "v1",
+  };
+  return Result.Ok(body);
+}
+
+export async function prepare_upload_file2(
   file_buffer: Buffer,
   options: {
     token: string;

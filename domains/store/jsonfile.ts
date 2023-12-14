@@ -105,7 +105,7 @@ export class JSONFileStore extends BaseDomain<TheTypesOfEvents> {
       },
     },
   };
-  find_drive(where: { unique_id: string; id: string | number }) {
+  find_drive(where: Partial<{ unique_id: string; id: string | number }>) {
     const { id, unique_id } = where;
     if (unique_id !== undefined) {
       const r = this.drives.find((d) => String(d.unique_id) === String(unique_id));

@@ -37,10 +37,11 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
       debug: boolean;
     }> = {}
   ) {
-    const { _name } = params;
+    const { _name, debug = false } = params;
     if (_name) {
       this._name = _name;
     }
+    this.debug = debug;
   }
   uid() {
     return uid();
