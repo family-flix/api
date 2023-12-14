@@ -12,21 +12,21 @@ import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 
 export type SearchedEpisode = {
   tv: {
+    /** tv 名称 */
+    name: string;
+    original_name: string;
     /** 文件夹/文件 id，如果该 tv name 来自 episode，该字段就会为空 */
     file_id?: string;
     /** 文件夹/文件名，如果该 tv name 来自 episode，该字段就会为空 */
     file_name?: string;
-    /** tv 名称 */
-    name: string;
-    original_name: string;
   };
   season: {
+    /** 第几季 */
+    season_text: string;
     /** 文件夹/文件 id，如果该 season 来自 episode，该字段就会为空 */
     file_id?: string;
     /** 文件夹/文件名，如果该 season 来自 episode，该字段就会为空 */
     file_name?: string;
-    /** 第几季 */
-    season_text: string;
   };
   episode: {
     /** 文件夹/文件名 */

@@ -150,6 +150,7 @@ import { notice_push_deer } from "../notice";
         title: "影视剧刷新",
         markdown: "执行了一次影视剧刷新任务",
       });
+      await schedule.clear_expired_drive_files();
     },
     null,
     true,

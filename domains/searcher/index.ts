@@ -2,10 +2,9 @@
  * @file 对解析出的影视剧结果进行搜索
  */
 import dayjs from "dayjs";
-import type { Handler } from "mitt";
 import uniqueBy from "lodash/fp/uniqBy";
 
-import { BaseDomain } from "@/domains/base";
+import { BaseDomain, Handler } from "@/domains/base";
 import { TMDBClient } from "@/domains/media_profile/tmdb";
 import {
   EpisodeProfileFromTMDB,

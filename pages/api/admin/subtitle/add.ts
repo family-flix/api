@@ -93,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const client = drive_res.data.client;
   const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
-  const file_buffer = fs.readFileSync(filepath);
+  // const file_buffer = fs.readFileSync(filepath);
   const correct_filename = filename || tmp_filename;
   const name_and_original_name = build_media_name(episode.tv.profile);
   const folder_res = await client.ensure_dir([
@@ -108,7 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!parent_folder) {
     return e(Result.Err("创建字幕文件夹失败"));
   }
-  const r = await client.upload(file_buffer, {
+  const r = await client.upload(filepath, {
     name: correct_filename,
     parent_file_id: parent_folder.file_id,
   });

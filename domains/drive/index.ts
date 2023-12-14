@@ -1231,7 +1231,21 @@ export async function clear_expired_files_in_drive(values: {
             on_print(Article.build_line([item.file_id]));
             on_print(Article.build_line([""]));
           }
-          // await drive.delete_file({ file_id: item.file_id }, { ignore_drive_file: true });
+          await store.prisma.file.delete({
+            where: {
+              id: item.id,
+            },
+          });
+          await store.prisma.parsed_episode.deleteMany({
+            where: {
+              file_id: item.file_id,
+            },
+          });
+          await store.prisma.parsed_movie.deleteMany({
+            where: {
+              file_id: item.file_id,
+            },
+          });
         }
         return;
       }

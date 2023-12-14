@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (existing_res.data) {
     return e(Result.Err("该文件已存在"));
   }
-  const file_buffer = fs.readFileSync(filepath);
+  // const file_buffer = fs.readFileSync(filepath);
   const folder_res = await client.ensure_dir([
     "_flix_subtitles",
     [movie.profile.name, movie.profile.original_name, movie.profile.air_date].filter(Boolean).join("."),
@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!parent_folder) {
     return e(Result.Err("创建字幕文件夹失败"));
   }
-  const r = await client.upload(file_buffer, {
+  const r = await client.upload(filepath, {
     name: correct_filename,
     parent_file_id: parent_folder.file_id,
   });

@@ -181,7 +181,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           );
           return;
         }
-        const file_buffer = fs.readFileSync(filepath);
+        // const file_buffer = fs.readFileSync(filepath);
         const name_and_original_name = build_media_name(tv.profile);
         const dir = [
           "_flix_subtitles",
@@ -206,7 +206,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           );
           return;
         }
-        const r = await client.upload(file_buffer, {
+        const r = await client.upload(filepath, {
           name: correct_filename,
           parent_file_id: parent_folder.file_id,
         });

@@ -48,10 +48,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("没有文件"));
   }
   const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
-  const file_buffer = fs.readFileSync(filepath);
+  // const file_buffer = fs.readFileSync(filepath);
   const correct_filename = filename || tmp_filename;
   // console.log("upload", filepath, file_name);
-  const r = await client.upload(file_buffer, {
+  const r = await client.upload(filepath, {
     name: correct_filename,
     parent_file_id: "root",
   });

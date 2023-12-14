@@ -84,8 +84,8 @@ async function main() {
   const client = drive_res.data.client;
   const filename = "example03.png";
   const filepath = "/Users/litao/Downloads";
-  const file_buffer = fs.readFileSync(path.resolve(filepath, filename));
-  const r = await client.upload(file_buffer, {
+  // const file_buffer = fs.readFileSync(path.resolve(filepath, filename));
+  const r = await client.upload(path.resolve(filepath, filename), {
     name: filename,
     parent_file_id: "root",
   });

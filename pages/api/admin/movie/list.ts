@@ -5,10 +5,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
+import { MovieProfileWhereInput } from "@/domains/store/types";
 import { store } from "@/store";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { MovieProfileWhereInput } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

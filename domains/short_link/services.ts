@@ -1,3 +1,6 @@
+/**
+ * @file 短链服务
+ */
 import axios from "axios";
 
 import { Result } from "@/types";

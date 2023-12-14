@@ -1,3 +1,7 @@
+/**
+ * @file 本地文件上传至阿里云盘
+ * yarn esbuild domains/media_upload/index.ts --platform=node --target=node12 --define:DEBUG=true --bundle --outfile=dist/client.js
+ */
 import fs from "fs";
 import path from "path";
 
@@ -8,14 +12,6 @@ import { parse_argv } from "@/utils/server";
 import { Result } from "@/types";
 import { check_path_type } from "@/src/bin/utils";
 
-/**
- * yarn esbuild domains/store/jsonfile.ts --platform=node --bundle --outfile=dist/json_store.js
- * yarn esbuild domains/aliyundrive/index.ts --platform=node --bundle --define:DEBUG=true --outfile=dist/aliyundrive_client.js
- */
-
-/**
- * {"app_id":"5dde4e1bdf9e4966b387ba58f4b3fdc3","drive_id":622310670,"device_id":"BOepG2qkMyMCAbeBpyoApYit","avatar":"","name":"138***046","user_id":"5565045eef84445cbdece790aebe54bd","root_folder_id":"63cfe91a1fcc189d7e134d5c882cf3ae1dc0ce00","total_size":23625673474048,"used_size":17332532277375,"access_token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTY1MDQ1ZWVmODQ0NDVjYmRlY2U3OTBhZWJlNTRiZCIsImN1c3RvbUpzb24iOiJ7XCJjbGllbnRJZFwiOlwicEpaSW5OSE4yZFpXazhxZ1wiLFwiZG9tYWluSWRcIjpcImJqMjlcIixcInNjb3BlXCI6W1wiRFJJVkUuQUxMXCIsXCJGSUxFLkFMTFwiLFwiVklFVy5BTExcIixcIlNIQVJFLkFMTFwiLFwiU1RPUkFHRS5BTExcIixcIlNUT1JBR0VGSUxFLkxJU1RcIixcIlVTRVIuQUxMXCIsXCJCQVRDSFwiLFwiQUNDT1VOVC5BTExcIixcIklNQUdFLkFMTFwiLFwiSU5WSVRFLkFMTFwiLFwiU1lOQ01BUFBJTkcuTElTVFwiXSxcInJvbGVcIjpcInVzZXJcIixcInJlZlwiOlwiXCIsXCJkZXZpY2VfaWRcIjpcIjhjZjA5NTRkZTU0ODQ2OTRiM2JkM2VlMzk3MjBiYWNjXCJ9IiwiZXhwIjoxNzAyMzk1MzIwLCJpYXQiOjE3MDIzODgwNjB9.SSbQwkcZKDb23IKr8NSmWZM87NIw3hPsUJMnDTayz4X-GmXogfoN9DpUfQqQqGBk97BDn_x1pH2lD655Z7nkSmgtA74zqOCEhvyuPY1GQF8CxrgQHc7OiijFrv3z2q2NEUg0ZmAgeI3p2UhZ4HzkIisOGejFibfUd2EIYN7YxlU","refresh_token":"8cf0954de5484694b3bd3ee39720bacc"}
- */
 enum Events {
   Change,
   Print,

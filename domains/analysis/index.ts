@@ -6,8 +6,8 @@
 import type { Handler } from "mitt";
 
 import { BaseDomain } from "@/domains/base";
-import { EpisodeFileProcessor } from "@/domains/episode_file_processor";
-import { MovieFileProcessor } from "@/domains/movie_file_processor";
+import { EpisodeFileProcessor } from "@/domains/file_processor/episode";
+import { MovieFileProcessor } from "@/domains/file_processor/movie";
 import { Folder } from "@/domains/folder";
 import { MediaSearcher } from "@/domains/searcher";
 import { EpisodeRecord, MovieRecord, SeasonRecord, TVRecord } from "@/domains/store/types";
@@ -177,9 +177,10 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     const { force = false, before_search } = options;
     const { client } = drive;
     if (!drive.has_root_folder()) {
-      this.emit(Events.Print, Article.build_line(["未设置索引目录，请先设置索引目录"]));
-      this.emit(Events.Error, new Error("未设置索引目录"));
-      return Result.Err("请先设置索引目录");
+      const tip = "未设置索引目录，请先设置索引目录";
+      this.emit(Events.Print, Article.build_line([tip]));
+      this.emit(Events.Error, new Error(tip));
+      return Result.Err(tip);
     }
     const walker = new FolderWalker({
       filename_rules: this.user.get_filename_rules(),
@@ -217,7 +218,6 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       // log(`[${drive_id}]`, "仅索引这些文件", files.length);
       let cloned_files = [...files];
       const ignore_files = this.user.get_ignore_files().map((f) => [this.drive.profile.root_folder_name, f].join("/"));
-      console.log('ignore', ignore_files);
       walker.filter = async (cur_file) => {
         if (ignore_files.includes([cur_file.parent_paths, cur_file.name].join("/"))) {
           return true;
