@@ -15,18 +15,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { type = DriveTypes.AliyunBackupDrive, payload } = req.body as { type: number; payload: unknown };
-  if (!payload) {
-    return e(Result.Err("请传入云盘信息"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res.error);
   }
   const user = t_res.data;
-  const r = await Drive.Add({ type, payload, user }, store);
-  // console.log('[API]drive/add - after r', r.error?.message);
+  if (!payload) {
+    return e(Result.Err("请传入云盘信息"));
+  }
+  const r = await Drive.Add({ type, payload, user, store });
   if (r.error) {
-    return e(r);
+    return e(Result.Err(r.error.message));
   }
   res.status(200).json({
     code: 0,

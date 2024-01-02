@@ -22,7 +22,7 @@ export type SearchedEpisode = {
   };
   season: {
     /** 第几季 */
-    season_text: string;
+    season_text: string | null;
     /** 文件夹/文件 id，如果该 season 来自 episode，该字段就会为空 */
     file_id?: string;
     /** 文件夹/文件名，如果该 season 来自 episode，该字段就会为空 */
@@ -40,7 +40,7 @@ export type SearchedEpisode = {
     /** 父文件夹id */
     parent_file_id: string;
     /** 第几季 */
-    season_text: string;
+    season_text: string | null;
     /** 第几集 */
     episode_text: string;
     /** 大小（单位字节）*/
@@ -58,6 +58,7 @@ export type SearchedMovie = {
   parent_paths: string;
   parent_file_id: string;
   size: number;
+  md5?: string;
   _position: string;
 };
 export type ParentFolder = Pick<ReturnType<typeof parse_filename_for_video>, "name" | "original_name" | "season"> & {
@@ -88,6 +89,8 @@ enum Events {
   Error,
   /** 遍历发生警告 */
   Warning,
+  /** 遍历被主动终止 */
+  Stop,
   Print,
 }
 type TheTypesOfEvents = {
@@ -103,6 +106,7 @@ type TheTypesOfEvents = {
   [Events.Movie]: {};
   [Events.Error]: { file_id: string; name: string; parent_paths: string; _position: string };
   [Events.Warning]: { file_id: string; name: string; parent_paths: string; _position: string };
+  [Events.Stop]: void;
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
 };
 type FolderWalkerProps = {
@@ -134,7 +138,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   /** 从哪个文件夹开始遍历的 */
   start_folder_id?: string;
   /** 是否需要终止 */
-  stop = false;
+  need_stop = false;
   /** 每次调用列表接口后，是否需要延迟一会 */
   delay?: number;
   /**
@@ -179,11 +183,14 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   /**
    * 递归遍历给定的文件夹
    */
-  async walk(data: Folder | File, parent: ParentFolder[] = []) {
+  async walk(
+    data: Folder | File,
+    parents: { file_id: string; file_name: string; name: string; original_name: string; season: string }[] = []
+  ) {
     const { id: file_id, type, name, size, parent_file_id, md5 } = data;
-    // console.log('[DOMAIN]walker - walk', file_id, name);
-    const parent_paths = parent.map((p) => p.file_name).join("/");
-    const parent_ids = parent.map((p) => p.file_id).join("/");
+    // console.log("[DOMAIN]walker - walk", file_id, name, parents);
+    const parent_paths = parents.map((p) => p.file_name).join("/");
+    const parent_ids = parents.map((p) => p.file_id).join("/");
     const filepath = (() => {
       if (!parent_paths) {
         return name;
@@ -195,7 +202,8 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     //   chalk.gray(parent_paths) + chalk.magenta("/") + chalk.magenta(name),
     //   file_id
     // );
-    if (this.stop) {
+    if (this.need_stop) {
+      this.emit(Events.Stop);
       return;
     }
     if (this.filter && file_id !== this.start_folder_id) {
@@ -251,17 +259,19 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
             await sleep(this.delay);
           }
           const r = await folder.next();
+          // console.log("after folder.next()", name, this.need_stop);
+          if (this.need_stop) {
+            this.emit(Events.Stop);
+            return;
+          }
           if (r.error) {
             // @todo listen error and notice
             continue;
           }
           for (let i = 0; i < r.data.length; i += 1) {
-            if (this.stop) {
-              return;
-            }
             const file = r.data[i];
             const { name: parsed_name, original_name, season } = parsed_info;
-            const parent_folders = parent
+            const parent_folders = parents
               .map((p) => {
                 return { ...p };
               })
@@ -324,7 +334,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       season: {
         file_id?: string;
         file_name?: string;
-        season: string;
+        season: string | null;
       };
       episode: {
         episode: string;
@@ -361,7 +371,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     }
 
     if (!parsed_info.episode) {
-      const last_parent = parent.slice(-1)[0];
+      const last_parent = parents.slice(-1)[0];
       if (!parsed_info.name && !parsed_info.original_name) {
         const reason = "影片文件未包含集数信息";
         if (!last_parent?.name) {
@@ -386,6 +396,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           parent_paths,
           parent_file_id,
           size,
+          md5,
           _position: "movie1",
         });
         return;
@@ -398,6 +409,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         parent_paths,
         parent_file_id,
         size,
+        md5,
         _position: "movie1",
       });
       // const reason = "可能是电影";
@@ -417,7 +429,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     }
     if (!parsed_info.season) {
       if (!parsed_info.name && !parsed_info.original_name) {
-        const tv_and_season_folder = this.find_season_and_tv_folder(parent);
+        const tv_and_season_folder = this.find_season_and_tv_folder(parents);
         // log('[]', parent, tv_and_season_folder);
         if (tv_and_season_folder) {
           if (tv_and_season_folder.season) {
@@ -468,7 +480,8 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           const tasks = create_tasks({
             tv: tv_and_season_folder.tv,
             season: {
-              season: DEFAULT_SEASON_NUMBER,
+              // season: DEFAULT_SEASON_NUMBER,
+              season: null,
             },
             episode: parsed_info,
             _position: "normal2",
@@ -546,7 +559,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         return;
       }
       // episode 有名字
-      const tv_and_season_folder = this.find_season_and_tv_folder(parent);
+      const tv_and_season_folder = this.find_season_and_tv_folder(parents);
       if (tv_and_season_folder) {
         if (this.has_same_name(tv_and_season_folder.tv, parsed_info)) {
           if (tv_and_season_folder.season) {
@@ -597,7 +610,8 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           const tasks = create_tasks({
             tv: tv_and_season_folder.tv,
             season: {
-              season: DEFAULT_SEASON_NUMBER,
+              // season: DEFAULT_SEASON_NUMBER,
+              season: null,
             },
             episode: parsed_info,
             _position: "normal4",
@@ -688,7 +702,10 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       }
       const tasks = create_tasks({
         tv: parsed_info,
-        season: { season: DEFAULT_SEASON_NUMBER },
+        season: {
+          // season: DEFAULT_SEASON_NUMBER
+          season: null,
+        },
         episode: parsed_info,
         _position: "normal5",
       });
@@ -697,7 +714,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         generate_episode({
           name: parsed_info.name,
           original_name: parsed_info.original_name,
-          season: DEFAULT_SEASON_NUMBER,
+          // season: DEFAULT_SEASON_NUMBER,
           episode: parsed_info.episode,
         })
       );
@@ -728,7 +745,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     }
     // 如果没有 self.name
     if (!parsed_info.name && !parsed_info.original_name) {
-      const tv_and_season_folder = this.find_season_and_tv_folder(parent);
+      const tv_and_season_folder = this.find_season_and_tv_folder(parents);
       // 如果没有 tv_and_season
       if (!tv_and_season_folder) {
         const reason = "影片及父文件夹均未找到合法名称";
@@ -899,7 +916,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       // );
       return;
     }
-    const tv_and_season_folder = this.find_season_and_tv_folder(parent);
+    const tv_and_season_folder = this.find_season_and_tv_folder(parents);
     // 如果没有 tv_and_season
     if (!tv_and_season_folder) {
       const tasks = create_tasks({
@@ -1211,9 +1228,12 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   /**
    * 开始遍历云盘
    */
-  async run(data: Folder) {
+  async run(
+    data: Folder | File,
+    parents: { file_id: string; file_name: string; name: string; original_name: string; season: string }[] = []
+  ) {
     this.start_folder_id = data.id;
-    await this.walk(data);
+    await this.walk(data, parents);
     return Result.Ok(this.episodes);
   }
   get_season_number_profile(parsed_info: ReturnType<typeof parse_filename_for_video>, parent: ParentFolder[] = []) {
@@ -1302,11 +1322,20 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
   clear_delay() {
     this.delay = undefined;
   }
+  stop() {
+    if (this.need_stop) {
+      return;
+    }
+    this.need_stop = true;
+  }
   // log(...args: unknown[]) {
   // }
 
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
     return this.on(Events.Print, handler);
+  }
+  on_stop(handler: Handler<TheTypesOfEvents[Events.Stop]>) {
+    return this.on(Events.Stop, handler);
   }
   // on_file(handler: Handler<TheTypesOfEvents[Events.File]>) {
   //   return this.on(Events.File, handler);

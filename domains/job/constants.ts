@@ -1,11 +1,11 @@
 export enum TaskStatus {
-  Running,
+  Running = 1,
   Paused,
   Finished,
 }
 export enum TaskTypes {
   /** 云盘索引 */
-  DriveAnalysis = 0,
+  DriveAnalysis = 1,
   /** 电视剧转存 */
   MoveTV,
   /** 电影转存 */

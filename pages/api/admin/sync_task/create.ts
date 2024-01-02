@@ -261,6 +261,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   res.status(200).json({
     code: 0,
     msg: "新增同步任务成功",
-    data: {},
+    data: null,
   });
 }

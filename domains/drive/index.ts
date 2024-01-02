@@ -1,7 +1,6 @@
 /**
  * @file 云盘所有逻辑
  */
-import { Handler } from "mitt";
 import dayjs from "dayjs";
 import Joi from "joi";
 
@@ -18,7 +17,7 @@ import {
 import { ModelParam, ModelQuery, DriveRecord, FileRecord } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { User } from "@/domains/user";
-import { BaseDomain } from "@/domains/base";
+import { BaseDomain, Handler } from "@/domains/base";
 import { DatabaseStore } from "@/domains/store";
 import { FileType } from "@/constants";
 import { Result, resultify } from "@/types";
@@ -169,19 +168,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       })
     );
   }
-  static async Add(
-    body: {
-      type?: DriveTypes;
-      payload: unknown;
-      user: User;
-    },
-    store: DatabaseStore,
-    options: Partial<{
-      skip_ping: boolean;
-    }> = {}
-  ) {
-    const { type = DriveTypes.AliyunBackupDrive, payload, user } = body;
-    const { skip_ping = false } = options;
+  static async Add(body: {
+    type?: DriveTypes;
+    payload: unknown;
+    user: User;
+    store: DatabaseStore;
+    skip_ping?: boolean;
+  }) {
+    const { type = DriveTypes.AliyunBackupDrive, payload, user, store, skip_ping = false } = body;
     const created_drive_res = await (async () => {
       if (type === DriveTypes.AliyunBackupDrive) {
         const r = await resultify(drivePayloadSchema.validateAsync.bind(drivePayloadSchema))(payload);
@@ -255,9 +249,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
               device_id,
               user_id: aliyun_user_id,
             } as AliyunDriveProfile),
-            root_folder_id: root_folder_id ?? null,
-            used_size: used_size ?? 0,
-            total_size: total_size ?? 0,
+            root_folder_id: root_folder_id || null,
+            used_size: used_size || 0,
+            total_size: total_size || 0,
             drive_token: {
               create: {
                 id: r_id(),
@@ -310,33 +304,49 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         }
         const { avatar, name, profile, root_folder_id, drive_token, used_size, total_size } = existing_drive;
         const r = parseJSONStr<AliyunDriveProfile>(profile);
-        // console.log("[DOMAIN]drive/index - after r");
         if (r.error) {
           return Result.Err(r.error.message);
         }
         const { resource_drive_id, device_id, user_id, app_id, nick_name, user_name } = r.data;
+        let _resource_drive_id = resource_drive_id;
         const r2 = parseJSONStr<{ access_token: string; refresh_token: string }>(drive_token.data);
         // console.log("[DOMAIN]drive/index - after r2");
         if (r2.error) {
           return Result.Err(r2.error.message);
         }
-        if (!resource_drive_id) {
+        const { access_token, refresh_token } = r2.data;
+        if (!_resource_drive_id) {
+          const client = new AliyunBackupDriveClient({
+            id: "",
+            drive_id: String(drive_id),
+            resource_drive_id: "",
+            device_id,
+            access_token,
+            refresh_token,
+            root_folder_id,
+            store,
+          });
+          const d = await client.ping();
+          if (d.data) {
+            _resource_drive_id = d.data.resource_drive_id;
+          }
+        }
+        if (!_resource_drive_id) {
           return Result.Err("没有资源盘");
         }
         const existing_resource_drive = await store.prisma.drive.findFirst({
           where: {
-            unique_id: String(resource_drive_id),
+            unique_id: String(_resource_drive_id),
             user_id: user.id,
           },
         });
         if (existing_resource_drive) {
           return Result.Err("该资源盘已存在，请检查信息后重试", undefined, { id: existing_resource_drive.id });
         }
-        const { access_token, refresh_token } = r2.data;
         const drive_record_id = r_id();
         const client = new AliyunBackupDriveClient({
           id: drive_record_id,
-          drive_id: resource_drive_id,
+          drive_id: _resource_drive_id,
           device_id,
           access_token,
           refresh_token,
@@ -350,20 +360,20 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
             name: `资源盘/${name}`,
             avatar,
             type: DriveTypes.AliyunResourceDrive,
-            unique_id: String(resource_drive_id),
+            unique_id: String(_resource_drive_id),
             profile: JSON.stringify({
               avatar,
               user_name,
               nick_name,
               app_id,
-              drive_id: String(resource_drive_id),
+              drive_id: String(_resource_drive_id),
               device_id,
               user_id,
               backup_drive_id: drive_id,
             } as AliyunDriveProfile),
-            root_folder_id: root_folder_id ?? null,
-            used_size: used_size ?? 0,
-            total_size: total_size ?? 0,
+            root_folder_id: root_folder_id || null,
+            used_size: used_size || 0,
+            total_size: total_size || 0,
             drive_token: {
               connect: {
                 id: drive_token.id,
@@ -1035,7 +1045,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   /** 重命名（文件/文件夹），并重置解析结果 */
-  async rename_file(file: { file_id: string; type: FileType }, values: { name: string }) {
+  async rename_file(file: { file_id: string; type?: FileType }, values: { name: string }) {
     const { name } = values;
     const r = await this.client.rename_file(file.file_id, name);
     if (r.error) {
@@ -1058,12 +1068,6 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         name,
       },
     });
-    const {
-      name: parsed_tv_name,
-      original_name,
-      episode: episode_text,
-      season: season_text,
-    } = parse_filename_for_video(name, ["name", "original_name", "episode", "season"], this.user?.get_filename_rules());
     if (file.type === FileType.File) {
       // @todo 这里非常重要，当改变一个文件的名字时，应该怎么做？
       // 如果是电影改成了剧集，剧集改成电影，就应该删除原先的解析结果，再重新索引
@@ -1084,33 +1088,6 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
             id: existing_parsed_episode.id,
           },
         });
-        // if (!episode_text) {
-        //   // 剧集改成电影
-        //   await this.store.prisma.parsed_episode.delete({
-        //     where: {
-        //       id: existing_parsed_episode.id,
-        //     },
-        //   });
-        //   return Result.Ok(null);
-        // }
-        // // 更新剧集信息
-        // if (!existing_parsed_episode.parsed_tv.file_id) {
-        //   // 如果电视剧名字是从 file 中解析的
-        // }
-        // await this.store.prisma.parsed_episode.update({
-        //   where: {
-        //     id: existing_parsed_episode.id,
-        //   },
-        //   data: {
-        //     updated: dayjs().toISOString(),
-        //     episode_id: null,
-        //     season_id: null,
-        //     episode_number: episode_text,
-        //     season_number: season_text,
-        //     name,
-        //     can_search: 1,
-        //   },
-        // });
         return Result.Ok(null);
       }
       const existing_parsed_movie = await this.store.prisma.parsed_movie.findFirst({
@@ -1157,27 +1134,6 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
             id: existing_parsed_tv.id,
           },
         });
-        // await this.store.prisma.parsed_tv.update({
-        //   where: {
-        //     id: existing_parsed_tv.id,
-        //   },
-        //   data: {
-        //     name: parsed_tv_name,
-        //     original_name,
-        //     file_name: name,
-        //     tv_id: null,
-        //   },
-        // });
-        // await this.store.prisma.parsed_episode.updateMany({
-        //   where: {
-        //     parsed_tv_id: existing_parsed_tv.id,
-        //   },
-        //   data: {
-        //     updated: dayjs().toISOString(),
-        //     episode_id: null,
-        //     season_id: null,
-        //   },
-        // });
       }
       return Result.Ok(null);
     }

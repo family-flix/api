@@ -53,7 +53,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "假面骑士圣刃",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "续集",
     });
   });
@@ -64,7 +64,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "番外01",
     });
   });
@@ -124,7 +124,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "斗破苍穹",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "特别篇2",
     });
   });
@@ -154,8 +154,8 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "番外2",
+      season: "",
+      episode: "番外02",
     });
   });
   /** 花絮 */
@@ -165,7 +165,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "花絮13",
     });
   });
@@ -175,8 +175,8 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "显微镜下的大明之丝绢案",
       original_name: "",
-      season: "其他",
-      episode: "预告1",
+      season: "",
+      episode: "预告01",
     });
   });
   /** 彩蛋 */
@@ -186,8 +186,8 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "彩蛋1",
+      season: "",
+      episode: "彩蛋01",
     });
   });
   test("去有风的地方_彩蛋_1080P_Tacit0924.mp4", () => {
@@ -196,7 +196,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "去有风的地方",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "彩蛋01",
     });
   });
@@ -206,7 +206,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "今生也是第一次",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "彩蛋01",
     });
   });
@@ -216,7 +216,7 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "彩蛋01",
     });
   });
@@ -226,8 +226,8 @@ describe("番外", () => {
     expect(result).toStrictEqual({
       name: "无间",
       original_name: "",
-      season: "其他",
-      episode: "彩蛋3",
+      season: "",
+      episode: "彩蛋03",
     });
   });
   test("番外篇.mp4", () => {
@@ -240,16 +240,26 @@ describe("番外", () => {
       episode: "",
     });
   });
-  test("0617彩蛋第1期_Tacit0924.mp4", () => {
-    const name = "0617彩蛋第1期_Tacit0924.mp4";
+  test("早餐中国 第2季 收官特辑：萌娃版：这些“戏精”宝宝太抢戏啦~.mp4", () => {
+    const name = "早餐中国 第2季 收官特辑：萌娃版：这些“戏精”宝宝太抢戏啦~.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "",
+      name: "早餐中国",
       original_name: "",
-      season: "其他",
-      episode: "彩蛋01",
+      season: "S02",
+      episode: "特辑01",
     });
   });
+  // test("0617彩蛋第1期_Tacit0924.mp4", () => {
+  //   const name = "0617彩蛋第1期_Tacit0924.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "",
+  //     original_name: "",
+  //     season: "",
+  //     episode: "0617",
+  //   });
+  // });
   // test("月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4", () => {
   //   const name = "月升沧海大结局点映礼 点映礼：吴磊赵露思组队游戏PK快问快答.mp4";
   //   const result = parse_filename_for_video(name);

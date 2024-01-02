@@ -80,26 +80,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(drive_res);
   }
   const drive = drive_res.data;
-  (async () => {
-    const diary = await store.prisma.member_diary.findFirst({
-      where: {
-        episode_id,
-        day: dayjs().format("YYYY-MM-DD"),
-        member_id: member.id,
-      },
-    });
-    if (diary) {
-      return;
-    }
-    await store.prisma.member_diary.create({
-      data: {
-        id: r_id(),
-        episode_id,
-        day: dayjs().format("YYYY-MM-DD"),
-        member_id: member.id,
-      },
-    });
-  })();
   const existing_history = await store.prisma.play_history.findFirst({
     where: {
       tv_id,
@@ -145,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         current_time,
         duration,
         member_id: member.id,
-        file_id: file_id ?? null,
+        file_id: file_id || null,
         thumbnail: null,
       },
     });
@@ -181,7 +161,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     season_id,
     episode_id,
     current_time,
-    file_id: file_id ?? null,
+    file_id: file_id || null,
     thumbnail: null,
   };
   if (duration) {

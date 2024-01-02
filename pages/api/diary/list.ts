@@ -31,41 +31,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return store.prisma.member_diary.findMany({
         where,
         include: {
-          episode: {
+          media_source: {
             include: {
-              season: {
+              media: {
                 include: {
-                  tv: {
-                    include: {
-                      profile: true,
-                    },
-                  },
                   profile: true,
-                  //   profile: {
-                  //     include: {
-                  //       persons: {
-                  //         include: {
-                  //           profile: true,
-                  //         },
-                  //       },
-                  //     },
-                  //   },
                 },
               },
-            },
-          },
-          movie: {
-            include: {
-              profile: true,
-              //       profile: {
-              //         include: {
-              //           persons: {
-              //             include: {
-              //               profile: true,
-              //             },
-              //           },
-              //         },
-              //       },
             },
           },
         },
@@ -84,40 +56,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     data: {
       next_marker: data.next_marker,
       list: data.list.map((diary) => {
-        const { id, day, episode, movie, content, created } = diary;
+        const { id, day, media_source, content, created } = diary;
         return {
           id,
           day,
           content,
           profile: (() => {
-            if (episode) {
-              const { season } = episode;
-              const { tv, profile, season_text } = season;
-              return {
-                name: tv.profile.name,
-                original_name: tv.profile.original_name,
-                poster_path: profile.poster_path || tv.profile.poster_path,
-                type: MediaTypes.Season,
-                tv_id: tv.id,
-                season_id: season.id,
-                season_text,
-                season_number: profile.season_number,
-                episode_number: episode.episode_number,
-                episode_text: episode.episode_text,
-                air_date: profile.air_date,
-              };
-            }
-            if (movie) {
-              const { profile } = movie;
-              return {
-                name: profile.name,
-                original_name: profile.original_name,
-                poster_path: profile.poster_path,
-                type: MediaTypes.Movie,
-                movie_id: movie.id,
-                air_date: profile.air_date,
-              };
-            }
+            // if (episode) {
+            //   const { season } = episode;
+            //   const { tv, profile, season_text } = season;
+            //   return {
+            //     name: tv.profile.name,
+            //     original_name: tv.profile.original_name,
+            //     poster_path: profile.poster_path || tv.profile.poster_path,
+            //     type: MediaTypes.Season,
+            //     tv_id: tv.id,
+            //     season_id: season.id,
+            //     season_text,
+            //     season_number: profile.season_number,
+            //     episode_number: episode.episode_number,
+            //     episode_text: episode.episode_text,
+            //     air_date: profile.air_date,
+            //   };
+            // }
+            // if (movie) {
+            //   const { profile } = movie;
+            //   return {
+            //     name: profile.name,
+            //     original_name: profile.original_name,
+            //     poster_path: profile.poster_path,
+            //     type: MediaTypes.Movie,
+            //     movie_id: movie.id,
+            //     air_date: profile.air_date,
+            //   };
+            // }
             return null;
           })(),
           created,

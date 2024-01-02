@@ -1,5 +1,4 @@
 import { AliyunBackupDriveClient } from ".";
-import { AliyunResourceClient } from "./resource";
 
 export type AliyunDriveToken = {
   access_token: string;

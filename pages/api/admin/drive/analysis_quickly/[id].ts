@@ -9,7 +9,6 @@ import { Drive } from "@/domains/drive";
 import { DriveAnalysis } from "@/domains/analysis";
 import { Job } from "@/domains/job";
 import { TaskTypes } from "@/domains/job/constants";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { FileType } from "@/constants";
 import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types";

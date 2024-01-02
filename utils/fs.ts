@@ -5,6 +5,7 @@ import fs from "fs/promises";
 import path from "path";
 
 import { accessSync, mkdirSync } from "fs";
+import { Result } from "@/types";
 
 /**
  * 确保某个路径必然存在
@@ -47,3 +48,68 @@ export function ensure_sync(filepath: string, next: string[] = []) {
     ensure_sync(needToCreate, next.concat(filepath));
   }
 }
+
+export async function file_info(file_path: string) {
+  try {
+    const stats = await fs.stat(file_path);
+    return Result.Ok({
+      size: stats.size,
+      file_type: (() => {
+        if (stats.isDirectory()) {
+          return "directory";
+        }
+        if (stats.isFile()) {
+          return "file";
+        }
+        return "unknown";
+      })(),
+    });
+  } catch (err) {
+    const e = err as Error;
+    return Result.Err(e.message);
+  }
+}
+
+export async function check_path_type(file_path: string): Promise<Result<"directory" | "file">> {
+  try {
+    const stats = await fs.stat(file_path);
+    if (stats.isDirectory()) {
+      return Result.Ok("directory");
+    }
+    if (stats.isFile()) {
+      return Result.Ok("file");
+    }
+    return Result.Err("unknown");
+  } catch (err) {
+    const e = err as Error;
+    return Result.Err(e.message);
+  }
+}
+
+export async function check_existing(filepath: string) {
+  try {
+    await fs.stat(filepath);
+    return Result.Ok(true);
+  } catch (err) {
+    return Result.Ok(false);
+  }
+}
+export async function access(filepath: string): Promise<Result<null>> {
+  try {
+    await fs.access(filepath);
+    return Result.Ok(null);
+  } catch (err) {
+    const e = err as Error;
+    return Result.Err(e.message);
+  }
+}
+export async function mkdir(filepath: string): Promise<Result<null>> {
+  try {
+    await fs.mkdir(filepath);
+    return Result.Ok(null);
+  } catch (err) {
+    const e = err as Error;
+    return Result.Err(e.message);
+  }
+}
+

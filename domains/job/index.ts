@@ -4,27 +4,31 @@ import path from "path";
 import { throttle } from "lodash";
 import dayjs from "dayjs";
 
-import { BaseDomain } from "@/domains/base";
+import { BaseDomain, Handler } from "@/domains/base";
 import { Article, ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { DatabaseStore } from "@/domains/store";
 import { AsyncTaskRecord } from "@/domains/store/types";
 import { Result } from "@/types";
 import { app } from "@/store";
-import { ensure } from "@/utils/fs";
 import { r_id } from "@/utils";
 
 import { TaskStatus, TaskTypes } from "./constants";
 
 export * from "./constants";
 
-enum Events {}
-type TheTypesOfEvents = {};
+enum Events {
+  StopTask,
+}
+type TheTypesOfEvents = {
+  [Events.StopTask]: void;
+};
 type JobNewProps = {
   unique_id: string;
   type: TaskTypes;
   desc: string;
   user_id: string;
   store: DatabaseStore;
+  on_print?: () => void;
 };
 type JobProps = {
   id: string;
@@ -35,10 +39,14 @@ type JobProps = {
   output: Article;
   store: DatabaseStore;
 };
+const cached_jobs: Record<string, Job> = {};
 
 export class Job extends BaseDomain<TheTypesOfEvents> {
   static async Get(body: { id: string; user_id: string; store: DatabaseStore }) {
     const { id, user_id, store } = body;
+    if (cached_jobs[id]) {
+      return Result.Ok(cached_jobs[id]);
+    }
     const r1 = await store.prisma.async_task.findFirst({
       select: {
         id: true,
@@ -75,6 +83,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       output: new Article({}),
       store,
     });
+    cached_jobs[id] = job;
     return Result.Ok(job);
   }
 
@@ -130,14 +139,17 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       output,
       store,
     });
+    cached_jobs[id] = job;
     return Result.Ok(job);
   }
 
   id: string;
   output: Article;
   profile: JobProps["profile"];
+  percent = 0;
   store: DatabaseStore;
   prev_write_time: number;
+  timer: null | NodeJS.Timer = null;
   // start: number;
 
   constructor(options: JobProps) {
@@ -149,11 +161,6 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     this.profile = profile;
     this.store = store;
     this.prev_write_time = dayjs().valueOf();
-    // setInterval(() => {
-    //   if (dayjs(this.prev_write_time).isBefore(dayjs().add(3, "minute"))) {
-    //     console.log("bingo");
-    //   }
-    // }, 1000 * 60 * 2);
     this.output.on_write(this.update_content);
   }
   pending_lines = [];
@@ -176,10 +183,9 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (!filepath) {
       return;
     }
-    const p = path.resolve(app.root_path, "logs", filepath);
-    await ensure(p);
+    const log_filepath = path.resolve(app.root_path, "logs", filepath);
     fs.appendFileSync(
-      p,
+      log_filepath,
       [
         "",
         ...content.map((c) => {
@@ -187,6 +193,17 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         }),
       ].join("\n")
     );
+  }, 5000);
+  update_percent = throttle(async (percent: number) => {
+    console.log("[DOMAIN]job/index - update_percent", percent);
+    await this.store.prisma.async_task.update({
+      where: {
+        id: this.id,
+      },
+      data: {
+        percent,
+      },
+    });
   }, 5000);
   check_need_pause = throttle(async () => {
     const r = await this.store.find_task({ id: this.id });
@@ -215,7 +232,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (!r1) {
       return Result.Err("没有匹配的任务记录");
     }
-    const { desc, unique_id, created, status, output, error } = r1;
+    const { desc, unique_id, created, status, percent, output, error } = r1;
     const { filepath } = output;
     if (!filepath) {
       return Result.Ok({
@@ -224,6 +241,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         unique_id,
         created,
         lines: [],
+        percent,
         more_line: false,
         error,
       });
@@ -241,6 +259,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       unique_id,
       created,
       lines: content.split("\n").filter(Boolean),
+      percent,
       more_line: false,
       error,
     });
@@ -270,48 +289,76 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       list,
     });
   }
-  /** pause the task */
+  /**
+   * 主动终止任务
+   */
   async pause(options: { force?: boolean } = {}) {
     const { force = false } = options;
-    const r = await this.store.update_task(this.id, {
-      need_stop: 1,
-      status: force ? TaskStatus.Paused : undefined,
+    const r = await this.store.prisma.async_task.findFirst({
+      where: {
+        id: this.id,
+      },
     });
+    if (!r) {
+      return Result.Err("记录不存在");
+    }
+    if (r.status !== TaskStatus.Running) {
+      return Result.Err("该任务非运行中状态");
+    }
+    await this.store.prisma.async_task.update({
+      where: {
+        id: this.id,
+      },
+      data: {
+        need_stop: 1,
+        status: force ? TaskStatus.Paused : undefined,
+      },
+    });
+    setTimeout(async () => {
+      const r = await this.store.prisma.async_task.update({
+        where: {
+          id: this.id,
+        },
+        data: {
+          status: TaskStatus.Finished,
+        },
+      });
+    }, 10 * 1000);
     const output = await this.store.prisma.output.findUnique({
       where: {
         id: this.profile.output_id,
       },
     });
-    if (!output) {
-      return;
+    this.emit(Events.StopTask);
+    if (output) {
+      const { filepath } = output;
+      if (filepath) {
+        const log_filepath = path.resolve(app.root_path, "logs", filepath);
+        fs.appendFileSync(
+          log_filepath,
+          [
+            "",
+            [
+              new ArticleLineNode({
+                children: [
+                  new ArticleTextNode({
+                    text: "主动中止索引任务",
+                  }),
+                ],
+              }).to_json(),
+            ].map((c) => {
+              return JSON.stringify(c);
+            }),
+          ].join("\n")
+        );
+      }
     }
-    const { filepath } = output;
-    if (!filepath) {
-      return;
-    }
-    const p = path.resolve(app.root_path, "logs", filepath);
-    await ensure(p);
-    fs.appendFileSync(
-      p,
-      [
-        "",
-        [
-          new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: "主动中止索引任务",
-              }),
-            ],
-          }).to_json(),
-        ].map((c) => {
-          return JSON.stringify(c);
-        }),
-      ].join("\n")
-    );
+    return Result.Ok(null);
   }
   /** tag the task is finished */
   async finish() {
     const r = await this.store.update_task(this.id, {
+      need_stop: 0,
       status: TaskStatus.Finished,
     });
     if (r.error) {
@@ -346,6 +393,14 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(null);
   }
+  update(body: Partial<{ percent: number; desc: string }>) {
+    this.store.prisma.async_task.update({
+      where: {
+        id: this.id,
+      },
+      data: body,
+    });
+  }
   is_to_long() {
     const { status, created } = this.profile;
     if (status === TaskStatus.Running && dayjs(created).add(50, "minute").isBefore(dayjs())) {
@@ -354,5 +409,30 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       return true;
     }
     return false;
+  }
+
+  on_pause(handler: Handler<TheTypesOfEvents[Events.StopTask]>) {
+    const handler1 = async () => {
+      // console.log("[DOMAIN]job/index - check need stop");
+      const r = await this.store.prisma.async_task.findFirst({
+        where: {
+          id: this.id,
+        },
+      });
+      if (!r) {
+        return Result.Err("记录不存在");
+      }
+      // console.log("[DOMAIN]job/index - before TaskStatus.Paused", r.status);
+      if (r.need_stop) {
+        this.emit(Events.StopTask);
+        app.clearInterval(handler1);
+      }
+      if ([TaskStatus.Paused, TaskStatus.Finished].includes(r.status)) {
+        app.clearInterval(handler1);
+      }
+      return Result.Ok(null);
+    };
+    app.startInterval(handler1, 5000);
+    return this.on(Events.StopTask, handler);
   }
 }

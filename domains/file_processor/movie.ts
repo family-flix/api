@@ -1,10 +1,8 @@
 /**
  * @file 电影文件解析
  */
-import { Handler } from "mitt";
-
 import { FileType } from "@/constants";
-import { BaseDomain } from "@/domains/base";
+import { BaseDomain, Handler } from "@/domains/base";
 import { SearchedMovie } from "@/domains/walker";
 import { DatabaseStore } from "@/domains/store";
 import { Result } from "@/types";

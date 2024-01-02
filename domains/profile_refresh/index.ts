@@ -2,9 +2,8 @@
  * @file 影视剧详情更新、变更
  */
 import dayjs from "dayjs";
-import { Handler } from "mitt";
 
-import { BaseDomain } from "@/domains/base";
+import { BaseDomain, Handler } from "@/domains/base";
 import { DatabaseStore } from "@/domains/store";
 import {
   EpisodeProfileRecord,

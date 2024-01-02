@@ -24,7 +24,7 @@ import {
 import { DatabaseStore } from "@/domains/store";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
-import { ImageUploader } from "@/domains/uploader";
+import { FileUpload } from "@/domains/uploader";
 import {
   MovieProfileRecord,
   ParsedMovieRecord,
@@ -143,7 +143,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   user: User;
   drive?: Drive;
   client: TMDBClient;
-  upload: ImageUploader;
+  $upload: FileUpload;
   options: Partial<{
     upload_image?: boolean;
     /** 忽略 can_search，强制重新搜索 */
@@ -173,7 +173,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     this.user = user;
     this.drive = drive;
     this.client = new TMDBClient({ token: user.settings.tmdb_token });
-    this.upload = new ImageUploader({ root: assets });
+    this.$upload = new FileUpload({ root: assets });
     this.options = {
       upload_image,
       force,
@@ -830,8 +830,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         });
       }
       return Promise.resolve({
-        poster_path: poster_path ?? null,
-        backdrop_path: backdrop_path ?? null,
+        poster_path: poster_path || null,
+        backdrop_path: backdrop_path || null,
       });
     })();
     // this.emit(Events.Print, Article.build_line(["before build body"]));
@@ -1208,7 +1208,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
             backdrop_path: null,
           });
           return {
-            poster_path: p ?? null,
+            poster_path: p || null,
           };
         }
         return Promise.resolve({
@@ -2161,7 +2161,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (poster_path) {
       const key = `/poster/${name}`;
       // this.emit(Events.Print, Article.build_line(["before upload.download poster", poster_path]));
-      const r = await this.upload.download(poster_path, key);
+      const r = await this.$upload.download(poster_path, key);
       if (r.error) {
         // console.log("download image failed 1", r.error.message);
       }
@@ -2172,7 +2172,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (backdrop_path) {
       const key = `/backdrop/${name}`;
       // this.emit(Events.Print, Article.build_line(["before upload.download backdrop", backdrop_path]));
-      const r = await this.upload.download(backdrop_path, key);
+      const r = await this.$upload.download(backdrop_path, key);
       if (r.error) {
         // console.log("download image failed 2", r.error.message);
       }

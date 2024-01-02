@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import { parse_filename_for_video } from "../parse_filename_for_video";
 
-describe("动漫", () => {
+describe("影视剧3", () => {
   test("灌篮高手.1080P.国粤日三语.软字幕.AVC.默认国语音频.100.mkv", () => {
     const name = "灌篮高手.1080P.国粤日三语.软字幕.AVC.默认国语音频.100.mkv";
     const result = parse_filename_for_video(name);
@@ -77,24 +77,14 @@ describe("动漫", () => {
       episode: "E36",
     });
   });
-  test("九尾狐转15.mp4", () => {
-    const name = "九尾狐转15.mp4";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "九尾狐转",
-      original_name: "",
-      season: "",
-      episode: "E15",
-    });
-  });
   test("九尾狐传9.mp4", () => {
     const name = "九尾狐传9.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "九尾狐传",
+      name: "九尾狐传9",
       original_name: "",
       season: "",
-      episode: "E09",
+      episode: "",
     });
   });
   test("灌篮高手日语版098.mp4", () => {

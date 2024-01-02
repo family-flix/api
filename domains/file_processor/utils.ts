@@ -1,7 +1,82 @@
-import { ParsedMovieRecord } from "@/domains/store/types";
+import { ParsedMediaRecord, ParsedMediaSourceRecord, ParsedMovieRecord } from "@/domains/store/types";
 import { SearchedMovie } from "@/domains/walker";
 import { ParsedEpisodeRecord, ParsedSeasonRecord, ParsedTVRecord } from "@/domains/store/types";
 import { SearchedEpisode } from "@/domains/walker";
+
+export function is_media_change(
+  existing: ParsedMediaRecord,
+  next: { name: string | null; original_name: string | null; season_text: string | null }
+) {
+  const payload: Partial<ParsedMediaRecord> = {};
+  if (existing.name !== (next.name || next.original_name)) {
+    payload.name = (next.name || next.original_name)!;
+  }
+  if (next.original_name && existing.original_name !== next.original_name) {
+    payload.original_name = next.original_name;
+  }
+  if (next.season_text !== null && existing.season_text !== next.season_text) {
+    payload.season_text = next.season_text;
+  }
+  return payload;
+}
+
+export function is_season_media_source_change(existing: ParsedMediaSourceRecord, next: SearchedEpisode) {
+  const payload: Partial<ParsedMediaSourceRecord> = {};
+  if (existing.name !== (next.tv.name || next.tv.original_name)) {
+    payload.name = next.tv.name || next.tv.original_name;
+  }
+  if (next.tv.original_name && existing.original_name !== next.tv.original_name) {
+    payload.original_name = next.tv.original_name;
+  }
+  if (next.season.season_text !== null && existing.season_text !== next.season.season_text) {
+    payload.season_text = next.season.season_text;
+  }
+  if (next.episode.episode_text !== existing.episode_text) {
+    payload.episode_text = next.episode.episode_text;
+  }
+  if (next.episode.file_name !== existing.file_name) {
+    payload.file_name = next.episode.file_name;
+  }
+  if (next.episode.parent_file_id !== existing.parent_file_id) {
+    payload.parent_file_id = next.episode.parent_file_id;
+  }
+  if (next.episode.parent_paths !== existing.parent_paths) {
+    payload.parent_paths = next.episode.parent_paths;
+  }
+  if (next.episode.size !== existing.size) {
+    payload.size = next.episode.size;
+  }
+  if (next.episode.md5 !== existing.md5) {
+    payload.md5 = next.episode.md5;
+  }
+  return payload;
+}
+
+export function is_movie_media_source_change(existing: ParsedMediaSourceRecord, next: SearchedMovie) {
+  const payload: Partial<ParsedMediaSourceRecord> = {};
+  if (existing.name !== (next.name || next.original_name)) {
+    payload.name = next.name || next.original_name;
+  }
+  if (next.original_name !== null && existing.original_name !== next.original_name) {
+    payload.original_name = next.original_name;
+  }
+  if (next.file_name !== existing.file_name) {
+    payload.file_name = next.file_name;
+  }
+  if (next.parent_file_id !== existing.parent_file_id) {
+    payload.parent_file_id = next.parent_file_id;
+  }
+  if (next.parent_paths !== existing.parent_paths) {
+    payload.parent_paths = next.parent_paths;
+  }
+  if (next.size !== existing.size) {
+    payload.size = next.size;
+  }
+  if (next.md5 !== existing.md5) {
+    payload.md5 = next.md5;
+  }
+  return payload;
+}
 
 /**
  * 判断两个 tv 信息是否有改变（名称有改变）
@@ -16,8 +91,8 @@ export function is_tv_changed(existing_tv: ParsedTVRecord, next_res: SearchedEpi
     original_name: string;
   }> = {};
   // log("判断视频文件所属的电视剧信息是否一致", [tv.name, tv.original_name, next_tv.name, next_tv.original_name]);
-  const name = next_tv.name ?? null;
-  const original_name = next_tv.original_name ?? null;
+  const name = next_tv.name || null;
+  const original_name = next_tv.original_name || null;
   if (existing_tv.name === null) {
     if (name !== null) {
       payload.name = name;
@@ -81,8 +156,8 @@ export function is_movie_changed(existing_movie: ParsedMovieRecord, next_res: Se
     original_name: string;
   }> = {};
   // log("判断视频文件所属的电视剧信息是否一致", [tv.name, tv.original_name, next_tv.name, next_tv.original_name]);
-  const name = next_res.name ?? null;
-  const original_name = next_res.original_name ?? null;
+  const name = next_res.name || null;
+  const original_name = next_res.original_name || null;
   if (existing_movie.name === null) {
     if (name !== null) {
       payload.name = name;

@@ -3,8 +3,8 @@
  * @doc https://www.yuque.com/aliyundrive/zpfszx
  */
 import fs from "fs";
+import crypto from "crypto";
 
-import { Handler } from "mitt";
 import axios from "axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
@@ -12,13 +12,12 @@ import dayjs, { Dayjs } from "dayjs";
 import { DatabaseStore } from "@/domains/store";
 import { DriveRecord } from "@/domains/store/types";
 import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
-import { BaseDomain } from "@/domains/base";
+import { BaseDomain, Handler } from "@/domains/base";
 import { parseJSONStr, query_stringify, sleep } from "@/utils";
 import { Result, Unpacked } from "@/types";
 
 import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo, AliyunDriveProfile, AliyunDriveClient } from "./types";
-import { prepare_upload_file } from "./utils";
-import { AliyunResourceClient } from "./resource";
+import { get_part_info_list, prepare_upload_file, read_part_file, file_info } from "./utils";
 
 const API_HOST = "https://api.aliyundrive.com";
 const API_V2_HOST = "https://api.alipan.com";
@@ -247,7 +246,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
           console.error("\n");
           console.error(url);
           // console.error(body, headers);
-          console.error("POST request failed, because", response?.status, response?.data);
+          console.error("POST request failed, because", error);
           // console.log(response, message);
           if (response?.status === 401) {
             if (response?.data?.code === "UserDeviceOffline") {
@@ -367,7 +366,6 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     const { drive_total_size, drive_used_size } = r.data;
     this.used_size = drive_used_size;
     this.total_size = drive_total_size;
-    // console.log(this.resource_drive_id);
     // if (!this.resource_drive_id) {
     //   const r3 = await this.ping();
     //   // console.log("[DOMAIN]AliyunResourceDrive - init", r3.data, this.resource_drive_id);
@@ -688,6 +686,26 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(result.data);
   }
+  /** 获取一个文件夹的完整路径（包括自身） */
+  async fetch_parent_paths(file_id: string) {
+    await this.ensure_initialized();
+    const url = "/adrive/v1/file/get_path";
+    const result = await this.request.post<{
+      items: {
+        name: string;
+        file_id: string;
+        parent_file_id: string;
+        type: "file" | "folder";
+      }[];
+    }>(API_HOST + url, {
+      drive_id: String(this.drive_id),
+      file_id,
+    });
+    if (result.error) {
+      return Result.Err(result.error.message);
+    }
+    return Result.Ok(result.data.items.reverse());
+  }
   /** 根据名称判断一个文件是否已存在 */
   async existing(parent_file_id: string, file_name: string): Promise<Result<AliyunDriveFileResp | null>> {
     await this.ensure_initialized();
@@ -840,7 +858,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     const share_id = matched_share_id[1];
     if (this.share_token && force === false) {
-      // 这是什么逻辑？忘记了
+      // 如果曾经调用过该方法获取到了 share_token，再次调用时就不会真正去调用了，而是复用之前获取到的
       return Result.Ok({
         share_id,
         share_token: this.share_token,
@@ -937,9 +955,37 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     );
     return r3;
   }
+  async search_shared_files(
+    keyword: string,
+    options: Partial<{
+      page_size: number;
+      share_id: string;
+      marker: string;
+    }>
+  ) {
+    if (this.share_token === null) {
+      return Result.Err("Please invoke fetch_share_profile first");
+    }
+    const { page_size = 20, share_id } = options;
+    const r3 = await this.request.post<{
+      items: AliyunDriveFileResp[];
+    }>(
+      API_HOST + "/recommend/v1/shareLink/search",
+      {
+        keyword,
+        limit: page_size,
+        order_by: "name DESC",
+        share_id,
+      },
+      {
+        "x-share-token": this.share_token,
+      }
+    );
+    return r3;
+  }
   /**
    * 转存分享的文件
-   * @deprecated 请使用 save_multiple_shared_files
+   * 在同步资源时，会需要转存单个？或者直接用转存多个？
    */
   async save_shared_files(options: {
     /** 分享链接 */
@@ -1413,12 +1459,16 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
    */
   async create_with_folder(
     body: {
-      content_hash: string;
       name: string;
       parent_file_id: string;
       part_info_list: { part_number: number }[];
-      proof_code: string;
       size: number;
+      content_hash?: string;
+      proof_code?: string;
+      pre_hash?: string;
+      create_scene?: string;
+      content_hash_name?: "sha1";
+      proof_version?: "v1";
     },
     override?: { drive_id: string }
   ) {
@@ -1426,10 +1476,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     const url = "/adrive/v2/file/createWithFolders";
     const b = {
       ...body,
-      content_hash_name: "sha1",
-      check_name_mode: "overwrite",
-      create_scene: "file_upload",
-      proof_version: "v1",
+      check_name_mode: "auto_rename",
       type: "file",
       device_name: "",
       drive_id: override ? override.drive_id : String(this.drive_id),
@@ -1453,6 +1500,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       file_name: string;
       encrypt_mode: string;
       location: string;
+      code?: string;
     }>(API_HOST + url, b);
     if (r.error) {
       return r;
@@ -1469,38 +1517,106 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     const { name, parent_file_id = "root", drive_id, on_progress } = options;
     await this.ensure_initialized();
     const token = this.access_token;
-    // 10 MB
-    let UPLOAD_CHUNK_SIZE = 10 * 1024 * 1024;
     const existing_res = await this.existing(parent_file_id, name);
     if (existing_res.error) {
-      return Result.Err(existing_res.error);
+      return Result.Err(existing_res.error.message);
     }
     if (existing_res.data) {
       return Result.Err("文件已存在");
     }
-    const r1 = await prepare_upload_file(filepath, {
-      token,
-    });
-    if (r1.error) {
-      return Result.Err(r1.error.message);
+    // 10 MB  10485760
+    let UPLOAD_CHUNK_SIZE = 10 * 1024 * 1024;
+    const r2 = await file_info(filepath);
+    if (r2.error) {
+      return Result.Err(r2.error.message);
     }
-    const { content_hash, proof_code, size, part_info_list } = r1.data;
-    const chunk_count = Math.ceil(size / UPLOAD_CHUNK_SIZE);
-    const r = await this.create_with_folder(
-      {
-        content_hash,
-        proof_code,
-        part_info_list,
-        size,
-        name,
-        parent_file_id,
-      },
-      { drive_id: drive_id || String(this.drive_id) }
-    );
+    const { size: file_size } = r2.data;
+    const r = await (async () => {
+      if (file_size > 1024) {
+        const c = await read_part_file(filepath, 1024);
+        if (c.error) {
+          return Result.Err(c.error.message);
+        }
+        const a = crypto.createHash("sha1");
+        const pre_hash = a.update(c.data).digest("hex");
+        this.debug && console.log("pre_hash", pre_hash);
+        const r = await this.create_with_folder(
+          {
+            part_info_list: get_part_info_list(file_size, UPLOAD_CHUNK_SIZE).slice(0, 20),
+            size: file_size,
+            name,
+            parent_file_id,
+            pre_hash,
+            create_scene: "",
+          },
+          { drive_id: drive_id || String(this.drive_id) }
+        );
+        if (r.error) {
+          return Result.Err(r.error.message);
+        }
+        const { code } = r.data;
+        this.debug && console.log("pre_hash result", r.data.part_info_list.length);
+        if (code === "PreHashMatched") {
+          const r1 = await prepare_upload_file(filepath, {
+            token,
+            size: r2.data.size,
+          });
+          if (r1.error) {
+            return Result.Err(r1.error.message);
+          }
+          const { content_hash, proof_code, size, part_info_list } = r1.data;
+          return this.create_with_folder(
+            {
+              content_hash,
+              proof_code,
+              part_info_list,
+              size,
+              name,
+              parent_file_id,
+              content_hash_name: "sha1",
+              create_scene: "file_upload",
+              proof_version: "v1",
+            },
+            { drive_id: drive_id || String(this.drive_id) }
+          );
+        }
+        return r;
+      }
+      const r1 = await prepare_upload_file(filepath, {
+        token,
+        size: r2.data.size,
+      });
+      if (r1.error) {
+        return Result.Err(r1.error.message);
+      }
+      const { content_hash, proof_code, size, part_info_list } = r1.data;
+      return this.create_with_folder(
+        {
+          content_hash,
+          proof_code,
+          part_info_list,
+          size,
+          name,
+          parent_file_id,
+          content_hash_name: "sha1",
+          create_scene: "file_upload",
+          proof_version: "v1",
+        },
+        { drive_id: drive_id || String(this.drive_id) }
+      );
+    })();
     if (r.error) {
       return Result.Err(r.error);
     }
+    const chunk_count = Math.ceil(file_size / UPLOAD_CHUNK_SIZE);
     const { upload_id, file_id, file_name } = r.data;
+    if (r.data.rapid_upload) {
+      // 秒传，即官方已经有该文件，无需上传
+      return Result.Ok({
+        file_id,
+        file_name,
+      });
+    }
     if (!r.data.part_info_list?.[0]) {
       // 秒传，即官方已经有该文件，无需上传
       return Result.Ok({
@@ -1512,19 +1628,19 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     let last_part = part_list[part_list.length - 1];
     let i = 0;
     this.debug && console.log("start upload");
-    while (i <= chunk_count - 1) {
-      this.debug && console.log(`chunk ${i}/${chunk_count - 1}`, i);
-      if (on_progress) {
-        on_progress(`chunk ${i}/${chunk_count - 1}`);
-      }
-      const upload_url = part_list[i].upload_url;
-      // console.log("[DOMAIN]aliyundrive/index - before upload", upload_url);
-
-      const r: Result<null> = await new Promise(async (resolve) => {
-        const stream = fs.createReadStream(filepath, { highWaterMark: UPLOAD_CHUNK_SIZE });
-        // this.debug && console.log("buffer size", start, offset);
-        stream.on("data", async (chunk) => {
+    const stream = fs.createReadStream(filepath, { highWaterMark: UPLOAD_CHUNK_SIZE });
+    // return Result.Err("未知错误");
+    // if (on_progress) {
+    //   on_progress(`chunk ${i}/${chunk_count - 1}`);
+    // }
+    const r10: Result<{ file_id: string; file_name: string }> = await new Promise(async (resolve1) => {
+      stream.on("data", async (chunk) => {
+        stream.pause();
+        const cur_part_number = part_list[i].part_number;
+        const r: Result<void> = await new Promise(async (resolve) => {
           try {
+            const upload_url = part_list[i].upload_url;
+            this.debug && console.log(`chunk ${cur_part_number}/${chunk_count - 1}`);
             const rr = await axios.put(upload_url, chunk, {
               headers: {
                 authority: "cn-beijing-data.aliyundrive.net",
@@ -1548,51 +1664,62 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
           } catch (err) {
             const error = err as AxiosError<{ code: string; message: string }>;
             const { response, message } = error;
-            // console.log("[]upload failed", message, response?.data);
+            console.log("[]upload failed", message, response?.data);
             resolve(Result.Err(message || response?.data.message || "unknown", response?.data?.code, 1563));
           }
         });
+        if (r.error) {
+          this.debug && console.log("upload failed, because ", r.error.message);
+          return resolve1(Result.Err(r.error.message));
+        }
+        i += 1;
+        if (cur_part_number >= chunk_count - 1) {
+          const r2 = await this.fetch_uploaded_file({
+            upload_id,
+            file_id,
+          });
+          if (r2.error) {
+            this.debug && console.log("upload complete, but fetch result failed, because ", r2.error.message);
+            return Result.Err(r2.error.message, 1562);
+          }
+          this.debug && console.log("fetch result and return");
+          return resolve1(
+            Result.Ok({
+              file_id: r2.data.file_id,
+              file_name: r2.data.name,
+            })
+          );
+        }
+        if (cur_part_number >= last_part.part_number) {
+          this.debug && console.log("fetch next part list");
+          const r2 = await this.fetch_upload_url({
+            upload_id,
+            file_id,
+            part_info_list: Array.from({ length: 20 }, (_, index) => last_part.part_number + index + 1).map((p) => {
+              return {
+                part_number: p,
+              };
+            }),
+          });
+          if (r2.error) {
+            this.debug && console.log("fetch next upload failed, because ", r2.error.message);
+            return Result.Err(r2.error.message, 1561);
+          }
+          // console.log(r2.data.part_info_list.map((p) => p.part_number));
+          part_list = r2.data.part_info_list;
+          last_part = part_list[part_list.length - 1];
+          i = 0;
+        }
+        stream.resume();
       });
-      if (r.error) {
-        this.debug && console.log("upload failed, because ", r.error.message);
-        return Result.Err(r.error.message);
-      }
-      i += 1;
-      if (i >= chunk_count) {
-        const r2 = await this.fetch_uploaded_file({
-          upload_id,
-          file_id,
-        });
-        if (r2.error) {
-          this.debug && console.log("upload complete, but fetch result failed, because ", r2.error.message);
-          return Result.Err(r2.error.message, 1562);
-        }
-        this.debug && console.log("fetch result and return");
-        return Result.Ok({
-          file_id: r2.data.file_id,
-          file_name: r2.data.name,
-        });
-      }
-      if (i >= last_part.part_number) {
-        this.debug && console.log("fetch next part list");
-        const r2 = await this.fetch_upload_url({
-          upload_id,
-          file_id,
-          part_info_list: part_list.map((p) => {
-            return {
-              part_number: p.part_number,
-            };
-          }),
-        });
-        if (r2.error) {
-          this.debug && console.log("fetch next upload failed, because ", r2.error.message);
-          return Result.Err(r2.error.message, 1561);
-        }
-        part_list = part_list.concat(r2.data.part_info_list);
-        last_part = part_list[part_list.length - 1];
-      }
-    }
-    return Result.Err("未知错误");
+      stream.on("end", () => {
+        resolve1(Result.Err("文件读取完毕"));
+      });
+      stream.on("error", (err) => {
+        resolve1(Result.Err(err.message));
+      });
+    });
+    return r10;
   }
   async fetch_upload_url(body: {
     upload_id: string;
@@ -1694,7 +1821,10 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (!this.resource_drive_id) {
       return Result.Err("请先初始化资源盘信息");
     }
-    const resource_client_res = await AliyunResourceClient.Get({ drive_id: this.resource_drive_id, store: this.store });
+    const resource_client_res = await AliyunBackupDriveClient.Get({
+      drive_id: this.resource_drive_id,
+      store: this.store,
+    });
     if (resource_client_res.error) {
       return Result.Err(resource_client_res.error.message);
     }
@@ -1915,7 +2045,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(r.data);
   }
-  /** 从回收站删除文件 */
+  /** 删除文件/不管在不在回收站，直接删除 */
   async delete_file(file_id: string) {
     await this.ensure_initialized();
     const r = await this.request.post(API_HOST + "/v3/file/delete", {

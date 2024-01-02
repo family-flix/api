@@ -123,7 +123,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E09@上",
+      episode: "第9期上",
     });
   });
   test("第9期下：医学生花式宣讲，冯岑在线卖唱.mp4", () => {
@@ -133,7 +133,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E09@下",
+      episode: "第9期下",
     });
   });
   test("0926第4局.mp4", () => {
@@ -153,7 +153,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E04@下",
+      episode: "第4期下",
     });
   });
   test("10.04期-下.mp4", () => {
@@ -163,7 +163,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "1004@下",
+      episode: "1004下",
     });
   });
   test("MULTISUB【了不起！舞社 Great Dance Crew】EP01上 - 搞笑女制霸舞社 苏有朋太难 - 苏有朋_王霏霏_程潇_李永钦TEN_赞多 - 优酷综艺 YOUKU SHOW.mp4", () => {
@@ -174,7 +174,7 @@ describe("提取综艺信息", () => {
       name: "MULTISUB.了不起！舞社",
       original_name: "Great.Dance.Crew",
       season: "",
-      episode: "E01@上",
+      episode: "第1期上",
     });
   });
   test("第10期 下:冠军票数惊人", () => {
@@ -184,7 +184,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E10@下",
+      episode: "第10期下",
     });
   });
   test("20230909第5期纯享_Tacit0924.mp4", () => {
@@ -214,7 +214,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E04@上",
+      episode: "第4期上",
     });
   });
   test("第14期下 半决赛五条人新歌首唱 新裤子开场舞魂爆发", () => {
@@ -224,7 +224,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E14@下",
+      episode: "第14期下",
     });
   });
   test("20200729上 张雨绮笑聊离婚 _Tacit0924 .mp4", () => {
@@ -234,7 +234,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "20200729@上",
+      episode: "20200729上",
     });
   });
   test("20190922徐峥吐槽黄渤爆笑模仿沈腾 _Tacit0924 .mp4", () => {
@@ -253,8 +253,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "加更02",
+      season: "",
+      episode: "20221216",
     });
   });
   test("20200812 黄圣依回应被骂：对不起 _Tacit0924 .mp4", () => {
@@ -273,8 +273,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "加更06",
+      season: "",
+      episode: "1006",
     });
   });
   test("20190728Ella回应生产后遗症 _Tacit0924 .mp4", () => {
@@ -334,7 +334,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E05@下",
+      episode: "第5期下",
     });
   });
   test("集结篇：思文惊喜回归引全场沸腾_Tacit0924.mp4", () => {
@@ -343,7 +343,7 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "集结篇：思文惊喜回归引全场沸腾",
     });
   });
@@ -353,8 +353,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "加更01",
+      season: "",
+      episode: "0910",
     });
   });
   test("20230503第3期加更：极挑男团夺金大战各出奇招_Tacit0924.mp4", () => {
@@ -363,8 +363,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "加更03",
+      season: "",
+      episode: "20230503",
     });
   });
   test("第1期上_Tacit0924.mp4", () => {
@@ -374,7 +374,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E01@上",
+      episode: "第1期上",
     });
   });
   test("集结篇：脱4六强选手不断遭挑战_Tacit0924.mp4", () => {
@@ -383,7 +383,7 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "集结篇：脱4六强选手不断遭挑战",
     });
   });
@@ -394,7 +394,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "",
       season: "",
-      episode: "E01@上",
+      episode: "第1期上",
     });
   });
 
@@ -404,8 +404,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "加更02",
+      season: "",
+      episode: "20230729",
     });
   });
   test("20230722加更版_Tacit0924.mp4", () => {
@@ -414,8 +414,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "20230722加更版",
+      season: "",
+      episode: "20230722",
     });
   });
   test("20230730-独家直拍第1期_Tacit0924.mp4", () => {
@@ -424,8 +424,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "直拍01",
+      season: "",
+      episode: "20230730",
     });
   });
   test("20231024先导片_Tacit0924.mp4", () => {
@@ -434,8 +434,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "先导片",
+      season: "",
+      episode: "20231024",
     });
   });
   test("20231026-超前营业第1期_Tacit0924.mp4", () => {
@@ -444,8 +444,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "超前营业01",
+      season: "",
+      episode: "20231026",
     });
   });
   test("花儿与少年第一季20140606期：花儿们抵达马德里_Tacit0924.mp4", () => {
@@ -565,8 +565,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "直拍06",
+      season: "",
+      episode: "1120",
     });
   });
   test("1119Plus第12期_Tacit0924.mp4", () => {
@@ -575,8 +575,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "Plus12",
+      season: "",
+      episode: "1119",
     });
   });
   test("0917Plus+第6期_Tacit0924.mp4", () => {
@@ -585,8 +585,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "Plus06",
+      season: "",
+      episode: "0917",
     });
   });
   test("20230929-特别企划_Tacit0924.mp4", () => {
@@ -595,8 +595,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "特别企划",
+      season: "",
+      episode: "20230929",
     });
   });
   test("中国诗词大会 第三季 20180325 第三场.mp4", () => {
@@ -615,8 +615,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "直播02",
+      season: "",
+      episode: "20230507",
     });
   });
   test("第20210122期 孟美岐钢琴弹唱首秀.ts", () => {
@@ -635,7 +635,7 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "先导片：杨迪庞博被困待解救",
     });
   });
@@ -685,8 +685,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "加更02",
+      season: "",
+      episode: "1006",
     });
   });
   test("奔跑吧黄河篇 - S01E06 - WEB1080P.20210110.新年派对.加长版.mp4", () => {
@@ -705,8 +705,8 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
-      episode: "彩蛋11",
+      season: "",
+      episode: "0825",
     });
   });
   test("典籍里的中国 第二季_第一期-永乐大典.mp4", () => {
@@ -725,7 +725,7 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "超前企划",
     });
   });
@@ -815,7 +815,7 @@ describe("提取综艺信息", () => {
     expect(result).toStrictEqual({
       name: "",
       original_name: "",
-      season: "其他",
+      season: "",
       episode: "预告01",
     });
   });
@@ -855,8 +855,8 @@ describe("提取综艺信息", () => {
   //   expect(result).toStrictEqual({
   //     name: "",
   //     original_name: "",
-  //     season: "其他",
-  //     episode: "加更1",
+  //     season: "",
+  //     episode: "0731",
   //   });
   // });
   // test("《早餐中国3》云林北港·煎盘粿.mkv", () => {

@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const where: ModelQuery<"episode"> = {
     user_id: user.id,
   };
-  const data = await store.list_with_cursor({
+  const result = await store.list_with_cursor({
     fetch: (args) => {
       return store.prisma.episode.findMany({
         where,
@@ -43,6 +43,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   res.status(200).json({
     code: 0,
     msg: "",
-    data,
+    data: result,
   });
 }

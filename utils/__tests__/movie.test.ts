@@ -32,11 +32,10 @@ describe("电影", () => {
     const name = "玩具总动员4.mp4";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "玩具总动员",
+      name: "玩具总动员4",
       original_name: "",
       season: "",
-      // @todo 怎么办？难道要分成 电视剧索引 和 电影索引 吗？
-      episode: "E04",
+      episode: "",
     });
   });
   test("1990.傅艺伟. 封神榜 4K. 高清修复", () => {
@@ -95,7 +94,7 @@ describe("电影", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "5.Warriors.of.Future",
+      original_name: "Warriors.of.Future",
       season: "",
       episode: "",
     });
@@ -397,21 +396,80 @@ describe("电影", () => {
     const name = "电锯惊魂7.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
-      name: "电锯惊魂",
+      name: "电锯惊魂7",
       original_name: "",
       season: "",
-      episode: "E07",
+      episode: "",
     });
   });
-  // @todo
-  // test("S 三傻大闹宝莱坞.3.Idiots.2009", () => {
-  //   const name = "S 三傻大闹宝莱坞.3.Idiots.2009";
-  //   const result = parse_filename_for_video(name);
-  //   expect(result).toStrictEqual({
-  //     name: "三傻大闹宝莱坞",
-  //     original_name: "3.Idiots",
-  //     season: "",
-  //     episode: "",
-  //   });
-  // });
+  test("熔炉.Silenced.2011.BD720P.超清韩语中字.mp4", () => {
+    const name = "熔炉.Silenced.2011.BD720P.超清韩语中字.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "熔炉",
+      original_name: "Silenced",
+      season: "",
+      episode: "",
+    });
+  });
+  test("CCTV6.My.Beloved.China.2009.HDTV.1080i.H264-HDCTV.ts", () => {
+    const name = "CCTV6.My.Beloved.China.2009.HDTV.1080i.H264-HDCTV.ts";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "My.Beloved.China",
+      season: "",
+      episode: "",
+    });
+  });
+  test("[无字]祸乱.화란.2023.1080P.WEBRip.H264.AAC.FANov.mp4", () => {
+    const name = "[无字]祸乱.화란.2023.1080P.WEBRip.H264.AAC.FANov.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "祸乱",
+      original_name: "화란",
+      season: "",
+      episode: "",
+    });
+  });
+  test("Tetris.2023.2160p.ATVP.WEB-DL.DDP5.1.Atmos.HDR.DV.HEVC-CM.mkv", () => {
+    const name = "Tetris.2023.2160p.ATVP.WEB-DL.DDP5.1.Atmos.HDR.DV.HEVC-CM.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Tetris",
+      season: "",
+      episode: "",
+    });
+  });
+  test("[电锯惊魂7]Saw.VII.2010.BluRay.1080p.H265.10bit.DTS-HD.MA.5.1.BOBO.mkv", () => {
+    const name = "[电锯惊魂7]Saw.VII.2010.BluRay.1080p.H265.10bit.DTS-HD.MA.5.1.BOBO.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "电锯惊魂7",
+      original_name: "Saw7",
+      season: "",
+      episode: "",
+    });
+  });
+  test("Detective.Chinatown.2015.1080p.BluRay.REMUX.AVC.LPCM.5.1-HDHIVE.mkv", () => {
+    const name = "Detective.Chinatown.2015.1080p.BluRay.REMUX.AVC.LPCM.5.1-HDHIVE.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Detective.Chinatown",
+      season: "",
+      episode: "",
+    });
+  });
+  test("《苦菜花》1965.老片修复版.mp4", () => {
+    const name = "《苦菜花》1965.老片修复版.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "苦菜花",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

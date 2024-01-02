@@ -17,14 +17,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     file_id: string;
     drive_id: string;
   }>;
-  if (!drive_id) {
-    return e(Result.Err("缺少云盘 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
+  if (!drive_id) {
+    return e(Result.Err("缺少云盘 id"));
+  }
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);

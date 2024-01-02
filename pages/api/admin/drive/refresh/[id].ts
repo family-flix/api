@@ -19,13 +19,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t.error) {
     return e(Result.Err(t.error.message));
   }
+  const user = t.data;
   if (!drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
-  const user = t.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
-    return e(drive_res);
+    return e(Result.Err(drive_res.error.message));
   }
   const drive = drive_res.data;
   const r = await drive.refresh_profile();

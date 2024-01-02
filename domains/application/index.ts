@@ -1,34 +1,11 @@
 import path from "path";
-import fs from "fs/promises";
 
 import { PrismaClient } from "@prisma/client";
 
 import { DatabaseStore } from "@/domains/store";
+import { ensure } from "@/utils/fs";
 
 let cached: null | DatabaseStore = null;
-
-/**
- * 确保某个路径必然存在
- * @param filepath
- */
-export async function ensure(filepath: string, next: string[] = []) {
-  const { ext, dir } = path.parse(filepath);
-  const isFile = ext !== undefined && ext !== "";
-  if (isFile) {
-    filepath = dir;
-  }
-  try {
-    await fs.access(filepath);
-    if (next.length !== 0) {
-      const theDirPrepareCreate = next.pop();
-      await fs.mkdir(theDirPrepareCreate!);
-      await ensure(filepath, next);
-    }
-  } catch {
-    const needToCreate = path.dirname(filepath);
-    await ensure(needToCreate, next.concat(filepath));
-  }
-}
 
 export class Application {
   root_path: string;
@@ -37,6 +14,12 @@ export class Application {
   database_name: string;
   assets: string;
   env: Record<string, string> = {};
+  timer: null | NodeJS.Timer = null;
+  listeners: {
+    handler: Function;
+    delay: number;
+    elapsed: number;
+  }[] = [];
 
   store: DatabaseStore;
 
@@ -58,6 +41,7 @@ export class Application {
     ensure(path.join(this.assets, "poster"));
     ensure(path.join(this.assets, "thumbnail"));
     ensure(path.join(this.assets, "backdrop"));
+    ensure(path.join(this.assets, "logs"));
     (() => {
       if (cached) {
         this.store = cached;
@@ -75,5 +59,47 @@ export class Application {
       );
       cached = this.store;
     })();
+  }
+
+  startInterval<T extends Function>(handler: T, delay: number) {
+    (() => {
+      if (this.timer !== null) {
+        return;
+      }
+      this.timer = setInterval(() => {
+        console.log("[DOMAIN]Application - tick");
+        this.listeners.forEach((event) => {
+          event.elapsed += 1000;
+          if (event.elapsed >= event.delay) {
+            event.handler();
+            event.elapsed = 0;
+          }
+        });
+      }, 1000 * 1);
+    })();
+    // console.log("[DOMAIN]Application - startInterval", delay);
+    const handlers = this.listeners.map((l) => l.handler);
+    if (handlers.includes(handler)) {
+      return;
+    }
+    this.listeners.push({
+      handler,
+      delay,
+      elapsed: 0,
+    });
+  }
+  clearInterval<T extends Function>(handler: T) {
+    const handlers = this.listeners.map((l) => l.handler);
+    if (!handlers.includes(handler)) {
+      return;
+    }
+    this.listeners = this.listeners.filter((l) => {
+      return l.handler !== handler;
+    });
+    if (this.listeners.length === 0) {
+      if (this.timer !== null) {
+        clearInterval(this.timer);
+      }
+    }
   }
 }

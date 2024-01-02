@@ -7,8 +7,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/server";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { TaskStatus } from "@/domains/walker/constants";
+import { Job } from "@/domains/job";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -19,30 +20,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     force: string;
   }>;
   if (!id) {
-    return e("缺少任务 id 参数");
+    return e(Result.Err("缺少任务 id 参数"));
   }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const existing_task_resp = await store.find_task({ id, user_id });
-  if (existing_task_resp.error) {
-    return e(existing_task_resp);
+  const user = t_res.data;
+  const job_res = await Job.Get({ id, user_id: user.id, store });
+  if (job_res.error) {
+    return e(Result.Err(job_res.error.message));
   }
-  if (!existing_task_resp.data) {
-    return e("索引任务不存在");
-  }
-  const { status } = existing_task_resp.data;
-  if (status !== TaskStatus.Running) {
-    return e("该索引任务非运行中状态");
-  }
-  const r = await store.update_task(id, {
-    need_stop: 1,
-    status: force === "1" ? TaskStatus.Paused : TaskStatus.Running,
-  });
-  if (r.error) {
-    return e(r);
-  }
+  const job = job_res.data;
+  await job.pause();
   res.status(200).json({ code: 0, msg: "中止索引任务成功", data: null });
 }

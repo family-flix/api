@@ -36,21 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return store.prisma.member_favorite.findMany({
         where,
         include: {
-          season: {
-            include: {
-              tv: {
-                include: {
-                  profile: true,
-                },
-              },
-            },
-          },
-          movie: {
+          media: {
             include: {
               profile: true,
             },
           },
-          collection: true,
         },
         ...args,
       });
@@ -64,20 +54,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     data: {
       ...data,
       list: data.list.map((record) => {
-        const { id, type, season, movie, collection } = record;
+        const { id, type, media } = record;
         return {
           id,
           type,
           payload: (() => {
-            if (type === FavoriteRecordTypes.Season) {
-              return season;
-            }
-            if (type === FavoriteRecordTypes.Movie) {
-              return movie;
-            }
-            if (type === FavoriteRecordTypes.Collection) {
-              return collection;
-            }
+            // if (type === FavoriteRecordTypes.Season) {
+            //   return season;
+            // }
+            // if (type === FavoriteRecordTypes.Movie) {
+            //   return movie;
+            // }
+            // if (type === FavoriteRecordTypes.Collection) {
+            //   return collection;
+            // }
             return null;
           })(),
         };

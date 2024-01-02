@@ -4,7 +4,7 @@
 import type { Handler } from "mitt";
 
 import { File, Folder } from "@/domains/folder";
-import { ArticleLineNode, ArticleListItemNode, ArticleListNode, ArticleTextNode } from "@/domains/article";
+import { Article, ArticleLineNode, ArticleListItemNode, ArticleListNode, ArticleTextNode } from "@/domains/article";
 import { BaseDomain } from "@/domains/base";
 
 export enum DiffTypes {
@@ -78,6 +78,7 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
   /** 可能是删除的 */
   maybe_deleting: MaybeActionPayload = {};
   // article: Article;
+  need_stop = false;
 
   constructor(options: FolderDifferProps) {
     super();
@@ -99,34 +100,17 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
     // log(prefix, is_next_page ? "继续" : "开始", "对比", this.prev_folder.name, "和", this.folder.name);
     // const a = parent_prefix ? parent_prefix : "";
     // log("[DOMAIN](FolderDiffer)run", this.prev_folder.name, this.folder.name, this.is_child);
+    if (this.need_stop) {
+      return;
+    }
     const r1 = await this.folder.next();
     if (r1.error) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["获取新文件列表失败", r1.error.message].map(
-            (text) =>
-              new ArticleTextNode({
-                text,
-              })
-          ),
-        })
-      );
+      this.emit(Events.Print, Article.build_line(["获取新文件列表失败", r1.error.message]));
       return;
     }
     const r2 = await this.prev_folder.next();
     if (r2.error) {
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["获取旧文件列表失败", r2.error.message].map(
-            (text) =>
-              new ArticleTextNode({
-                text,
-              })
-          ),
-        })
-      );
+      this.emit(Events.Print, Article.build_line(["获取旧文件列表失败", r2.error.message]));
       return;
     }
     const cur_files = r1.data.filter((f) => {
@@ -141,16 +125,7 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
       }
       return true;
     });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [
-          new ArticleTextNode({
-            text: "对比文件列表",
-          }),
-        ],
-      })
-    );
+    this.emit(Events.Print, Article.build_line([`对比「${this.folder.name}」文件列表`]));
     this.emit(
       Events.Print,
       new ArticleLineNode({
@@ -297,6 +272,7 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
           new ArticleLineNode({
             children: [
               new ArticleTextNode({
+                color: "magenta",
                 text: "新增了如下文件",
               }),
             ],
@@ -636,6 +612,9 @@ export class FolderDiffer extends BaseDomain<TheTypesOfEvents> {
     // }
     // log(prefix, "获取更多子文件");
     await this.run(parent_prefix, true);
+  }
+  stop() {
+    this.need_stop = true;
   }
 
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {

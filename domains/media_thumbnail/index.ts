@@ -1,7 +1,7 @@
 /**
  * @file 一个云盘文件视频截图工具
  */
-import { ImageUploader } from "@/domains/uploader";
+import { FileUpload } from "@/domains/uploader";
 import { DatabaseStore } from "@/domains/store";
 import { Drive } from "@/domains/drive";
 import { r_id } from "@/utils";
@@ -20,20 +20,20 @@ export class MediaThumbnail {
 
   /** 资源存放根目录 */
   assets: string;
-  upload: ImageUploader;
+  $upload: FileUpload;
 
   constructor(options: { assets: string }) {
     const { assets } = options;
 
     this.assets = assets;
-    this.upload = new ImageUploader({ root: assets });
+    this.$upload = new FileUpload({ root: assets });
   }
 
   /** 上传海报 */
   async upload_poster(original_path: string) {
     const filename = `${r_id()}.jpg`;
     const key = `/poster/${filename}`;
-    const r = await this.upload.download(original_path, key);
+    const r = await this.$upload.download(original_path, key);
     if (r.error) {
       return Result.Ok({
         img_path: key,
@@ -43,6 +43,7 @@ export class MediaThumbnail {
       img_path: key,
     });
   }
+  /** 对指定视频文件截取指定帧 */
   async snapshot_media(body: {
     file_id?: string;
     cur_time: number;
@@ -64,7 +65,7 @@ export class MediaThumbnail {
     const key = `/thumbnail/${name}.jpg`;
     // console.log("[DOMAIN]TV - snapshot - before download", key);
     // const filepath = path.join(this.assets, key);
-    const r = await this.upload.download(thumbnail_res.data.responseUrl, key);
+    const r = await this.$upload.download(thumbnail_res.data.responseUrl, key);
     if (r.error) {
       return Result.Ok(null);
     }
@@ -76,6 +77,6 @@ export class MediaThumbnail {
   /** 删除指定截图 */
   delete_snapshot(key: string) {
     // const filepath = path.join(this.assets, key);
-    return this.upload.delete(key);
+    return this.$upload.delete_file(key);
   }
 }

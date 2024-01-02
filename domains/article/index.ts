@@ -21,12 +21,16 @@ export class Article extends BaseDomain<TheTypesOfEvents> {
   static async New() {}
   static build_line(texts: unknown[]) {
     return new ArticleLineNode({
-      children: texts.map(
-        (text) =>
-          new ArticleTextNode({
-            text: String(text),
-          })
-      ),
+      children: texts
+        .filter((text) => {
+          return text !== undefined && text !== "" && text !== null;
+        })
+        .map(
+          (text) =>
+            new ArticleTextNode({
+              text: String(text),
+            })
+        ),
     });
   }
 

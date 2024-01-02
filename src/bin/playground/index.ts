@@ -1,5 +1,5 @@
 import { Application } from "@/domains/application";
-import { ScheduleTask } from "@/domains/schedule";
+import { ScheduleTask } from "@/domains/schedule/v2";
 import { parse_argv } from "@/utils/server";
 
 /**
@@ -26,8 +26,7 @@ async function main() {
     return;
   }
   const actions = {
-    find_duplicated_medias: schedule.find_duplicated_medias,
-    find_media_errors: schedule.find_media_errors,
+    find_media_and_media_source_errors: schedule.find_media_and_media_source_errors,
     run_sync_task_list: schedule.run_sync_task_list,
     update_daily_updated: schedule.update_daily_updated,
     update_stats: schedule.update_stats,

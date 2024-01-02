@@ -1,9 +1,7 @@
 /**
  * @file 文件夹、文件
  */
-import { Handler } from "mitt";
-
-import { BaseDomain } from "@/domains/base";
+import { BaseDomain, Handler } from "@/domains/base";
 import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
 import { Result } from "@/types";
 import { sleep } from "@/utils";
@@ -64,12 +62,12 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
   ) {
     super();
 
+    this.id = id;
     const { client = null, name, parents = [] } = options;
     if (name) {
       this.name = name;
     }
     this.parents = parents;
-    this.id = id;
     this.client = client;
   }
   get parent_paths() {
@@ -102,50 +100,8 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
     this.size = size;
     return Result.Ok(null);
   }
-  async _walk(next_marker: string) {
-    if (this.client === null) {
-      return Result.Err("缺少云盘操作实例");
-    }
-    const r = await this.client.fetch_files(this.id, {
-      marker: next_marker === "initial" ? "" : this.next_marker,
-    });
-    if (r.error) {
-      this.emit(Events.Error, r.error);
-      return Result.Err(r.error);
-    }
-    const { items, next_marker: next_next_marker } = r.data;
-    const folder_or_files = items.map((f) => {
-      const { type, file_id, size, md5 } = f;
-      const parents = this.parents.concat({
-        id: this.id,
-        name: this.name,
-      });
-      if (type === "folder") {
-        const folder = new Folder(file_id, {
-          client: this.client,
-          parents,
-        });
-        folder.parent_file_id = this.id;
-        folder.set_profile(f);
-        return folder;
-      }
-      const file = new File(file_id, {
-        size,
-        md5,
-        client: this.client,
-        parents,
-      });
-      file.parent_file_id = this.id;
-      file.set_profile(f);
-      return file;
-    });
-    return Result.Ok({
-      files: folder_or_files,
-      next_marker: next_next_marker,
-    });
-  }
   /** 深度递归 */
-  async walk(handler: (file: File | Folder) => Promise<void>) {
+  async walk(handler: (file: File | Folder) => Promise<boolean>) {
     if (this.client === null) {
       throw new Error("缺少云盘操作实例");
     }
@@ -155,31 +111,22 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
         return Result.Err(r.error.message);
       }
     }
-    if (this.delay) {
-      await sleep(this.delay);
-    }
-    let next_marker = "initial";
     do {
-      let r = await this._walk(next_marker);
+      const r = await this.next();
       if (r.error) {
-        r = await this._walk(next_marker);
+        continue;
       }
-      if (r.error) {
-        r = await this._walk(next_marker);
-      }
-      if (r.error) {
-        return Result.Err("获取文件列表失败，因为", r.error.message);
-      }
-      const { files } = r.data;
-      next_marker = r.data.next_marker;
-      for (let i = 0; i < files.length; i += 1) {
-        const file = files[i];
+      for (let i = 0; i < r.data.length; i += 1) {
+        const file = r.data[i];
+        const can_continue = await handler(file);
+        if (!can_continue) {
+          return Result.Ok(null);
+        }
         if (file instanceof Folder) {
           await file.walk(handler);
         }
-        await handler(file);
       }
-    } while (next_marker);
+    } while (this.next_marker);
     return Result.Ok(null);
   }
   /** 获取该文件夹下的子文件夹，每次调用的结果不同，开始是第一页，然后是第二页 */
@@ -273,6 +220,7 @@ export class File {
   constructor(
     id: string,
     options: {
+      name?: string;
       size?: number;
       md5?: string | null;
       client: File["client"];
