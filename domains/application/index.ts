@@ -41,7 +41,7 @@ export class Application {
     ensure(path.join(this.assets, "poster"));
     ensure(path.join(this.assets, "thumbnail"));
     ensure(path.join(this.assets, "backdrop"));
-    ensure(path.join(this.assets, "logs"));
+    ensure(path.join(root_path, "logs"));
     (() => {
       if (cached) {
         this.store = cached;
