@@ -7,7 +7,7 @@
     "db": "npx prisma studio",
     "build": "next build",
     "check": "tsc --noEmit",
-    "start": "next start --port 3200",
+    "start": "next start",
     "schedule": "vite-node src/schedule/index.ts",
     "lint": "next lint",
     "test": "vitest run",
