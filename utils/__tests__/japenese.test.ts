@@ -17,6 +17,16 @@ describe("动漫", () => {
       episode: "E166-167",
     });
   });
+  test("犬夜叉 - 本篇 - 第001话.mkv", () => {
+    const name = "犬夜叉 - 本篇 - 第001话.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "犬夜叉",
+      original_name: "",
+      season: "S01",
+      episode: "E01",
+    });
+  });
   test("犬夜叉 - OVA.2010-01-29：It’s a Rumic World 犬夜叉～黒い鐵砕牙（黑色的铁碎牙）；1920×1080P.mkv", () => {
     const name = "犬夜叉 - OVA.2010-01-29：It’s a Rumic World 犬夜叉～黒い鐵砕牙（黑色的铁碎牙）；1920×1080P.mkv";
     const result = parse_filename_for_video(name);

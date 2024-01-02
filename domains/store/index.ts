@@ -141,9 +141,6 @@ export class DatabaseStore {
   find_output_line_list_with_pagination: ReturnType<typeof pagination_factory<PrismaClient["output_line"]>>;
   /** 云盘签到 */
   add_check_in: ReturnType<typeof add_factory<PrismaClient["drive_check_in"]>>;
-  /** 电视剧详情快照 */
-  add_tv_profile_snap: ReturnType<typeof add_factory<PrismaClient["tv_profile_quick"]>>;
-  find_tv_profile_snap: ReturnType<typeof first_factory<PrismaClient["tv_profile_quick"]>>;
   /** 分享资源 */
   add_shared_files: ReturnType<typeof add_factory<PrismaClient["shared_file"]>>;
   add_shared_files_safely: ReturnType<typeof add_factory<PrismaClient["shared_file"]>>;
@@ -346,9 +343,6 @@ export class DatabaseStore {
     this.find_output_line_list_with_pagination = pagination_factory<PrismaClient["output_line"]>(prisma.output_line);
     /** 云盘签到 */
     this.add_check_in = add_factory<PrismaClient["drive_check_in"]>(prisma.drive_check_in);
-    /** 电视剧详情快照 */
-    this.add_tv_profile_snap = add_factory<PrismaClient["tv_profile_quick"]>(prisma.tv_profile_quick);
-    this.find_tv_profile_snap = first_factory<PrismaClient["tv_profile_quick"]>(prisma.tv_profile_quick);
     /** 分享资源 */
     this.add_shared_files = add_factory<PrismaClient["shared_file"]>(prisma.shared_file);
     this.add_shared_files_safely = async (
@@ -464,6 +458,12 @@ export class DatabaseStore {
     page_size?: number;
   }) {
     const { fetch, next_marker = "", page_size = 20 } = options;
+    if (next_marker === null) {
+      return {
+        next_marker: null,
+        list: [] as Unpacked<ReturnType<F>>[number][],
+      };
+    }
     const extra_args = this.build_extra_args({ next_marker, page_size });
     const list = await fetch(extra_args);
     const correct_list: Unpacked<ReturnType<F>>[number][] = list.slice(0, page_size);

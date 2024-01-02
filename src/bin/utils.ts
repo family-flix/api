@@ -1,9 +1,9 @@
 import os from "os";
 import path from "path";
-import fs from "fs";
 import { exec } from "child_process";
 
 import { Result } from "@/types";
+import { ensure, check_existing } from "@/utils/fs";
 
 export function get_ip_address() {
   const interfaces = os.networkInterfaces();
@@ -19,82 +19,6 @@ export function get_ip_address() {
     }
   }
   return "0.0.0.0";
-}
-
-function check_existing(pathname: string) {
-  return new Promise((resolve, reject) => {
-    fs.stat(pathname, (err, stats) => {
-      if (err) {
-        const e = err as Error;
-        return resolve(false);
-      }
-      return resolve(true);
-    });
-  });
-}
-function access(filepath: string): Promise<Result<null>> {
-  return new Promise((resolve) => {
-    fs.access(filepath, (err) => {
-      if (err) {
-        const e = err as Error;
-        return resolve(Result.Err(e.message));
-      }
-      return resolve(Result.Ok(null));
-    });
-  });
-}
-function mkdir(filepath: string): Promise<Result<null>> {
-  return new Promise((resolve) => {
-    fs.mkdir(filepath, (err) => {
-      if (err) {
-        const e = err as Error;
-        return resolve(Result.Err(e.message));
-      }
-      return resolve(Result.Ok(null));
-    });
-  });
-}
-
-export function check_path_type(file_path: string): Promise<Result<"directory" | "file">> {
-  return new Promise((resolve) => {
-    fs.stat(file_path, (err, stats) => {
-      if (err) {
-        resolve(Result.Err(err.message));
-        return;
-      }
-      if (stats.isDirectory()) {
-        resolve(Result.Ok("directory"));
-        return;
-      }
-      if (stats.isFile()) {
-        resolve(Result.Ok("file"));
-        return;
-      }
-      resolve(Result.Err("unknown"));
-    });
-  });
-}
-/**
- * 确保某个路径必然存在
- * @param filepath
- */
-export async function ensure(filepath: string, next: string[] = []) {
-  const { ext, dir } = path.parse(filepath);
-  const is_file = ext !== undefined && ext !== "";
-  if (is_file) {
-    filepath = dir;
-  }
-  const r = await access(filepath);
-  if (r.error) {
-    const need_to_create = path.dirname(filepath);
-    await ensure(need_to_create, next.concat(filepath));
-    return;
-  }
-  const the_dir_prepare_create = next.pop();
-  if (the_dir_prepare_create) {
-    await mkdir(the_dir_prepare_create);
-    await ensure(filepath, next);
-  }
 }
 
 export function run_command(command: string): Promise<Result<null>> {
@@ -118,10 +42,10 @@ export function run_command(command: string): Promise<Result<null>> {
 /** 检查数据库是否初始化 */
 export async function check_database_initialized(filepath: string) {
   const existing = await check_existing(filepath);
-  if (!existing) {
+  if (!existing.error) {
     return false;
   }
-  return true;
+  return existing.data;
 }
 
 export async function setup_database(body: { dir: string; filename: string }) {

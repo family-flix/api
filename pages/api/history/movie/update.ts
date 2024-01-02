@@ -58,26 +58,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!file) {
     return e(Result.Err("没有匹配的视频源"));
   }
-  (async () => {
-    const diary = await store.prisma.member_diary.findFirst({
-      where: {
-        movie_id,
-        day: dayjs().format("YYYY-MM-DD"),
-        member_id: member.id,
-      },
-    });
-    if (diary) {
-      return;
-    }
-    await store.prisma.member_diary.create({
-      data: {
-        id: r_id(),
-        movie_id,
-        day: dayjs().format("YYYY-MM-DD"),
-        member_id: member.id,
-      },
-    });
-  })();
+  // (async () => {
+  //   const diary = await store.prisma.member_diary.findFirst({
+  //     where: {
+  //       media_source_id: movie_id,
+  //       day: dayjs().format("YYYY-MM-DD"),
+  //       member_id: member.id,
+  //     },
+  //   });
+  //   if (diary) {
+  //     return;
+  //   }
+  //   await store.prisma.member_diary.create({
+  //     data: {
+  //       id: r_id(),
+  //       media_source_id: movie_id,
+  //       day: dayjs().format("YYYY-MM-DD"),
+  //       member_id: member.id,
+  //     },
+  //   });
+  // })();
   const existing_history = await store.prisma.play_history.findFirst({
     where: {
       movie_id,
@@ -128,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         current_time,
         duration,
         member_id: member.id,
-        file_id: file_id ?? null,
+        file_id: file_id || null,
       },
     });
     delete pending_unique[k];
@@ -161,7 +161,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const update_res = await store.update_history(existing_history.id, {
     current_time,
-    file_id: file_id ?? null,
+    file_id: file_id || null,
   });
   if (update_res.error) {
     return e(update_res);

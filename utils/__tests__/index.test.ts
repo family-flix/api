@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import { parse_filename_for_video } from "../parse_filename_for_video";
 
-describe("提取视频信息", () => {
+describe("影视剧1", () => {
   test("鸡毛飞上天 - S01E55 - 第 55 集.mp4", () => {
     const name = "鸡毛飞上天 - S01E55 - 第 55 集.mp4";
     const result = parse_filename_for_video(name);

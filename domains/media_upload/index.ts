@@ -9,8 +9,8 @@ import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
 import { JSONFileStore } from "@/domains/store/jsonfile";
 import { BaseDomain, Handler } from "@/domains/base";
 import { parse_argv } from "@/utils/server";
+import { file_info } from "@/domains/aliyundrive/utils";
 import { Result } from "@/types";
-import { check_path_type } from "@/src/bin/utils";
 
 enum Events {
   Change,
@@ -159,11 +159,11 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     }
     const client = r.data;
     const filename = path.basename(filepath);
-    const type_r = await check_path_type(filepath);
+    const type_r = await file_info(filepath);
     if (type_r.error) {
       return Result.Err(`check filepath type failed, because ${type_r.error.message}`);
     }
-    const type = type_r.data;
+    const type = type_r.data.file_type;
     if (type === "file") {
       this.emit(Events.Print, "共1个文件");
       this.emit(Events.Print, `第1个、${filename}`);
@@ -232,7 +232,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
       await (async () => {
         const filename = files[i];
         const file_path = path.resolve(dir, filename);
-        this.emit(Events.Print, `第${i}个、${filename}`);
+        this.emit(Events.Print, `第${i + 1}个、${filename}`);
         const r = await this.upload_file({
           client,
           parent_file_id: folder_existing.file_id,

@@ -1,7 +1,6 @@
 /**
  * @file 给电影添加字幕
  */
-import fs from "fs";
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import { File, IncomingForm } from "formidable";

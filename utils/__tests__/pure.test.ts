@@ -460,4 +460,24 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("4K高码杜比音效和AAC双音轨.mkv", () => {
+    const name = "4K高码杜比音效和AAC双音轨.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("4K超前26集完结", () => {
+    const name = "4K超前26集完结";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

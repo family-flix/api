@@ -1,9 +1,4 @@
-require("dotenv").config();
-
-import fs from "fs";
 import crypto from "crypto";
-
-import axios from "axios";
 
 import { Drive } from "@/domains/drive";
 import { Application } from "@/domains/application";

@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import { parse_filename_for_video } from "../parse_filename_for_video";
 
-describe("提取视频信息", () => {
+describe("影视剧2", () => {
   test("Modern.Family", () => {
     const name = "Modern.Family";
     const result = parse_filename_for_video(name);

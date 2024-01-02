@@ -1,7 +1,6 @@
 /**
  * @file 上传文件到阿里云盘的 相册盘
  */
-import fs from "fs";
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 

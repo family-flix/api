@@ -56,4 +56,14 @@ describe("国漫", () => {
       episode: "E08",
     });
   });
+  test("[Judas] Tensei Shitara Slime Datta Ken - OAD 3 [1080p][HEVC x265 10bit][Multi-Su.mkv", () => {
+    const name = "[Judas] Tensei Shitara Slime Datta Ken - OAD 3 [1080p][HEVC x265 10bit][Multi-Su.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Tensei.Shitara.Slime.Datta.Ken",
+      season: "",
+      episode: "OAD03",
+    });
+  });
 });

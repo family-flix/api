@@ -288,55 +288,6 @@ async function add_parsed_tv(data: SearchedEpisode, extra: ExtraUserAndDriveInfo
 }
 
 /**
- * 根据名称找 tv 记录，找到则返回 id，没找到就创建并返回 id
- * @param tv
- * @param extra
- * @returns
- */
-async function add_unique_parsed_season(
-  data: SearchedEpisode,
-  extra: ExtraUserAndDriveInfo & { parsed_tv_id: string },
-  store: DatabaseStore
-) {
-  const { season, episode } = data;
-  const { user_id, drive_id } = extra;
-  // log(`[${episode.file_name}]`, "查找是否已存在该季", season.season);
-  const existing_season_res = await resultify(store.prisma.parsed_season.findFirst.bind(store.prisma.parsed_season))({
-    where: {
-      season_number: {
-        equals: season.season_text,
-      },
-      parsed_tv_id: extra.parsed_tv_id,
-      user_id,
-      drive_id,
-    },
-  });
-  if (existing_season_res.error) {
-    return Result.Err(existing_season_res.error);
-  }
-  if (existing_season_res.data) {
-    // log(`[${episode.file_name}]`, "季已存在", existing_season_res.data.season_number);
-    return Result.Ok(existing_season_res.data);
-  }
-  // log(`[${episode.file_name}]`, "季", season.season, "不存在，新增");
-  const parsed_season_adding_res = await store.add_parsed_season({
-    parsed_tv_id: extra.parsed_tv_id,
-    season_number: season.season_text,
-    file_id: season.file_id || null,
-    file_name: season.file_name || null,
-    user_id: extra.user_id,
-    drive_id: extra.drive_id,
-  });
-  if (parsed_season_adding_res.error) {
-    // log("[ERROR]adding tv request failed", adding_tv_res.error.message);
-    return Result.Err(parsed_season_adding_res.error);
-  }
-  // log("[UTIL]get_tv_id_by_name end", tv.name || tv.original_name);
-  // log(`[${episode.file_name}]`, "为该视频文件新增季", season.season, "成功");
-  return Result.Ok(parsed_season_adding_res.data);
-}
-
-/**
  * 根据 tasks 创建 season
  * @param data
  * @param extra
@@ -477,7 +428,10 @@ export type RequestedAliyunDriveFiles = PartialAliyunDriveFile & {
 };
 
 /** 模拟请求阿里云盘用于单测 */
-export function fetch_files_factory(options: { tree: RequestedAliyunDriveFiles; size?: number }): AliyunBackupDriveClient {
+export function fetch_files_factory(options: {
+  tree: RequestedAliyunDriveFiles;
+  size?: number;
+}): AliyunBackupDriveClient {
   // console.log("[]__invoke fetchFilesFactory");
   const { size = 10, tree } = options;
   function fetch_files(id: string, { marker }: { marker?: string }) {

@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     data: {
       id: r_id(),
       type,
-      unique_id: payload.id,
+      media_id: payload.id,
       member_id: member.id,
     },
   });

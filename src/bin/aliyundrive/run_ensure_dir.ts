@@ -1,11 +1,5 @@
-require("dotenv").config();
-
-import fs from "fs";
-import crypto from "crypto";
-
 import { Drive } from "@/domains/drive";
 import { Application } from "@/domains/application";
-import path from "path";
 import { User } from "@/domains/user";
 
 async function main() {

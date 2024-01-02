@@ -4,8 +4,9 @@
 import path from "path";
 
 import { Result } from "@/types";
+import { ensure } from "@/utils/fs";
 
-import { check_database_initialized, ensure, run_command } from "../utils";
+import { check_database_initialized, run_command } from "../utils";
 import { Application } from "../application";
 
 async function setup_database(body: { app: Application }) {

@@ -40,8 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const r = await store.add_member({
     remark,
-    name: name ?? null,
-    email: email ?? null,
+    name: name || null,
+    email: email || null,
     disabled: 0,
     user_id,
   });

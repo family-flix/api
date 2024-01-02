@@ -4,7 +4,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 
@@ -12,18 +12,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  if (!id) {
-    return e("缺少电影 id");
-  }
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: member_id, user } = t_res.data;
+  const member = t_res.data;
+  if (!id) {
+    return e(Result.Err("缺少电影 id"));
+  }
   const movie = await store.prisma.movie.findFirst({
     where: {
       id,
-      user_id: user.id,
+      user_id: member.user.id,
     },
     include: {
       profile: true,
@@ -31,20 +31,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       play_histories: {
         where: {
           movie_id: id,
-          member_id,
+          member_id: member.id,
         },
       },
       parsed_movies: true,
     },
   });
   if (movie === null) {
-    return e("没有匹配的电影记录");
+    return e(Result.Err("没有匹配的电影记录"));
   }
   const { profile, play_histories, subtitles, parsed_movies } = movie;
   const play_history =
     play_histories.find((p) => {
-      return p.movie_id === id && p.member_id === member_id;
-    }) ?? null;
+      return p.movie_id === id && p.member_id === member.id;
+    }) || null;
   const { current_time, thumbnail, file_id } = await (async () => {
     if (play_history === null) {
       const r = {
@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (high) {
         return high;
       }
-      return sources[0] ?? null;
+      return sources[0] || null;
     })(),
   };
   res.status(200).json({ code: 0, msg: "", data });

@@ -36,17 +36,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive_id: string;
     name: string;
   }>;
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
+  }
+  const user = t_res.data;
   if (!file_id) {
     return e(Result.Err("缺少文件夹 id 参数"));
   }
   if (!drive_id) {
     return e(Result.Err("缺少云盘 id 参数"));
   }
-  const t_res = await User.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res);
-  }
-  const user = t_res.data;
   const tree: SimpleAliyunDriveFile = {
     file_id,
     name,

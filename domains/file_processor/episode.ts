@@ -2,10 +2,8 @@
  * @file 将解析好的电视剧、剧集、电影等信息，保存至本地数据库
  * 主要是处理重复添加和更新
  */
-import { Handler } from "mitt";
-
 import { FileType } from "@/constants";
-import { BaseDomain } from "@/domains/base";
+import { BaseDomain, Handler } from "@/domains/base";
 import { SearchedEpisode } from "@/domains/walker";
 import { DatabaseStore } from "@/domains/store";
 import { User } from "@/domains/user";
@@ -131,7 +129,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
       this.emit(Events.AddSeason, data.season);
       const add_episode_res = await store.add_parsed_episode({
         name: tv.name || tv.original_name,
-        season_number: season.season_text,
+        season_number: season.season_text || "S01",
         episode_number: episode.episode_text,
         file_id: episode.file_id,
         file_name: episode.file_name,
@@ -270,7 +268,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
       episode_payload.body.parent_file_id = episode.parent_file_id;
       episode_payload.body.parent_paths = episode.parent_paths;
       episode_payload.body.episode_number = episode.episode_text;
-      episode_payload.body.season_number = episode.season_text;
+      episode_payload.body.season_number = episode.season_text || "S01";
       episode_payload.body.size = episode.size;
       episode_payload.body.can_search = 1;
     }
@@ -349,10 +347,10 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     }
     this.emit(Events.Print, Article.build_line([prefix, "电视剧", tv.name || tv.original_name, "不存在，新增"]));
     return store.add_parsed_tv({
-      file_id: tv.file_id ?? null,
-      file_name: tv.file_name ?? null,
-      name: tv.name ?? null,
-      original_name: tv.original_name ?? null,
+      file_id: tv.file_id || null,
+      file_name: tv.file_name || null,
+      name: tv.name || null,
+      original_name: tv.original_name || null,
       user_id,
       drive_id,
     });
@@ -383,7 +381,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     this.emit(Events.Print, Article.build_line([prefix, "查找是否已存在该季", season.season_text]));
     const existing_season = await store.prisma.parsed_season.findFirst({
       where: {
-        season_number: season.season_text,
+        season_number: season.season_text || "S01",
         parsed_tv_id,
         user_id,
         drive_id,
@@ -396,7 +394,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     this.emit(Events.Print, Article.build_line([prefix, "季", season.season_text, "不存在，新增"]));
     return store.add_parsed_season({
       parsed_tv_id,
-      season_number: season.season_text,
+      season_number: season.season_text || "S01",
       file_id: season.file_id || null,
       file_name: season.file_name || null,
       user_id,

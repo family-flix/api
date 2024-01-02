@@ -50,6 +50,9 @@ model drive {
         shared_file_in_progress shared_file_in_progress[]
         subtitles               subtitle[]
         sync_tasks              bind_for_parsed_tv[]
+        resource_sync_tasks     resource_sync_task[]
+        parsed_media            parsed_media[]
+        parsed_sources          parsed_media_source[]
 
         @@unique([user_id, unique_id])
         @@map("Drive")
@@ -111,8 +114,7 @@ model tv_profile {
         status            String?
         in_production     Int?    @default(0)
 
-        tvs       tv[]
-        snapshots tv_profile_quick[]
+        tvs tv[]
 
         @@map("TVProfile")
 }
@@ -244,6 +246,22 @@ model subtitle {
         drive      drive    @relation(fields: [drive_id], references: [id], onDelete: Cascade)
         user_id    String
         user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model subtitle_v2 {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type      Int    @default(1)
+        unique_id String
+        name      String
+        language  String
+
+        media_source_id String?
+        media_source    media_source? @relation(fields: [media_source_id], references: [id])
+        user_id         String
+        user            user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model tv_live {
@@ -398,6 +416,212 @@ model parsed_movie {
         @@map("ParsedMovie")
 }
 
+model parsed_media {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type          Int     @default(1)
+        name          String
+        original_name String?
+        air_year      String?
+        season_text   String?
+        can_search    Int     @default(1)
+
+        media_profile_id String?
+        media_profile    media_profile? @relation(fields: [media_profile_id], references: [id])
+        drive_id         String
+        drive            drive          @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        user_id          String
+        user             user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        parsed_sources parsed_media_source[]
+
+        @@map("ParsedMedia")
+}
+
+model parsed_media_source {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type           Int     @default(1)
+        name           String
+        original_name  String?
+        episode_text   String?
+        season_text    String?
+        file_id        String  @unique
+        file_name      String
+        parent_file_id String
+        parent_paths   String
+        size           Float   @default(0)
+        md5            String?
+        can_search     Int     @default(1)
+
+        parsed_media_id String?
+        // 匹配详情时更快，A 和 B 有同一个 parsed_media，在处理 B 时，可以直接获取 A.parsed_media.media.profile
+        // 省去使用 B.name 进行搜索的过程
+        parsed_media    parsed_media? @relation(fields: [parsed_media_id], references: [id], onDelete: Cascade)
+        media_source_id String?
+        media_source    media_source? @relation(fields: [media_source_id], references: [id])
+        drive_id        String
+        drive           drive         @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        user_id         String
+        user            user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("ParsedSource")
+}
+
+model media {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type Int    @default(1)
+        text String
+
+        profile_id String
+        profile    media_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+        user_id    String
+        user       user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        media_sources       media_source[]
+        histories           play_history_v2[]
+        collections         collection_v2[]
+        favorites           member_favorite[]
+        shared_medias       shared_media_v2[]
+        resource_sync_tasks resource_sync_task[]
+        reports             report_v2[]
+        error_tip           invalid_media?
+
+        // profile_id + user_id 标志唯一
+
+        @@map("Media")
+}
+
+model media_source {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type Int    @default(1)
+        text String
+
+        media_id   String
+        media      media                @relation(fields: [media_id], references: [id], onDelete: Cascade)
+        profile_id String
+        profile    media_source_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+        user_id    String
+        user       user                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        files     parsed_media_source[]
+        histories play_history_v2[]
+        diaries   member_diary[]
+        subtitles subtitle_v2[]
+        reports   report_v2[]
+        error_tip invalid_media_source?
+
+        @@map("MediaSource")
+}
+
+model media_series_profile {
+        id      String   @id @unique
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type           Int             @default(1)
+        name           String
+        original_name  String?
+        alias          String?
+        overview       String?
+        poster_path    String?
+        backdrop_path  String?
+        air_date       String?
+        genres         media_genre[]
+        origin_country media_country[]
+        tmdb_id        String?         @unique
+
+        media_profiles media_profile[]
+
+        @@map("MediaSeriesProfile")
+}
+
+model media_profile {
+        id      String   @id @unique
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type          Int     @default(1)
+        name          String
+        original_name String?
+        alias         String?
+        overview      String?
+        poster_path   String?
+        backdrop_path String?
+        air_date      String?
+        order         Int
+        source_count  Int
+        vote_average  Float   @default(0)
+        in_production Int     @default(0)
+        tmdb_id       String? @unique
+        douban_id     String? @unique
+
+        series_id String?
+        series    media_series_profile? @relation(fields: [series_id], references: [id])
+
+        parsed_medias   parsed_media[]
+        source_profiles media_source_profile[]
+        media           media[]
+        genres          media_genre[]
+        origin_country  media_country[]
+
+        @@map("MediaProfile")
+}
+
+model media_source_profile {
+        id      String   @id @unique
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type          Int     @default(1)
+        name          String
+        original_name String?
+        overview      String?
+        air_date      String?
+        still_path    String?
+        order         Int
+        runtime       Int?
+        tmdb_id       String? @unique
+        douban_id     String? @unique
+
+        media_profile_id String
+        media_profile    media_profile @relation(fields: [media_profile_id], references: [id], onDelete: Cascade)
+
+        media_sources media_source[]
+
+        @@map("MediaSourceProfile")
+}
+
+model media_genre {
+        id   Int    @id @unique
+        text String
+
+        media_profiles  media_profile[]
+        series_profiles media_series_profile[]
+
+        @@map("MediaGenre")
+}
+
+model media_country {
+        id   String @id @unique
+        text String
+
+        media_profiles  media_profile[]
+        series_profiles media_series_profile[]
+
+        @@map("MediaCountry")
+}
+
 // 根据 parsed_episode 信息创建的电视剧
 model tv {
         id      String   @id
@@ -447,7 +671,6 @@ model season {
         sync_tasks      bind_for_parsed_tv[]
         collections     collection[]
         shared_medias   shared_media[]
-        member_favorite member_favorite[]
 
         @@map("Season")
 }
@@ -475,7 +698,6 @@ model episode {
         play_histories  play_history[]
         reports         report[]
         subtitles       subtitle[]
-        member_diaries  member_diary[]
 
         @@map("Episode")
 }
@@ -492,14 +714,12 @@ model movie {
         user_id    String
         user       user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        play_histories  play_history[]
-        parsed_movies   parsed_movie[]
-        reports         report[]
-        subtitles       subtitle[]
-        collections     collection[]
-        shared_medias   shared_media[]
-        member_favorite member_favorite[]
-        member_diaries  member_diary[]
+        play_histories play_history[]
+        parsed_movies  parsed_movie[]
+        reports        report[]
+        subtitles      subtitle[]
+        collections    collection[]
+        shared_medias  shared_media[]
 
         @@map("Movie")
 }
@@ -517,6 +737,38 @@ model media_error_need_process {
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("MediaErrorNeedProcess")
+}
+
+model invalid_media {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type    Int    @default(1)
+        profile String
+
+        media_id String @unique
+        media    media  @relation(fields: [media_id], references: [id], onDelete: Cascade)
+        user_id  String
+        user     user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("InvalidMedia")
+}
+
+model invalid_media_source {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type    Int    @default(1)
+        profile String
+
+        media_source_id String       @unique
+        media_source    media_source @relation(fields: [media_source_id], references: [id], onDelete: Cascade)
+        user_id         String
+        user            user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("InvalidMediaSource")
 }
 
 model collection {
@@ -540,12 +792,36 @@ model collection {
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        tvs             tv[]
-        seasons         season[]
-        movies          movie[]
-        member_favorite member_favorite[]
+        tvs     tv[]
+        seasons season[]
+        movies  movie[]
 
         @@map("Collection")
+}
+
+model collection_v2 {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        title  String
+        desc   String?
+        type   Int     @default(1)
+        // 1草稿 2发布 3隐藏
+        status Int     @default(1)
+        extra  String?
+        rules  String?
+        sort   Int     @default(0)
+        hidden Int     @default(0)
+        // 样式配置
+        styles String?
+
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        medias media[]
+
+        @@map("CollectionV2")
 }
 
 model async_task {
@@ -553,12 +829,14 @@ model async_task {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        unique_id String
-        type      Int?    @default(0)
-        desc      String?
-        status    Int?    @default(0)
-        need_stop Int?    @default(0)
-        error     String?
+        unique_id    String
+        type         Int     @default(1)
+        desc         String?
+        percent      Float   @default(0)
+        percent_text String?
+        status       Int     @default(1)
+        need_stop    Int     @default(0)
+        error        String?
 
         output_id String @unique
         output    output @relation(fields: [output_id], references: [id], onDelete: Cascade)
@@ -624,18 +902,25 @@ model play_history {
         @@map("PlayHistory")
 }
 
-// 用名字将 tv_profile 关联起来，当在 tmdb 搜索时优先在该表中查询，提高搜索性能
-// 已废弃
-model tv_profile_quick {
+model play_history_v2 {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
-        name    String   @unique
 
-        tv_profile_id String
-        tv_profile    tv_profile @relation(fields: [tv_profile_id], references: [id], onDelete: Cascade)
+        text           String
+        duration       Float   @default(0)
+        current_time   Float   @default(0)
+        thumbnail_path String?
+        file_id        String?
 
-        @@map("TVProfileQuick")
+        media_id        String
+        media           media        @relation(fields: [media_id], references: [id], onDelete: Cascade)
+        media_source_id String
+        media_source    media_source @relation(fields: [media_source_id], references: [id], onDelete: Cascade)
+        member_id       String
+        member          member       @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+        @@map("PlayHistoryV2")
 }
 
 model shared_file {
@@ -647,7 +932,6 @@ model shared_file {
         // 分享链接
         url     String
 
-        // 关联 user 表
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -705,6 +989,36 @@ model bind_for_parsed_tv {
         @@map("BindForParsedTV")
 }
 
+model resource_sync_task {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        // 1等待关联文件夹 2等待关联影视剧 3同步中 4已完成
+        status                  Int     @default(1)
+        // 分享文件夹所属 url
+        url                     String
+        pwd                     String?
+        // 关联的分享文件夹 file_id
+        file_id                 String
+        // 关联的分享文件夹名称
+        name                    String
+        // 云盘中和分享资源文件夹关联的文件夹
+        file_id_link_resource   String
+        file_name_link_resource String
+        // 分享资源是否失效
+        invalid                 Int     @default(0)
+
+        media_id String?
+        media    media?  @relation(fields: [media_id], references: [id], onDelete: Cascade)
+        drive_id String
+        drive    drive   @relation(fields: [drive_id], references: [id], onDelete: Cascade)
+        user_id  String
+        user     user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("ResourceSyncTask")
+}
+
 model drive_check_in {
         id         String    @id
         created    DateTime  @default(now())
@@ -712,7 +1026,6 @@ model drive_check_in {
         // 签到时间
         checked_at DateTime?
 
-        // 关联 drive 表
         drive_id String
         drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
 
@@ -723,40 +1036,23 @@ model drive_check_in {
 // 以及 转存文件到索引云盘中间这段时间避免重复添加文件（这时候靠和 parent_paths/name 做唯一值避免重复）
 // 两个作用都有
 model tmp_file {
-        id           String   @id
-        created      DateTime @default(now())
-        updated      DateTime @default(now())
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type         Float   @default(2)
         // 文件夹/文件 名称
         name         String
-        // 0文件夹 1文件
-        type         Float?   @default(0)
-        // 父文件夹路径，其实基本上都是 drive.root_folder_name（有什么用？）
+        file_id      String?
+        // 1文件 2文件夹 3未知
         parent_paths String
 
-        // 关联 drive 表
         drive_id String
         drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
-
-        // 关联 user 表
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+        user_id  String
+        user     user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("TmpFile")
-}
-
-// @deprecated
-model incomplete_tv {
-        id            String   @id
-        created       DateTime @default(now())
-        updated       DateTime @default(now())
-        episode_count Int?     @default(0)
-        cur_count     Int?     @default(0)
-        text          String?
-
-        user_id String
-        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-        @@map("TVNeedComplete")
 }
 
 model file {
@@ -773,15 +1069,13 @@ model file {
         // 文件路径
         parent_paths   String
         // 1文件 2文件夹 3未知
-        type           Int
+        type           Int     @default(3)
         // 文件大小
-        size           Float?  @default(0)
+        size           Float   @default(0)
         md5            String?
 
-        // 关联 drive 表
         drive_id String
         drive    drive  @relation(fields: [drive_id], references: [id], onDelete: Cascade)
-        // 关联 user 表
         user_id  String
         user     user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -820,9 +1114,9 @@ model member {
         // 权限 json
         permission String?
         // 是否禁用
-        disabled   Int?     @default(0)
+        disabled   Int      @default(0)
         // 软删除
-        delete     Int?     @default(0)
+        delete     Int      @default(0)
 
         inviter_id     String?
         inviter        member?        @relation("InviterToInvitees", fields: [inviter_id], references: [id])
@@ -831,18 +1125,22 @@ model member {
         user_id        String
         user           user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-        setting         member_setting?
-        tokens          member_token[]
-        play_histories  play_history[]
-        reports         report[]
-        invitees        member[]                @relation("InviterToInvitees")
-        notifications   member_notification[]
-        invited_members member_invite[]
-        created_medias  shared_media[]          @relation("MemberFrom")
-        received_medias shared_media[]          @relation("MemberTarget")
-        authentications member_authentication[]
-        favorites       member_favorite[]
-        diaries         member_diary[]
+        setting            member_setting?
+        tokens             member_token[]
+        authentications    member_authentication[]
+        notifications      member_notification[]
+        invitees           member[]                @relation("InviterToInvitees")
+        invited_members    member_invite[]
+        created_medias     shared_media[]          @relation("MemberFrom")
+        created_medias_v2  shared_media_v2[]       @relation("MemberFromV2")
+        received_medias    shared_media[]          @relation("MemberTarget")
+        received_medias_v2 shared_media_v2[]       @relation("MemberTargetV2")
+        play_histories     play_history[]
+        play_histories_v2  play_history_v2[]
+        reports            report[]
+        reports_v2         report_v2[]
+        favorites          member_favorite[]
+        diaries            member_diary[]
 
         @@unique([user_id, inviter_id, remark])
         @@map("Member")
@@ -905,15 +1203,10 @@ model member_favorite {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        unique_id  String?
-        type       Int
-        // season_id     String?
-        season     season?     @relation(fields: [unique_id], references: [id], onDelete: Cascade)
-        // movie_id      String?
-        movie      movie?      @relation(fields: [unique_id], references: [id], onDelete: Cascade)
-        // collection_id String?
-        collection collection? @relation(fields: [unique_id], references: [id], onDelete: Cascade)
+        type Int
 
+        media_id  String
+        media     media  @relation(fields: [media_id], references: [id], onDelete: Cascade)
         member_id String
         member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
@@ -925,16 +1218,14 @@ model member_diary {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        day        String
-        content    String?
-        profile    String?
-        episode_id String?
-        episode    episode? @relation(fields: [episode_id], references: [id], onDelete: Cascade)
-        movie_id   String?
-        movie      movie?   @relation(fields: [movie_id], references: [id], onDelete: Cascade)
+        day     String
+        content String?
+        profile String?
 
-        member_id String
-        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        media_source_id String
+        media_source    media_source @relation(fields: [media_source_id], references: [id], onDelete: Cascade)
+        member_id       String
+        member          member       @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
         @@map("MemberDiary")
 }
@@ -975,9 +1266,9 @@ model member_notification {
 
         unique_id String
         content   String?
-        type      Int?    @default(1)
-        status    Int?    @default(1)
-        is_delete Int?    @default(0)
+        type      Int     @default(1)
+        status    Int     @default(1)
+        is_delete Int     @default(0)
 
         // 接收者
         member_id String
@@ -1007,6 +1298,25 @@ model shared_media {
         @@map("SharedMedia")
 }
 
+model shared_media_v2 {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        url String
+
+        media_id         String
+        media            media  @relation(fields: [media_id], references: [id], onDelete: Cascade)
+        // 创建分享的人
+        member_from_id   String
+        member_from      member @relation("MemberFromV2", fields: [member_from_id], references: [id], onDelete: Cascade)
+        // 被分享的人
+        member_target_id String
+        member_target    member @relation("MemberTargetV2", fields: [member_target_id], references: [id], onDelete: Cascade)
+
+        @@map("SharedMediaV2")
+}
+
 model notification {
         id      String   @id
         created DateTime @default(now())
@@ -1014,9 +1324,9 @@ model notification {
 
         unique_id String
         content   String?
-        type      Int?    @default(1)
-        status    Int?    @default(1)
-        is_delete Int?    @default(0)
+        type      Int     @default(1)
+        status    Int     @default(1)
+        is_delete Int     @default(0)
 
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -1073,6 +1383,29 @@ model report {
         user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("Report")
+}
+
+model report_v2 {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        type   Int     @default(1)
+        // 1待处理 2不解决 3已完成
+        status Int     @default(1)
+        data   String
+        answer String?
+
+        media_source_id String?
+        media_source    media_source? @relation(fields: [media_source_id], references: [id], onDelete: Cascade)
+        reply_media_id  String?
+        reply_media     media?        @relation(fields: [reply_media_id], references: [id], onDelete: Cascade)
+        member_id       String
+        member          member        @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        user_id         String
+        user            user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("ReportV2")
 }
 
 // 三方授权凭证
@@ -1152,23 +1485,32 @@ model user {
         parsed_seasons          parsed_season[]
         parsed_episodes         parsed_episode[]
         parsed_movies           parsed_movie[]
-        tv_need_complete        incomplete_tv[]
         async_task              async_task[]
         files                   file[]
         members                 member[]
         shared_files            shared_file[]
         shared_file_in_progress shared_file_in_progress[]
         tmp_files               tmp_file[]
-        sync_tasks              bind_for_parsed_tv[]
         notifications           notification[]
         outputs                 output[]
+        sync_tasks              bind_for_parsed_tv[]
+        resource_sync_tasks     resource_sync_task[]
         reports                 report[]
+        reports_v2              report_v2[]
         collections             collection[]
+        collections_v2          collection_v2[]
         subtitles               subtitle[]
+        subtitles_v2            subtitle_v2[]
         permission              permission[]
         tv_lives                tv_live[]
         statistics              statistics[]
         media_errors            media_error_need_process[]
+        parsed_medias           parsed_media[]
+        parsed_sources          parsed_media_source[]
+        medias                  media[]
+        media_sources           media_source[]
+        invalid_medias          invalid_media[]
+        invalid_media_sources   invalid_media_source[]
 
         @@map("User")
 }

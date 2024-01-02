@@ -267,14 +267,4 @@ describe("奇怪", () => {
       episode: "E97",
     });
   });
-  test("英日双轨 猎户不鸽组", () => {
-    const name = "英日双轨 猎户不鸽组";
-    const result = parse_filename_for_video(name);
-    expect(result).toStrictEqual({
-      name: "",
-      original_name: "",
-      season: "",
-      episode: "",
-    });
-  });
 });

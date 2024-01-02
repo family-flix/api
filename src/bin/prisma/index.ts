@@ -38,7 +38,7 @@ async function main() {
   await store.prisma.member_diary.create({
     data: {
       id: r_id(),
-      episode_id: episode.id,
+      media_source_id: episode.id,
       day: dayjs().format("YYYY-MM-DD"),
       member_id: member.id,
     },

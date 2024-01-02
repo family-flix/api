@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = drive_res.data;
   if (!drive) {
-    return e("没有匹配的云盘记录");
+    return e(Result.Err("没有匹配的云盘记录"));
   }
   const client = drive.client;
   const { error, data } = await client.fetch_file(file_id as string);

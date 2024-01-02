@@ -1,28 +1,6 @@
 import path from "path";
-import fs from "fs/promises";
 
-/**
- * 确保某个路径必然存在
- * @param filepath
- */
-export async function ensure(filepath: string, next: string[] = []) {
-  const { ext, dir } = path.parse(filepath);
-  const isFile = ext !== undefined && ext !== "";
-  if (isFile) {
-    filepath = dir;
-  }
-  try {
-    await fs.access(filepath);
-    if (next.length !== 0) {
-      const theDirPrepareCreate = next.pop();
-      await fs.mkdir(theDirPrepareCreate!);
-      await ensure(filepath, next);
-    }
-  } catch {
-    const needToCreate = path.dirname(filepath);
-    await ensure(needToCreate, next.concat(filepath));
-  }
-}
+import { ensure } from "@/utils/fs";
 
 export class Application {
   root_path: string;
@@ -40,7 +18,7 @@ export class Application {
     const database_name = "family-flix.db";
     const database_client_name = "prisma_v4.17.0";
     const storage_path = path.join(root_path, "storage");
-    this.schema_path = path.join(root_path, 'prisma/schema.prisma');
+    this.schema_path = path.join(root_path, "prisma/schema.prisma");
     this.database_path = path.join(database_dir, database_name);
     this.database_client_path = path.join(root_path, database_client_name);
     this.database_dir = database_dir;

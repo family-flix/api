@@ -73,13 +73,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const job_res = await Job.New({
     unique_id: file_id,
-    desc: `转存资源 '${file_name}' 到云盘 '${drive.name}'`,
+    desc: `转存资源「${file_name}」到云盘「${drive.name}」`,
     type: TaskTypes.Transfer,
     user_id: user.id,
     store,
   });
   if (job_res.error) {
-    return e(job_res);
+    return e(Result.Err(job_res.error.message));
   }
   const job = job_res.data;
   job.output.write_line(["开始转存"]);

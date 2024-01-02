@@ -1,20 +1,24 @@
 /**
- * @file 图片上传器
+ * @file 本地文件管理
+ * 1、将网络图片下载至本地
+ * 2、将二进制文件保存至本地
  */
-import { ReadStream, createWriteStream, writeFileSync, unlink } from "fs";
-import { join } from "path";
+import { rename, ReadStream, createWriteStream, writeFileSync, unlink } from "fs";
+import path from "path";
 
 import axios from "axios";
 
 import { Result } from "@/types";
+import { check_existing } from "@/utils/fs";
 
-export class ImageUploader {
+export class FileUpload {
   root: string;
 
   constructor(options: { root: string }) {
     const { root } = options;
     this.root = root;
   }
+
   /** 网络地址转成 Stream 流 */
   async online_url_to_stream(url: string) {
     try {
@@ -42,10 +46,27 @@ export class ImageUploader {
       });
     });
   }
-  upload(url: string, name: string) {}
+  upload_subtitle(filepath: string): Promise<Result<null>> {
+    return new Promise((resolve) => {
+      rename(filepath, path.resolve(this.root, "subtitle"), (err) => {
+        if (err) {
+          return resolve(Result.Err(err.message));
+        }
+        return resolve(Result.Ok(null));
+      });
+    });
+  }
   /** 下载网络图片到本地 */
   async download(url: string, key: string): Promise<Result<string>> {
     try {
+      const filepath = path.join(this.root, key);
+      const r = await check_existing(filepath);
+      if (r.error) {
+        return Result.Err(r.error.message);
+      }
+      if (r.data) {
+        return Result.Err("文件已存在");
+      }
       // console.log("[DOMAIN]Uploader - before request");
       const response = await axios({
         url,
@@ -53,7 +74,6 @@ export class ImageUploader {
         responseType: "stream",
         timeout: 6000,
       });
-      const filepath = join(this.root, key);
       // console.log("[DOMAIN]Uploader - download", filepath);
       return new Promise((resolve) => {
         response.data
@@ -74,8 +94,8 @@ export class ImageUploader {
     }
   }
   /** 删除本地图片 */
-  async delete(key: string) {
-    const filepath = join(this.root, key);
+  async delete_file(key: string) {
+    const filepath = path.join(this.root, key);
     return new Promise((resolve) => {
       unlink(filepath, (err) => {
         if (err) {

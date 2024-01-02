@@ -24,7 +24,7 @@ describe("自定义额外解析规则", () => {
     const name = "Top028.十二怒汉(CC标准收藏版).12.Angry.Men.1957.CC.Bluray.1080p.x265.AAC.GREENOTEA.mkv";
     const result = parse_filename_for_video(name, undefined, [
       {
-        replace: ["12.Angry.Men", "{{12.Angry.Men}}"],
+        replace: ["12.Angry.Men", "ORIGINAL_NAME"],
       },
     ]);
     expect(result).toStrictEqual({
@@ -60,6 +60,48 @@ describe("自定义额外解析规则", () => {
       original_name: "",
       season: "S03",
       episode: "E20",
+    });
+  });
+  test("悬吧猪栏2367电锯惊魂10.SAW X.2023.1080p.x265.yc.mkv", () => {
+    const name = "悬吧猪栏2367电锯惊魂10.SAW X.2023.1080p.x265.yc.mkv";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["悬吧猪栏2367", "EMPTY"],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "电锯惊魂10",
+      original_name: "SAW10",
+      season: "",
+      episode: "",
+    });
+  });
+  test("十二公民[国语中字].12.Citizens.2014.2160p.WEB-DL.H265.AAC-BBQDDQ.mp4", () => {
+    const name = "十二公民[国语中字].12.Citizens.2014.2160p.WEB-DL.H265.AAC-BBQDDQ.mp4";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["12.Citizens", "ORIGINAL_NAME"],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "十二公民",
+      original_name: "12.Citizens",
+      season: "",
+      episode: "",
+    });
+  });
+  test("S 三傻大闹宝莱坞.3.Idiots.2009", () => {
+    const name = "S 三傻大闹宝莱坞.3.Idiots.2009";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["3.Idiots", "ORIGINAL_NAME"],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "三傻大闹宝莱坞",
+      original_name: "3.Idiots",
+      season: "",
+      episode: "",
     });
   });
 });

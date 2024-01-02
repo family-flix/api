@@ -1,69 +1,34 @@
-import util from "util";
-
-import dayjs from "dayjs";
-
 import { Application } from "@/domains/application";
+import { ScheduleTask } from "@/domains/schedule";
+import { parse_argv } from "@/utils/server";
 
-const OUTPUT_PATH = "/Users/litao/Documents/workspaces/family-flix/dev-output";
-const DATABASE_PATH = "file://$OUTPUT_PATH/data/family-flix.db?connection_limit=1";
-
-const app = new Application({
-  root_path: OUTPUT_PATH,
-});
-const store = app.store;
+/**
+ * yarn vite-node playground.ts -- -- -a 1 -b
+ * { a: '1', b: true }
+ */
 
 async function main() {
-  const profile = await store.prisma.season.findFirst({
-    where: {
-      id: "oqpAtuwrFG7oQo9",
-      // episodes: {
-      //   every: {
-      //     parsed_episodes: {
-      //       some: {},
-      //     },
-      //   },
-      // },
-    },
-    include: {
-      episodes: {
-        where: {
-          parsed_episodes: {
-            some: {},
-          },
-        },
-        orderBy: {
-          episode_number: "asc",
-        },
-        include: {
-          parsed_episodes: {
-            select: {
-              file_name: true,
-            },
-          },
-        },
-      },
-    },
-  });
-  if (!profile) {
+  const OUTPUT_PATH = process.env.OUTPUT_PATH;
+  if (!OUTPUT_PATH) {
+    console.error("缺少数据库文件路径");
     return;
   }
-  console.log(
-    util.inspect(
-      {
-        ...profile,
-        episodes: profile.episodes.map((episode) => {
-          const { episode_text, parsed_episodes } = episode;
-          return {
-            episode_text,
-            parsed_episodes,
-          };
-        }),
-      },
-      {
-        depth: 5,
-      }
-    )
-  );
+  const app = new Application({
+    root_path: OUTPUT_PATH,
+  });
+  const start = performance.now();
+  app.startInterval(() => {
+    const end = performance.now();
+    console.log("hello1", start - end);
+  }, 3000);
+  app.startInterval(() => {
+    const end = performance.now();
+    console.log("hello2", start - end);
+  }, 3000);
+  app.startInterval(() => {
+    const end = performance.now();
+    console.log("hello3", start - end);
+  }, 10000);
 }
 
 main();
