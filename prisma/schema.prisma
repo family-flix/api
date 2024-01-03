@@ -114,7 +114,8 @@ model tv_profile {
         status            String?
         in_production     Int?    @default(0)
 
-        tvs tv[]
+        tvs       tv[]
+        snapshots tv_profile_quick[]
 
         @@map("TVProfile")
 }
@@ -922,6 +923,18 @@ model play_history_v2 {
         member          member       @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
         @@map("PlayHistoryV2")
+}
+
+model tv_profile_quick {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+        name    String   @unique
+
+        tv_profile_id String
+        tv_profile    tv_profile @relation(fields: [tv_profile_id], references: [id], onDelete: Cascade)
+
+        @@map("TVProfileQuick")
 }
 
 model shared_file {
