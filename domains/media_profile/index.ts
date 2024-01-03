@@ -266,6 +266,7 @@ export class MediaProfileClient {
       number_of_seasons,
       seasons,
       origin_country,
+      next_episode_to_air,
       in_production,
       genres,
     } = r.data;
@@ -366,13 +367,16 @@ export class MediaProfileClient {
             order: season_number,
             source_count: episode_count,
             in_production: (() => {
+              if (season_number !== number_of_seasons) {
+                return 0;
+              }
+              if (!next_episode_to_air) {
+                return 0;
+              }
               if (!in_production) {
                 return 0;
               }
-              if (season_number === number_of_seasons) {
-                return 1;
-              }
-              return 0;
+              return 1;
             })(),
             tmdb_id: season_tmdb_id,
             series_id: created.id,
@@ -703,6 +707,7 @@ export class MediaProfileClient {
     });
     return Result.Ok(created);
   }
+  /** 使用 TDMB 刷新本地影视剧详情 */
   async refresh_media_profile(media_profile: MediaProfileRecord) {
     const { id, type } = media_profile;
     if (type === MediaTypes.Season) {
@@ -720,12 +725,12 @@ export class MediaProfileClient {
       const payload: Partial<MediaProfileRecord> = {
         updated: dayjs().toDate(),
       };
-      const { poster_path, backdrop_path, air_date } = r.data;
+      const { poster_path, backdrop_path, air_date, episodes } = r.data;
       if (poster_path && poster_path !== media_profile.poster_path) {
-        payload.poster_path = poster_path;
+        payload.poster_path = await this.download_image(poster_path, "poster");
       }
       if (backdrop_path && backdrop_path !== media_profile.backdrop_path) {
-        payload.backdrop_path = backdrop_path;
+        payload.backdrop_path = await this.download_image(backdrop_path, "backdrop");
       }
       if (air_date && air_date !== media_profile.air_date) {
         payload.air_date = air_date;
@@ -749,7 +754,38 @@ export class MediaProfileClient {
           });
         },
         handler: async (data) => {
-          await this.refresh_media_source_profile(data);
+          const { order, tmdb_id } = data;
+          if (tmdb_id) {
+            const matched = episodes.find((episode) => {
+              return episode.episode_number === order;
+            });
+            if (!matched) {
+              return;
+            }
+            const { runtime, name, overview, still_path } = matched;
+            const payload: Partial<MediaSourceProfileRecord> = {};
+            if (runtime && runtime !== data.runtime) {
+              payload.runtime = runtime;
+            }
+            if (name && name !== data.name) {
+              payload.name = name;
+            }
+            if (overview && overview !== data.overview) {
+              payload.overview = overview;
+            }
+            if (still_path && still_path !== data.still_path) {
+              payload.still_path = await this.download_image(still_path, "still_path");
+            }
+            if (Object.keys(payload).length === 0) {
+              return;
+            }
+            await this.store.prisma.media_source_profile.update({
+              where: {
+                id: data.id,
+              },
+              data: payload,
+            });
+          }
         },
       });
       return Result.Ok(updated_media_profile);
@@ -765,10 +801,10 @@ export class MediaProfileClient {
       };
       const { poster_path, backdrop_path, air_date } = r.data;
       if (poster_path && poster_path !== media_profile.poster_path) {
-        payload.poster_path = poster_path;
+        payload.poster_path = await this.download_image(poster_path, "poster");
       }
       if (backdrop_path && backdrop_path !== media_profile.backdrop_path) {
-        payload.backdrop_path = backdrop_path;
+        payload.backdrop_path = await this.download_image(backdrop_path, "backdrop");
       }
       if (air_date && air_date !== media_profile.air_date) {
         payload.air_date = air_date;
@@ -861,6 +897,85 @@ export class MediaProfileClient {
     }
     return Result.Err("未知类型");
   }
+  /** 遍历所有图片，如果是 themoviedb 域名，就下载到本地 */
+  async upload_images_in_profile() {
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.media_profile.findMany({
+          where: {
+            OR: [
+              {
+                poster_path: {
+                  contains: "movie",
+                },
+              },
+              {
+                backdrop_path: {
+                  contains: "movie",
+                },
+              },
+            ],
+          },
+          ...extra,
+        });
+      },
+      handler: async (data) => {
+        const { id, poster_path, backdrop_path } = data;
+        const payload: {
+          poster_path: null | string;
+          backdrop_path: null | string;
+        } = {
+          poster_path: null,
+          backdrop_path: null,
+        };
+        if (poster_path) {
+          payload.poster_path = await this.download_image(poster_path, "poster");
+        }
+        if (poster_path) {
+          payload.backdrop_path = await this.download_image(backdrop_path, "backdrop");
+        }
+        await this.store.prisma.media_profile.update({
+          where: {
+            id,
+          },
+          data: payload,
+        });
+      },
+    });
+    await walk_model_with_cursor({
+      fn: (extra) => {
+        return this.store.prisma.media_source_profile.findMany({
+          where: {
+            OR: [
+              {
+                still_path: {
+                  contains: "movie",
+                },
+              },
+            ],
+          },
+          ...extra,
+        });
+      },
+      handler: async (data) => {
+        const { id, still_path } = data;
+        const payload: {
+          still_path: null | string;
+        } = {
+          still_path: null,
+        };
+        if (still_path) {
+          payload.still_path = await this.download_image(still_path, "still_path");
+        }
+        await this.store.prisma.media_source_profile.update({
+          where: {
+            id,
+          },
+          data: payload,
+        });
+      },
+    });
+  }
   async download_image(url: string | null, parent_dir: string) {
     if (!url) {
       return null;
@@ -878,48 +993,5 @@ export class MediaProfileClient {
       return url;
     }
     return r.data;
-  }
-  /**
-   * 下载 TMDB 图片到本地
-   * @param tmdb
-   * @returns
-   */
-  async upload_tmdb_images(tmdb: {
-    tmdb_id: number | string;
-    poster_path: string | null;
-    backdrop_path: string | null;
-  }) {
-    const { tmdb_id, poster_path, backdrop_path } = tmdb;
-    // log("[]upload_tmdb_images", tmdb_id, poster_path, backdrop_path);
-    const result = {
-      poster_path,
-      backdrop_path,
-    };
-    const name = `${tmdb_id}.jpg`;
-    if (poster_path) {
-      const key = `/poster/${name}`;
-      // this.emit(Events.Print, Article.build_line(["before upload.download poster", poster_path]));
-      const r = await this.$upload.download(poster_path, key);
-      if (r.error) {
-        // console.log("download image failed 1", r.error.message);
-      }
-      if (r.data) {
-        result.poster_path = r.data;
-      }
-    }
-    if (backdrop_path) {
-      const key = `/backdrop/${name}`;
-      // this.emit(Events.Print, Article.build_line(["before upload.download backdrop", backdrop_path]));
-      const r = await this.$upload.download(backdrop_path, key);
-      if (r.error) {
-        // console.log("download image failed 2", r.error.message);
-      }
-      if (r.data) {
-        result.backdrop_path = r.data;
-      }
-    }
-    // console.log("check need upload images result", result);
-    // this.emit(Events.Print, Article.build_line(["before return result"]));
-    return result;
   }
 }

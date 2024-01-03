@@ -1,5 +1,5 @@
 /**
- * @file 管理后台/更新同步任务
+ * @file 管理后台/获取同步任务基础信息
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -33,12 +33,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           profile: true,
         },
       },
+      drive: true,
     },
   });
   if (!task) {
     return e(Result.Err("没有匹配的记录"));
   }
-  const { file_id, name, file_id_link_resource, file_name_link_resource, url, media, drive_id } = task;
+  const { file_id, name, invalid, file_id_link_resource, file_name_link_resource, url, media, drive } = task;
   const data = {
     id,
     resource_file_id: file_id,
@@ -46,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive_file_id: file_id_link_resource,
     drive_file_name: file_name_link_resource,
     url,
+    invalid,
     season: (() => {
       if (!media) {
         return null;
@@ -61,7 +63,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       };
     })(),
     drive: {
-      id: drive_id,
+      id: drive.id,
+      name: drive.name,
+      avatar: drive.avatar,
     },
   };
   res.status(200).json({ code: 0, msg: "", data });

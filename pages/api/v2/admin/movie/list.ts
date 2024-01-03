@@ -8,9 +8,8 @@ import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { to_number } from "@/utils/primitive";
 import { MediaTypes } from "@/constants";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -18,18 +17,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const {
     name,
     next_marker = "",
-    page_size: page_size_str,
-  } = req.query as Partial<{
+    page_size = 20,
+  } = req.body as Partial<{
     name: string;
     next_marker: string;
-    page_size: string;
+    page_size: number;
   }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const page_size = to_number(page_size_str, 20);
   const where: ModelQuery<"media"> = {
     type: MediaTypes.Movie,
     user_id: user.id,

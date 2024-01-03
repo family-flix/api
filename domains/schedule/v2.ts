@@ -394,18 +394,6 @@ export class ScheduleTask {
       return Result.Err(job_res.error.message);
     }
     const job = job_res.data;
-    // const searcher_res = await MediaSearcher.New({
-    //   user,
-    //   store: this.store,
-    //   assets: this.app.assets,
-    //   on_print(node) {
-    //     job.output.write(node);
-    //   },
-    // });
-    // if (searcher_res.error) {
-    //   return Result.Err(searcher_res.error.message);
-    // }
-    // const searcher = searcher_res.data;
     const profile_res = await MediaProfileClient.New({
       store: this.store,
       assets: this.app.assets,
@@ -425,9 +413,7 @@ export class ScheduleTask {
         await profile_client.refresh_media_profile(data);
       },
     });
-    job.output.write_line(["全部电视剧详情刷新完成"]);
-    // await profile_client.refresh_media_source_profile();
-    // job.output.write_line(["全部电影详情刷新完成"]);
+    job.output.write_line(["全部影视剧详情刷新完成"]);
     job.finish();
     return Result.Ok(null);
   }

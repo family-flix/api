@@ -491,7 +491,8 @@ model media {
         favorites           member_favorite[]
         shared_medias       shared_media_v2[]
         resource_sync_tasks resource_sync_task[]
-        reports             report_v2[]
+        reports             report_v2[]          @relation("ErrorInReport")
+        reply_in_report     report_v2[]          @relation("ReplyInReport")
         error_tip           invalid_media?
 
         // profile_id + user_id 标志唯一
@@ -1396,10 +1397,12 @@ model report_v2 {
         data   String
         answer String?
 
+        media_id        String?
+        media           media?        @relation("ErrorInReport", fields: [media_id], references: [id], onDelete: Cascade)
         media_source_id String?
         media_source    media_source? @relation(fields: [media_source_id], references: [id], onDelete: Cascade)
         reply_media_id  String?
-        reply_media     media?        @relation(fields: [reply_media_id], references: [id], onDelete: Cascade)
+        reply_media     media?        @relation("ReplyInReport", fields: [reply_media_id], references: [id], onDelete: Cascade)
         member_id       String
         member          member        @relation(fields: [member_id], references: [id], onDelete: Cascade)
         user_id         String

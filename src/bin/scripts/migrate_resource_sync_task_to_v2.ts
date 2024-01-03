@@ -37,6 +37,7 @@ async function main() {
     async handler(data, index, finish) {
       console.log(index);
       const {
+        id,
         url,
         file_id,
         name,
@@ -50,6 +51,14 @@ async function main() {
         drive_id,
         user,
       } = data;
+      const existing = await store.prisma.resource_sync_task.findFirst({
+        where: {
+          id,
+        },
+      });
+      if (existing) {
+        return;
+      }
       const matched_media = await (async () => {
         if (!season) {
           return null;

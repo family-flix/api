@@ -16,16 +16,24 @@ async function main() {
   console.log("Start");
   await walk_model_with_cursor({
     fn(extra) {
-      return store.prisma.play_history.findMany({
+      return store.prisma.report.findMany({
         include: {
+          movie: {
+            include: {
+              profile: true,
+            },
+          },
+          season: {
+            include: {
+              profile: true,
+            },
+          },
           tv: {
             include: {
               profile: true,
             },
           },
-          season: true,
-          episode: true,
-          movie: {
+          episode: {
             include: {
               profile: true,
             },
@@ -39,11 +47,9 @@ async function main() {
         ...extra,
       });
     },
-    async handler(data, index) {
-      console.log(index);
-      const { id, tv, season, episode, movie, file_id, duration, current_time, thumbnail, created, updated, member } =
-        data;
-      const existing = await store.prisma.play_history_v2.findFirst({
+    async handler(report, index) {
+      const { id, type, data, answer, tv, season, episode, movie, created, updated, member_id, user_id } = report;
+      const existing = await store.prisma.report_v2.findFirst({
         where: {
           id,
         },
@@ -51,7 +57,19 @@ async function main() {
       if (existing) {
         return;
       }
-      const { user } = member;
+      if (!tv && !season && !episode && !movie) {
+        await store.prisma.report_v2.create({
+          data: {
+            id,
+            type,
+            data,
+            answer,
+            member_id,
+            user_id,
+          },
+        });
+        return;
+      }
       if (tv && season && episode) {
         const { profile } = tv;
         const r = parseJSONStr<{ tmdb_id: string }>(profile.sources);
@@ -65,7 +83,7 @@ async function main() {
         const matched_media = await store.prisma.media.findFirst({
           where: {
             profile_id: media_profile_id,
-            user_id: user.id,
+            user_id,
           },
           include: {
             profile: true,
@@ -80,31 +98,36 @@ async function main() {
         const matched_media_source = await store.prisma.media_source.findFirst({
           where: {
             profile_id: media_source_profile_id,
-            user_id: user.id,
+            user_id,
           },
           include: {
             profile: true,
           },
         });
-        if (!matched_media_source) {
-          console.log(profile.name, "没有对应的剧集", season_number, episode_number);
+        if (matched_media_source) {
+          await store.prisma.report_v2.create({
+            data: {
+              id,
+              type,
+              data,
+              answer,
+              media_id: matched_media.id,
+              media_source_id: matched_media_source.id,
+              member_id,
+              user_id,
+            },
+          });
           return;
         }
-        await store.prisma.play_history_v2.create({
+        await store.prisma.report_v2.create({
           data: {
-            id: r_id(),
-            created,
-            updated,
-            duration: duration || 0,
-            current_time: current_time || 0,
-            text: (() => {
-              return [matched_media.profile.name].join("/");
-            })(),
-            thumbnail_path: thumbnail,
-            file_id,
+            id,
+            type,
+            data,
+            answer,
             media_id: matched_media.id,
-            media_source_id: matched_media_source.id,
-            member_id: member.id,
+            member_id,
+            user_id,
           },
         });
         return;
@@ -121,7 +144,7 @@ async function main() {
         const matched_media = await store.prisma.media.findFirst({
           where: {
             profile_id: media_profile_id,
-            user_id: user.id,
+            user_id,
           },
           include: {
             profile: true,
@@ -131,38 +154,19 @@ async function main() {
           console.log(profile.name, "没有匹配的电影1");
           return;
         }
-        const media_source_profile_id = [media_profile_id].join("/");
-        const matched_media_source = await store.prisma.media_source.findFirst({
-          where: {
-            profile_id: media_source_profile_id,
-            user_id: user.id,
-          },
-          include: {
-            profile: true,
-          },
-        });
-        if (!matched_media_source) {
-          console.log(profile.name, "没有匹配的电影2");
-          return;
-        }
-        await store.prisma.play_history_v2.create({
+        await store.prisma.report_v2.create({
           data: {
             id,
             created,
             updated,
-            duration: duration || 0,
-            current_time: current_time || 0,
-            text: (() => {
-              return [matched_media.profile.name].join("/");
-            })(),
-            thumbnail_path: thumbnail,
-            file_id,
+            type,
+            data,
+            answer,
             media_id: matched_media.id,
-            media_source_id: matched_media_source.id,
-            member_id: member.id,
+            member_id,
+            user_id,
           },
         });
-        return;
       }
     },
   });

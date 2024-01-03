@@ -373,6 +373,7 @@ export async function fetch_tv_profile(
     number_of_episodes,
     number_of_seasons,
     in_production,
+    next_episode_to_air,
   } = r.data;
   return Result.Ok({
     id,
@@ -387,6 +388,7 @@ export async function fetch_tv_profile(
     number_of_episodes,
     number_of_seasons,
     in_production,
+    next_episode_to_air,
     ...fix_TMDB_image_path({
       poster_path,
       backdrop_path,

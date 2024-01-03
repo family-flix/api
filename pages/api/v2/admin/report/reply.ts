@@ -19,10 +19,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
+  const user = t_res.data;
   if (!id) {
     return e(Result.Err("缺少反馈 id"));
   }
-  const user = t_res.data;
   const report = await store.prisma.report_v2.findFirst({
     where: {
       id,
