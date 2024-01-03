@@ -937,6 +937,20 @@ model tv_profile_quick {
         @@map("TVProfileQuick")
 }
 
+model incomplete_tv {
+        id            String   @id
+        created       DateTime @default(now())
+        updated       DateTime @default(now())
+        episode_count Int?     @default(0)
+        cur_count     Int?     @default(0)
+        text          String?
+
+        user_id String
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("TVNeedComplete")
+}
+
 model shared_file {
         id      String   @id
         created DateTime @default(now())
@@ -1504,6 +1518,7 @@ model user {
         async_task              async_task[]
         files                   file[]
         members                 member[]
+        tv_need_complete        incomplete_tv[]
         shared_files            shared_file[]
         shared_file_in_progress shared_file_in_progress[]
         tmp_files               tmp_file[]
