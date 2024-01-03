@@ -34,6 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     });
     res.status(200).json({ code: 0, msg: "删除成功", data: null });
+    return;
   }
   const movie_source = await store.prisma.parsed_movie.findFirst({
     where: {

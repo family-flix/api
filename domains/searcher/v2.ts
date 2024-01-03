@@ -50,6 +50,7 @@ enum Events {
   MovieAdded,
   Print,
   Stop,
+  Percent,
   Finish,
   Error,
 }
@@ -59,6 +60,7 @@ type TheTypesOfEvents = {
   [Events.EpisodeAdded]: EpisodeRecord;
   [Events.MovieAdded]: MovieRecord;
   [Events.Print]: ArticleLineNode | ArticleSectionNode;
+  [Events.Percent]: number;
   [Events.Stop]: void;
   [Events.Finish]: void;
   [Events.Error]: Error;
@@ -257,6 +259,19 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         this.emit(
           Events.Print,
           Article.build_line([`第${i + 1}个、`, prefix, [season_text, episode_text].filter(Boolean).join("/")])
+        );
+        this.emit(
+          Events.Percent,
+          (() => {
+            const v = i + 1 / count;
+            if (v < 0.0001) {
+              return 0.0001;
+            }
+            if (v >= 1) {
+              return 1;
+            }
+            return Number(v.toFixed(4));
+          })()
         );
         try {
           if (type === MediaTypes.Season) {
@@ -1334,6 +1349,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
     return this.on(Events.Print, handler);
+  }
+  on_percent(handler: Handler<TheTypesOfEvents[Events.Percent]>) {
+    return this.on(Events.Percent, handler);
   }
   on_stop(handler: Handler<TheTypesOfEvents[Events.Stop]>) {
     return this.on(Events.Stop, handler);

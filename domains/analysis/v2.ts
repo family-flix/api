@@ -344,6 +344,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       this.emit(Events.AddMovie, r.data);
       return;
     };
+    searcher.on_percent((percent) => {
+      this.emit(Events.Percent, percent);
+    });
 
     // if (on_season_added) {
     //   this.on_add_season(on_season_added);
