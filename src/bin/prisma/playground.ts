@@ -18,25 +18,7 @@ async function main() {
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
-  // const start = performance.now();
   await store.prisma.tv_profile_quick.deleteMany({});
-  // await walk_model_with_cursor({
-  //   fn(extra) {
-  //     return store.prisma.member_diary.findMany({
-  //       ...extra,
-  //     });
-  //   },
-  //   async batch_handler(list, index) {
-  //     console.log(index);
-  //     await store.prisma.member_diary.deleteMany({
-  //       where: {
-  //         id: {
-  //           in: list.map((media) => media.id),
-  //         },
-  //       },
-  //     });
-  //   },
-  // });
 }
 
 main();

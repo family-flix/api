@@ -11,7 +11,7 @@
 
 */
 -- DropIndex
-DROP INDEX "TVProfileQuick_name_key";
+-- DROP INDEX "TVProfileQuick_name_key";
 
 -- DropTable
 PRAGMA foreign_keys=off;
@@ -19,9 +19,9 @@ DROP TABLE "TVNeedComplete";
 PRAGMA foreign_keys=on;
 
 -- DropTable
-PRAGMA foreign_keys=off;
-DROP TABLE "TVProfileQuick";
-PRAGMA foreign_keys=on;
+-- PRAGMA foreign_keys=off;
+-- DROP TABLE "TVProfileQuick";
+-- PRAGMA foreign_keys=on;
 
 -- CreateTable
 CREATE TABLE "subtitle_v2" (
