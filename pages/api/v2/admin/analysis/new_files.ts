@@ -37,6 +37,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const tmp_folders = await store.prisma.tmp_file.findMany({
     where: {
       drive_id,
+      file_id: {
+        not: null,
+      },
       user_id: user.id,
     },
   });
@@ -75,15 +78,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   async function run() {
     // console.log("[API]admin/drive/analysis_quickly/[id].ts - before await analysis.run", tmp_folders.length);
-    await analysis.run(
-      tmp_folders.map((file) => {
-        const { name, parent_paths, type } = file;
-        return {
-          name: [parent_paths, name].filter(Boolean).join("/"),
-          type: type === FileType.File ? "file" : "folder",
-        };
+    const the_files_prepare_analysis = tmp_folders
+      .filter((f) => {
+        return f.file_id;
       })
-    );
+      .map((f) => {
+        const { file_id, name, type } = f;
+        return {
+          file_id: file_id as string,
+          type,
+          name,
+        };
+      });
+    await analysis.run2(the_files_prepare_analysis);
     job.output.write_line(["索引完成"]);
     job.finish();
   }

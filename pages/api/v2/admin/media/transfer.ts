@@ -202,64 +202,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }
         const analysis = r3.data;
         job.output.write_line([prefix, "在目标云盘索引新增的文件"]);
-        const r = await analysis.run(
-          [
-            {
-              name: [to_drive_root_folder_name!, folder_in_from_drive.file_name].join("/"),
-              type: "folder",
-            },
-          ],
-          {
-            async before_search() {
-              await walk_model_with_cursor({
-                fn(extra) {
-                  return store.prisma.parsed_media_source.findMany({
-                    where: {
-                      parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
-                      drive_id: to_drive.id,
-                      user_id: user.id,
-                    },
-                    orderBy: {
-                      created: "desc",
-                    },
-                    ...extra,
-                  });
-                },
-                async handler(data) {
-                  const same_file = await store.prisma.parsed_media_source.findFirst({
-                    where: {
-                      parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
-                      drive_id: from_drive.id,
-                      user_id: user.id,
-                    },
-                  });
-                  if (!same_file) {
-                    return;
-                  }
-                  await store.prisma.parsed_media_source.update({
-                    where: {
-                      id: data.id,
-                    },
-                    data: {
-                      media_source_id: same_file.media_source_id,
-                    },
-                  });
-                  //   if (same_file.parsed_media_id && data.parsed_media_id) {
-                  //     await store.prisma.parsed_media.update({
-                  //       where: {
-                  //         id: data.parsed_media_id,
-                  //       },
-                  //       data: {
-                  //         media_id: same_file.media_source_id,
-                  //       },
-                  //     });
-                  //   }
-                },
-              });
-              return false;
-            },
-          }
-        );
+        const r = await analysis.run({
+          async before_search() {
+            await walk_model_with_cursor({
+              fn(extra) {
+                return store.prisma.parsed_media_source.findMany({
+                  where: {
+                    parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
+                    drive_id: to_drive.id,
+                    user_id: user.id,
+                  },
+                  orderBy: {
+                    created: "desc",
+                  },
+                  ...extra,
+                });
+              },
+              async handler(data) {
+                const same_file = await store.prisma.parsed_media_source.findFirst({
+                  where: {
+                    parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
+                    drive_id: from_drive.id,
+                    user_id: user.id,
+                  },
+                });
+                if (!same_file) {
+                  return;
+                }
+                await store.prisma.parsed_media_source.update({
+                  where: {
+                    id: data.id,
+                  },
+                  data: {
+                    media_source_id: same_file.media_source_id,
+                  },
+                });
+                //   if (same_file.parsed_media_id && data.parsed_media_id) {
+                //     await store.prisma.parsed_media.update({
+                //       where: {
+                //         id: data.parsed_media_id,
+                //       },
+                //       data: {
+                //         media_id: same_file.media_source_id,
+                //       },
+                //     });
+                //   }
+              },
+            });
+            return false;
+          },
+        });
         if (r.error) {
           job.output.write_line([prefix, "索引失败，因为", r.error.message]);
           return;

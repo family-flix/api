@@ -10,19 +10,15 @@ import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { Job } from "@/domains/job";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types";
-import { FileType } from "@/constants";
 import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { drive_id, force, target_folders } = req.body as Partial<{
+  const { drive_id } = req.body as Partial<{
     drive_id: string;
-    force: number;
-    target_folders: { file_id: string; parent_paths?: string; name: string; type: string }[];
   }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -37,22 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err(drive_res.error.message));
   }
   const drive = drive_res.data;
-  if (!target_folders && !drive.has_root_folder()) {
+  if (!drive.has_root_folder()) {
     return e(Result.Err("请先设置索引目录", 30001));
   }
   const job_res = await Job.New({
-    desc: `索引云盘「${drive.name}」${(() => {
-      if (!target_folders) {
-        return "";
-      }
-      if (!Array.isArray(target_folders)) {
-        return "";
-      }
-      if (target_folders.length === 1) {
-        return target_folders[0].name;
-      }
-      return " 部分文件";
-    })()}`,
+    desc: `索引云盘「${drive.name}」`,
     type: TaskTypes.DriveAnalysis,
     unique_id: drive.id,
     user_id: user.id,
@@ -67,11 +52,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     store,
     user,
     assets: app.assets,
+    unique_id: job.id,
     on_print(v) {
       job.output.write(v);
     },
-    on_error() {
-      job.finish();
+    on_error(err) {
+      job.throw(err);
     },
   });
   if (r2.error) {
@@ -86,47 +72,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   // console.log("[API]admin/drive/analysis/[id].ts - before analysis.run");
   async function run() {
-    const the_files_prepare_analysis = await (async () => {
-      if (!target_folders) {
-        return undefined;
-      }
-      if (!Array.isArray(target_folders)) {
-        return undefined;
-      }
-      if (target_folders && target_folders[0] && target_folders[0].parent_paths) {
-        return target_folders.map((f) => {
-          const { name, parent_paths, type } = f;
-          return {
-            name: [parent_paths, name].filter(Boolean).join("/"),
-            type,
-          };
-        });
-      }
-      const files = await store.prisma.file.findMany({
-        where: {
-          name: {
-            in: target_folders.map((f) => f.name),
-          },
-        },
-      });
-      return files.map((f) => {
-        const { name, parent_paths, type } = f;
-        return {
-          name: [parent_paths, name].filter(Boolean).join("/"),
-          type: type === FileType.File ? "file" : "folder",
-        };
-      });
-    })();
-    await analysis.run(the_files_prepare_analysis, { force: !!force });
-    job.output.write(
-      new ArticleLineNode({
-        children: [
-          new ArticleTextNode({
-            text: "索引完成",
-          }),
-        ],
-      })
-    );
+    await analysis.run();
+    job.output.write_line(["索引完成"]);
     job.finish();
   }
   run();

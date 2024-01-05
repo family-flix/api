@@ -8,19 +8,20 @@ import { Drive } from "@/domains/drive";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
+import { MediaResolutionTypes, SubtitleFileTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id, type = "LD" } = req.body as Partial<{ id: string; type: string }>;
-  if (!id) {
-    return e(Result.Err("缺少视频文件 id"));
-  }
+  const { id, type = MediaResolutionTypes.SD } = req.body as Partial<{ id: string; type: string }>;
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const member = t_res.data;
+  if (!id) {
+    return e(Result.Err("缺少视频文件 id"));
+  }
   const source = await store.prisma.parsed_media_source.findFirst({
     where: {
       id,
@@ -38,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const client = drive_res.data.client;
   const play_info_res = await client.fetch_video_preview_info(file_id);
   if (play_info_res.error) {
-    return e(play_info_res);
+    return e(Result.Err(play_info_res.error.message));
   }
   const info = play_info_res.data;
   if (info.sources.length === 0) {
@@ -87,7 +88,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { url, width, height } = recommend_resolution;
   const result: MediaFile & { other: MediaFile[]; subtitles: { language: string; url: string }[] } = {
     id,
-    //     file_id,
     url,
     thumbnail_path: thumbnail,
     type: recommend_resolution.type,
@@ -106,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     subtitles: info.subtitles.map((subtitle) => {
       const { id, name, url, language } = subtitle;
       return {
-        type: 1,
+        type: SubtitleFileTypes.MediaInnerFile,
         id,
         name,
         url,

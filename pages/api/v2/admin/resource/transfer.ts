@@ -10,8 +10,8 @@ import { Job } from "@/domains/job";
 import { TaskTypes } from "@/domains/job/constants";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { BaseApiResp, Result } from "@/types";
-import { FileType } from "@/constants";
 import { response_error_factory } from "@/utils/server";
+import { ResourceSyncTaskStatus } from "@/constants";
 import { store } from "@/store";
 import { r_id } from "@/utils";
 
@@ -95,10 +95,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     drive.client.on_transfer_finish(async () => {
       job.output.write_line(["添加到待索引文件"]);
+      const r = await drive.client.search_files(name);
+      if (r.error) {
+        job.output.write_line(["搜索已转存文件失败", r.error.message]);
+        return;
+      }
+      const first = r.data.items[0];
+      if (!first) {
+        job.output.write_line(["转存后没有搜索到转存文件"]);
+        return;
+      }
       await store.prisma.tmp_file.create({
         data: {
           id: r_id(),
           name,
+          file_id: first.file_id,
           parent_paths: drive.profile.root_folder_name ?? "",
           drive_id: drive.id,
           user_id: user.id,
@@ -112,8 +123,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           pwd: code,
           file_id,
           name,
+          status: ResourceSyncTaskStatus.WaitSetProfile,
           file_name_link_resource: name,
-          file_id_link_resource: "pending",
+          file_id_link_resource: first.file_id,
           drive_id: drive.id,
           user_id: user.id,
         },

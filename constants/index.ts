@@ -41,6 +41,34 @@ export enum ResourceSyncTaskStatus {
   Completed = 4,
 }
 
+/** 影片分辨率 */
+export enum MediaResolutionTypes {
+  /** 标清 */
+  LD = "LD",
+  /** 普清 */
+  SD = "SD",
+  /** 高清 */
+  HD = "HD",
+  /** 超高清 */
+  FHD = "FHD",
+}
+/** 影片分辨率中文描述 */
+export const MediaResolutionTypeTexts = {
+  [MediaResolutionTypes.LD]: "标清",
+  [MediaResolutionTypes.SD]: "普清",
+  [MediaResolutionTypes.HD]: "高清",
+  [MediaResolutionTypes.FHD]: "4K",
+};
+
+export enum SubtitleFileTypes {
+  /** 上传到服务器本地的 */
+  LocalFile = 1,
+  /** 在阿里云盘的 */
+  AliyundriveFile = 2,
+  /** 内挂字幕 */
+  MediaInnerFile = 3,
+}
+
 export enum CollectionTypes {
   /** 手动创建 */
   Manually = 1,

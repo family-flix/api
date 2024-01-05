@@ -69,6 +69,7 @@ type TheTypesOfEvents = {
 type MediaSearcherProps = {
   /** 强制索引全部，忽略 can_search 为 0 */
   force?: boolean;
+  unique_id?: string;
   /** 搜索到的影视剧中如果存在图片，是否要将图片上传到 cdn */
   upload_image?: boolean;
   /** 影视剧海报封面上传后的本地存储路径 */
@@ -96,11 +97,12 @@ type MediaSearcherProps = {
 export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   static New(body: MediaSearcherProps) {
     const {
-      user,
-      drive,
       assets,
       force,
+      unique_id,
       store,
+      user,
+      drive,
       on_season_added,
       on_episode_added,
       on_movie_added,
@@ -121,10 +123,11 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("缺少 store 实例");
     }
     const searcher = new MediaSearcher({
+      assets,
+      force,
+      unique_id,
       user,
       drive,
-      force,
-      assets,
       store,
       on_season_added,
       on_episode_added,
@@ -143,6 +146,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   upload: FileUpload;
   options: Partial<{
     upload_image?: boolean;
+    unique_id?: string;
     /** 忽略 can_search，强制重新搜索 */
     force?: boolean;
   }> = {};
@@ -154,10 +158,11 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
 
     const {
       upload_image = true,
-      user,
-      drive,
       force = false,
       assets,
+      unique_id,
+      user,
+      drive,
       store,
       on_season_added,
       on_episode_added,
@@ -178,6 +183,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     this.options = {
       upload_image,
       force,
+      unique_id,
     };
     if (on_season_added) {
       this.on_add_season(on_season_added);
@@ -206,7 +212,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   async process_parsed_media_source_list_by_file_id(file_ids: string[]) {
-    const { force } = this.options;
+    const { force = false } = this.options;
     const where: ModelQuery<"parsed_media_source"> = {
       media_source_id: null,
       file_id: {
@@ -218,23 +224,9 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (this.drive) {
       where.drive_id = this.drive.id;
     }
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["搜索待查询记录", JSON.stringify(where)].map((text) => {
-          return new ArticleTextNode({ text });
-        }),
-      })
-    );
+    this.emit(Events.Print, Article.build_line(["搜索待查询记录", JSON.stringify(where)]));
     const count = await this.store.prisma.parsed_media_source.count({ where });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["找到", count, "个需要搜索的记录"].map((text) => {
-          return new ArticleTextNode({ text: String(text) });
-        }),
-      })
-    );
+    this.emit(Events.Print, Article.build_line(["找到", count, "个需要搜索的记录"]));
     await walk_model_with_cursor({
       fn: (args) => {
         return this.store.prisma.parsed_media_source.findMany({
@@ -260,19 +252,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           Events.Print,
           Article.build_line([`第${i + 1}个、`, prefix, [season_text, episode_text].filter(Boolean).join("/")])
         );
-        this.emit(
-          Events.Percent,
-          (() => {
-            const v = i + 1 / count;
-            if (v < 0.0001) {
-              return 0.0001;
-            }
-            if (v >= 1) {
-              return 1;
-            }
-            return Number(v.toFixed(4));
-          })()
-        );
+        const percent = (() => {
+          const v = (i + 1) / count;
+          if (v < 0.0001) {
+            return 0.0001;
+          }
+          if (v >= 1) {
+            return 1;
+          }
+          return Number(v.toFixed(4));
+        })();
+        // console.log("[DOMAIN]searcher/index - before process media", percent);
+        this.emit(Events.Percent, percent);
         try {
           if (type === MediaTypes.Season) {
             const r = await this.process_season_media_source(parsed_media_source);
@@ -299,94 +290,24 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
   /** 开始搜索 */
   async run(scope: { name: string }[] = []) {
-    // console.log("[DOMAIN]MediaSearcher - run", scope);
-    let file_groups: { name: string }[][] = [[]];
-    if (scope.length !== 0) {
-      const files = uniqueBy((obj) => obj.name, scope);
-      this.emit(Events.Print, Article.build_line(["限定搜索范围", files.length, "个关键字"]));
-      this.emit(
-        Events.Print,
-        new ArticleSectionNode({
-          children: [
-            new ArticleListNode({
-              children: files.map((file) => {
-                return new ArticleListItemNode({
-                  children: [file.name].map((text) => new ArticleTextNode({ text })),
-                });
-              }),
-            }),
-          ],
-        })
-      );
-      file_groups = split_array_into_chunks(
-        files.filter((f) => {
-          return !!f.name;
-        }),
-        10
-      );
-    }
-    for (let i = 0; i < file_groups.length; i += 1) {
-      const group = file_groups[i];
-      await this.process_parsed_media_source_list_by_name(group);
-      if (this.need_stop) {
-        this.emit(Events.Finish);
-        return Result.Ok(null);
-      }
-    }
+    await this.process_parsed_media_source_list_by_unique_id();
     this.emit(Events.Finish);
     return Result.Ok(null);
   }
-  async process_parsed_media_source_list_by_name(group: { name: string }[]) {
+  async process_parsed_media_source_list_by_unique_id() {
     const { force } = this.options;
     const where: ModelQuery<"parsed_media_source"> = {
       media_source_id: null,
+      cause_job_id: this.options.unique_id,
       can_search: force ? undefined : 1,
       user_id: this.user.id,
     };
     if (this.drive) {
       where.drive_id = this.drive.id;
     }
-    if (group.length) {
-      where.OR = group.map((s) => {
-        const { name } = s;
-        return {
-          OR: [
-            {
-              name: {
-                contains: name,
-              },
-            },
-            {
-              file_name: {
-                contains: name,
-              },
-            },
-            {
-              parent_paths: {
-                contains: name,
-              },
-            },
-          ],
-        };
-      });
-    }
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["搜索待查询记录", JSON.stringify(where)].map((text) => {
-          return new ArticleTextNode({ text });
-        }),
-      })
-    );
+    this.emit(Events.Print, Article.build_line(["搜索待查询记录", JSON.stringify(where)]));
     const count = await this.store.prisma.parsed_media_source.count({ where });
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["找到", count, "个需要搜索的记录"].map((text) => {
-          return new ArticleTextNode({ text: String(text) });
-        }),
-      })
-    );
+    this.emit(Events.Print, Article.build_line(["找到", count, "个需要搜索的记录"]));
     await walk_model_with_cursor({
       fn: (args) => {
         return this.store.prisma.parsed_media_source.findMany({
@@ -412,6 +333,18 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           Events.Print,
           Article.build_line([`第${i + 1}个、`, prefix, [season_text, episode_text].filter(Boolean).join("/")])
         );
+        const percent = (() => {
+          const v = (i + 1) / count;
+          if (v < 0.0001) {
+            return 0.0001;
+          }
+          if (v >= 1) {
+            return 1;
+          }
+          return Number(v.toFixed(4));
+        })();
+        // console.log("[DOMAIN]searcher/index - before process media", percent);
+        this.emit(Events.Percent, percent);
         try {
           if (type === MediaTypes.Season) {
             const r = await this.process_season_media_source(parsed_media_source);
@@ -453,6 +386,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     })();
     const unique_key = [name, original_name, season_text, year].filter(Boolean).join("/");
     if (!episode_text) {
+      await this.store.prisma.parsed_media_source.update({
+        where: {
+          id: parsed_media_source.id,
+        },
+        data: {
+          cause_job_id: null,
+          can_search: 0,
+        },
+      });
       return Result.Err("不存在剧集信息");
     }
     // console.log("process_season_media_source", parsed_media.media_id);
@@ -504,6 +446,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     })();
     if (media_profile_record === null) {
       this.cached_media_profile_records[unique_key] = null;
+      await this.store.prisma.parsed_media_source.update({
+        where: {
+          id: parsed_media_source.id,
+        },
+        data: {
+          cause_job_id: null,
+          can_search: 0,
+        },
+      });
       return Result.Err("没有搜索到匹配结果");
     }
     const media = await this.get_season_media_record_by_profile(media_profile_record);
@@ -522,6 +473,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     // console.log("before find_matched_source_profile", parsed_media_source.episode_text);
     const matched_source_profile = await this.find_matched_source_profile(source_profiles, parsed_media_source);
     if (!matched_source_profile) {
+      await this.store.prisma.parsed_media_source.update({
+        where: {
+          id: parsed_media_source.id,
+        },
+        data: {
+          cause_job_id: null,
+          can_search: 0,
+        },
+      });
       return Result.Err("没有匹配到剧集");
     }
     this.emit(Events.Print, Article.build_line([`第${matched_source_profile.order}集`]));
@@ -739,6 +699,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     // const media_profile_record = await this.get_movie_media_record_by_profile(parsed_media);
     if (media_profile_record === null) {
       this.cached_media_profile_records[unique_key] = null;
+      await this.store.prisma.parsed_media_source.update({
+        where: {
+          id: parsed_media_source.id,
+        },
+        data: {
+          cause_job_id: null,
+          can_search: 0,
+        },
+      });
       return Result.Err("没有搜索到匹配结果");
     }
     const media = await this.get_movie_media_record_by_profile(media_profile_record);
@@ -757,6 +726,15 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return source_profiles[0];
     })();
     if (!matched_source_profile) {
+      await this.store.prisma.parsed_media_source.update({
+        where: {
+          id: parsed_media_source.id,
+        },
+        data: {
+          cause_job_id: null,
+          can_search: 0,
+        },
+      });
       return Result.Err("没有匹配到详情");
     }
     const media_source = await this.get_movie_media_source_record_by_profile(media_profile_record, media);

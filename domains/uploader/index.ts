@@ -46,13 +46,15 @@ export class FileUpload {
       });
     });
   }
-  upload_subtitle(filepath: string): Promise<Result<null>> {
+  upload_subtitle(filepath: string): Promise<Result<string>> {
     return new Promise((resolve) => {
-      rename(filepath, path.resolve(this.root, "subtitle"), (err) => {
+      const subtitle_path = path.resolve(this.root, "subtitle");
+      const { base } = path.parse(filepath);
+      rename(filepath, subtitle_path, (err) => {
         if (err) {
           return resolve(Result.Err(err.message));
         }
-        return resolve(Result.Ok(null));
+        return resolve(Result.Ok(path.join("subtitle", base)));
       });
     });
   }

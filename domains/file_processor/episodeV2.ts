@@ -33,6 +33,7 @@ type TheTypesOfEvents = {
 };
 type EpisodeFileProcessorProps = {
   episode: SearchedEpisode;
+  unique_id?: string;
   user: User;
   drive: Drive;
   task_id?: string;
@@ -65,13 +66,13 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
   options: {
     user_id: string;
     drive_id: string;
-    task_id?: string;
+    unique_id?: string;
   };
 
   constructor(options: Partial<{}> & EpisodeFileProcessorProps) {
     super();
 
-    const { episode, user, drive, task_id, store, on_print } = options;
+    const { episode, user, drive, unique_id, store, on_print } = options;
     this.episode = episode;
     this.store = store;
     this.user = user;
@@ -79,7 +80,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
     this.options = {
       user_id: user.id,
       drive_id: drive.id,
-      task_id,
+      unique_id,
     };
     if (on_print) {
       this.on_print(on_print);
@@ -141,6 +142,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
             parent_paths: episode.parent_paths,
             size: episode.size,
             md5: episode.md5,
+            cause_job_id: this.options.unique_id,
             parsed_media_id: parsed_media.id,
             user_id,
             drive_id,
@@ -194,6 +196,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
             parent_paths: episode.parent_paths,
             size: episode.size,
             md5: episode.md5,
+            cause_job_id: this.options.unique_id,
             parsed_media_id: created_parsed_media.id,
             user_id,
             drive_id,
@@ -261,6 +264,8 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         },
         data: {
           ...media_source_payload.body,
+          cause_job_id: this.options.unique_id,
+          can_search: 1,
           updated: dayjs().toISOString(),
         },
       });

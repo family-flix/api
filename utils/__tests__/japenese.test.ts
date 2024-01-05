@@ -351,4 +351,14 @@ describe("动漫", () => {
       episode: "E04",
     });
   });
+  test("[Airota×LF2×FS-Raw] Koe no Katachi (HEVC-10Bit AAC)[5.1ch].mp4", () => {
+    const name = "[Airota×LF2×FS-Raw] Koe no Katachi (HEVC-10Bit AAC)[5.1ch].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Airota×LF2×FS-Raw.Koe.no.Katachi",
+      season: "",
+      episode: "",
+    });
+  });
 });

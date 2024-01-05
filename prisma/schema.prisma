@@ -458,6 +458,7 @@ model parsed_media_source {
         size           Float   @default(0)
         md5            String?
         can_search     Int     @default(1)
+        cause_job_id   String?
 
         parsed_media_id String?
         // 匹配详情时更快，A 和 B 有同一个 parsed_media，在处理 B 时，可以直接获取 A.parsed_media.media.profile
@@ -518,7 +519,7 @@ model media_source {
 
         files     parsed_media_source[]
         histories play_history_v2[]
-        diaries   member_diary[]
+        // diaries   member_diary[]
         subtitles subtitle_v2[]
         reports   report_v2[]
         error_tip invalid_media_source?
@@ -1250,10 +1251,10 @@ model member_diary {
         content String?
         profile String?
 
-        media_source_id String
-        media_source    media_source @relation(fields: [media_source_id], references: [id], onDelete: Cascade)
-        member_id       String
-        member          member       @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        // media_source_id String
+        // media_source    media_source @relation(fields: [media_source_id], references: [id], onDelete: Cascade)
+        member_id String
+        member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
 
         @@map("MemberDiary")
 }

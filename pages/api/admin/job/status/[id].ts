@@ -27,18 +27,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err(job_res.error.message));
   }
   const job = job_res.data;
-  const r = await job.fetch_profile();
+  const r = await job.fetch_profile(false);
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
-  const { unique_id, status, desc, percent, error, created } = r.data;
+  const { output_id, status, desc, percent, error, created, updated } = r.data;
   const data = {
-    unique_id,
     status,
     desc,
     percent,
     error,
+    output_id,
     created,
+    updated,
   };
   res.status(200).json({ code: 0, msg: "获取任务状态成功", data });
 }

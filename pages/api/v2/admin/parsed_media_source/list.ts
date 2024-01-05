@@ -17,11 +17,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     empty = 1,
     type,
     page_size,
+    parsed_media_id,
     next_marker,
   } = req.body as Partial<{
     empty: number;
     type: number;
     name: string;
+    parsed_media_id: string;
     next_marker: string;
     page_size: number;
   }>;
@@ -39,6 +41,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   if (type !== undefined) {
     where.type = type;
+  }
+  if (parsed_media_id) {
+    where.parsed_media_id = parsed_media_id;
   }
   if (name) {
     where.OR = [
@@ -73,6 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           drive: true,
         },
         orderBy: {
+          episode_text: "asc",
           created: "desc",
         },
         ...args,

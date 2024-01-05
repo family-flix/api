@@ -9,7 +9,7 @@ import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { MediaTypes } from "@/constants";
+import { MediaTypes, ResourceSyncTaskStatus } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -54,11 +54,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
   }
   const count = await store.prisma.media.count({ where });
-  const data = await store.list_with_cursor({
+  const result = await store.list_with_cursor({
     fetch: (args) => {
       return store.prisma.media.findMany({
         where,
         include: {
+          _count: true,
           profile: {
             include: {
               origin_country: true,
@@ -66,6 +67,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             },
           },
           media_sources: true,
+          resource_sync_tasks: {
+            where: {
+              invalid: 0,
+              status: ResourceSyncTaskStatus.WorkInProgress,
+            },
+            take: 10,
+          },
         },
         orderBy: {
           profile: {
@@ -78,45 +86,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     next_marker,
   });
+  const { list } = result;
+  const data = {
+    total: count,
+    next_marker: result.next_marker,
+    list: list.map((media) => {
+      const { id, profile, _count, media_sources, resource_sync_tasks } = media;
+      const tips: string[] = [];
+      if (_count.media_sources === 0) {
+        tips.push("关联的剧集数为 0");
+      }
+      if (!profile.in_production && _count.media_sources !== profile.source_count) {
+        tips.push(`已完结但集数不完整，总集数 ${profile.source_count}，当前集数 ${_count.media_sources}`);
+      }
+      if (profile.in_production && _count.media_sources !== profile.source_count && resource_sync_tasks.length === 0) {
+        tips.push("未完结但缺少同步任务");
+      }
+      const {
+        name,
+        original_name,
+        overview,
+        air_date,
+        poster_path,
+        source_count,
+        vote_average,
+        origin_country,
+        genres,
+      } = profile;
+      return {
+        id,
+        name,
+        original_name,
+        overview,
+        air_date,
+        poster_path,
+        vote_average,
+        origin_country: origin_country.map((country) => country.id),
+        genres: genres.map((genre) => {
+          return {
+            value: genre.id,
+            label: genre.id,
+          };
+        }),
+        episode_count: source_count,
+        cur_episode_count: media_sources.length,
+        tips,
+      };
+    }),
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      ...data,
-      total: count,
-      list: data.list.map((media) => {
-        const { id, profile, media_sources } = media;
-        const {
-          name,
-          original_name,
-          overview,
-          air_date,
-          poster_path,
-          source_count,
-          vote_average,
-          origin_country,
-          genres,
-        } = profile;
-        return {
-          id,
-          name,
-          original_name,
-          overview,
-          air_date,
-          poster_path,
-          vote_average,
-          origin_country: origin_country.map((country) => country.id),
-          genres: genres.map((genre) => {
-            return {
-              value: genre.id,
-              label: genre.id,
-            };
-          }),
-          episode_count: source_count,
-          cur_episode_count: media_sources.length,
-          tips: [],
-        };
-      }),
-    },
+    data,
   });
 }

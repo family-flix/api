@@ -1167,7 +1167,7 @@ export function parse_filename_for_video(
       regexp: /\({0,1}([SH]DR|DV|HLG)\){0,1}([0-9]{1,}){0,1}/,
     },
     {
-      regexp: /[0-9]{1,}bit/,
+      regexp: /[0-9]{1,}[bB][iI][tT]/,
     },
     {
       //  Subtitles for the deaf and hard of hearing (SDH)

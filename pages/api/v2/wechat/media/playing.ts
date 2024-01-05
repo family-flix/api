@@ -1,5 +1,5 @@
 /**
- * @file 获取季详情加上当前正在播放的剧集信息
+ * @file 获取季/电影详情加上当前正在播放的剧集信息
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -8,7 +8,12 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { MediaTypes } from "@/constants";
-import { MediaSourceProfileRecord, MediaSourceRecord, ParsedMediaSourceRecord } from "@/domains/store/types";
+import {
+  MediaSourceProfileRecord,
+  MediaSourceRecord,
+  ParsedMediaSourceRecord,
+  SubtitleRecord,
+} from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -20,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const member = t_res.data;
   if (!media_id) {
-    return e(Result.Err("缺少电影 id"));
+    return e(Result.Err(type === MediaTypes.Season ? "缺少季 id" : "缺少电影 id"));
   }
   const media = await store.prisma.media.findFirst({
     where: {
@@ -38,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (media === null) {
-    return e(Result.Err("没有匹配的电影"));
+    return e(Result.Err(type === MediaTypes.Season ? "没有匹配的季" : "没有匹配的电影"));
   }
   const history = await store.prisma.play_history_v2.findFirst({
     where: {
@@ -49,11 +54,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       media_source: {
         include: {
           profile: true,
+          subtitles: true,
+          files: true,
         },
       },
     },
   });
-  const { profile } = media;
   const { sources: media_sources, cur_source } = await (async () => {
     if (!history) {
       const sources = await store.prisma.media_source.findMany({
@@ -62,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
         include: {
           profile: true,
+          subtitles: true,
           files: {
             include: { drive: true },
           },
@@ -82,6 +89,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               current_time: 0,
               thumbnail_path: sources[0].profile.still_path,
               index: 0,
+              subtitles: sources[0].subtitles,
+              files: sources[0].files,
               order: sources[0].profile.order,
             }
           : null,
@@ -95,6 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
       include: {
         profile: true,
+        subtitles: true,
         files: {
           include: { drive: true },
         },
@@ -115,6 +125,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         current_time,
         thumbnail_path,
         index: sources.findIndex((s) => s.id === media_source.id),
+        files: media_source.files,
+        subtitles: media_source.subtitles,
         order: media_source.profile.order,
       },
     };
@@ -125,7 +137,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   const { name, original_name, overview, poster_path, air_date, source_count, vote_average, genres, origin_country } =
-    profile;
+    media.profile;
   const episode_ranges = split_count_into_ranges(20, cur_source_count);
   const sources = media_sources.map((episode) => {
     return format_episode(episode, media_id);
@@ -189,13 +201,14 @@ function format_episode(
   episode: MediaSourceRecord & {
     profile: MediaSourceProfileRecord;
     files: ParsedMediaSourceRecord[];
+    subtitles: SubtitleRecord[];
   },
   media_id: string
 ) {
   if (episode === null) {
     return null;
   }
-  const { id, profile, files } = episode;
+  const { id, profile, files, subtitles } = episode;
   const { name, overview, order, runtime, still_path } = profile;
   return {
     id,
@@ -211,6 +224,15 @@ function format_episode(
         id,
         file_name,
         parent_paths,
+      };
+    }),
+    subtitles: subtitles.map((subtitle) => {
+      const { id, type, name, language } = subtitle;
+      return {
+        id,
+        type,
+        name,
+        language,
       };
     }),
   };

@@ -34,7 +34,7 @@ type JobProps = {
   id: string;
   profile: Pick<
     AsyncTaskRecord,
-    "unique_id" | "type" | "status" | "created" | "desc" | "user_id" | "output_id" | "error"
+    "unique_id" | "type" | "status" | "desc" | "user_id" | "output_id" | "error" | "created" | "updated"
   >;
   output: Article;
   store: DatabaseStore;
@@ -48,17 +48,6 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       return Result.Ok(cached_jobs[id]);
     }
     const r1 = await store.prisma.async_task.findFirst({
-      select: {
-        id: true,
-        desc: true,
-        unique_id: true,
-        type: true,
-        created: true,
-        status: true,
-        output: true,
-        output_id: true,
-        error: true,
-      },
       where: {
         id,
         user_id,
@@ -67,7 +56,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (!r1) {
       return Result.Err("没有匹配的任务记录");
     }
-    const { desc, unique_id, type, created, status, output_id, error } = r1;
+    const { desc, unique_id, type, status, error, output_id, created, updated } = r1;
     const job = new Job({
       id,
       profile: {
@@ -75,10 +64,11 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         desc,
         unique_id,
         type,
-        created,
         user_id,
         output_id,
         error,
+        created,
+        updated,
       },
       output: new Article({}),
       store,
@@ -122,7 +112,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         },
       },
     });
-    const { id, status, type: t, output_id, created } = res;
+    const { id, status, type: t, output_id, created, updated } = res;
     const output = new Article({});
     const job = new Job({
       id,
@@ -131,10 +121,11 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         status,
         desc,
         unique_id,
-        created,
         output_id,
         user_id,
         error: null,
+        created,
+        updated,
       },
       output,
       store,
@@ -150,7 +141,6 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   store: DatabaseStore;
   prev_write_time: number;
   timer: null | NodeJS.Timer = null;
-  // start: number;
 
   constructor(options: JobProps) {
     super();
@@ -195,13 +185,14 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     );
   }, 5000);
   update_percent = throttle(async (percent: number) => {
-    console.log("[DOMAIN]job/index - update_percent", percent);
+    console.log("[DOMAIN]job/index - update_percent", `${(percent * 100).toFixed(2)}%`);
     await this.store.prisma.async_task.update({
       where: {
         id: this.id,
       },
       data: {
         percent,
+        updated: dayjs().toISOString(),
       },
     });
   }, 5000);
@@ -219,7 +210,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(false);
   }, 3000);
-  async fetch_profile() {
+  async fetch_profile(with_log: boolean = true) {
     const r1 = await this.store.prisma.async_task.findFirst({
       where: {
         id: this.id,
@@ -232,18 +223,35 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (!r1) {
       return Result.Err("没有匹配的任务记录");
     }
-    const { desc, unique_id, created, status, percent, output, error } = r1;
+    const { id, desc, status, percent, output, error, created, updated } = r1;
     const { filepath } = output;
     if (!filepath) {
       return Result.Ok({
+        id,
         status,
         desc,
-        unique_id,
-        created,
         lines: [],
         percent,
         more_line: false,
         error,
+        created,
+        updated,
+        output_id: output.id,
+      });
+    }
+    if (!with_log) {
+      return Result.Ok({
+        id,
+        status,
+        desc,
+        // unique_id,
+        lines: [],
+        percent,
+        more_line: false,
+        error,
+        output_id: output.id,
+        created,
+        updated,
       });
     }
     let content = "";
@@ -254,14 +262,17 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       // ...
     }
     return Result.Ok({
+      id,
       status,
       desc,
-      unique_id,
-      created,
+      // unique_id,
       lines: content.split("\n").filter(Boolean),
       percent,
       more_line: false,
       error,
+      output_id: output.id,
+      created,
+      updated,
     });
   }
   /**
@@ -406,6 +417,13 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (status === TaskStatus.Running && dayjs(created).add(50, "minute").isBefore(dayjs())) {
       // this.pause({ force: true });
       // return Result.Ok("任务耗时过长，自动中止");
+      return true;
+    }
+    return false;
+  }
+  is_expected_break() {
+    const { status, updated } = this.profile;
+    if (status === TaskStatus.Running && dayjs(updated).add(30, "seconds").isBefore(dayjs())) {
       return true;
     }
     return false;

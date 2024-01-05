@@ -41,6 +41,7 @@ export class Application {
     ensure(path.join(this.assets, "poster"));
     ensure(path.join(this.assets, "thumbnail"));
     ensure(path.join(this.assets, "backdrop"));
+    ensure(path.join(this.assets, "subtitle"));
     ensure(path.join(root_path, "logs"));
     (() => {
       if (cached) {
@@ -67,7 +68,7 @@ export class Application {
         return;
       }
       this.timer = setInterval(() => {
-        console.log("[DOMAIN]Application - tick");
+        // console.log("[DOMAIN]Application - tick");
         this.listeners.forEach((event) => {
           event.elapsed += 1000;
           if (event.elapsed >= event.delay) {

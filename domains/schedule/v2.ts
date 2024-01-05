@@ -22,6 +22,7 @@ import {
   MediaProfileSourceTypes,
   MediaTypes,
   ReportTypes,
+  ResourceSyncTaskStatus,
 } from "@/constants";
 import { r_id } from "@/utils";
 
@@ -301,15 +302,7 @@ export class ScheduleTask {
           return;
         }
         const analysis = r2.data;
-        await analysis.run(
-          tmp_folders.map((file) => {
-            const { name, parent_paths, type } = file;
-            return {
-              name: [parent_paths, name].filter(Boolean).join("/"),
-              type: type === FileType.File ? "file" : "folder",
-            };
-          })
-        );
+        await analysis.run();
         job.output.write_line(["云盘", `[${drive.name}]`, "索引完毕"]);
       },
     });
@@ -364,15 +357,7 @@ export class ScheduleTask {
     }
     const analysis = r2.data;
     // console.log("[API]admin/drive/analysis_quickly/[id].ts - before await analysis.run", tmp_folders.length);
-    await analysis.run(
-      tmp_folders.map((file) => {
-        const { name, parent_paths, type } = file;
-        return {
-          name: [parent_paths, name].filter(Boolean).join("/"),
-          type: type === FileType.File ? "file" : "folder",
-        };
-      })
-    );
+    await analysis.run();
     job.output.write_line(["索引完成"]);
     job.finish();
   }
@@ -644,6 +629,13 @@ export class ScheduleTask {
           include: {
             _count: true,
             profile: true,
+            resource_sync_tasks: {
+              where: {
+                invalid: 0,
+                status: ResourceSyncTaskStatus.WorkInProgress,
+              },
+              take: 10,
+            },
           },
           orderBy: {
             profile: { air_date: "desc" },
@@ -652,7 +644,7 @@ export class ScheduleTask {
         });
       },
       handler: async (media, index) => {
-        const { id, type, _count } = media;
+        const { id, type, resource_sync_tasks, _count } = media;
         const profile = media.profile;
         const tips: string[] = [];
         if (_count.media_sources === 0) {
@@ -661,7 +653,11 @@ export class ScheduleTask {
         if (!profile.in_production && _count.media_sources !== profile.source_count) {
           tips.push(`已完结但集数不完整，总集数 ${profile.source_count}，当前集数 ${_count.media_sources}`);
         }
-        if (profile.in_production && _count.resource_sync_tasks === 0) {
+        if (
+          profile.in_production &&
+          _count.media_sources !== profile.source_count &&
+          resource_sync_tasks.length === 0
+        ) {
           tips.push("未完结但缺少资源同步任务");
         }
         const invalid_media_sources = await this.store.prisma.media_source.findMany({

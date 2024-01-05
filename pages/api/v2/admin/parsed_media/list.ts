@@ -55,6 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return store.prisma.parsed_media.findMany({
         where,
         include: {
+          _count: true,
           parsed_sources: {
             where: {
               media_source_id: null,
@@ -67,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               },
               drive: true,
             },
+            take: 10,
             orderBy: {
               episode_text: "asc",
             },
@@ -89,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: count,
       next_marker: result.next_marker,
       list: result.list.map((parsed_tv) => {
-        const { id, name, type, original_name, season_text, parsed_sources } = parsed_tv;
+        const { id, name, type, original_name, season_text, parsed_sources, _count } = parsed_tv;
         return {
           id,
           type,
@@ -113,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               },
             };
           }),
+          has_more_sources: parsed_sources.length < _count.parsed_sources,
         };
       }),
     },

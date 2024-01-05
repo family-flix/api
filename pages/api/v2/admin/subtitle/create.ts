@@ -9,12 +9,12 @@ import { File, IncomingForm } from "formidable";
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
+import { FileUpload } from "@/domains/uploader";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
 import { build_media_name } from "@/utils/parse_filename_for_video";
 import { r_id } from "@/utils";
-import { FileUpload } from "@/domains/uploader";
 
 export const config = {
   api: {
@@ -27,7 +27,7 @@ function create_subtitle() {}
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { media_source_id, season_text, lang } = req.query as Partial<{
+  const { media_source_id, lang } = req.query as Partial<{
     media_source_id: string;
     season_text: string;
     lang: string;
@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   if (!media_source_id) {
-    return e(Result.Err("缺少剧集集数"));
+    return e(Result.Err("请指定字幕关联剧集"));
   }
   if (!lang) {
     return e(Result.Err("请传入字幕语言"));
@@ -47,10 +47,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     id: media_source_id,
     user_id: user.id,
   };
-  const episode = await store.prisma.media_source.findFirst({
+  const media_source = await store.prisma.media_source.findFirst({
     where,
   });
-  if (!episode) {
+  if (!media_source) {
     return e(Result.Err("没有匹配的视频记录"));
   }
   const $upload = new FileUpload({ root: app.assets });
@@ -77,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   await store.prisma.subtitle_v2.create({
     data: {
       id: r_id(),
-      unique_id: "",
+      unique_id: r.data,
       name: correct_filename,
       language: lang,
       user_id: user.id,

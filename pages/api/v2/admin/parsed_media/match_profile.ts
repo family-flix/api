@@ -21,18 +21,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
+  const user = t_res.data;
   if (!drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
-  const user = t_res.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
-    return e(drive_res);
+    return e(Result.Err(drive_res.error.message));
   }
   const drive = drive_res.data;
   if (!drive.has_root_folder()) {
     return e(Result.Err("请先设置索引目录", 30001));
   }
+  const searcher_res = await MediaSearcher.New({
+    drive,
+    user,
+    store,
+    force: Boolean(force),
+    assets: app.assets,
+    on_print(v) {
+      job.output.write(v);
+    },
+  });
+  if (searcher_res.error) {
+    return e(Result.Err(searcher_res.error.message));
+  }
+  const searcher = searcher_res.data;
   const job_res = await Job.New({
     desc: `云盘「${drive.name}」影视剧搜索详情信息`,
     type: TaskTypes.SearchMedia,
@@ -44,25 +58,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err(job_res.error.message));
   }
   const job = job_res.data;
-  const r2 = await MediaSearcher.New({
-    drive,
-    user,
-    store,
-    force: Boolean(force),
-    assets: app.assets,
-    on_print(v) {
-      job.output.write(v);
-    },
+  searcher.on_percent((percent) => {
+    job.update_percent(percent);
   });
-  if (r2.error) {
-    return e(Result.Err(r2.error.message));
-  }
-  const searcher = r2.data;
-  async function run() {
+  job.on_pause(() => {
+    searcher.stop();
+  });
+  (async () => {
     await searcher.run();
     job.finish();
-  }
-  run();
+  })();
   res.status(200).json({
     code: 0,
     msg: "开始搜索任务",

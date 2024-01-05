@@ -24,6 +24,7 @@ type TheTypesOfEvents = {
 };
 type MovieFileProcessorProps = {
   movie: SearchedMovie;
+  unique_id?: string;
   user_id: string;
   drive_id: string;
   task_id?: string;
@@ -37,13 +38,13 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
   options: {
     user_id: string;
     drive_id: string;
-    task_id?: string;
+    unique_id?: string;
   };
 
   constructor(options: Partial<{} & MovieFileProcessorProps> = {}) {
     super();
 
-    const { movie, user_id, drive_id, task_id, store, on_add_movie } = options;
+    const { movie, user_id, drive_id, unique_id, store, on_add_movie } = options;
     if (!store) {
       throw new Error("缺少数据库实例");
     }
@@ -61,7 +62,7 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
     this.options = {
       user_id,
       drive_id,
-      task_id,
+      unique_id,
     };
     if (on_add_movie) {
       this.on_add_movie(on_add_movie);
@@ -110,6 +111,7 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
           parent_file_id,
           parent_paths,
           size,
+          cause_job_id: this.options.unique_id,
           parsed_media_id: created_parsed_media.id,
           user_id,
           drive_id,
@@ -144,6 +146,7 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
             parent_file_id,
             parent_paths,
             size,
+            cause_job_id: this.options.unique_id,
             parsed_media_id: created_parsed_media.id,
             user_id,
             drive_id,
@@ -209,6 +212,8 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
         },
         data: {
           ...media_source_payload.body,
+          can_search: 1,
+          cause_job_id: this.options.unique_id,
           updated: dayjs().toISOString(),
         },
       });

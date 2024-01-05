@@ -26,6 +26,7 @@ import {
   season,
   season_profile,
   shared_file_in_progress,
+  subtitle_v2,
   tv,
   tv_profile,
 } from "@prisma/client";
@@ -54,6 +55,7 @@ export type MovieProfileRecord = movie_profile;
 export type PersonProfileRecord = person_profile;
 export type PersonRecord = person_in_media;
 export type MediaProfileRecord = media_profile;
+export type SubtitleRecord = subtitle_v2;
 export type MediaSourceProfileRecord = media_source_profile;
 
 export type ReportRecord = report;

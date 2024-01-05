@@ -6,8 +6,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { Member } from "@/domains/user/member";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 import { MediaTypes } from "@/constants";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -43,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       profile: true,
+      subtitles: true,
       files: {
         include: { drive: true },
       },
@@ -57,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const data = {
     list: episodes.map((episode) => {
-      const { id, profile, files } = episode;
+      const { id, profile, files, subtitles } = episode;
       const { name, overview, order, runtime } = profile;
       return {
         id,

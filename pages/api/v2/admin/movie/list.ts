@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
   }
   const count = await store.prisma.media.count({ where });
-  const data = await store.list_with_cursor({
+  const result = await store.list_with_cursor({
     fetch: (args) => {
       return store.prisma.media.findMany({
         where,
@@ -83,49 +83,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     next_marker,
   });
+  const data = {
+    total: count,
+    next_marker: result.next_marker,
+    list: result.list.map((media) => {
+      const { id, profile, media_sources } = media;
+      const { name, original_name, overview, air_date, poster_path, vote_average, origin_country, genres } = profile;
+      const source_count = media_sources.reduce((count, cur) => {
+        return count + cur._count.files;
+      }, 0);
+      const tips: string[] = [];
+      if (source_count === 0) {
+        tips.push("没有可播放的视频源");
+      }
+      return {
+        id,
+        name,
+        original_name,
+        overview,
+        air_date,
+        poster_path,
+        vote_average,
+        origin_country: origin_country.map((country) => country.id),
+        genres: genres.map((genre) => {
+          const { id, text } = genre;
+          return {
+            value: id,
+            label: text,
+          };
+        }),
+        runtime: (() => {
+          if (media_sources.length === 0) {
+            return null;
+          }
+          const { runtime } = media_sources[0].profile;
+          return runtime;
+        })(),
+        tips,
+        persons: [],
+      };
+    }),
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      ...data,
-      total: count,
-      list: data.list.map((media) => {
-        const { id, profile, media_sources } = media;
-        const { name, original_name, overview, air_date, poster_path, vote_average, origin_country, genres } = profile;
-        const source_count = media_sources.reduce((count, cur) => {
-          return count + cur._count.files;
-        }, 0);
-        const tips: string[] = [];
-        if (source_count === 0) {
-          tips.push("没有可播放的视频源");
-        }
-        return {
-          id,
-          name,
-          original_name,
-          overview,
-          air_date,
-          poster_path,
-          vote_average,
-          origin_country: origin_country.map((country) => country.id),
-          genres: genres.map((genre) => {
-            const { id, text } = genre;
-            return {
-              value: id,
-              label: text,
-            };
-          }),
-          runtime: (() => {
-            if (media_sources.length === 0) {
-              return null;
-            }
-            const { runtime } = media_sources[0].profile;
-            return runtime;
-          })(),
-          tips,
-          persons: [],
-        };
-      }),
-    },
+    data,
   });
 }

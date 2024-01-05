@@ -33,35 +33,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (status) {
     where.status = status;
   }
-  const list = await store.prisma.async_task.findMany({
-    where,
-    skip: (page - 1) * page_size,
-    take: page_size,
-    orderBy: {
-      created: "desc",
+  const count = await store.prisma.async_task.count({ where });
+  const result = await store.list_with_cursor({
+    fetch(extra) {
+      return store.prisma.async_task.findMany({
+        where,
+        orderBy: {
+          created: "desc",
+        },
+        ...extra,
+      });
     },
   });
-  const count = await store.prisma.async_task.count({ where });
+  const data = {
+    total: count,
+    next_marker: result.next_marker,
+    list: result.list.map((item) => {
+      const { id, type, desc, status, error, output_id, created, updated } = item;
+      return {
+        id,
+        desc,
+        status,
+        type,
+        error,
+        output_id,
+        created,
+        updated,
+      };
+    }),
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      page,
-      page_size,
-      total: count,
-      no_more: list.length + (page - 1) * page_size >= count,
-      list: list.map((item) => {
-        const { id, type, desc, status, created, error, unique_id } = item;
-        return {
-          id,
-          desc,
-          status,
-          type,
-          created,
-          error,
-          unique_id,
-        };
-      }),
-    },
+    data,
   });
 }
