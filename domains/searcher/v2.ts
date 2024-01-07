@@ -433,7 +433,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       if (this.cached_media_profile_records[unique_key] !== undefined) {
         return this.cached_media_profile_records[unique_key];
       }
-      // console.log("before fetch_season_media_profile_record", name, original_name, unique_key);
+      // console.log("before fetch_season_media_profile_record", name, original_name, season_text, year, unique_key);
       const r = await this.fetch_season_media_profile_record({
         name,
         original_name,

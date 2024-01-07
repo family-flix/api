@@ -16,4 +16,15 @@ describe("电视剧4", () => {
       episode: "E01",
     });
   });
+  test("Unforgettable.S310.mkv", () => {
+    // @todo 没有剧集，将 季 认为是序号，拼接在名字后面
+    const name = "Unforgettable.S310.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Unforgettable310",
+      season: "",
+      episode: "",
+    });
+  });
 });

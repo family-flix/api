@@ -65,21 +65,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     const client = client_res.data;
     cached_drive = client;
-    const r1 = await client.fetch_share_profile(url, {
-      code,
-    });
-    if (r1.error) {
-      if (r1.error.message.includes("share_link is cancelled by the creator")) {
-        return Result.Err("分享链接被取消");
-      }
-      return Result.Err(r1.error.message);
-    }
     return Result.Ok(client);
   })();
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
   const client = r.data;
+  const r1 = await client.fetch_share_profile(url, {
+    code,
+  });
+  if (r1.error) {
+    if (r1.error.message.includes("share_link is cancelled by the creator")) {
+      return Result.Err("分享链接被取消");
+    }
+    return Result.Err(r1.error.message);
+  }
   const r2 = await client.fetch_shared_files(parent_file_id, {
     marker: next_marker,
     share_id,

@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       await (async () => {
         const url = resources_urls[i];
         job.output.write_line([url]);
-        drive.client.share_token = null;
+        // drive.client.share_token = null;
         const profile_res = await drive.client.fetch_share_profile(url, { force: true });
         if (profile_res.error) {
           job.output.write_line(["获取资源详情失败，因为", profile_res.error.message]);

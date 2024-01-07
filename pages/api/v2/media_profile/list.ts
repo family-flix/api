@@ -54,6 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
     }
   }
+  const count = await store.prisma.media_profile.count({ where });
   const result = await store.list_with_cursor({
     fetch: (args) => {
       return store.prisma.media_profile.findMany({
@@ -70,24 +71,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     next_marker,
   });
+  const data = {
+    list: result.list.map((media_profile) => {
+      const { id, type, name, original_name, poster_path, overview, air_date, order } = media_profile;
+      return {
+        id,
+        type,
+        name,
+        original_name: name === original_name ? null : original_name,
+        poster_path,
+        overview,
+        air_date,
+        order,
+      };
+    }),
+    next_marker: result.next_marker,
+    total: count,
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      list: result.list.map((media_profile) => {
-        const { id, type, name, original_name, poster_path, overview, air_date, order } = media_profile;
-        return {
-          id,
-          type,
-          name,
-          original_name: name === original_name ? null : original_name,
-          poster_path,
-          overview,
-          air_date,
-          order,
-        };
-      }),
-      next_marker: result.next_marker,
-    },
+    data,
   });
 }

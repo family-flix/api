@@ -90,23 +90,23 @@ async function main() {
           console.log(profile.name, "没有对应的剧集", season_number, episode_number);
           return;
         }
-        await store.prisma.play_history_v2.create({
-          data: {
-            id: r_id(),
-            created,
-            updated,
-            duration: duration || 0,
-            current_time: current_time || 0,
-            text: (() => {
-              return [matched_media.profile.name].join("/");
-            })(),
-            thumbnail_path: thumbnail,
-            file_id,
-            media_id: matched_media.id,
-            media_source_id: matched_media_source.id,
-            member_id: member.id,
-          },
-        });
+        // await store.prisma.play_history_v2.create({
+        //   data: {
+        //     id,
+        //     created,
+        //     updated,
+        //     duration: duration || 0,
+        //     current_time: current_time || 0,
+        //     text: (() => {
+        //       return [matched_media.profile.name].join("/");
+        //     })(),
+        //     thumbnail_path: thumbnail,
+        //     file_id,
+        //     media_id: matched_media.id,
+        //     media_source_id: matched_media_source.id,
+        //     member_id: member.id,
+        //   },
+        // });
         return;
       }
       if (movie) {
@@ -145,23 +145,23 @@ async function main() {
           console.log(profile.name, "没有匹配的电影2");
           return;
         }
-        await store.prisma.play_history_v2.create({
-          data: {
-            id,
-            created,
-            updated,
-            duration: duration || 0,
-            current_time: current_time || 0,
-            text: (() => {
-              return [matched_media.profile.name].join("/");
-            })(),
-            thumbnail_path: thumbnail,
-            file_id,
-            media_id: matched_media.id,
-            media_source_id: matched_media_source.id,
-            member_id: member.id,
-          },
-        });
+        // await store.prisma.play_history_v2.create({
+        //   data: {
+        //     id,
+        //     created,
+        //     updated,
+        //     duration: duration || 0,
+        //     current_time: current_time || 0,
+        //     text: (() => {
+        //       return [matched_media.profile.name].join("/");
+        //     })(),
+        //     thumbnail_path: thumbnail,
+        //     file_id,
+        //     media_id: matched_media.id,
+        //     media_source_id: matched_media_source.id,
+        //     member_id: member.id,
+        //   },
+        // });
         return;
       }
     },

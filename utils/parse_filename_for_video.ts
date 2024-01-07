@@ -44,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("大蛇4")) {
+    if (!filename.includes("Unforgettable")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -934,7 +934,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
-      regexp: /[^A-Za-z]([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})/,
+      regexp: /\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})/,
       pick: [1],
     },
     {

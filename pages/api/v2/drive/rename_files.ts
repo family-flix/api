@@ -16,11 +16,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
-    id,
+    drive_id: id,
     file_id: folder_id,
     regexp,
     replace,
-  } = req.body as Partial<{ id: string; file_id: string; regexp: string; replace: string }>;
+  } = req.body as Partial<{ drive_id: string; file_id: string; regexp: string; replace: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);

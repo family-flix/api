@@ -1,5 +1,5 @@
 /**
- * @file 删除指定视频源（不删除文件）
+ * @file 删除指定影视剧详情
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -12,27 +12,26 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { parsed_media_source_id } = req.body as Partial<{ parsed_media_source_id: string }>;
+  const { media_profile_id } = req.query as Partial<{ media_profile_id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  if (!parsed_media_source_id) {
-    return e(Result.Err("缺少影片 id"));
+  if (!media_profile_id) {
+    return e(Result.Err("缺少 id"));
   }
-  const media_source = await store.prisma.parsed_media_source.findFirst({
+  const existing = await store.prisma.media_profile.findFirst({
     where: {
-      id: parsed_media_source_id,
-      user_id: user.id,
+      id: media_profile_id,
     },
   });
-  if (!media_source) {
-    return e(Result.Err("没有匹配的影片记录"));
+  if (!existing) {
+    return e(Result.Err("没有匹配的记录"));
   }
-  await store.prisma.parsed_media_source.delete({
+  await store.prisma.media_profile.delete({
     where: {
-      id: media_source.id,
+      id: media_profile_id,
     },
   });
   res.status(200).json({ code: 0, msg: "删除成功", data: null });

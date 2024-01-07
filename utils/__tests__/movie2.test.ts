@@ -26,4 +26,14 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("S01E012：掠夺者.mp4", () => {
+    const name = "S01E012：掠夺者.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "S01",
+      episode: "E12",
+    });
+  });
 });

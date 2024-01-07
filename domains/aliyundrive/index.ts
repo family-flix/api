@@ -168,8 +168,13 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
   used_size: number = 0;
   total_size: number = 0;
   expired_at: null | Dayjs = null;
-  share_token: string | null = null;
-  share_token_expired_at: number | null = null;
+  share_token: Record<
+    string,
+    {
+      token: string;
+      expired_at: number;
+    }
+  > = {};
 
   /** 请求客户端 */
   request: RequestClient;
@@ -828,7 +833,6 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(result.data);
   }
-  cached_share_token: Record<string, string> = {};
   async fetch_share_token(body: { url: string; code?: string }) {
     const { url, code } = body;
     const matched_share_id = url.match(/\/s\/([a-zA-Z0-9]{1,})$/);
@@ -857,11 +861,11 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("Invalid url, it must includes share_id like 'hFgvpSXzCYd' at the end of url");
     }
     const share_id = matched_share_id[1];
-    if (this.share_token && force === false) {
+    if (this.share_token[share_id] && force === false) {
       // 如果曾经调用过该方法获取到了 share_token，再次调用时就不会真正去调用了，而是复用之前获取到的
       return Result.Ok({
         share_id,
-        share_token: this.share_token,
+        share_token: this.share_token[share_id].token,
         share_name: undefined,
         share_title: undefined,
         files: [] as { file_id: string; file_name: string; type: "folder" | "file" }[],
@@ -885,7 +889,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r1.error);
     }
     const share_token_resp = await (async () => {
-      if (!this.share_token || !this.share_token_expired_at || dayjs(this.share_token_expired_at).isBefore(dayjs())) {
+      if (!this.share_token[share_id]) {
         const r2 = await this.request.post<{
           share_token: string;
           expire_time: string;
@@ -898,13 +902,17 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
           return Result.Err(r2.error);
         }
         const { share_token, expires_in } = r2.data;
-        this.share_token_expired_at = dayjs().add(expires_in, "second").valueOf();
+        this.share_token[share_id] = {
+          token: share_token,
+          expired_at: dayjs().add(expires_in, "second").valueOf(),
+        };
+        // this.share_token_expired_at = dayjs().add(expires_in, "second").valueOf();
         return Result.Ok({
           share_token,
         });
       }
       return Result.Ok({
-        share_token: this.share_token,
+        share_token: this.share_token[share_id].token,
       });
     })();
     if (share_token_resp.error) {
@@ -912,7 +920,10 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     const token = share_token_resp.data.share_token;
     const { share_name, share_title, file_infos } = r1.data;
-    this.share_token = token;
+    this.share_token[share_id] = {
+      token,
+      expired_at: 0,
+    };
     return Result.Ok({
       share_token: token,
       share_id,
@@ -929,10 +940,13 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       marker: string;
     }>
   ) {
+    const { page_size = 20, share_id, marker } = options;
     if (this.share_token === null) {
       return Result.Err("Please invoke fetch_share_profile first");
     }
-    const { page_size = 20, share_id, marker } = options;
+    if (!share_id) {
+      return Result.Err("Please invoke fetch_share_profile first");
+    }
     const r3 = await this.request.post<{
       items: AliyunDriveFileResp[];
       next_marker: string;
@@ -950,7 +964,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
         video_thumbnail_process: "video/snapshot,t_1000,f_jpg,ar_auto,w_256",
       },
       {
-        "x-share-token": this.share_token,
+        "x-share-token": this.share_token[share_id].token,
       }
     );
     return r3;
@@ -963,10 +977,13 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       marker: string;
     }>
   ) {
+    const { page_size = 20, share_id } = options;
     if (this.share_token === null) {
       return Result.Err("Please invoke fetch_share_profile first");
     }
-    const { page_size = 20, share_id } = options;
+    if (!share_id) {
+      return Result.Err("Please invoke fetch_share_profile first");
+    }
     const r3 = await this.request.post<{
       items: AliyunDriveFileResp[];
     }>(
@@ -978,7 +995,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
         share_id,
       },
       {
-        "x-share-token": this.share_token,
+        "x-share-token": this.share_token[share_id].token,
       }
     );
     return r3;
@@ -1007,6 +1024,9 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (this.share_token === null) {
       return Result.Err("请先调用 fetch_share_profile 方法");
     }
+    if (!r1.data.share_id) {
+      return Result.Err("请先调用 fetch_share_profile 方法");
+    }
     const { share_id, share_title, share_name } = r1.data;
     // console.log("target folder id", target_file_id, this.root_folder_id);
     const r2 = await this.request.post(
@@ -1018,7 +1038,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
         to_drive_id: String(this.drive_id),
       },
       {
-        "x-share-token": this.share_token,
+        "x-share-token": this.share_token[r1.data.share_id].token,
       }
     );
     if (r2.error) {
@@ -1101,7 +1121,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
         status: number;
       }[];
     }>(API_HOST + "/adrive/v2/batch", body, {
-      "x-share-token": this.share_token,
+      "x-share-token": this.share_token[share_id].token,
     });
     if (r2.error) {
       this.emit(Events.TransferFailed, r2.error);
@@ -1264,7 +1284,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
         status: number;
       }[];
     }>(API_HOST + "/adrive/v2/batch", body, {
-      "x-share-token": this.share_token,
+      // "x-share-token": this.share_token[share_id].token,
     });
     if (r2.error) {
       return Result.Err(r2.error);
