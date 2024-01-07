@@ -30,17 +30,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     fetch: (args) => {
       return store.prisma.member_diary.findMany({
         where,
-        include: {
-          media_source: {
-            include: {
-              media: {
-                include: {
-                  profile: true,
-                },
-              },
-            },
-          },
-        },
+        // include: {
+        //   media_source: {
+        //     include: {
+        //       media: {
+        //         include: {
+        //           profile: true,
+        //         },
+        //       },
+        //     },
+        //   },
+        // },
         orderBy: {
           created: "desc",
         },
@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     data: {
       next_marker: data.next_marker,
       list: data.list.map((diary) => {
-        const { id, day, media_source, content, created } = diary;
+        const { id, day, content, created } = diary;
         return {
           id,
           day,

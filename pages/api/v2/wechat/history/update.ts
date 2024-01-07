@@ -117,26 +117,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         });
       });
   }
-  (async () => {
-    const diary = await store.prisma.member_diary.findFirst({
-      where: {
-        media_source_id,
-        day: dayjs().format("YYYY-MM-DD"),
-        member_id: member.id,
-      },
-    });
-    if (diary) {
-      return;
-    }
-    await store.prisma.member_diary.create({
-      data: {
-        id: r_id(),
-        media_source_id,
-        day: dayjs().format("YYYY-MM-DD"),
-        member_id: member.id,
-      },
-    });
-  })();
+  // (async () => {
+  //   const diary = await store.prisma.member_diary.findFirst({
+  //     where: {
+  //       media_source_id,
+  //       day: dayjs().format("YYYY-MM-DD"),
+  //       member_id: member.id,
+  //     },
+  //   });
+  //   if (diary) {
+  //     return;
+  //   }
+  //   await store.prisma.member_diary.create({
+  //     data: {
+  //       id: r_id(),
+  //       media_source_id,
+  //       day: dayjs().format("YYYY-MM-DD"),
+  //       member_id: member.id,
+  //     },
+  //   });
+  // })();
   const existing_history = await store.prisma.play_history_v2.findFirst({
     where: {
       media_id,
