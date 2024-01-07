@@ -84,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     assets: app.assets,
   });
   if (searcher_res.error) {
-    return Result.Err(searcher_res.error.message);
+    return e(Result.Err(searcher_res.error.message));
   }
   const searcher = searcher_res.data;
   if (profile.type === MediaTypes.Movie) {
@@ -132,12 +132,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         parsed_media: updated_parsed_media,
       });
     }
-    // job.finish();
     res.status(200).json({ code: 0, msg: "变更详情成功", data: null });
     return;
   }
-  // job.finish();
-  // run(parsed_media, media_profile);
-  // res.status(200).json({ code: 0, msg: "变更详情成功", data: null });
   return e(Result.Err("未知的 type"));
 }

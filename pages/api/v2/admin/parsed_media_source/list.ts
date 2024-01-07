@@ -77,10 +77,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
           drive: true,
         },
-        orderBy: {
-          episode_text: "asc",
-          created: "desc",
-        },
+        orderBy: [
+          {
+            episode_text: "asc",
+          },
+          {
+            created: "desc",
+          },
+        ],
         ...args,
       });
     },

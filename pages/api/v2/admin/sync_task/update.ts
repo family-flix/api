@@ -10,6 +10,7 @@ import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
+import { ResourceSyncTaskStatus } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -30,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     assets: app.assets,
   });
   if (task_res.error) {
-    return e(task_res);
+    return e(Result.Err(task_res.error.message));
   }
   const task = task_res.data;
   const season = await store.prisma.media.findFirst({
@@ -48,6 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     data: {
       updated: dayjs().toISOString(),
+      status: ResourceSyncTaskStatus.WorkInProgress,
       media_id: season_id,
     },
   });

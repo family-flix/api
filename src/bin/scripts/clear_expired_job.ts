@@ -12,16 +12,16 @@ async function clear_expired_job_outlines() {
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
-  console.log('Start');
+  console.log("Start");
   await walk_model_with_cursor({
     fn(extra) {
-      return store.prisma.output_line.findMany({
+      return store.prisma.resource_sync_task.findMany({
         ...extra,
       });
     },
     async batch_handler(list, i) {
       console.log(i);
-      await store.prisma.output_line.deleteMany({
+      await store.prisma.resource_sync_task.deleteMany({
         where: {
           id: {
             in: list.map((d) => d.id),
@@ -29,14 +29,6 @@ async function clear_expired_job_outlines() {
         },
       });
     },
-    // async handler(data, index, finish) {
-    //   console.log(index);
-    //   await store.prisma.output_line.delete({
-    //     where: {
-    //       id: data.id,
-    //     },
-    //   });
-    // },
   });
   console.log("Success");
 }

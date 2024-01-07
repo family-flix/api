@@ -18,6 +18,9 @@ async function main() {
   await walk_model_with_cursor({
     fn(extra) {
       return store.prisma.bind_for_parsed_tv.findMany({
+        where: {
+          in_production: 1,
+        },
         include: {
           season: {
             include: {
@@ -63,7 +66,7 @@ async function main() {
         if (!season) {
           return null;
         }
-        const { profile } = season;
+        const { profile } = season.tv;
         const r = parseJSONStr<{ tmdb_id: string }>(profile.sources);
         if (r.error) {
           console.log(profile.name, "没有记录 tmdb_id");
@@ -89,7 +92,7 @@ async function main() {
       })();
       await store.prisma.resource_sync_task.create({
         data: {
-          id: r_id(),
+          id,
           created,
           updated,
           status: (() => {

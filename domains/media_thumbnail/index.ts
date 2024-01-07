@@ -53,13 +53,13 @@ export class MediaThumbnail {
   }) {
     const { file_id, cur_time: original_cur_time, drive, store, filename } = body;
     if (!file_id) {
-      return Result.Ok(null);
+      return Result.Err("异常1");
     }
     const cur_time = format_number_with_3decimals(original_cur_time);
     const client = drive.client;
     const thumbnail_res = await client.generate_thumbnail({ file_id, cur_time: cur_time.replace(".", "") });
     if (thumbnail_res.error) {
-      return Result.Ok(null);
+      return Result.Err("异常2");
     }
     const name = filename(cur_time);
     const key = `/thumbnail/${name}.jpg`;
@@ -67,7 +67,7 @@ export class MediaThumbnail {
     // const filepath = path.join(this.assets, key);
     const r = await this.$upload.download(thumbnail_res.data.responseUrl, key);
     if (r.error) {
-      return Result.Ok(null);
+      return Result.Err(r.error.message);
     }
     return Result.Ok({
       original_path: thumbnail_res.data.responseUrl,
