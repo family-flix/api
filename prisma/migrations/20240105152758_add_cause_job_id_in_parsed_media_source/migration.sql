@@ -16,7 +16,9 @@ CREATE TABLE "new_MemberDiary" (
     "day" TEXT NOT NULL,
     "content" TEXT,
     "profile" TEXT,
+    "media_source_id" TEXT NOT NULL,
     "member_id" TEXT NOT NULL,
+    CONSTRAINT "MemberDiary_media_source_id_fkey" FOREIGN KEY ("media_source_id") REFERENCES "MediaSource" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "MemberDiary_member_id_fkey" FOREIGN KEY ("member_id") REFERENCES "Member" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 INSERT INTO "new_MemberDiary" ("content", "created", "day", "id", "member_id", "profile", "updated") SELECT "content", "created", "day", "id", "member_id", "profile", "updated" FROM "MemberDiary";
