@@ -216,17 +216,16 @@ export class ScheduleTask {
       return Result.Err(job_res.error.message);
     }
     const job = job_res.data;
-    const where: ModelQuery<"bind_for_parsed_tv"> = {
-      season_id: { not: null },
-      in_production: 1,
+    const where: ModelQuery<"resource_sync_task"> = {
+      status: ResourceSyncTaskStatus.WorkInProgress,
       invalid: 0,
       user_id: user.id,
     };
-    const count = await this.store.prisma.bind_for_parsed_tv.count({ where });
+    const count = await this.store.prisma.resource_sync_task.count({ where });
     job.output.write_line(["共", count, "个同步任务"]);
     await walk_model_with_cursor({
       fn: (extra) => {
-        return this.store.prisma.bind_for_parsed_tv.findMany({
+        return this.store.prisma.resource_sync_task.findMany({
           where,
           ...extra,
         });
@@ -285,11 +284,11 @@ export class ScheduleTask {
           store: this.store,
           user,
           assets: this.app.assets,
-          extra_scope: tmp_folders
-            .map((tv) => {
-              return tv.name;
-            })
-            .filter(Boolean) as string[],
+          // extra_scope: tmp_folders
+          //   .map((tv) => {
+          //     return tv.name;
+          //   })
+          //   .filter(Boolean) as string[],
           on_print(v) {
             job.output.write(v);
           },
@@ -302,7 +301,20 @@ export class ScheduleTask {
           return;
         }
         const analysis = r2.data;
-        await analysis.run();
+        await analysis.run2(
+          tmp_folders
+            .filter((f) => {
+              return f.file_id;
+            })
+            .map((file) => {
+              const { file_id, name, type } = file;
+              return {
+                file_id: file_id as string,
+                name,
+                type,
+              };
+            })
+        );
         job.output.write_line(["云盘", `[${drive.name}]`, "索引完毕"]);
       },
     });

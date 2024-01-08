@@ -2,7 +2,7 @@ import CronJob from "cron";
 import dayjs from "dayjs";
 
 import { Application } from "@/domains/application";
-import { ScheduleTask } from "@/domains/schedule";
+import { ScheduleTask } from "@/domains/schedule/v2";
 
 import { notice_push_deer } from "../notice";
 
@@ -66,13 +66,13 @@ import { notice_push_deer } from "../notice";
     "0 15 8-23 * * *",
     async () => {
       console.log("执行任务 at 0 15 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      await schedule.update_sync_task_resources(
-        "https://docs.qq.com/dop-api/opendoc?u=&id=DQmx1WEdTRXpGeEZ6&normal=1&outformat=1&noEscape=1&commandsFormat=1&preview_token=&doc_chunk_flag=1"
-      );
+      // await schedule.update_sync_task_resources(
+      //   "https://docs.qq.com/dop-api/opendoc?u=&id=DQmx1WEdTRXpGeEZ6&normal=1&outformat=1&noEscape=1&commandsFormat=1&preview_token=&doc_chunk_flag=1"
+      // );
       await schedule.run_sync_task_list();
       await schedule.update_daily_updated();
-      await schedule.find_duplicated_medias();
-      await schedule.find_media_errors();
+      // await schedule.find_duplicated_medias();
+      await schedule.find_media_and_media_source_errors();
       await schedule.update_stats();
     },
     null,
