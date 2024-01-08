@@ -44,14 +44,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
         orderBy: [
           {
-            type: "asc",
-          },
-          {
             media: {
               profile: {
-                order: "asc",
+                air_date: "asc",
               },
             },
+          },
+          {
+            type: "asc",
           },
         ],
         ...args,

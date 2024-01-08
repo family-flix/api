@@ -650,15 +650,13 @@ export class ScheduleTask {
         if (_count.media_sources === 0) {
           tips.push("关联的剧集数为 0");
         }
-        if (!profile.in_production && _count.media_sources !== profile.source_count) {
-          tips.push(`已完结但集数不完整，总集数 ${profile.source_count}，当前集数 ${_count.media_sources}`);
-        }
-        if (
-          profile.in_production &&
-          _count.media_sources !== profile.source_count &&
-          resource_sync_tasks.length === 0
-        ) {
-          tips.push("未完结但缺少资源同步任务");
+        if (_count.media_sources !== profile.source_count) {
+          if (resource_sync_tasks.length === 0) {
+            tips.push("集数不全且没有同步任务");
+          }
+          if (!profile.in_production) {
+            tips.push(`已完结但集数不全，总集数 ${profile.source_count}，当前集数 ${_count.media_sources}`);
+          }
         }
         const invalid_media_sources = await this.store.prisma.media_source.findMany({
           where: {
@@ -683,7 +681,6 @@ export class ScheduleTask {
         const existing = await this.store.prisma.invalid_media.findFirst({
           where: {
             media_id: media.id,
-            type: MediaErrorTypes.Season,
             user_id: user.id,
           },
         });
@@ -693,7 +690,7 @@ export class ScheduleTask {
               id: existing.id,
             },
             data: {
-              type: MediaErrorTypes.Season,
+              type,
               profile: JSON.stringify(payload),
               updated: dayjs().toISOString(),
             },
@@ -704,7 +701,7 @@ export class ScheduleTask {
           data: {
             id: r_id(),
             media_id: media.id,
-            type: MediaErrorTypes.Season,
+            type,
             profile: JSON.stringify(payload),
             user_id: user.id,
           },

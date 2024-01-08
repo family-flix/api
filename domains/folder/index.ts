@@ -101,7 +101,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   /** 深度递归 */
-  async walk(handler: (file: File | Folder) => Promise<boolean>) {
+  async walk(handler: (file: File | Folder) => Promise<boolean>, options: Partial<{ deep: boolean }> = { deep: true }) {
     if (this.client === null) {
       throw new Error("缺少云盘操作实例");
     }
@@ -122,7 +122,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
         if (!can_continue) {
           return Result.Ok(null);
         }
-        if (file instanceof Folder) {
+        if (file instanceof Folder && options.deep) {
           await file.walk(handler);
         }
       }

@@ -47,6 +47,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           contains: name,
         },
       },
+      {
+        media_profile: {
+          OR: [
+            {
+              name: {
+                contains: name,
+              },
+            },
+            {
+              original_name: {
+                contains: name,
+              },
+            },
+          ],
+        },
+      },
     ];
   }
   const count = await store.prisma.parsed_media.count({ where });

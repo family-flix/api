@@ -992,18 +992,28 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
   async search_shared_files(
     keyword: string,
     options: Partial<{
+      url: string;
+      code: string;
       page_size: number;
       share_id: string;
       marker: string;
     }>
   ) {
-    const { page_size = 20, share_id } = options;
+    const { page_size = 20, url, share_id } = options;
     if (this.share_token === null) {
       return Result.Err("Please invoke fetch_share_profile first");
     }
     if (!share_id) {
       return Result.Err("Please invoke fetch_share_profile first");
     }
+    const share_token = this.share_token[share_id]?.token;
+    // console.log("[DOMAIN]aliyundrive/index - search_shared_files", share_token);
+    // if (!share_token) {
+    //   if (!url) {
+    //     return Result.Err("缺少 token 而且缺少 url");
+    //   }
+    //   await this.fetch_share_profile(url, options);
+    // }
     const r3 = await this.request.post<{
       items: AliyunDriveFileResp[];
     }>(
@@ -1015,7 +1025,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
         share_id,
       },
       {
-        "x-share-token": this.share_token[share_id].token,
+        "x-share-token": share_token,
       }
     );
     return r3;

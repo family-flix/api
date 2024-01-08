@@ -60,51 +60,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   async function run(parent: { regexp: string; replace: string }) {
     const { regexp, replace } = parent;
     job.output.write_line(["开始重命名"]);
-    let error_count = 0;
-    do {
-      if (error_count >= 6) {
-        // 文件列表请求失败超过6次就中断
-        folder.next_marker = "";
-      }
-      await (async () => {
-        const r = await folder.next();
+    const files_has_modify: Record<string, boolean> = {};
+    await folder.walk(
+      async (file) => {
+        if (files_has_modify[file.id]) {
+          return true;
+        }
+        const prefix = `[${file.name}]`;
+        const reg = new RegExp(regexp);
+        if (!file.name.match(reg)) {
+          job.output.write_line([prefix, "不匹配，无需修改"]);
+          return true;
+        }
+        const next_name = file.name.replace(reg, replace);
+        job.output.write_line([prefix, "新文件名是", next_name]);
+        if (file.name === next_name) {
+          job.output.write_line([prefix, "文件名已经是", next_name, "直接跳过"]);
+          return true;
+        }
+        const r = await drive.rename_file(
+          {
+            file_id: file.id,
+          },
+          { name: next_name }
+        );
         if (r.error) {
-          job.output.write_line(["请求失败", r.error.message]);
-          error_count += 1;
-          return;
+          job.output.write_line([prefix, "重命名失败，因为", r.error.message]);
+          return true;
         }
-        const result = r.data;
-        if (!result) {
-          job.output.write_line(["没有文件"]);
-          error_count += 1;
-          return;
-        }
-        for (let i = 0; i < result.length; i += 1) {
-          await (async () => {
-            const file = result[i];
-            const prefix = `[${file.name}]`;
-            const next_name = file.name.replace(new RegExp(regexp), replace);
-            job.output.write_line([prefix, "新文件名是", next_name]);
-            if (file.name === next_name) {
-              job.output.write_line([prefix, "文件名已经是", next_name, "直接跳过"]);
-              return;
-            }
-            const r = await drive.rename_file(
-              {
-                file_id: file.id,
-              },
-              { name: next_name }
-            );
-            if (r.error) {
-              job.output.write_line([prefix, "重命名失败，因为", r.error.message]);
-              return;
-            }
-            job.output.write_line([prefix, "重命名完成"]);
-          })();
-        }
-      })();
-    } while (folder.next_marker);
-    job.output.write_line(["重命名成功"]);
+        files_has_modify[file.id] = true;
+        job.output.write_line([prefix, "重命名完成"]);
+        return true;
+      },
+      { deep: false }
+    );
+    job.output.write_line(["所有文件重命名成功"]);
     job.finish();
   }
   run({

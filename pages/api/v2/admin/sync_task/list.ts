@@ -34,9 +34,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const user = t_res.data;
   const queries: NonNullable<ModelQuery<"resource_sync_task">>[] = [
     {
-      status: {
-        not: ResourceSyncTaskStatus.WaitLinkFolder,
-      },
+      OR: [
+        {
+          status: ResourceSyncTaskStatus.WaitSetProfile,
+        },
+        {
+          status: ResourceSyncTaskStatus.WorkInProgress,
+        },
+      ],
       invalid,
     },
   ];
