@@ -874,7 +874,8 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
    * 获取分享详情
    * @param url 分享链接
    */
-  async fetch_share_profile(url: string, options: Partial<{ code: string; force: boolean }> = {}) {
+  async fetch_share_profile(url: string, options: Partial<{ code: string | null; force: boolean }> = {}) {
+    console.log("[DOMAIN]fetch_share_profile", url, options);
     const { code, force = false } = options;
     const matched_share_id = url.match(/\/s\/([a-zA-Z0-9]{1,})$/);
     if (!matched_share_id) {
@@ -939,7 +940,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(share_token_resp.error);
     }
     const token = share_token_resp.data.share_token;
-    const { share_name, share_title, file_infos } = r1.data;
+    const { share_name, share_title, file_infos = [] } = r1.data;
     this.share_token[share_id] = {
       token,
       expired_at: 0,
@@ -1105,6 +1106,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       this.emit(Events.TransferFailed, error);
       return Result.Err(error);
     }
+    console.log(r1.data);
     const { share_id, share_title, share_name, files } = r1.data;
     this.emit(
       Events.Print,

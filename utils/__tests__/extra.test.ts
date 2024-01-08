@@ -250,6 +250,16 @@ describe("番外", () => {
       episode: "特辑01",
     });
   });
+  // test("S01ED01-LOST IN PARADISE [ALI feat. AKLO].mkv", () => {
+  //   const name = "S01ED01-LOST IN PARADISE [ALI feat. AKLO].mkv";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "",
+  //     original_name: "",
+  //     season: "S01",
+  //     episode: "ED01",
+  //   });
+  // });
   // test("0617彩蛋第1期_Tacit0924.mp4", () => {
   //   const name = "0617彩蛋第1期_Tacit0924.mp4";
   //   const result = parse_filename_for_video(name);

@@ -72,7 +72,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           job.output.write_line([prefix, "不匹配，无需修改"]);
           return true;
         }
-        const next_name = file.name.replace(reg, replace);
+        const next_name = file.name.replace(
+          reg,
+          (() => {
+            if (replace === "EMPTY") {
+              return "";
+            }
+            return replace;
+          })()
+        );
         job.output.write_line([prefix, "新文件名是", next_name]);
         if (file.name === next_name) {
           job.output.write_line([prefix, "文件名已经是", next_name, "直接跳过"]);

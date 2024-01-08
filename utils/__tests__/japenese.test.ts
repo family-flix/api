@@ -361,4 +361,24 @@ describe("动漫", () => {
       episode: "",
     });
   });
+  test("Saiki Kusuo no Psi Nan 2x02.mkv", () => {
+    const name = "Saiki Kusuo no Psi Nan 2x02.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Saiki.Kusuo.no.Psi.Nan",
+      season: "S02",
+      episode: "E02",
+    });
+  });
+  test("S01E01-Ryomen Sukuna.mkv", () => {
+    const name = "S01E01-Ryomen Sukuna.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "S01",
+      episode: "E01",
+    });
+  });
 });

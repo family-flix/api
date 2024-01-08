@@ -44,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("Unforgettable")) {
+    if (!filename.includes("Leon")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -244,8 +244,8 @@ export function parse_filename_for_video(
     "MyTVSuper",
     "SS的笔记",
     "FLTTH",
-    "BOBO",
-    "Prof",
+    "\\bBOBO",
+    "\\bProf\\b",
     "CYW",
     "Ma10p",
   ]
@@ -364,7 +364,7 @@ export function parse_filename_for_video(
     {
       key: k("voice_type"),
       regexp:
-        /[英国國粤日][语語配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码/,
+        /[英国國粤日][语語配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码|上海话/,
       placeholder: ".",
     },
     {
@@ -386,7 +386,7 @@ export function parse_filename_for_video(
     {
       // 字幕及其语言
       regexp:
-        /(内封|内嵌|外挂){0,1}[简繁中英多]{1,}[文语語]{0,1}字幕|无字|(内封|内嵌|内挂|无|[软硬])字幕版{0,1}|(内封|内嵌|外挂)(多国){0,1}字幕|(内封|内嵌|外挂)[简繁中英][简繁中英]|(内封|内嵌|外挂)/,
+        /(内封|内嵌|外挂){0,1}[简繁中英多双]{1,}[文语語]{0,1}字幕|无字|(内封|内嵌|内挂|无|[软硬])字幕版{0,1}|(内封|内嵌|外挂)(多国){0,1}字幕|(内封|内嵌|外挂)[简繁中英][简繁中英]|(内封|内嵌|外挂)/,
     },
     {
       regexp: /[\u4e00-\u9fa5]{0,}压制组{0,1}/,
@@ -1299,6 +1299,7 @@ export function parse_filename_for_video(
             log("[3.1]the original_name is", original_filename, original_name_index);
             if (result.season) {
               const season_index = original_filename.indexOf(result.season);
+              // log("[3.1.2]the original_name is", season_index, original_name_index);
               if (season_index !== -1 && season_index < original_name_index) {
                 return {
                   skip: true,
@@ -1333,6 +1334,26 @@ export function parse_filename_for_video(
           priority: -1,
           before() {
             cur_filename = cur_filename.replace(/`$/, "");
+          },
+          after(matched_content) {
+            if (!matched_content) {
+              return undefined;
+            }
+            const original_name_index = original_filename.indexOf(matched_content);
+            // 如果季数在 original_name 前面，original_name 视为无效
+            // if (original_name_index === 0) {
+            //   return undefined;
+            // }
+            log("[3.1]the original_name is", original_filename, original_name_index);
+            if (result.season) {
+              const season_index = original_filename.indexOf(result.season);
+              // log("[3.1.2]the original_name is", season_index, original_name_index);
+              if (season_index !== -1 && season_index < original_name_index) {
+                return {
+                  skip: true,
+                };
+              }
+            }
           },
         },
         {
@@ -1924,6 +1945,9 @@ function normalize_episode_text(filename: string) {
   // if there only two number, use as episode number.
   if (/(\.|^)[-_]{0,1}([0-9]{2,3})(\.|$)/.test(name)) {
     name = name.replace(/(\.|^)[-_]{0,1}([0-9]{2,3})(\.|$)/, ".E$2.");
+  }
+  if (name.match(/\b([0-9]{1,})[xX]([0-9]{1,})\b/)) {
+    return name.replace(/\b([0-9]{1,})[xX]([0-9]{1,})\b/g, "S$1.E$2");
   }
   return name.replace(/\b([0-9]{1})([0-9]{2})\b/g, "S$1.E$2");
 }

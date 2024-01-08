@@ -779,6 +779,13 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           file_id: file.file_id,
           user_id: this.user.id,
         },
+        include: {
+          parsed_media: {
+            include: {
+              _count: true,
+            },
+          },
+        },
       });
       if (existing_parsed_episode) {
         await this.store.prisma.parsed_media_source.delete({

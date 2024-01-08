@@ -15,54 +15,45 @@ async function main() {
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
-  const profile_client_r = await MediaProfileClient.New({
-    assets: app.assets,
-    token: "c2e5d34999e27f8e0ef18421aa5dec38",
-    store,
-  });
-  if (profile_client_r.error) {
-    console.log(profile_client_r.error.message);
-    return;
-  }
-  const client = profile_client_r.data;
+  // const profile_client_r = await MediaProfileClient.New({
+  //   assets: app.assets,
+  //   token: "c2e5d34999e27f8e0ef18421aa5dec38",
+  //   store,
+  // });
+  // if (profile_client_r.error) {
+  //   console.log(profile_client_r.error.message);
+  //   return;
+  // }
+  // const client = profile_client_r.data;
   console.log("Start");
-  const list = await store.prisma.parsed_media_source.findMany({
-    include: {
-      parsed_media: {
-        include: {
-          media_profile: true,
+  // const list = await store.prisma.parsed_media.findMany({
+  //   where: {
+  //     parsed_sources: {
+  //       none: {},
+  //     },
+  //   },
+  // });
+  // console.log(list);
+  await walk_model_with_cursor({
+    fn(extra) {
+      return store.prisma.parsed_media.findMany({
+        where: {
+          parsed_sources: {
+            none: {},
+          },
         },
-      },
-      drive: true,
+        ...extra,
+      });
     },
-    orderBy: [
-      {
-        episode_text: "asc",
-      },
-      {
-        created: "desc",
-      },
-    ],
-    take: 10,
+    async handler(data, index, finish) {
+      console.log(data.name);
+      await store.prisma.parsed_media.delete({
+        where: {
+          id: data.id,
+        },
+      });
+    },
   });
-  console.log(list);
-  //   await walk_model_with_cursor({
-  //     fn(extra) {
-  //       return store.prisma.parsed_media_source.findMany({
-  //         ...extra,
-  //       });
-  //     },
-  //     async handler(data, index, finish) {
-  //       await store.prisma.resource_sync_task.update({
-  //         where: {
-  //           id: data.id,
-  //         },
-  //         data: {
-  //           status: ResourceSyncTaskStatus.WorkInProgress,
-  //         },
-  //       });
-  //     },
-  //   });
   console.log("Success");
 }
 

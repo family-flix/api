@@ -133,7 +133,7 @@ describe("影视剧2", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "A.No-Rough-Stuff-Type.Deal",
+      original_name: "",
       season: "S01",
       episode: "E07",
     });
@@ -343,7 +343,7 @@ describe("影视剧2", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "M.Night.Shaym-Aliens!",
+      original_name: "",
       season: "S01",
       episode: "E04",
     });

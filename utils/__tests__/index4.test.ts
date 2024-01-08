@@ -27,4 +27,24 @@ describe("电视剧4", () => {
       episode: "",
     });
   });
+  test("S01E012：掠夺者.mp4", () => {
+    const name = "S01E012：掠夺者.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "S01",
+      episode: "E12",
+    });
+  });
+  test("S02E01-红月.mkv", () => {
+    const name = "S02E01-红月.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "S02",
+      episode: "E01",
+    });
+  });
 });

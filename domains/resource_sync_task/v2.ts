@@ -160,21 +160,27 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   }
   async run() {
     const { profile, client, store } = this;
-    const { id, url, file_id, file_id_link_resource, file_name_link_resource, invalid } = profile;
+    const { id, url, file_id, file_id_link_resource, file_name_link_resource, invalid, pwd } = profile;
     // const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
-
     const drive_id = this.drive.id;
-
     if (invalid) {
       const tip = "该更新已失效，请重新绑定更新";
       this.emit(Events.Print, Article.build_line([tip]));
       this.emit(Events.Error, new Error(tip));
       return Result.Err(tip);
     }
-    const r1 = await client.fetch_share_profile(url, { force: true });
+    const r1 = await client.fetch_share_profile(url, { code: pwd, force: true });
     if (r1.error) {
       if (["share_link is cancelled by the creator"].includes(r1.error.message)) {
-        await store.update_sync_task(id, { invalid: 1 });
+        // await store.update_sync_task(id, { invalid: 1 });
+        await store.prisma.resource_sync_task.update({
+          where: {
+            id,
+          },
+          data: {
+            invalid: 1,
+          },
+        });
         const tip = "分享资源失效，请关联新分享资源";
         this.emit(
           Events.Print,
@@ -203,26 +209,14 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         return Result.Err(tip);
       }
       const tip = "获取分享资源信息失败";
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: [
-            new ArticleTextNode({
-              text: tip,
-            }),
-            new ArticleTextNode({
-              text: r1.error.message,
-            }),
-          ],
-        })
-      );
+      this.emit(Events.Print, Article.build_line([tip, r1.error.message]));
       this.emit(Events.Error, new Error(tip));
       return Result.Err(r1.error);
     }
     const { share_id } = r1.data;
     const prev_folder = new Folder(file_id_link_resource, {
       name: file_name_link_resource,
-      client: folder_client({ drive_id }, store),
+      client,
     });
     const folder = new Folder(file_id, {
       // 这里本应该用 file_name，但是很可能分享文件的名字改变了，但我还要认为它没变。

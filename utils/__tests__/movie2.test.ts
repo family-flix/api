@@ -26,14 +26,24 @@ describe("电影", () => {
       episode: "",
     });
   });
-  test("S01E012：掠夺者.mp4", () => {
-    const name = "S01E012：掠夺者.mp4";
+  test("Leon.The.Professional.1994.mkv", () => {
+    const name = "Leon.The.Professional.1994.mkv";
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      original_name: "",
-      season: "S01",
-      episode: "E12",
+      original_name: "Leon.The.Professional",
+      season: "",
+      episode: "",
     });
   });
+  // test("up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv", () => {
+  //   const name = "up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "飞屋环游记",
+  //     original_name: "",
+  //     season: "",
+  //     episode: "",
+  //   });
+  // });
 });
