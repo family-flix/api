@@ -1,3 +1,4 @@
+import { CollectionTypes } from "@/constants";
 import { Application } from "@/domains/application";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { parseJSONStr, r_id } from "@/utils";
@@ -17,6 +18,9 @@ async function main() {
   await walk_model_with_cursor({
     fn(extra) {
       return store.prisma.collection.findMany({
+        where: {
+          type: CollectionTypes.Manually,
+        },
         include: {
           movies: {
             include: {
@@ -98,25 +102,25 @@ async function main() {
         }
         medias.push(matched_media);
       }
-      await store.prisma.collection_v2.create({
-        data: {
-          id,
-          created,
-          updated,
-          title,
-          desc,
-          type,
-          sort,
-          medias: {
-            connect: medias.map((m) => {
-              return {
-                id: m.id,
-              };
-            }),
-          },
-          user_id,
-        },
-      });
+      // await store.prisma.collection_v2.create({
+      //   data: {
+      //     id,
+      //     created,
+      //     updated,
+      //     title,
+      //     desc,
+      //     type,
+      //     sort,
+      //     medias: {
+      //       connect: medias.map((m) => {
+      //         return {
+      //           id: m.id,
+      //         };
+      //       }),
+      //     },
+      //     user_id,
+      //   },
+      // });
     },
   });
   console.log("Success");

@@ -95,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     drive.client.on_transfer_finish(async () => {
       job.output.write_line(["添加到待索引文件"]);
-      const r = await drive.client.search_files(name);
+      const r = await drive.client.search_files({ name });
       if (r.error) {
         job.output.write_line(["搜索已转存文件失败", r.error.message]);
         return;

@@ -40,7 +40,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = drive_res.data;
   if (name) {
-    const r = await drive.client.search_files(name, "folder");
+    const r = await drive.client.search_files({
+      name,
+      type: "folder",
+      marker: next_marker,
+    });
     if (r.error) {
       return e(Result.Err(r.error.message));
     }

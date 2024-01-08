@@ -84,7 +84,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r2.error) {
     return e(Result.Err(r2.error.message));
   }
-  const data = r2.data;
+  const data = r2.data.items
+    ? r2.data
+    : {
+        items: [],
+        next_marker: null,
+      };
   res.status(200).json({
     code: 0,
     msg: "",

@@ -17,11 +17,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const {
     type,
+    name,
     series_id,
     next_marker = "",
     page_size = 20,
   } = req.body as Partial<{
     type: MediaTypes;
+    name: string;
     series_id: string;
     next_marker: string;
     page_size: number;
@@ -34,6 +36,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const where: ModelQuery<"media_profile"> = {};
   if (type) {
     where.type = type;
+  }
+  if (name) {
+    where.OR = [
+      {
+        name: {
+          contains: name,
+        },
+      },
+      {
+        original_name: {
+          contains: name,
+        },
+      },
+      {
+        alias: {
+          contains: name,
+        },
+      },
+    ];
   }
   if (series_id) {
     where.series_id = series_id;

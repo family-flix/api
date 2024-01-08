@@ -398,13 +398,14 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       page_size: number;
       /** 下一页标志 */
       marker: string;
+      sort: { field: "name" | "updated_at" | "size"; order: "asc" | "desc" }[];
     }> = {}
   ) {
     if (file_id === undefined) {
       return Result.Err("请传入要获取的文件夹 file_id");
     }
     await this.ensure_initialized();
-    const { page_size = 20, marker } = options;
+    const { page_size = 20, marker, sort = [{ field: "name", order: "desc" }] } = options;
     await sleep(800);
     const r = await this.request.post<{
       items: AliyunDriveFileResp[];
@@ -415,8 +416,21 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       drive_id: String(this.drive_id),
       limit: page_size,
       marker,
-      order_by: "name",
-      order_direction: "DESC",
+      ...sort
+        .map((s) => {
+          return {
+            order_by: s.field,
+            order_direction: s.order.toUpperCase(),
+          };
+        })
+        .reduce((total, cur) => {
+          return {
+            ...total,
+            ...cur,
+          };
+        }, {}),
+      // order_by: "name",
+      // order_direction: "DESC",
       image_thumbnail_process: "image/resize,w_256/format,jpeg",
       image_url_process: "image/resize,w_1920/format,jpeg/interlace,1",
       url_expire_sec: 14400,
@@ -672,8 +686,13 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
   /**
    * 按名字模糊搜索文件/文件夹
    */
-  async search_files(name: string, type: "folder" = "folder") {
+  async search_files(body: { name: string; type?: "file" | "folder"; marker?: string }) {
+    const { name, type, marker } = body;
     await this.ensure_initialized();
+    let query = `name match "${name}"`;
+    if (type) {
+      query += ` and type = "${type}"`;
+    }
     const result = await this.request.post<{
       items: AliyunDriveFileResp[];
       next_marker: string;
@@ -683,8 +702,9 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       image_url_process: "image/resize,w_1920/format,jpeg",
       limit: 20,
       order_by: "updated_at DESC",
-      query: `name match "${name}" and type = "${type}"`,
+      query,
       video_thumbnail_process: "video/snapshot,t_1000,f_jpg,ar_auto,w_300",
+      marker,
     });
     if (result.error) {
       return result;

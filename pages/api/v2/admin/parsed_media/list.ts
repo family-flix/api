@@ -56,10 +56,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         where,
         include: {
           _count: true,
+          media_profile: true,
           parsed_sources: {
-            where: {
-              media_source_id: null,
-            },
             include: {
               media_source: {
                 include: {
@@ -91,12 +89,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       total: count,
       next_marker: result.next_marker,
       list: result.list.map((parsed_tv) => {
-        const { id, name, type, original_name, season_text, parsed_sources, _count } = parsed_tv;
+        const { id, name, type, original_name, season_text, parsed_sources, media_profile, _count } = parsed_tv;
         return {
           id,
           type,
           name: name || original_name,
           season_text,
+          profile: (() => {
+            if (!media_profile) {
+              return null;
+            }
+            return {
+              id: media_profile.id,
+              name: media_profile.name,
+              poster_path: media_profile.poster_path,
+              air_date: media_profile.air_date,
+            };
+          })(),
           sources: parsed_sources.map((episode) => {
             const { id, name, original_name, season_text, episode_text, file_name, parent_paths, media_source, drive } =
               episode;
@@ -108,7 +117,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               episode_text,
               file_name,
               parent_paths,
-              profile: media_source ? media_source.profile : null,
+              profile: (() => {
+                if (!media_source) {
+                  return null;
+                }
+                const { id, name, order } = media_source.profile;
+                return {
+                  id,
+                  name,
+                  order,
+                };
+              })(),
               drive: {
                 id: drive.id,
                 name: drive.name,
