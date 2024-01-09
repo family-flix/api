@@ -284,11 +284,6 @@ export class ScheduleTask {
           store: this.store,
           user,
           assets: this.app.assets,
-          // extra_scope: tmp_folders
-          //   .map((tv) => {
-          //     return tv.name;
-          //   })
-          //   .filter(Boolean) as string[],
           on_print(v) {
             job.output.write(v);
           },
@@ -509,8 +504,9 @@ export class ScheduleTask {
       return r;
     })();
     const range = [dayjs().startOf("day").toISOString(), dayjs().endOf("day").toISOString()];
-    const episodes = await store.prisma.media_source.findMany({
+    const season_media_sources = await store.prisma.media_source.findMany({
       where: {
+        type: MediaTypes.Season,
         created: {
           gte: range[0],
           lt: range[1],
@@ -532,21 +528,21 @@ export class ScheduleTask {
         },
       ],
     });
-    type MediaPayload = {
+    type SeasonMediaPayload = {
       id: string;
       type: MediaTypes;
-      name: string;
-      poster_path: string;
-      air_date: string;
-      tv_id?: string;
-      season_text?: string;
-      text: string | null;
-      created: number;
+      // name: string;
+      // poster_path: string;
+      // air_date: string;
+      // tv_id?: string;
+      // season_text?: string;
+      // text: string | null;
+      created: Date;
     };
-    const season_medias: MediaPayload[] = [];
-    for (let i = 0; i < episodes.length; i += 1) {
+    const season_medias: SeasonMediaPayload[] = [];
+    for (let i = 0; i < season_media_sources.length; i += 1) {
       await (async () => {
-        const episode = episodes[i];
+        const episode = season_media_sources[i];
         const { media: season } = episode;
         const latest_episode = await store.prisma.media_source.findFirst({
           where: {
@@ -554,6 +550,9 @@ export class ScheduleTask {
             files: {
               some: {},
             },
+          },
+          include: {
+            profile: true,
           },
           orderBy: {
             profile: {
@@ -565,59 +564,97 @@ export class ScheduleTask {
         if (!latest_episode) {
           return;
         }
-        // const media = {
-        //   id: season.id,
-        //   type: MediaTypes.Season,
-        //   name: season.profile.name,
-        //   poster_path: season.profile.poster_path,
-        //   air_date: dayjs(season.profile.air_date).format("YYYY/MM/DD"),
-        //   text: await (async () => {
-        //     const episode_count = await store.prisma.episode.count({
-        //       where: {
-        //         season_id: season.id,
-        //         parsed_episodes: {
-        //           some: {},
-        //         },
-        //       },
-        //     });
-        //     if (season.profile.episode_count === episode_count) {
-        //       return `全${season.profile.episode_count}集`;
-        //     }
-        //     if (episode_count === latest_episode.episode_number) {
-        //       return `更新至${latest_episode.episode_number}集`;
-        //     }
-        //     return `收录${episode_count}集`;
-        //   })(),
-        //   created: dayjs(latest_episode.created).unix(),
-        // } as MediaPayload;
-        // season_medias.push(media);
+        const media = {
+          id: season.id,
+          type: MediaTypes.Season,
+          // name: season.profile.name,
+          // poster_path: season.profile.poster_path,
+          // air_date: dayjs(season.profile.air_date).format("YYYY/MM/DD"),
+          // text: await (async () => {
+          //   const episode_count = await store.prisma.episode.count({
+          //     where: {
+          //       season_id: season.id,
+          //       parsed_episodes: {
+          //         some: {},
+          //       },
+          //     },
+          //   });
+          //   if (season.profile.source_count === episode_count) {
+          //     return `全${season.profile.source_count}集`;
+          //   }
+          //   if (episode_count === latest_episode.profile.order) {
+          //     return `更新至${latest_episode.profile.order}集`;
+          //   }
+          //   return `收录${episode_count}集`;
+          // })(),
+          // created: dayjs(latest_episode.created).unix(),
+          created: latest_episode.created,
+        } as SeasonMediaPayload;
+        season_medias.push(media);
       })();
     }
+    const movie_medias = await store.prisma.media.findMany({
+      where: {
+        type: MediaTypes.Movie,
+        media_sources: {
+          some: {
+            files: {
+              some: {},
+            },
+          },
+        },
+        created: {
+          gte: range[0],
+          lt: range[1],
+        },
+        user_id: user.id,
+      },
+      include: {
+        profile: true,
+      },
+      distinct: ["id"],
+      take: 20,
+      orderBy: [
+        {
+          created: "desc",
+        },
+      ],
+    });
+    const medias = [...season_medias, ...movie_medias];
+    const orders = medias
+      .sort((a, b) => {
+        return b.created.valueOf() - a.created.valueOf();
+      })
+      .map((media, index) => {
+        return {
+          [media.id]: index,
+        };
+      })
+      .reduce((result, cur) => {
+        return {
+          ...result,
+          ...cur,
+        };
+      }, {});
     await store.prisma.collection_v2.update({
       where: {
         id: dailyUpdateCollection.id,
       },
       data: {
         title: dayjs().unix().toString(),
-        // medias: JSON.stringify(
-        //   [...season_medias, ...movie_media].sort((a, b) => {
-        //     return b.created - a.created;
-        //   })
-        // ),
-        // seasons: {
-        //   connect: season_medias.map((season) => {
-        //     return {
-        //       id: season.id,
-        //     };
-        //   }),
-        // },
-        // movies: {
-        //   connect: movie_media.map((movie) => {
-        //     return {
-        //       id: movie.id,
-        //     };
-        //   }),
-        // },
+        extra: (() => {
+          if (!orders) {
+            return "{}";
+          }
+          return JSON.stringify({
+            orders,
+          });
+        })(),
+        medias: {
+          connect: medias.map((media) => {
+            return { id: media.id };
+          }),
+        },
       },
     });
   }
@@ -796,49 +833,44 @@ export class ScheduleTask {
         }),
         drive_total_size_count: 0,
         drive_used_size_count: 0,
-        movie_count: await store.prisma.movie.count({
+        movie_count: await store.prisma.media.count({
           where: {
+            type: MediaTypes.Movie,
             user_id: user.id,
           },
         }),
-        season_count: await store.prisma.season.count({
+        season_count: await store.prisma.media.count({
           where: {
+            type: MediaTypes.Season,
             user_id: user.id,
           },
         }),
-        tv_count: await store.prisma.tv.count({
+        episode_count: await store.prisma.media_source.count({
           where: {
+            type: MediaTypes.Season,
             user_id: user.id,
           },
         }),
-        episode_count: await store.prisma.episode.count({
+        sync_task_count: await store.prisma.resource_sync_task.count({
           where: {
-            user_id: user.id,
-          },
-        }),
-        sync_task_count: await store.prisma.bind_for_parsed_tv.count({
-          where: {
-            season_id: {
-              not: null,
-            },
+            status: ResourceSyncTaskStatus.WorkInProgress,
             invalid: 0,
-            in_production: 1,
             user_id: user.id,
           },
         }),
-        invalid_sync_task_count: await store.prisma.bind_for_parsed_tv.count({
+        invalid_sync_task_count: await store.prisma.resource_sync_task.count({
           where: {
             invalid: 1,
             user_id: user.id,
           },
         }),
-        invalid_season_count: await store.prisma.media_error_need_process.count({
+        invalid_season_count: await store.prisma.invalid_media.count({
           where: {
             type: MediaErrorTypes.Season,
             user_id: user.id,
           },
         }),
-        report_count: await store.prisma.report.count({
+        report_count: await store.prisma.report_v2.count({
           where: {
             type: {
               in: [ReportTypes.Movie, ReportTypes.TV, ReportTypes.Question],
@@ -854,7 +886,7 @@ export class ScheduleTask {
             user_id: user.id,
           },
         }),
-        media_request_count: await store.prisma.report.count({
+        media_request_count: await store.prisma.report_v2.count({
           where: {
             type: ReportTypes.Want,
             OR: [
@@ -888,7 +920,6 @@ export class ScheduleTask {
         drive_total_size_count,
         drive_used_size_count,
         movie_count,
-        tv_count,
         season_count,
         episode_count,
         sync_task_count,
@@ -905,7 +936,8 @@ export class ScheduleTask {
             drive_total_size_count: String(drive_total_size_count),
             drive_used_size_count: String(drive_used_size_count),
             movie_count: String(movie_count),
-            tv_count: String(tv_count),
+            tv_count: "0",
+            // tv_count: String(tv_count),
             season_count: String(season_count),
             episode_count: String(episode_count),
             sync_task_count: String(sync_task_count),
@@ -927,7 +959,8 @@ export class ScheduleTask {
           drive_total_size_count: String(drive_total_size_count),
           drive_used_size_count: String(drive_used_size_count),
           movie_count: String(movie_count),
-          tv_count: String(tv_count),
+          tv_count: "0",
+          // tv_count: String(tv_count),
           season_count: String(season_count),
           episode_count: String(episode_count),
           sync_task_count: String(sync_task_count),

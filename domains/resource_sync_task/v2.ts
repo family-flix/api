@@ -162,7 +162,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     const { profile, client, store } = this;
     const { id, url, file_id, file_id_link_resource, file_name_link_resource, invalid, pwd } = profile;
     // const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
-    const drive_id = this.drive.id;
+    // const drive_id = this.drive.id;
     if (invalid) {
       const tip = "该更新已失效，请重新绑定更新";
       this.emit(Events.Print, Article.build_line([tip]));
@@ -317,23 +317,17 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           // }
           // continue;
         }
-        // log(`[${prefix}]`, "新增文件", parents.map((f) => f.name).join("/"), name);
         // 避免添加后，还没有索引云盘，本地数据库没有，导致重复转存文件到云盘
-        const existing_res = await store.find_tmp_file({
-          name,
-          parent_paths,
-          user_id,
-          drive_id,
+        const existing_tmp_file = await store.prisma.tmp_file.findFirst({
+          where: {
+            name,
+            parent_paths,
+            user_id,
+            drive_id,
+          },
         });
-        if (existing_res.error) {
-          //   log(`[${prefix}]`, "查找临时文件失败", existing_res.error.message);
-          // errors.push(new Error(`${prefix} find_tmp_file failed ${existing_res.error.message}`));
-          continue;
-        }
-        if (existing_res.data) {
-          this.emit(Events.Print, Article.build_line([`'${prefix}' 已经在云盘中`]));
-          //   log(`[${prefix}]`, "文件已存在临时文件列表，可能已转存到云盘中");
-          // errors.push(new Error(`[${prefix}] 文件已存在临时文件列表，可能已转存到云盘中`));
+        if (existing_tmp_file) {
+          this.emit(Events.Print, Article.build_line([`「${prefix}」已经在云盘中`]));
           continue;
         }
         const r1 = await client.save_shared_files({
@@ -344,33 +338,32 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         if (r1.error) {
           this.emit(
             Events.Print,
-            Article.build_line([`转存文件 '${shared_file_id}' 到云盘文件夹 '${prev_folder.id}' 失败`, r1.error.message])
+            Article.build_line([`转存文件「${shared_file_id}」到云盘文件夹「${prev_folder.id}」失败`, r1.error.message])
           );
-          //   log(
-          //     `[${prefix}]`,
-          //     `转存文件 '${shared_file_id}' 到云盘文件夹 '${prev_folder.file_id}' 失败`,
-          //     r1.error.message
-          //   );
-          // errors.push(new Error(`${prefix} save file to drive folder failed, because ${r1.error.message}`));
           continue;
         }
         // 这里的「临时文件」之所以没有 file_id，是因为转存到云盘后，才生成了 file_id，上面的 file_id 是分享资源的，不是转存到云盘后的
-        const full_parent_paths = [this.drive.profile.root_folder_name, parent_paths].filter(Boolean).join("/");
+        // const full_parent_paths = [this.drive.profile.root_folder_name, parent_paths].filter(Boolean).join("/");
         this.emit(Events.File, {
           name,
-          parent_paths: full_parent_paths,
+          parent_paths,
           type: type === "file" ? FileType.File : FileType.Folder,
         });
-        await store.prisma.tmp_file.create({
-          data: {
-            id: r_id(),
-            name,
-            parent_paths: full_parent_paths,
-            type: type === "file" ? FileType.File : FileType.Folder,
-            user_id,
-            drive_id,
-          },
-        });
+        const drive_file_existing = await this.drive.client.existing(this.drive.profile.root_folder_id!, name);
+        if (drive_file_existing.data) {
+          this.emit(Events.Print, Article.build_line([`转存文件「${name}」到云盘成功`]));
+          await store.prisma.tmp_file.create({
+            data: {
+              id: r_id(),
+              name,
+              file_id: drive_file_existing.data.file_id,
+              parent_paths,
+              type: type === "file" ? FileType.File : FileType.Folder,
+              user_id,
+              drive_id,
+            },
+          });
+        }
       }
     }
     // if (errors.length !== 0) {

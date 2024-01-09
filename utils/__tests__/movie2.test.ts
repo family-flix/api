@@ -36,6 +36,16 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("画江湖之天罡 (2023) - The.Legend.2023.2160p.WEB-DL.H265.DV.DDP2.0.mp4", () => {
+    const name = "画江湖之天罡 (2023) - The.Legend.2023.2160p.WEB-DL.H265.DV.DDP2.0.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "画江湖之天罡",
+      original_name: "The.Legend",
+      season: "",
+      episode: "",
+    });
+  });
   // test("up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv", () => {
   //   const name = "up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv";
   //   const result = parse_filename_for_video(name);

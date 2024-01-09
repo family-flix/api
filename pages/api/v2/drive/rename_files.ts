@@ -18,9 +18,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const {
     drive_id: id,
     file_id: folder_id,
+    name,
     regexp,
     replace,
-  } = req.body as Partial<{ drive_id: string; file_id: string; regexp: string; replace: string }>;
+  } = req.body as Partial<{ drive_id: string; file_id: string; name: string; regexp: string; replace: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -45,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const drive = drive_res.data;
   const job_res = await Job.New({
     unique_id: [id, folder_id].join("/"),
-    desc: "重命名子文件列表",
+    desc: name ? `重命名「${name}」子文件列表` : "重命名子文件列表",
     type: TaskTypes.RenameFiles,
     user_id: user.id,
     store,

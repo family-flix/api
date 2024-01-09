@@ -90,6 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           name,
         };
       });
+    job.output.write_line([`共${the_files_prepare_analysis.length}个新文件`]);
     await analysis.run2(the_files_prepare_analysis);
     job.output.write_line(["索引完成"]);
     job.finish();

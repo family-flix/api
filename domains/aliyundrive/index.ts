@@ -1033,22 +1033,23 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
   }
   /**
    * 转存分享的文件
-   * 在同步资源时，会需要转存单个？或者直接用转存多个？
+   * 在同步资源时使用
    */
   async save_shared_files(options: {
     /** 分享链接 */
     url: string;
+    code?: string;
     /** 要转存的文件/文件夹 id */
     file_id: string;
     /** 转存到网盘指定的文件夹 id */
     target_file_id?: string;
   }) {
     await this.ensure_initialized();
-    const { url, file_id, target_file_id = this.root_folder_id } = options;
+    const { url, code, file_id, target_file_id = this.root_folder_id } = options;
     if (!target_file_id) {
       return Result.Err("请指定转存到云盘哪个文件夹");
     }
-    const r1 = await this.fetch_share_profile(url);
+    const r1 = await this.fetch_share_profile(url, { code });
     if (r1.error) {
       return Result.Err(r1.error);
     }

@@ -71,7 +71,6 @@ import { notice_push_deer } from "../notice";
       // );
       await schedule.run_sync_task_list();
       await schedule.update_daily_updated();
-      // await schedule.find_duplicated_medias();
       await schedule.find_media_and_media_source_errors();
       await schedule.update_stats();
     },

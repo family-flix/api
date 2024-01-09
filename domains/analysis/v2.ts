@@ -178,37 +178,12 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         })();
         this.emit(Events.Percent, percent / 2);
       }
-      // await (async () => {
-      //   // 创建同步任务
-      //   if (type === "file") {
-      //     return;
-      //   }
-      //   const sync_task = await this.store.prisma.resource_sync_task.findFirst({
-      //     where: {
-      //       file_name_link_resource: name,
-      //       user_id: user.id,
-      //     },
-      //   });
-      //   if (sync_task) {
-      //     if (sync_task.status === ResourceSyncTaskStatus.WaitLinkFolder) {
-      //       await this.store.prisma.resource_sync_task.update({
-      //         where: {
-      //           id: sync_task.id,
-      //         },
-      //         data: {
-      //           file_id_link_resource: file_id,
-      //           status: ResourceSyncTaskStatus.WaitSetProfile,
-      //         },
-      //       });
-      //       this.emit(Events.Print, Article.build_line([`[${name}]`, "建立同步任务成功"]));
-      //     }
-      //     return;
-      //   }
-      // })();
       await (async () => {
         const existing = await store.prisma.file.findFirst({
           where: {
             file_id: file.file_id,
+            user_id: user.id,
+            drive_id: drive.id,
           },
         });
         if (!existing) {
@@ -237,11 +212,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
           return;
         }
         const diff = get_diff_of_file(file, existing);
-        // console.log("[DOMAIN]analysis/index - walker.on_file get diff", diff);
         if (diff === null) {
           return;
         }
-        // this.emit(Events.Print, Article.build_line([`[${name}]`, "文件已存在且有变更字段，更新"]));
         await store.prisma.file.update({
           where: {
             id: existing.id,
@@ -249,13 +222,22 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
           data: diff,
         });
       })();
-      // await store.prisma.tmp_file.deleteMany({
-      //   where: {
-      //     name,
-      //     parent_paths,
-      //     user_id: this.user.id,
-      //   },
-      // });
+      await (async () => {
+        const existing = await store.prisma.tmp_file.findFirst({
+          where: {
+            file_id: file.file_id,
+            user_id: user.id,
+            drive_id: drive.id,
+          },
+        });
+        if (existing) {
+          await store.prisma.tmp_file.delete({
+            where: {
+              id: existing.id,
+            },
+          });
+        }
+      })();
     };
     walker.on_episode = async (parsed) => {
       const { tv, episode } = parsed;

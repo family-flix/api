@@ -47,4 +47,14 @@ describe("电视剧4", () => {
       episode: "E01",
     });
   });
+  test("the.company.you.keep.s01e04.1080p.web.h264-cakes.chs.eng.mp4", () => {
+    const name = "the.company.you.keep.s01e04.1080p.web.h264-cakes.chs.eng.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "the.company.you.keep",
+      season: "S01",
+      episode: "E04",
+    });
+  });
 });

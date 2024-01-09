@@ -773,6 +773,35 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         name,
       },
     });
+    await (async () => {
+      const existing_tmp = await this.store.prisma.tmp_file.findFirst({
+        where: {
+          file_id: file.file_id,
+        },
+      });
+      if (existing_tmp) {
+        await this.store.prisma.tmp_file.update({
+          where: {
+            id: existing_tmp.id,
+          },
+          data: {
+            name,
+          },
+        });
+        return;
+      }
+      await this.store.prisma.tmp_file.create({
+        data: {
+          id: file.file_id,
+          name,
+          file_id: file.file_id,
+          type: f.type,
+          parent_paths: f.parent_paths,
+          drive_id: f.drive_id,
+          user_id: f.user_id,
+        },
+      });
+    })();
     if (f.type === FileType.File) {
       const existing_parsed_episode = await this.store.prisma.parsed_media_source.findFirst({
         where: {
