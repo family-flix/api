@@ -305,7 +305,7 @@ export function parse_filename_for_video(
     },
     // 流媒体平台
     {
-      regexp: /AMZN|ATVP|NF|Netflix|DSNP|iQIYI|HunanTV|CCTV[1-9]{1,2}|YYeTs|陕艺|JSTV\.{0,1}|江苏卫视\.{0,1}|[bB]站/,
+      regexp: /AMZN|ATVP|NF|Netflix|DSNP|iQIYI|HunanTV|\bCCTV[1-9]{0,2}|YYeTs|陕艺|JSTV\.{0,1}|江苏卫视\.{0,1}|[bB]站/,
     },
     // 文件后缀
     {

@@ -95,13 +95,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     drive.client.on_transfer_finish(async () => {
       job.output.write_line(["添加到待索引文件"]);
-      const r = await drive.client.search_files({ name });
+      const r = await drive.client.existing(drive.profile.root_folder_id!, name);
       if (r.error) {
         job.output.write_line(["搜索已转存文件失败", r.error.message]);
         return;
       }
-      const first = r.data.items[0];
-      if (!first) {
+      if (!r.data) {
         job.output.write_line(["转存后没有搜索到转存文件"]);
         return;
       }
@@ -109,13 +108,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         data: {
           id: r_id(),
           name,
-          file_id: first.file_id,
+          file_id: r.data.file_id,
           parent_paths: drive.profile.root_folder_name ?? "",
           drive_id: drive.id,
           user_id: user.id,
         },
       });
-      job.output.write_line(["添加转存记录列表"]);
+      job.output.write_line(["创建同步任务"]);
       await store.prisma.resource_sync_task.create({
         data: {
           id: r_id(),
@@ -125,7 +124,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           name,
           status: ResourceSyncTaskStatus.WaitSetProfile,
           file_name_link_resource: name,
-          file_id_link_resource: first.file_id,
+          file_id_link_resource: r.data.file_id,
           drive_id: drive.id,
           user_id: user.id,
         },

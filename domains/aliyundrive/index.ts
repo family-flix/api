@@ -251,7 +251,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
           console.error("\n");
           console.error(url);
           // console.error(body, headers);
-          console.error("POST request failed, because", error);
+          console.error("POST request failed, because", response);
           // console.log(response, message);
           if (response?.status === 401) {
             if (response?.data?.code === "UserDeviceOffline") {

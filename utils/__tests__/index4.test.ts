@@ -57,4 +57,14 @@ describe("电视剧4", () => {
       episode: "E04",
     });
   });
+  test("风味人间-CCTV", () => {
+    const name = "风味人间-CCTV";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "风味人间",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });
