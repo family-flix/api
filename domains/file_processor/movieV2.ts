@@ -186,6 +186,7 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
       name: data.name,
       original_name: data.original_name,
       season_text: null,
+      year: null,
     });
     if (Object.keys(media_changed).length !== 0) {
       this.emit(Events.Print, Article.build_line([`[${prefix}]`, "视频文件信息改变"]));

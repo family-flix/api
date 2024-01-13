@@ -56,6 +56,7 @@ export type SearchedMovie = {
   file_name: string;
   name: string;
   original_name: string;
+  year: string | null;
   parent_paths: string;
   parent_file_id: string;
   size: number;
@@ -396,6 +397,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           file_name: name,
           name: last_parent?.name,
           original_name: last_parent?.original_name,
+          year: parsed_info.year,
           parent_paths,
           parent_file_id,
           size,
@@ -409,6 +411,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         file_name: name,
         name: parsed_info.name,
         original_name: parsed_info.original_name,
+        year: parsed_info.year,
         parent_paths,
         parent_file_id,
         size,
