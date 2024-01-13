@@ -43,6 +43,7 @@ export type SearchedEpisode = {
     season_text: string | null;
     /** 第几集 */
     episode_text: string;
+    year: string | null;
     /** 大小（单位字节）*/
     size: number;
     md5?: string;
@@ -249,7 +250,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     if (type === "folder") {
       const parsed_info = parse_filename_for_video(
         name,
-        ["name", "original_name", "season", "episode"],
+        ["name", "original_name", "season", "episode", "year"],
         this.filename_rules
       );
       const folder = data as Folder;
@@ -270,7 +271,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           }
           for (let i = 0; i < r.data.length; i += 1) {
             const file = r.data[i];
-            const { name: parsed_name, original_name, season } = parsed_info;
+            const { name: parsed_name, original_name, season, year } = parsed_info;
             const parent_folders = parents
               .map((p) => {
                 return { ...p };
@@ -299,7 +300,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     }
     const parsed_info = parse_filename_for_video(
       name,
-      ["name", "original_name", "season", "episode"],
+      ["name", "original_name", "season", "episode", "year"],
       this.filename_rules
     );
     function generate_episode(profile: { name: string; original_name: string; season?: string; episode?: string }) {
@@ -338,6 +339,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       };
       episode: {
         episode: string;
+        year: string | null;
       };
       _position?: string;
     }): SearchedEpisode {
@@ -362,6 +364,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           file_name: name,
           season_text: season.season,
           episode_text: episode.episode,
+          year: episode.year,
           size,
           md5,
         },

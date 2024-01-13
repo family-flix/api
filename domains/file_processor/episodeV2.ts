@@ -237,6 +237,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
       name: data.tv.name,
       original_name: data.tv.original_name,
       season_text: data.season.season_text,
+      year: data.episode.year,
     });
     // this.emit(Events.Print, Article.build_line([`[${prefix}]`, "开始检查"]));
     if (Object.keys(media_changed).length !== 0) {
@@ -288,6 +289,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
           {
             name,
             season_text: season.season_text,
+            air_year: data.episode.year,
           },
           {
             AND: [
@@ -306,6 +308,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
               },
             ],
             season_text: season.season_text,
+            air_year: data.episode.year,
           },
         ],
         drive_id: this.options.drive_id,

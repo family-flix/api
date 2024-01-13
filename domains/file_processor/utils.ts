@@ -5,7 +5,7 @@ import { SearchedEpisode } from "@/domains/walker";
 
 export function is_media_change(
   existing: ParsedMediaRecord,
-  next: { name: string | null; original_name: string | null; season_text: string | null }
+  next: { name: string | null; original_name: string | null; season_text: string | null; year: string | null }
 ) {
   const payload: Partial<ParsedMediaRecord> = {};
   if (existing.name !== (next.name || next.original_name)) {
@@ -16,6 +16,9 @@ export function is_media_change(
   }
   if (next.season_text !== null && existing.season_text !== next.season_text) {
     payload.season_text = next.season_text;
+  }
+  if (next.year && existing.air_year !== next.year) {
+    payload.air_year = next.year;
   }
   return payload;
 }

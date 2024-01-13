@@ -190,20 +190,23 @@ function get_episodes_range(order: number, step = 20) {
   return [start + 1, start + step];
 }
 function split_count_into_ranges(num: number, count: number) {
+  if (count <= 0) {
+    return [];
+  }
   const ranges: [number, number][] = [];
   let start = 1;
   let end = 1;
-  while (end < count) {
+  while (start <= count) {
     end = Math.min(start + num - 1, count);
     ranges.push([start, end]);
     start = end + 1;
   }
-  const last_range = ranges[ranges.length - 1];
-  if (!last_range) {
+  if (ranges.length === 0) {
     return [];
   }
+  const last_range = ranges[ranges.length - 1];
   const diff = last_range[1] - last_range[0] + 1;
-  if (diff < 5) {
+  if (ranges.length > 1 && diff < 5) {
     const last_second_range = ranges[ranges.length - 2];
     return [...ranges.slice(0, ranges.length - 2), [last_second_range[0], last_second_range[1] + diff]];
   }
