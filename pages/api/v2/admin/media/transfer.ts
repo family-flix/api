@@ -31,13 +31,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
+  const user = t_res.data;
   if (!media_id) {
     return e(Result.Err("缺少电视剧季 id"));
   }
   if (!to_drive_id) {
     return e(Result.Err("缺少目标云盘 id"));
   }
-  const user = t_res.data;
   const media = await store.prisma.media.findFirst({
     where: {
       id: media_id,

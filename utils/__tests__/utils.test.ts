@@ -93,7 +93,7 @@ function split_count_into_ranges(num: number, count: number) {
     return [];
   }
   const diff = last_range[1] - last_range[0] + 1;
-  if (diff <= 5) {
+  if (diff < 5) {
     const last_second_range = ranges[ranges.length - 2];
     return [...ranges.slice(0, ranges.length - 2), [last_second_range[0], last_second_range[1] + diff]];
   }
@@ -103,6 +103,10 @@ describe("生成剧集范围", () => {
   test("1", () => {
     const range = split_count_into_ranges(20, 1);
     expect(range).toStrictEqual([]);
+  });
+  test("5", () => {
+    const range = split_count_into_ranges(20, 5);
+    expect(range).toStrictEqual([[1, 5]]);
   });
   test("88", () => {
     const range = split_count_into_ranges(30, 88);
@@ -141,7 +145,8 @@ describe("生成剧集范围", () => {
     const range = split_count_into_ranges(20, 45);
     expect(range).toStrictEqual([
       [1, 20],
-      [21, 45],
+      [21, 40],
+      [41, 45],
     ]);
   });
   test("46", () => {

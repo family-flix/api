@@ -64,6 +64,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (!history) {
       const sources = await store.prisma.media_source.findMany({
         where: {
+          files: {
+            some: {},
+          },
           media_id,
         },
         include: {
@@ -85,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         cur_source: sources[0]
           ? {
               id: sources[0].id,
-              cur_source_file_id: sources[0].files[0].id || null,
+              cur_source_file_id: sources[0].files?.[0]?.id || null,
               current_time: 0,
               thumbnail_path: sources[0].profile.still_path,
               index: 0,
@@ -100,6 +103,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const range = get_episodes_range(media_source.profile.order);
     const sources = await store.prisma.media_source.findMany({
       where: {
+        files: {
+          some: {},
+        },
+        profile: {
+          order: {
+            gte: range[0],
+            lte: range[1],
+          },
+        },
         media_id: history.media_id,
       },
       include: {
@@ -109,8 +121,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           include: { drive: true },
         },
       },
-      skip: range[0],
-      take: 20,
+      // skip: range[0],
+      // take: 20,
       orderBy: {
         profile: {
           order: "asc",
@@ -175,7 +187,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
 function get_episodes_range(order: number, step = 20) {
   const start = Math.floor(order / step) * step;
-  return [start, start + step];
+  return [start + 1, start + step];
 }
 function split_count_into_ranges(num: number, count: number) {
   const ranges: [number, number][] = [];
@@ -191,7 +203,7 @@ function split_count_into_ranges(num: number, count: number) {
     return [];
   }
   const diff = last_range[1] - last_range[0] + 1;
-  if (diff <= 5) {
+  if (diff < 5) {
     const last_second_range = ranges[ranges.length - 2];
     return [...ranges.slice(0, ranges.length - 2), [last_second_range[0], last_second_range[1] + diff]];
   }

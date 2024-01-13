@@ -486,7 +486,7 @@ export class MediaProfileClient {
             id: episode_tmdb_id,
             name,
             overview,
-            still_path: await this.download_image(still_path, "still_path"),
+            still_path,
             order: episode_number,
             air_date,
             runtime,
@@ -774,7 +774,7 @@ export class MediaProfileClient {
               payload.overview = overview;
             }
             if (still_path && still_path !== data.still_path) {
-              payload.still_path = await this.download_image(still_path, "still_path");
+              payload.still_path = still_path;
             }
             if (Object.keys(payload).length === 0) {
               return;
@@ -965,7 +965,7 @@ export class MediaProfileClient {
           still_path: null,
         };
         if (still_path) {
-          payload.still_path = await this.download_image(still_path, "still_path");
+          payload.still_path = still_path;
         }
         await this.store.prisma.media_source_profile.update({
           where: {

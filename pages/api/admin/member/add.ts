@@ -17,21 +17,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     email: string;
     remark: string;
   }>;
-  if (!remark) {
-    return e(Result.Err("缺少成员备注"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const { id: user_id } = user;
+  if (!remark) {
+    return e(Result.Err("缺少成员备注"));
+  }
   const existing_member = await store.prisma.member.findUnique({
     where: {
       user_id_inviter_id_remark: {
         remark,
         inviter_id: "",
-        user_id,
+        user_id: user.id,
       },
     },
   });
@@ -43,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name: name || null,
     email: email || null,
     disabled: 0,
-    user_id,
+    user_id: user.id,
   });
   if (r.error) {
     return e(r);

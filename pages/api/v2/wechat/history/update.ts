@@ -103,11 +103,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return `${media_id}-${time}`;
         },
       })
-      .then((r) => {
+      .then(async (r) => {
         if (r.error) {
           return;
         }
-        store.prisma.play_history_v2.update({
+        await store.prisma.play_history_v2.update({
           where: {
             id: history_id,
           },

@@ -860,16 +860,7 @@ export async function archive_media_files(body: {
     const key = paths[0];
     if (key === new_folder_parent_path) {
       need_create_parent_folder = false;
-      job.output.write(
-        new ArticleLineNode({
-          children: ["无需创建新文件夹"].map(
-            (text) =>
-              new ArticleTextNode({
-                text,
-              })
-          ),
-        })
-      );
+      job.output.write_line(["无需创建新文件夹"]);
     }
   }
   const created_folder_res = await (async () => {
@@ -878,27 +869,10 @@ export async function archive_media_files(body: {
       if (exceed_res.data) {
         return Result.Err("云盘容量超出且需要文件夹，操作失败");
       }
-      job.output.write(
-        new ArticleLineNode({
-          children: [
-            new ArticleTextNode({
-              text: `创建新文件夹 '${season_folder_name}' 存放格式化后的视频文件`,
-            }),
-          ],
-        })
-      );
+      job.output.write_line([`创建新文件夹「${season_folder_name}」存放格式化后的视频文件`]);
       const existing_res = await drive.client.existing(drive.profile.root_folder_name!, season_folder_name);
       if (existing_res.data) {
-        job.output.write(
-          new ArticleLineNode({
-            children: ["使用云盘中查找到的"].map(
-              (text) =>
-                new ArticleTextNode({
-                  text,
-                })
-            ),
-          })
-        );
+        job.output.write_line(["使用云盘中查找到的"]);
         return Result.Ok({
           file_id: existing_res.data.file_id,
           file_name: existing_res.data.name,
@@ -909,15 +883,7 @@ export async function archive_media_files(body: {
         name: season_folder_name,
       });
       if (r2.error) {
-        job.output.write(
-          new ArticleLineNode({
-            children: [
-              new ArticleTextNode({
-                text: `创建文件夹 '${season_folder_name}' 失败，因为 ${r2.error.message}`,
-              }),
-            ],
-          })
-        );
+        job.output.write_line([`创建文件夹「${season_folder_name}」失败，因为 ${r2.error.message}`]);
         return Result.Err(r2.error.message);
       }
       await store.add_file({
@@ -930,31 +896,13 @@ export async function archive_media_files(body: {
         drive_id: drive.id,
         user_id: user.id,
       });
-      job.output.write(
-        new ArticleLineNode({
-          children: ["使用新创建的文件夹", r2.data.file_id].map(
-            (text) =>
-              new ArticleTextNode({
-                text,
-              })
-          ),
-        })
-      );
+      job.output.write_line(["使用新创建的文件夹", r2.data.file_id]);
       return Result.Ok({
         file_id: r2.data.file_id,
         file_name: r2.data.file_name,
       });
     }
-    job.output.write(
-      new ArticleLineNode({
-        children: ["复用现有的文件夹"].map(
-          (text) =>
-            new ArticleTextNode({
-              text,
-            })
-        ),
-      })
-    );
+    job.output.write_line(["复用现有的文件夹"]);
     return Result.Ok({
       file_id: parents[paths[0]].file_id,
       file_name: season_folder_name,
@@ -1075,16 +1023,7 @@ export async function archive_media_files(body: {
       target_folder_id: created_folder.file_id,
     });
     if (move_res.error) {
-      job.output.write(
-        new ArticleLineNode({
-          children: ["移动文件到目标文件夹失败"].map(
-            (text) =>
-              new ArticleTextNode({
-                text,
-              })
-          ),
-        })
-      );
+      job.output.write_line(["移动文件到目标文件夹失败"]);
       errors.push({
         file_id: created_folder.file_id,
         tip: `移动文件到文件夹失败, ${move_res.error.message}`,

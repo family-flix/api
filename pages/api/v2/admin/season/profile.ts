@@ -60,7 +60,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (season === null) {
     return e(Result.Err("没有匹配的电视剧记录"));
   }
-
   const other_seasons = await store.prisma.media.findMany({
     where: {
       id: {

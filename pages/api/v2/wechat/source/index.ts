@@ -94,9 +94,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     width,
     height,
     other: info.sources.map((res) => {
-      const { url, width, height } = res;
+      const { url, type, width, height } = res;
       return {
-        cur: recommend_resolution.type === res.type,
+        cur: recommend_resolution.type === type,
         url,
         type,
         width,

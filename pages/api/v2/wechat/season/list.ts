@@ -127,39 +127,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     total: count,
     list: payload.list.map((media) => {
       const { id, type, profile, _count } = media;
-      const {
-        name,
-        original_name,
-        overview,
-        poster_path,
-        air_date,
-        source_count,
-        order,
-        vote_average,
-        genres,
-        origin_country,
-      } = profile;
+      const { name, poster_path, air_date, source_count, order, vote_average, genres, origin_country } = profile;
       return {
         id,
         type,
         name,
-        original_name,
-        overview,
-        // season_number: order,
+        season_number: order,
         episode_count: source_count,
         cur_episode_count: _count.media_sources,
-        extra_text: (() => {
-          if (type === MediaTypes.Movie) {
-            return null;
-          }
-          if (!source_count) {
-            return null;
-          }
-          if (_count.media_sources === source_count) {
-            return `全${source_count}集`;
-          }
-          return `更新至${_count.media_sources}集`;
-        })(),
         poster_path,
         air_date,
         origin_country: origin_country.map((country) => country.id),
