@@ -67,4 +67,14 @@ describe("电视剧4", () => {
       episode: "",
     });
   });
+  test("Planet.Earth.III.E04.Freshwater.2160p.iP.WEB-DL.AAC2.0.HLG.H.265-FLUX.mkv", () => {
+    const name = "Planet.Earth.III.E04.Freshwater.2160p.iP.WEB-DL.AAC2.0.HLG.H.265-FLUX.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Planet.Earth",
+      season: "S03",
+      episode: "E04",
+    });
+  });
 });

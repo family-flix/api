@@ -282,46 +282,38 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
       season,
     } = data;
     const prefix = `[${name}]`;
+    const where = {
+      type: MediaTypes.Season,
+      OR: [
+        {
+          name,
+          season_text: season.season_text || null,
+          air_year: data.episode.year || null,
+        },
+        {
+          AND: [
+            {
+              original_name: original_name || null,
+            },
+            {
+              original_name: {
+                not: null,
+              },
+            },
+          ],
+          season_text: season.season_text || null,
+          air_year: data.episode.year || null,
+        },
+      ],
+      drive_id: this.options.drive_id,
+      user_id: this.options.user_id,
+    };
     const existing_parsed_media = await this.store.prisma.parsed_media.findFirst({
-      where: {
-        type: MediaTypes.Season,
-        OR: [
-          {
-            name,
-            season_text: season.season_text,
-            air_year: data.episode.year,
-          },
-          {
-            AND: [
-              {
-                original_name: {
-                  not: null,
-                },
-              },
-              {
-                original_name: {
-                  not: "",
-                },
-              },
-              {
-                original_name,
-              },
-            ],
-            season_text: season.season_text,
-            air_year: data.episode.year,
-          },
-        ],
-        drive_id: this.options.drive_id,
-        user_id: this.options.user_id,
-      },
+      where,
     });
     if (existing_parsed_media) {
       return existing_parsed_media;
     }
-    // this.emit(
-    //   Events.Print,
-    //   Article.build_line([prefix, "电视剧季", name || original_name, season.season_text, "不存在，新增"])
-    // );
     const n = name || original_name;
     const created = await this.store.prisma.parsed_media.create({
       data: {

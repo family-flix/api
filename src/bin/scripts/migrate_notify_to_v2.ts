@@ -1,19 +1,32 @@
+import { MediaTypes } from "@/constants";
 import { Application } from "@/domains/application";
 import { DatabaseStore } from "@/domains/store";
 import { MovieProfileRecord, TVProfileRecord } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { parseJSONStr } from "@/utils";
 
-type AnswerPayload = Partial<{
+type OldAnswerPayload = Partial<{
   msg: string;
   season: {
     id: string;
+    tv_id: string;
     name: string;
     air_date: string | null;
     poster_path: string | null;
   };
   movie: {
     id: string;
+    name: string;
+    air_date: string | null;
+    poster_path: string | null;
+  };
+}>;
+
+type AnswerPayload = Partial<{
+  msg: string;
+  media: {
+    id: string;
+    type: MediaTypes;
     name: string;
     air_date: string | null;
     poster_path: string | null;
@@ -86,9 +99,6 @@ async function main() {
   await walk_model_with_cursor({
     fn(extra) {
       return store.prisma.member_notification.findMany({
-        where: {
-          member_id: "2thR5Xhl2pMQHOs",
-        },
         include: {
           member: {
             include: {
@@ -104,12 +114,11 @@ async function main() {
       if (content === null) {
         return;
       }
-      const { msg, movie, season } = JSON.parse(content) as AnswerPayload;
-      if (season) {
+      const { msg, movie, season } = JSON.parse(content) as OldAnswerPayload;
+      if (season && season.tv_id) {
         const s = await store.prisma.season.findFirst({
           where: {
-            id: season.id,
-            user_id: member.user.id,
+            tv_id: season.tv_id,
           },
           include: {
             tv: {
@@ -120,7 +129,7 @@ async function main() {
           },
         });
         if (!s) {
-          console.log(`${season.name} 没有匹配记录`);
+          console.log(`${season.name} 没有匹配记录1`);
           return;
         }
         const media = await find_matched_season({
@@ -135,8 +144,9 @@ async function main() {
         }
         const new_content: AnswerPayload = {
           msg,
-          season: {
+          media: {
             id: media.id,
+            type: MediaTypes.Season,
             name: media.profile.name,
             poster_path: media.profile.poster_path,
             air_date: media.profile.air_date,
@@ -153,17 +163,28 @@ async function main() {
         return;
       }
       if (movie) {
-        const s = await store.prisma.movie.findFirst({
+        let s = await store.prisma.movie.findFirst({
           where: {
             id: movie.id,
-            user_id: member.user.id,
           },
           include: {
             profile: true,
           },
         });
         if (!s) {
-          console.log(`${movie.name} 没有匹配记录`);
+          s = await store.prisma.movie.findFirst({
+            where: {
+              profile: {
+                name: movie.name,
+              },
+            },
+            include: {
+              profile: true,
+            },
+          });
+        }
+        if (!s) {
+          console.log(`${movie.name} 没有匹配记录3`);
           return;
         }
         const media = await find_matched_movie({
@@ -172,13 +193,14 @@ async function main() {
           store,
         });
         if (!media) {
-          console.log(`${movie.name} 没有匹配记录2`);
+          console.log(`${movie.name} 没有匹配记录4`);
           return;
         }
         const new_content: AnswerPayload = {
           msg,
-          movie: {
+          media: {
             id: media.id,
+            type: MediaTypes.Movie,
             name: media.profile.name,
             poster_path: media.profile.poster_path,
             air_date: media.profile.air_date,

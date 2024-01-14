@@ -225,7 +225,7 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(existing_source);
   }
   async add_parsed_media(data: SearchedMovie) {
-    const { name, original_name } = data;
+    const { name, original_name, year } = data;
     const prefix = `[${name}]`;
     const existing_parsed_media = await this.store.prisma.parsed_media.findFirst({
       where: {
@@ -233,10 +233,18 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
         OR: [
           {
             name,
+            air_year: year || null,
           },
           {
-            NOT: [{ original_name: null }],
+            AND: [
+              {
+                original_name: {
+                  not: null,
+                },
+              },
+            ],
             original_name,
+            air_year: year || null,
           },
         ],
         drive_id: this.options.drive_id,

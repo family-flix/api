@@ -9,6 +9,7 @@ import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
+import { MediaTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -20,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     next_marker,
   } = req.body as Partial<{
     empty: number;
-    type: number;
+    type: MediaTypes;
     name: string;
     next_marker: string;
     page_size: number;
