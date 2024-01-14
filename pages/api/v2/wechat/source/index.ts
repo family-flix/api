@@ -8,7 +8,7 @@ import { Drive } from "@/domains/drive";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { MediaResolutionTypes, SubtitleFileTypes } from "@/constants";
+import { MediaOriginCountries, MediaResolutionTypes, SubtitleFileTypes, SubtitleLanguageMap } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("视频文件无法播放，请修改 refresh_token"));
   }
   const { url, width, height } = recommend_resolution;
-  const result: MediaFile & { other: MediaFile[]; subtitles: { language: string; url: string }[] } = {
+  const result: MediaFile & { other: MediaFile[]; subtitles: { language: MediaOriginCountries[]; url: string }[] } = {
     id,
     url,
     thumbnail_path: thumbnail,
@@ -110,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         id,
         name,
         url,
-        language,
+        language: SubtitleLanguageMap[language],
       };
     }),
   };

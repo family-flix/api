@@ -218,8 +218,10 @@ export const MEDIA_SOURCE_MAP: Record<string, string> = {
  * @doc https://www.iso.org/standard/63545.html
  */
 export enum MediaOriginCountries {
-  US = "US", // 美国 (United States)
-  CN = "CN", // 中国 (China)
+  /**  // 美国 (United States) */
+  US = "US",
+  /**  // 中国 (China) */
+  CN = "CN",
   TW = "TW", // 中国台湾 (Taiwan)
   HK = "HK", // 中国香港 (Hong Kong)
   JP = "JP", // 日本 (Japan)
@@ -403,3 +405,9 @@ export const MovieGenresOptions = MovieGenres.map((text) => {
     value: text,
   };
 });
+
+export const SubtitleLanguageMap = {
+  chi: [MediaOriginCountries.CN],
+  eng: [MediaOriginCountries.US],
+  jpn: [MediaOriginCountries.JP],
+};

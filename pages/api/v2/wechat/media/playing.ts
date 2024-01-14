@@ -150,7 +150,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const { name, original_name, overview, poster_path, air_date, source_count, vote_average, genres, origin_country } =
     media.profile;
-  const episode_ranges = split_count_into_ranges(20, cur_source_count);
+  const episode_orders = await store.prisma.media_source.findMany({
+    select: {
+      profile: {
+        select: {
+          order: true,
+        },
+      },
+    },
+    where: {
+      media_id: media.id,
+    },
+  });
+  const groups = split_count_into_ranges(20, cur_source_count);
+  const cur_episode_orders = episode_orders.map((e) => e.profile.order);
+  const missing_episodes = find_missing_episodes({
+    count: source_count,
+    episode_orders: cur_episode_orders,
+  });
+  const episode_ranges = fix_episode_group_by_missing_episodes({
+    groups,
+    missing_episodes,
+  });
   const sources = media_sources.map((episode) => {
     return format_episode(episode, media_id);
   });
@@ -189,7 +210,7 @@ function get_episodes_range(order: number, step = 20) {
   const start = Math.floor(order / step) * step;
   return [start + 1, start + step];
 }
-function split_count_into_ranges(num: number, count: number) {
+function split_count_into_ranges(num: number, count: number): [number, number][] {
   if (count <= 0) {
     return [];
   }
@@ -251,4 +272,38 @@ function format_episode(
       };
     }),
   };
+}
+
+function fix_episode_group_by_missing_episodes(values: { missing_episodes: number[]; groups: [number, number][] }) {
+  const { groups, missing_episodes } = values;
+  const updated_groups: [number?, number?][] = [];
+  if (missing_episodes.length === 0) {
+    return groups;
+  }
+  for (let i = 0; i < groups.length; i += 1) {
+    let [start, end] = groups[i];
+    const range: number[] = [];
+    for (let i = start; i < end + 1; i += 1) {
+      if (!missing_episodes.includes(i)) {
+        range.push(i);
+      }
+    }
+    if (range.length === 0) {
+      updated_groups.push([]);
+      continue;
+    }
+    updated_groups.push([range[0], range[range.length - 1]]);
+  }
+  return updated_groups;
+}
+
+function find_missing_episodes(values: { count: number; episode_orders: number[] }) {
+  const { count, episode_orders } = values;
+  const missing_episodes: number[] = [];
+  for (let i = 1; i <= count; i++) {
+    if (!episode_orders.includes(i)) {
+      missing_episodes.push(i);
+    }
+  }
+  return missing_episodes;
 }
