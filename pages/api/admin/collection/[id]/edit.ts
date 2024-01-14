@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       sort,
       type: 1,
       seasons: {
-        connect: medias
+        set: medias
           .filter((media) => media.type === 1)
           .map((media) => {
             return {
@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           }),
       },
       movies: {
-        connect: medias
+        set: medias
           .filter((media) => media.type === 2)
           .map((media) => {
             return {

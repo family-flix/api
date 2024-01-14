@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       title: draft.title,
       type: CollectionTypes.DailyUpdate,
       medias: {
-        connect: draft.medias.map((media) => {
+        set: draft.medias.map((media) => {
           return {
             id: media.id,
           };

@@ -7,12 +7,14 @@ import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
+import { CollectionTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
     id,
+    type,
     title,
     desc,
     medias,
@@ -23,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     title: string;
     desc: string;
     sort: number;
-    type: number;
+    type: CollectionTypes;
     medias: { id: string; type: number }[];
     rules: Record<string, unknown>;
     orders: Record<string, unknown>;
@@ -60,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       title,
       desc,
       sort,
-      type: 1,
+      type,
       extra: (() => {
         if (!orders) {
           return "{}";
@@ -70,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         });
       })(),
       medias: {
-        connect: medias.map((media) => {
+        set: medias.map((media) => {
           return {
             id: media.id,
           };

@@ -651,7 +651,7 @@ export class ScheduleTask {
           });
         })(),
         medias: {
-          connect: medias.map((media) => {
+          set: medias.map((media) => {
             return { id: media.id };
           }),
         },
@@ -1083,14 +1083,14 @@ export class ScheduleTask {
             data: {
               medias: draft.medias,
               seasons: {
-                connect: draft.seasons.map((season) => {
+                set: draft.seasons.map((season) => {
                   return {
                     id: season.id,
                   };
                 }),
               },
               movies: {
-                connect: draft.movies.map((movie) => {
+                set: draft.movies.map((movie) => {
                   return {
                     id: movie.id,
                   };

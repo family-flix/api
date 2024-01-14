@@ -2064,7 +2064,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           },
           data: {
             persons: {
-              connect: {
+              set: {
                 id: person_record.id,
               },
             },
@@ -2131,7 +2131,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
           },
           data: {
             persons: {
-              connect: {
+              set: {
                 id: person_record.id,
               },
             },

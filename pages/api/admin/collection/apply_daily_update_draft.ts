@@ -75,14 +75,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       type: CollectionTypes.DailyUpdate,
       medias: draft.medias,
       seasons: {
-        connect: draft.seasons.map((season) => {
+        set: draft.seasons.map((season) => {
           return {
             id: season.id,
           };
         }),
       },
       movies: {
-        connect: draft.movies.map((movie) => {
+        set: draft.movies.map((movie) => {
           return {
             id: movie.id,
           };
