@@ -14,9 +14,10 @@ import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const { type, data, media_source_id } = req.body as Partial<{
+  const { type, data, media_id, media_source_id } = req.body as Partial<{
     type: number;
     data: string;
+    media_id: string;
     media_source_id: string;
   }>;
   const { authorization } = req.headers;
@@ -31,32 +32,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!data) {
     return e(Result.Err("缺少问题描述"));
   }
-  await (async () => {
-    if (media_source_id) {
-      // 1. 影视剧存在问题
-      const r = await store.prisma.report_v2.create({
-        data: {
-          id: r_id(),
-          type,
-          data,
-          media_source_id,
-          member_id: member.id,
-          user_id: member.user.id,
-        },
-      });
-      return;
-    }
-    // 2. 意见/反馈/想看
-    const r = await store.prisma.report_v2.create({
-      data: {
-        id: r_id(),
-        type,
-        data,
-        member_id: member.id,
-        user_id: member.user.id,
-      },
-    });
-  })();
   async function notify(text: string) {
     if (typeof text !== "string") {
       console.log(`推送消息失败，请传入文本消息，传入了 `, text);
@@ -92,6 +67,91 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return "未知反馈";
     })()
   );
+  if (media_id && media_source_id) {
+    // 1. 影视剧存在问题
+    const existing = await store.prisma.report_v2.findFirst({
+      where: {
+        type,
+        data,
+        media_id,
+        media_source_id,
+        member_id: member.id,
+        user_id: member.user.id,
+      },
+    });
+    if (existing) {
+      return e(Result.Err("已经提交过该内容了"));
+    }
+    const r = await store.prisma.report_v2.create({
+      data: {
+        id: r_id(),
+        type,
+        data,
+        media_id,
+        media_source_id,
+        member_id: member.id,
+        user_id: member.user.id,
+      },
+    });
+    res.status(200).json({
+      code: 0,
+      msg: "新增反馈成功",
+      data: null,
+    });
+    return;
+  }
+  if (media_id) {
+    // 1. 影视剧存在问题
+    const existing = await store.prisma.report_v2.findFirst({
+      where: {
+        type,
+        data,
+        media_id,
+        member_id: member.id,
+        user_id: member.user.id,
+      },
+    });
+    if (existing) {
+      return e(Result.Err("已经提交过该内容了"));
+    }
+    const r = await store.prisma.report_v2.create({
+      data: {
+        id: r_id(),
+        type,
+        data,
+        media_id,
+        member_id: member.id,
+        user_id: member.user.id,
+      },
+    });
+    res.status(200).json({
+      code: 0,
+      msg: "新增反馈成功",
+      data: null,
+    });
+    return;
+  }
+  // 2. 意见/反馈/想看
+  const existing = await store.prisma.report_v2.findFirst({
+    where: {
+      type,
+      data,
+      member_id: member.id,
+      user_id: member.user.id,
+    },
+  });
+  if (existing) {
+    return e(Result.Err("已经提交过该内容了"));
+  }
+  const r = await store.prisma.report_v2.create({
+    data: {
+      id: r_id(),
+      type,
+      data,
+      member_id: member.id,
+      user_id: member.user.id,
+    },
+  });
   res.status(200).json({
     code: 0,
     msg: "新增反馈成功",

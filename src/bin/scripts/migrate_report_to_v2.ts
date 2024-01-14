@@ -61,6 +61,8 @@ async function main() {
         await store.prisma.report_v2.create({
           data: {
             id,
+            created,
+            updated,
             type,
             data,
             answer,
@@ -108,6 +110,8 @@ async function main() {
           await store.prisma.report_v2.create({
             data: {
               id,
+              updated,
+              created,
               type,
               data,
               answer,
@@ -122,6 +126,8 @@ async function main() {
         await store.prisma.report_v2.create({
           data: {
             id,
+            updated,
+            created,
             type,
             data,
             answer,

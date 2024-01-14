@@ -36,14 +36,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return store.prisma.report_v2.findMany({
         where,
         include: {
+          media: {
+            include: {
+              profile: true,
+            },
+          },
           media_source: {
             include: {
               profile: true,
-              media: {
-                include: {
-                  profile: true,
-                },
-              },
             },
           },
           member: true,
@@ -55,43 +55,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
     },
   });
+  const data = {
+    page_size,
+    total: count,
+    next_marker: result.next_marker,
+    list: result.list.map((report) => {
+      const { id, type, answer, member, media, media_source, data, created } = report;
+      return {
+        id,
+        type,
+        data,
+        media: (() => {
+          if (media) {
+            if (media_source) {
+              return {
+                type: media.type,
+                name: media.profile.name,
+                poster_path: media.profile.poster_path,
+                episode_text:
+                  media.type === MediaTypes.Season
+                    ? `${media_source.profile.order} ${media_source.profile.name}`
+                    : null,
+              };
+            }
+            return {
+              type: media.type,
+              name: media.profile.name,
+              poster_path: media.profile.poster_path,
+              episode_text: null,
+            };
+          }
+          return null;
+        })(),
+        answer,
+        member: {
+          id: member.id,
+          name: member.remark,
+        },
+        created,
+      };
+    }),
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      page_size,
-      total: count,
-      list: result.list.map((report) => {
-        const { id, type, answer, member, media_source, data, created } = report;
-        return {
-          id,
-          type,
-          data,
-          media: (() => {
-            if (!media_source) {
-              return null;
-            }
-            const {
-              type,
-              profile: media_source_profile,
-              media: { profile: media_profile },
-            } = media_source;
-            return {
-              type,
-              name: media_profile.name,
-              poster_path: media_profile.poster_path,
-              episode_text:
-                type === MediaTypes.Season ? `${media_source_profile.order} ${media_source_profile.name}` : null,
-            };
-          })(),
-          answer,
-          member: {
-            id: member.id,
-            name: member.remark,
-          },
-          created,
-        };
-      }),
-    },
+    data,
   });
 }

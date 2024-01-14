@@ -77,4 +77,14 @@ describe("电视剧4", () => {
       episode: "E04",
     });
   });
+  test("01买或死？ .mp4", () => {
+    const name = "01买或死？ .mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E01",
+    });
+  });
 });
