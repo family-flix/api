@@ -14,7 +14,11 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { type, page_size = 20 } = req.body as Partial<{
+  const {
+    type,
+    next_marker,
+    page_size = 20,
+  } = req.body as Partial<{
     type: ReportTypes;
     next_marker: string;
     page_size: number;
@@ -54,6 +58,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         ...args,
       });
     },
+    next_marker,
+    page_size,
   });
   const data = {
     page_size,

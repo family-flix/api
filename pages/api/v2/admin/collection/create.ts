@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     title: string;
     desc: string;
     sort: number;
-    type: number;
+    type: CollectionTypes;
     medias: { id: string; type: number }[];
     rules: Record<string, unknown>;
     orders: Record<string, unknown>;

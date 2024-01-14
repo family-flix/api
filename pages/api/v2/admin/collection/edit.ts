@@ -11,14 +11,15 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.body as Partial<{ id: string }>;
   const {
+    id,
     title,
     desc,
     medias,
     orders,
     sort = 0,
   } = req.body as Partial<{
+    id: string;
     title: string;
     desc: string;
     sort: number;
@@ -33,6 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
+  if (!id) {
+    return e(Result.Err("缺少 id"));
+  }
   if (!title) {
     return e(Result.Err("缺少 title"));
   }

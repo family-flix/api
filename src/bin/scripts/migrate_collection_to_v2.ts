@@ -102,25 +102,25 @@ async function main() {
         }
         medias.push(matched_media);
       }
-      // await store.prisma.collection_v2.create({
-      //   data: {
-      //     id,
-      //     created,
-      //     updated,
-      //     title,
-      //     desc,
-      //     type,
-      //     sort,
-      //     medias: {
-      //       connect: medias.map((m) => {
-      //         return {
-      //           id: m.id,
-      //         };
-      //       }),
-      //     },
-      //     user_id,
-      //   },
-      // });
+      await store.prisma.collection_v2.create({
+        data: {
+          id,
+          created,
+          updated,
+          title,
+          desc,
+          type,
+          sort,
+          medias: {
+            connect: medias.map((m) => {
+              return {
+                id: m.id,
+              };
+            }),
+          },
+          user_id,
+        },
+      });
     },
   });
   console.log("Success");

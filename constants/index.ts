@@ -78,6 +78,8 @@ export enum CollectionTypes {
   DailyUpdateDraft = 3,
   /** 每日更新存档 */
   DailyUpdateArchive = 4,
+  /** 手动创建的排行榜 */
+  ManuallyRank = 5,
 }
 
 export enum MediaErrorTypes {

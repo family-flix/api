@@ -18,10 +18,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
+  const user = t_res.data;
   if (!id) {
     return e(Result.Err("缺少集合 id"));
   }
-  const user = t_res.data;
   const collection = await store.prisma.collection_v2.findFirst({
     where: {
       id,
@@ -38,13 +38,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!collection) {
     return e(Result.Err("没有匹配的记录"));
   }
-  const { sort, title, desc, extra, medias } = collection;
+  const { type, sort, title, desc, extra, medias } = collection;
   const r = parseJSONStr<{ orders: Record<string, number> }>(extra);
   const data = {
     id,
     title,
     desc,
     sort,
+    type,
     medias: medias
       .map((season) => {
         const { id, type, profile } = season;
