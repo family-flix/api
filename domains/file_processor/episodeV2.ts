@@ -326,7 +326,8 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
           }
           return name === original_name ? null : original_name;
         })(),
-        season_text: season.season_text,
+        season_text: season.season_text || null,
+        air_year: data.episode.year || null,
         drive_id: this.options.drive_id,
         user_id: this.options.user_id,
       },

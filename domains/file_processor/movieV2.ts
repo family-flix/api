@@ -267,6 +267,7 @@ export class MovieFileProcessor extends BaseDomain<TheTypesOfEvents> {
           }
           return name === original_name ? null : original_name;
         })(),
+        air_year: year || null,
         drive_id: this.options.drive_id,
         user_id: this.options.user_id,
       },
