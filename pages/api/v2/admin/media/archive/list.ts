@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const {
     name,
-    type = MediaTypes.Season,
+    type,
     drive_ids,
     page_size,
     next_marker = "",
@@ -34,9 +34,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const user = t_res.data;
   let queries: NonNullable<ModelQuery<"media">>[] = [
     {
-      type,
       media_sources: {
-        every: {
+        some: {
           files: {
             some: drive_ids
               ? {
@@ -51,6 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: user.id,
     },
   ];
+  if (type) {
+    queries.push({
+      type,
+    });
+  }
   if (name) {
     queries.push({
       profile: {

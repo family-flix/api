@@ -7,9 +7,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
-import { Drive } from "@/domains/drive";
+import { Drive } from "@/domains/drive/v2";
 import { DriveTypes } from "@/domains/drive/constants";
-import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/aliyundrive/utils";
+import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/aliyundrive/utilsV2";
 import { MediaSourceProfileRecord, MediaSourceRecord, ParsedMediaSourceRecord } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DriveAnalysis } from "@/domains/analysis/v2";
@@ -53,9 +53,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     id: season.id,
     type: season.profile.type,
     name: season.profile.name,
+    original_name: season.profile.original_name,
     air_date: season.profile.air_date,
-    episode_count: season.profile.source_count ?? 0,
-    episodes: season.media_sources,
+    source_count: season.profile.source_count ?? 0,
+    sources: season.media_sources,
   };
   const job_res = await Job.New({
     unique_id: season.id,
@@ -72,14 +73,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     id: string;
     type: MediaTypes;
     name: string;
+    original_name: string | null;
     air_date: string | null;
-    episode_count: number;
-    episodes: (MediaSourceRecord & {
+    source_count: number;
+    sources: (MediaSourceRecord & {
       profile: MediaSourceProfileRecord;
       files: ParsedMediaSourceRecord[];
     })[];
   }) {
-    const { episodes } = season;
+    const { sources: episodes } = season;
     const all_parsed_episodes_of_the_season = episodes.reduce((total, cur) => {
       return total.concat(
         cur.files.map((parsed_episode) => {
@@ -279,7 +281,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         from_drive.on_print((node) => {
           job.output.write(node);
         });
-        await from_drive.delete_file_in_drive(folder_in_from_drive.file_id);
+        await from_drive.delete_file_or_folder_in_drive(folder_in_from_drive.file_id);
         job.output.write_line([prefix, "归档完成"]);
       })();
     }

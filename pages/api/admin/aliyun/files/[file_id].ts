@@ -8,7 +8,7 @@ import path from "path";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Folder } from "@/domains/folder";
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";

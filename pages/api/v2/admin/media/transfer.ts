@@ -1,24 +1,25 @@
 /**
- * @file 管理后台/归档指定影视剧
+ * @file 管理后台/归档指定影视剧并移动到指定云盘
  * 1、归档的意思是重命名、移动到同一个文件夹
  * 如 Name/S01/E01.xxx.mp4，归档后，变成 Name.S01/Name.S01E01.mp4
  * 极端情况下，一部电视剧的剧集可能在不同盘内
+ * 2、通过创建分享，转存的方式，可以将 A 盘的文件夹，「移动」到 B 盘
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
-import { Drive } from "@/domains/drive";
+import { Drive } from "@/domains/drive/v2";
 import { MediaSourceProfileRecord, MediaSourceRecord, ParsedMediaSourceRecord } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DriveAnalysis } from "@/domains/analysis/v2";
-import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/aliyundrive/utils";
+import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/aliyundrive/utilsV2";
 import { BaseApiResp, Result } from "@/types";
 import { FileType, MediaTypes } from "@/constants";
 import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/server";
-import { padding_zero } from "@/utils";
+import { padding_zero, sleep } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -58,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const to_drive_res = await Drive.Get({ id: to_drive_id, user, store });
   if (to_drive_res.error) {
-    return e(to_drive_res);
+    return e(Result.Err(to_drive_res.error.message));
   }
   const to_drive = to_drive_res.data;
   if (!to_drive.has_root_folder()) {
@@ -66,17 +67,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const to_drive_root_folder_id = to_drive.profile.root_folder_id!;
   const to_drive_root_folder_name = to_drive.profile.root_folder_name!;
-  const season_payload = {
+  const media_payload = {
     id: media.id,
     type: media.type,
     name: media.profile.name,
+    original_name: media.profile.original_name,
     air_date: media.profile.air_date,
-    episode_count: media.profile.source_count ?? 0,
-    episodes: media.media_sources,
+    source_count: media.profile.source_count ?? 0,
+    sources: media.media_sources,
   };
   const job_res = await Job.New({
     unique_id: to_drive.id,
-    desc: `移动「${season_payload.name}」到云盘「${to_drive.name}]`,
+    desc: `移动「${media_payload.name}」到云盘「${to_drive.name}]`,
     type: TaskTypes.MoveTV,
     user_id: user.id,
     store,
@@ -89,15 +91,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     id: string;
     type: MediaTypes;
     name: string;
+    original_name: string | null;
     air_date: string | null;
-    episode_count: number;
-    episodes: (MediaSourceRecord & {
+    source_count: number;
+    sources: (MediaSourceRecord & {
       profile: MediaSourceProfileRecord;
       files: ParsedMediaSourceRecord[];
     })[];
   }) {
-    const { episodes } = season;
-    const all_parsed_episodes_of_the_season = episodes.reduce((total, cur) => {
+    const { sources: episodes } = season;
+    const parsed_media_source_of_the_media = episodes.reduce((total, cur) => {
       return total.concat(
         cur.files.map((parsed_episode) => {
           return {
@@ -107,11 +110,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         })
       );
     }, [] as (ParsedMediaSourceRecord & { order: number })[]);
-    const parsed_episode_groups_by_drive_id: Record<string, TheFilePrepareTransferV2[]> = {};
-    for (let i = 0; i < all_parsed_episodes_of_the_season.length; i += 1) {
+    const parsed_media_source_groups_by_drive_id: Record<string, TheFilePrepareTransferV2[]> = {};
+    for (let i = 0; i < parsed_media_source_of_the_media.length; i += 1) {
       (() => {
-        const parsed_episode = all_parsed_episodes_of_the_season[i];
-        const { id, order, file_id, file_name, parent_file_id, parent_paths, drive_id } = parsed_episode;
+        const parsed_media_source = parsed_media_source_of_the_media[i];
+        const { id, order, file_id, file_name, parent_file_id, parent_paths, drive_id } = parsed_media_source;
         const payload: TheFilePrepareTransferV2 = {
           id,
           type: FileType.File,
@@ -126,16 +129,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             return `E${padding_zero(order)}`;
           })(),
         };
-        parsed_episode_groups_by_drive_id[drive_id] = parsed_episode_groups_by_drive_id[drive_id] || [];
-        parsed_episode_groups_by_drive_id[drive_id].push(payload);
+        parsed_media_source_groups_by_drive_id[drive_id] = parsed_media_source_groups_by_drive_id[drive_id] || [];
+        parsed_media_source_groups_by_drive_id[drive_id].push(payload);
       })();
     }
-    const drive_ids_of_parsed_episodes = Object.keys(parsed_episode_groups_by_drive_id);
+    const drive_ids_of_parsed_episodes = Object.keys(parsed_media_source_groups_by_drive_id);
     // 这里遍历云盘，将每个云盘内、该 电视剧季 需要归档的文件进行整理
     for (let i = 0; i < drive_ids_of_parsed_episodes.length; i += 1) {
       await (async () => {
         const from_drive_id = drive_ids_of_parsed_episodes[i];
-        const the_files_prepare_transfer = parsed_episode_groups_by_drive_id[from_drive_id];
+        const the_files_prepare_transfer = parsed_media_source_groups_by_drive_id[from_drive_id];
         if (the_files_prepare_transfer.length === 0) {
           job.output.write_line([`云盘「${from_drive_id}」要转存的文件数为 0`]);
           return;
@@ -153,6 +156,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           profile: {
             type: season.type,
             name: season.name,
+            original_name: season.original_name,
             air_date: season.air_date,
           },
           job,
@@ -187,7 +191,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           job.output.write_line([prefix, "转存分享资源失败，因为", transfer_res.error.message]);
           return;
         }
+        await sleep(5000);
+        job.output.write_line([prefix, "在目标云盘索引新增的文件 ", folder_in_from_drive.file_name]);
+        const drive_folder_in_to_drive_r = await to_drive.client.existing(
+          to_drive.profile.root_folder_id!,
+          folder_in_from_drive.file_name
+        );
+        if (drive_folder_in_to_drive_r.error) {
+          job.output.write_line([prefix, "获取目标云盘内文件夹失败", drive_folder_in_to_drive_r.error.message]);
+          return;
+        }
+        const drive_folder_in_to_drive = drive_folder_in_to_drive_r.data;
+        if (!drive_folder_in_to_drive) {
+          job.output.write_line([prefix, "转存成功后，没有找到目标文件夹"]);
+          return;
+        }
         const r3 = await DriveAnalysis.New({
+          unique_id: job.id,
           drive: to_drive,
           store,
           user,
@@ -201,61 +221,87 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const analysis = r3.data;
-        job.output.write_line([prefix, "在目标云盘索引新增的文件"]);
-        const r = await analysis.run({
-          async before_search() {
-            await walk_model_with_cursor({
-              fn(extra) {
-                return store.prisma.parsed_media_source.findMany({
-                  where: {
-                    parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
-                    drive_id: to_drive.id,
-                    user_id: user.id,
-                  },
-                  orderBy: {
-                    created: "desc",
-                  },
-                  ...extra,
-                });
-              },
-              async handler(data) {
-                const same_file = await store.prisma.parsed_media_source.findFirst({
-                  where: {
-                    parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
-                    drive_id: from_drive.id,
-                    user_id: user.id,
-                  },
-                });
-                if (!same_file) {
-                  return;
-                }
-                await store.prisma.parsed_media_source.update({
-                  where: {
-                    id: data.id,
-                  },
-                  data: {
-                    media_source_id: same_file.media_source_id,
-                  },
-                });
-                //   if (same_file.parsed_media_id && data.parsed_media_id) {
-                //     await store.prisma.parsed_media.update({
-                //       where: {
-                //         id: data.parsed_media_id,
-                //       },
-                //       data: {
-                //         media_id: same_file.media_source_id,
-                //       },
-                //     });
-                //   }
-              },
-            });
-            return false;
-          },
-        });
+        const r = await analysis.run2(
+          [
+            {
+              file_id: drive_folder_in_to_drive.file_id,
+              name: drive_folder_in_to_drive.name,
+              type: FileType.Folder,
+            },
+          ],
+          {
+            async before_search() {
+              return false;
+            },
+          }
+        );
         if (r.error) {
           job.output.write_line([prefix, "索引失败，因为", r.error.message]);
           return;
         }
+        await walk_model_with_cursor({
+          fn(extra) {
+            return store.prisma.parsed_media_source.findMany({
+              where: {
+                cause_job_id: job.id,
+                // parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
+                drive_id: to_drive.id,
+                user_id: user.id,
+              },
+              include: {
+                parsed_media: true,
+              },
+              orderBy: {
+                created: "desc",
+              },
+              ...extra,
+            });
+          },
+          async handler(data) {
+            const same_file_in_from_drive = await store.prisma.parsed_media_source.findFirst({
+              where: {
+                file_name: data.file_name,
+                parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
+                drive_id: from_drive.id,
+                user_id: user.id,
+              },
+              include: {
+                parsed_media: true,
+                media_source: {
+                  include: {
+                    profile: true,
+                  },
+                },
+              },
+            });
+            if (!same_file_in_from_drive) {
+              return;
+            }
+            await store.prisma.parsed_media_source.update({
+              where: {
+                id: data.id,
+              },
+              data: {
+                media_source_id: same_file_in_from_drive.media_source_id,
+              },
+            });
+            if (
+              data.parsed_media &&
+              !data.parsed_media.media_profile_id &&
+              same_file_in_from_drive.parsed_media &&
+              same_file_in_from_drive.parsed_media.media_profile_id
+            ) {
+              await store.prisma.parsed_media.update({
+                where: {
+                  id: data.parsed_media.id,
+                },
+                data: {
+                  media_profile_id: same_file_in_from_drive.parsed_media.media_profile_id,
+                },
+              });
+            }
+          },
+        });
         job.output.write_line([prefix, "完成目标云盘转存后的文件索引"]);
         const from_drive_episode_count = the_files_prepare_transfer.length;
         job.output.write_line([
@@ -307,14 +353,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         from_drive.on_print((line) => {
           job.output.write(line);
         });
-        await from_drive.delete_file_in_drive(folder_in_from_drive.file_id);
+        await from_drive.delete_file_or_folder_in_drive(folder_in_from_drive.file_id);
         job.output.write_line([prefix, "归档完成"]);
       })();
     }
     job.output.write_line(["全部归档任务完成"]);
     job.finish();
   }
-  run(season_payload);
+  run(media_payload);
   res.status(200).json({
     code: 0,
     msg: "开始转存",

@@ -1,5 +1,5 @@
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
-import { AliyunDriveClient, AliyunDriveProfile } from "@/domains/aliyundrive/types";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunDriveProfile } from "@/domains/aliyundrive/types";
 import { User } from "@/domains/user";
 import { Result } from "@/types";
 import { parseJSONStr } from "@/utils";
@@ -26,7 +26,7 @@ export async function initial_share_client(user: User) {
     return Result.Err(p_res.error.message);
   }
   const { drive_id } = p_res.data;
-  const client_res = await AliyunBackupDriveClient.Get({ drive_id: String(drive_id), store });
+  const client_res = await AliyunDriveClient.Get({ drive_id: String(drive_id), store });
   if (client_res.error) {
     return Result.Err(client_res.error.message);
   }

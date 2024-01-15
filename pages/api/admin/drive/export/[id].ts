@@ -16,15 +16,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.query as Partial<{ id: string }>;
-  if (!id) {
-    return e(Result.Err("缺少云盘 id"));
-  }
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
-  const { id: user_id } = t_res.data;
-  const drive_res = await store.find_drive({ id, user_id });
+  const user = t_res.data;
+  if (!id) {
+    return e(Result.Err("缺少云盘 id"));
+  }
+  const drive_res = await store.find_drive({ id, user_id: user.id });
   if (drive_res.error) {
     return e(drive_res);
   }
@@ -33,7 +33,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("没有匹配的云盘记录"));
   }
   const { type, profile, avatar, name, root_folder_id, total_size, used_size } = drive_record;
-
   const data_res = await (async () => {
     if (type === DriveTypes.AliyunBackupDrive) {
       const p_res = parseJSONStr<AliyunDrivePayload>(profile);
@@ -71,39 +70,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
     }
     if (type === DriveTypes.AliyunResourceDrive) {
-      const p_res = parseJSONStr<AliyunDrivePayload>(profile);
-      if (p_res.error) {
-        return Result.Err(p_res.error);
-      }
-      const { app_id, drive_id, device_id, user_id } = p_res.data;
-      const drive_token_res = await store.find_aliyun_drive_token({
-        id: drive_record.drive_token_id,
-      });
-      if (drive_token_res.error) {
-        return Result.Err(drive_token_res.error);
-      }
-      if (!drive_token_res.data) {
-        return Result.Err("没有匹配的云盘凭证记录");
-      }
-      const { data } = drive_token_res.data;
-      const d_res = parseJSONStr<{ access_token: string; refresh_token: string }>(data);
-      if (d_res.error) {
-        return Result.Err(d_res.error);
-      }
-      const { access_token, refresh_token } = d_res.data;
-      return Result.Ok({
-        app_id,
-        drive_id,
-        device_id,
-        avatar,
-        name,
-        user_id,
-        root_folder_id,
-        total_size,
-        used_size,
-        access_token,
-        refresh_token,
-      });
+      // const p_res = parseJSONStr<AliyunDrivePayload>(profile);
+      // if (p_res.error) {
+      //   return Result.Err(p_res.error);
+      // }
+      // const { app_id, drive_id, device_id, user_id } = p_res.data;
+      // const drive_token_res = await store.find_aliyun_drive_token({
+      //   id: drive_record.drive_token_id,
+      // });
+      // if (drive_token_res.error) {
+      //   return Result.Err(drive_token_res.error);
+      // }
+      // if (!drive_token_res.data) {
+      //   return Result.Err("没有匹配的云盘凭证记录");
+      // }
+      // const { data } = drive_token_res.data;
+      // const d_res = parseJSONStr<{ access_token: string; refresh_token: string }>(data);
+      // if (d_res.error) {
+      //   return Result.Err(d_res.error);
+      // }
+      // const { access_token, refresh_token } = d_res.data;
+      // return Result.Ok({
+      //   app_id,
+      //   drive_id,
+      //   device_id,
+      //   avatar,
+      //   name,
+      //   user_id,
+      //   root_folder_id,
+      //   total_size,
+      //   used_size,
+      //   access_token,
+      //   refresh_token,
+      // });
+      return Result.Err("请先导入备份盘，再创建资源盘");
     }
     return Result.Err("异常云盘信息");
   })();

@@ -11,12 +11,12 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { DatabaseStore } from "@/domains/store";
 import { DriveRecord } from "@/domains/store/types";
-import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
+import { Article, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { BaseDomain, Handler } from "@/domains/base";
 import { parseJSONStr, query_stringify, sleep } from "@/utils";
 import { Result, Unpacked } from "@/types";
 
-import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo, AliyunDriveProfile, AliyunDriveClient } from "./types";
+import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo, AliyunDriveProfile } from "./types";
 import { get_part_info_list, prepare_upload_file, read_part_file, file_info } from "./utils";
 
 const API_HOST = "https://api.aliyundrive.com";
@@ -79,7 +79,7 @@ type AliyunDriveProps = {
   store: DatabaseStore;
 };
 
-export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
+export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   static async Get(options: Partial<{ drive_id: string; store: DatabaseStore }>) {
     const { drive_id, store } = options;
     if (!store) {
@@ -135,7 +135,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     }
     const { id: token_id, access_token, refresh_token } = token_res.data;
     return Result.Ok(
-      new AliyunBackupDriveClient({
+      new AliyunDriveClient({
         id,
         drive_id,
         device_id,
@@ -251,7 +251,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
           console.error("\n");
           console.error(url);
           // console.error(body, headers);
-          console.error("POST request failed, because", response);
+          console.error("POST request failed, because", response?.data);
           // console.log(response, message);
           if (response?.status === 401) {
             if (response?.data?.code === "UserDeviceOffline") {
@@ -473,7 +473,8 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    return Result.Ok(r.data);
+    const file = r.data;
+    return Result.Ok(file);
   }
   /** 添加文件夹 */
   async add_folder(
@@ -1107,7 +1108,6 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       this.emit(Events.TransferFailed, error);
       return Result.Err(error);
     }
-    console.log(r1.data);
     const { share_id, share_title, share_name, files } = r1.data;
     this.emit(
       Events.Print,
@@ -1192,14 +1192,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     // console.log("async task list", async_task_list);
     if (async_task_list.length !== 0) {
       await sleep(1000);
-      this.emit(
-        Events.Print,
-        new ArticleLineNode({
-          children: ["获取转存任务状态"].map((text) => {
-            return new ArticleTextNode({ text });
-          }),
-        })
-      );
+      this.emit(Events.Print, Article.build_line(["获取转存任务状态"]));
       const r = await run(
         async () => {
           await sleep(3000);
@@ -1267,14 +1260,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
       //   return Result.Err(err);
       // }
     }
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: ["转存成功"].map((text) => {
-          return new ArticleTextNode({ text });
-        }),
-      })
-    );
+    this.emit(Events.Print, Article.build_line(["转存成功"]));
     this.emit(Events.TransferFinish);
     // console.log("save_multiple_shared_files", responses);
     return Result.Ok({
@@ -1604,12 +1590,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
           },
           { drive_id: drive_id || String(this.drive_id) }
         );
-        if (r.error) {
-          return Result.Err(r.error.message);
-        }
-        const { code } = r.data;
-        this.debug && console.log("pre_hash result", r.data.part_info_list.length);
-        if (code === "PreHashMatched") {
+        if (r.code === "PreHashMatched") {
           const r1 = await prepare_upload_file(filepath, {
             token,
             size: r2.data.size,
@@ -1632,6 +1613,10 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
             },
             { drive_id: drive_id || String(this.drive_id) }
           );
+        }
+        if (r.error) {
+          console.log("r.error", r.code);
+          return Result.Err(r.error.message);
         }
         return r;
       }
@@ -1874,7 +1859,7 @@ export class AliyunBackupDriveClient extends BaseDomain<TheTypesOfEvents> {
     if (!this.resource_drive_id) {
       return Result.Err("请先初始化资源盘信息");
     }
-    const resource_client_res = await AliyunBackupDriveClient.Get({
+    const resource_client_res = await AliyunDriveClient.Get({
       drive_id: this.resource_drive_id,
       store: this.store,
     });

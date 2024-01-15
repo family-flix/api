@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
+import { Drive } from "@/domains/drive/v2";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { Job } from "@/domains/job";
 import { TaskTypes } from "@/domains/job/constants";

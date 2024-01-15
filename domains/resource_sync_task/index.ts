@@ -12,7 +12,7 @@ import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DatabaseStore } from "@/domains/store";
 import { SyncTaskRecord } from "@/domains/store/types";
-import { AliyunDriveClient } from "@/domains/aliyundrive/types";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { folder_client } from "@/domains/store/utils";
 import { Result } from "@/types";
 import { is_video_file, sleep } from "@/utils";

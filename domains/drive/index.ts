@@ -4,8 +4,8 @@
 import dayjs from "dayjs";
 import Joi from "joi";
 
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
-import { AliyunDriveClient, AliyunDrivePayload, AliyunDriveProfile } from "@/domains/aliyundrive/types";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunDrivePayload, AliyunDriveProfile } from "@/domains/aliyundrive/types";
 import {
   Article,
   ArticleLineNode,
@@ -55,7 +55,7 @@ type DriveProps = {
     drive_id: string;
     token_id: string;
   } & AliyunDriveProfile;
-  client: AliyunBackupDriveClient;
+  client: AliyunDriveClient;
   user?: User;
   store: DatabaseStore;
 };
@@ -83,7 +83,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const { drive_id, ...rest } = r.data;
     // console.log("[DOMAIN]drive/index - Get", drive_id, type, drive_token_id);
     const client_res = await (async (): Promise<Result<AliyunDriveClient>> => {
-      const r = await AliyunBackupDriveClient.Get({ drive_id, store });
+      const r = await AliyunDriveClient.Get({ drive_id, store });
       if (r.error) {
         return Result.Err(r.error.message);
       }
@@ -137,7 +137,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const { drive_id, ...rest } = r.data;
     // console.log("[DOMAIN]drive/index - Get", drive_id, type, drive_token_id);
     const client_res = await (async (): Promise<Result<AliyunDriveClient>> => {
-      const r = await AliyunBackupDriveClient.Get({ drive_id, store });
+      const r = await AliyunDriveClient.Get({ drive_id, store });
       if (r.error) {
         return Result.Err(r.error.message);
       }
@@ -211,7 +211,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           return Result.Err("该云盘已存在，请检查信息后重试", undefined, { id: existing_drive.id });
         }
         const drive_record_id = r_id();
-        const client = new AliyunBackupDriveClient({
+        const client = new AliyunDriveClient({
           // 这里给一个空的是为了下面能调用 ping 方法
           id: drive_record_id,
           drive_id: String(drive_id),
@@ -316,7 +316,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         }
         const { access_token, refresh_token } = r2.data;
         if (!_resource_drive_id) {
-          const client = new AliyunBackupDriveClient({
+          const client = new AliyunDriveClient({
             id: "",
             drive_id: String(drive_id),
             resource_drive_id: "",
@@ -344,7 +344,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           return Result.Err("该资源盘已存在，请检查信息后重试", undefined, { id: existing_resource_drive.id });
         }
         const drive_record_id = r_id();
-        const client = new AliyunBackupDriveClient({
+        const client = new AliyunDriveClient({
           id: drive_record_id,
           drive_id: _resource_drive_id,
           device_id,
@@ -449,7 +449,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** 云盘所属用户 id */
   user?: User;
   profile: DriveProps["profile"];
-  client: AliyunBackupDriveClient;
+  client: AliyunDriveClient;
   store: DatabaseStore;
 
   constructor(options: DriveProps) {
@@ -486,7 +486,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       total_size,
       used_size,
     };
-    if (client instanceof AliyunBackupDriveClient) {
+    if (client instanceof AliyunDriveClient) {
       const r2 = await client.fetch_vip_info();
       if (r2.data) {
         const { user_name, nick_name, avatar, drive_id, device_id, user_id, app_id, resource_drive_id } = this.profile;

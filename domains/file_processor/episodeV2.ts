@@ -10,7 +10,7 @@ import { SearchedEpisode } from "@/domains/walker";
 import { DatabaseStore } from "@/domains/store";
 import { ParsedMediaSourceRecord } from "@/domains/store/types";
 import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
+import { Drive } from "@/domains/drive/v2";
 import { Article, ArticleLineNode } from "@/domains/article";
 import { Result } from "@/types";
 import { r_id } from "@/utils";
@@ -305,7 +305,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
           air_year: data.episode.year || null,
         },
       ],
-      drive_id: this.options.drive_id,
+      // drive_id: this.options.drive_id,
       user_id: this.options.user_id,
     };
     const existing_parsed_media = await this.store.prisma.parsed_media.findFirst({

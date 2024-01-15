@@ -1,6 +1,6 @@
 import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
 import { SearchedEpisode } from "@/domains/walker";
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { DatabaseStore } from "@/domains/store";
 import { ParsedTVRecord, ParsedEpisodeRecord, RecordCommonPart, ParsedSeasonRecord } from "@/domains/store/types";
 import { is_video_file } from "@/utils";
@@ -431,7 +431,7 @@ export type RequestedAliyunDriveFiles = PartialAliyunDriveFile & {
 export function fetch_files_factory(options: {
   tree: RequestedAliyunDriveFiles;
   size?: number;
-}): AliyunBackupDriveClient {
+}): AliyunDriveClient {
   // console.log("[]__invoke fetchFilesFactory");
   const { size = 10, tree } = options;
   function fetch_files(id: string, { marker }: { marker?: string }) {
@@ -476,7 +476,7 @@ export function fetch_files_factory(options: {
   const client = {
     fetch_files,
     fetch_file,
-  } as AliyunBackupDriveClient;
+  } as AliyunDriveClient;
   return client;
 }
 

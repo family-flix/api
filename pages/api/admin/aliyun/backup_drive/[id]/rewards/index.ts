@@ -9,7 +9,7 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { Drive } from "@/domains/drive";
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!backup_drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
-  const client_res = await AliyunBackupDriveClient.Get({ drive_id: backup_drive_id, store });
+  const client_res = await AliyunDriveClient.Get({ drive_id: backup_drive_id, store });
   if (client_res.error) {
     return e(client_res);
   }

@@ -1,5 +1,3 @@
-import { AliyunBackupDriveClient } from ".";
-
 export type AliyunDriveToken = {
   access_token: string;
   refresh_token: string;
@@ -88,5 +86,3 @@ export type AliyunDriveProfile = {
     started_at: number;
   }[];
 };
-
-export type AliyunDriveClient = AliyunBackupDriveClient;

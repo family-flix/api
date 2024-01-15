@@ -5,7 +5,7 @@
 import fs from "fs";
 import path from "path";
 
-import { AliyunBackupDriveClient } from "@/domains/aliyundrive";
+import { AliyunDriveClient } from "@/domains/aliyundrive";
 import { JSONFileStore } from "@/domains/store/jsonfile";
 import { BaseDomain, Handler } from "@/domains/base";
 import { parse_argv } from "@/utils/server";
@@ -53,7 +53,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     if (!existing) {
       return Result.Err("please create drive");
     }
-    const r = await AliyunBackupDriveClient.Get({
+    const r = await AliyunDriveClient.Get({
       drive_id: String(drive_id),
       // @ts-ignore
       store: this.store,
@@ -103,7 +103,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
       // @ts-ignore
       await this.store.create_drive(drive_body);
     }
-    const r = await AliyunBackupDriveClient.Get({
+    const r = await AliyunDriveClient.Get({
       drive_id: String(drive_id),
       // @ts-ignore
       store: this.store,
@@ -127,7 +127,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     filename: string;
     /** 上传到哪个父文件夹 */
     parent_file_id: string;
-    client: AliyunBackupDriveClient;
+    client: AliyunDriveClient;
   }) {
     const { client, parent_file_id, filename, filepath } = body;
     const file_existing_r = await client.existing(parent_file_id, filename);

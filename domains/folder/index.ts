@@ -103,7 +103,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
   /** 深度递归 */
   async walk(handler: (file: File | Folder) => Promise<boolean>, options: Partial<{ deep: boolean }> = { deep: true }) {
     if (this.client === null) {
-      throw new Error("缺少云盘操作实例");
+      return Result.Err("缺少云盘操作实例");
     }
     if (!this.name) {
       const r = await this.profile();
@@ -114,6 +114,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
     do {
       const r = await this.next();
       if (r.error) {
+        console.log(r.error.message);
         continue;
       }
       for (let i = 0; i < r.data.length; i += 1) {
@@ -183,7 +184,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
     });
     this.cur_items = folder_or_files;
     this.items = this.items.concat(folder_or_files);
-    return Result.Ok(this.cur_items);
+    return Result.Ok(folder_or_files);
   }
   set_delay(delay?: number) {
     this.delay = delay;

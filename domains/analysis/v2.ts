@@ -10,7 +10,7 @@ import { MediaSearcher } from "@/domains/searcher/v2";
 import { File, Folder } from "@/domains/folder";
 import { ParsedMediaSourceRecord } from "@/domains/store/types";
 import { Article, ArticleHeadNode, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
-import { Drive } from "@/domains/drive";
+import { Drive } from "@/domains/drive/v2";
 import { User } from "@/domains/user";
 import { DatabaseStore } from "@/domains/store";
 import { FolderWalker } from "@/domains/walker";
@@ -47,6 +47,7 @@ type DriveAnalysisProps = {
   store: DatabaseStore;
   walker: FolderWalker;
   searcher: MediaSearcher;
+  /** 用来标志一次任务中索引到的所有解析结果 */
   unique_id?: string;
   assets: string;
   tmdb_token: string;

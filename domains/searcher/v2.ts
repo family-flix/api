@@ -21,7 +21,7 @@ import {
 } from "@/domains/article";
 import { DatabaseStore } from "@/domains/store";
 import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
+import { Drive } from "@/domains/drive/v2";
 import { FileUpload } from "@/domains/uploader";
 import {
   MovieProfileRecord,

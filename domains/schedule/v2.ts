@@ -6,7 +6,7 @@ import { DatabaseStore } from "@/domains/store";
 import { FileRecord, ModelQuery } from "@/domains/store/types";
 import { User } from "@/domains/user";
 import { DriveTypes } from "@/domains/drive/constants";
-import { Drive } from "@/domains/drive";
+import { Drive } from "@/domains/drive/v2";
 import { Job, TaskTypes } from "@/domains/job";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
