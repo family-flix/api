@@ -6,7 +6,7 @@ import { Application } from "@/domains/application";
 import { Folder } from "@/domains/folder";
 import { folder_client } from "@/domains/store/utils";
 import { MockFileClient } from "@/domains/clients/mock";
-import { data, id } from "@/mock/yi_qi_zui_guo_de_nv_hai";
+// import { data, id } from "@/mock/yi_qi_zui_guo_de_nv_hai";
 import { Result } from "@/types";
 
 (async () => {
@@ -19,13 +19,13 @@ import { Result } from "@/types";
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
-  const original_drive_res = await AliyunDriveClient.Get({ drive_id: "625667282", store });
-  if (original_drive_res.error) {
-    console.log(original_drive_res.error.message);
-    return;
-  }
-  const original_client = original_drive_res.data;
-  const video_filepath = path.resolve(os.homedir(), "Downloads", "output.mp4");
+  // const original_drive_res = await AliyunDriveClient.Get({ drive_id: "625667282", store });
+  // if (original_drive_res.error) {
+  //   console.log(original_drive_res.error.message);
+  //   return;
+  // }
+  // const original_client = original_drive_res.data;
+  // const video_filepath = path.resolve(os.homedir(), "Downloads", "output.mp4");
   // const folder = new Folder("65a39f93f0f55618c47a441aa406f59c5efd9e75", {
   //   client: original_client,
   // });
@@ -47,28 +47,28 @@ import { Result } from "@/types";
   //   console.log(r.error.message);
   //   return;
   // }
-  const folder = new Folder("63dc947efb67a1c74018416cbcff45c3e137fa6e", {
-    // @ts-ignore
-    client: new MockFileClient({ data }),
-  });
-  const r = await folder.walk(async (file) => {
-    const { name, type, parents, mime_type } = file;
-    const filepath = [...parents].map((p) => p.name).join("/");
-    if (type === "file" && mime_type?.includes("video")) {
-      console.log("\n");
-      console.log("filepath: ", filepath);
-      console.log("name: ", name);
-      await original_client.upload(video_filepath, {
-        name: [filepath, name].join("/"),
-        parent_file_id: "65a49ebae33fc9fe9f554362aa556130b4887ba8",
-      });
-    }
-    return true;
-  });
-  if (r.error) {
-    console.log(r.error.message);
-    return;
-  }
+  // const folder = new Folder("63dc947efb67a1c74018416cbcff45c3e137fa6e", {
+  //   // @ts-ignore
+  //   client: new MockFileClient({ data }),
+  // });
+  // const r = await folder.walk(async (file) => {
+  //   const { name, type, parents, mime_type } = file;
+  //   const filepath = [...parents].map((p) => p.name).join("/");
+  //   if (type === "file" && mime_type?.includes("video")) {
+  //     console.log("\n");
+  //     console.log("filepath: ", filepath);
+  //     console.log("name: ", name);
+  //     await original_client.upload(video_filepath, {
+  //       name: [filepath, name].join("/"),
+  //       parent_file_id: "65a49ebae33fc9fe9f554362aa556130b4887ba8",
+  //     });
+  //   }
+  //   return true;
+  // });
+  // if (r.error) {
+  //   console.log(r.error.message);
+  //   return;
+  // }
   console.log("Completed");
 })();
 
