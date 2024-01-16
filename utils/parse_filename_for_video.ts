@@ -44,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("Leon")) {
+    if (!filename.includes("如果")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -72,7 +72,7 @@ export function parse_filename_for_video(
     .replace(/\u200B/g, "")
     // 在 小谢尔顿S01E01 这种 S01E01 紧跟着名字后面的场景，前面加一个符号来分割
     .replace(/(?=[sS][0-9]{2}[eE][0-9]{2})([sS][0-9]{2}[eE][0-9]{2})/, ".$1")
-    .replace(/_([0-9]{1,})_/, ".E$1.");
+    .replace(/_([0-9]{1,3})_/, ".E$1.");
   const special_season_with_number_regexp = /(^|[^a-zA-Z])([sS][pP])([0-9]{1,})($|[^a-zA-Z])/;
   if (original_filename.match(special_season_with_number_regexp)) {
     // name.SP2 改成 name.SP.E2
@@ -126,6 +126,18 @@ export function parse_filename_for_video(
           const r = original_filename.match(regexp);
           if (r) {
             result["original_name"] = r[0];
+            original_filename = original_filename.replace(r[0], "");
+            return;
+          }
+        }
+        if (replace[1] === "NAME") {
+          if (!keys.includes("name")) {
+            return;
+          }
+          const r = original_filename.match(regexp);
+          log("[]NAME rule", r);
+          if (r) {
+            result["name"] = r[0];
             original_filename = original_filename.replace(r[0], "");
             return;
           }
@@ -557,6 +569,24 @@ export function parse_filename_for_video(
       key: k("resolution"),
       regexp: /[hH][dD]1080[pP]/,
     },
+    // 总集数，要放在「总季数」前面
+    {
+      // EP01-40，表示 1 到 40 集
+      desc: "总集数1",
+      regexp: /[eE][pP][0-9]{1,}-([0-9]{1,})/,
+    },
+    {
+      desc: "总集数2",
+      regexp: /全([0-9]{1,})[集話话]/,
+    },
+    {
+      desc: "总集数4",
+      regexp: /[0-9]{1,}-[0-9]{1,}[集話话]全/,
+    },
+    {
+      desc: "总集数3",
+      regexp: /([0-9]{1,})[集話话]全/,
+    },
     // 编码方式
     {
       key: k("encode"),
@@ -628,24 +658,6 @@ export function parse_filename_for_video(
       key: k("voice_encode"),
       regexp: /TrueHD\.7\.1/,
     },
-    // 总集数，要放在「总季数」前面
-    {
-      // EP01-40，表示 1 到 40 集
-      desc: "总集数1",
-      regexp: /[eE][pP][0-9]{1,}-([0-9]{1,})/,
-    },
-    {
-      desc: "总集数2",
-      regexp: /全([0-9]{1,})[集話话]/,
-    },
-    {
-      desc: "总集数4",
-      regexp: /[0-9]{1,}-[0-9]{1,}[集話话]全/,
-    },
-    {
-      desc: "总集数3",
-      regexp: /([0-9]{1,})[集話话]全/,
-    },
     {
       key: k("episode"),
       // 第1-20集
@@ -682,7 +694,7 @@ export function parse_filename_for_video(
     {
       key: k("season"),
       desc: "special season1",
-      regexp: /本篇|完结篇|OVA([^编編篇]{1,}[编編篇]){0,1}|特典映像|番外篇|特辑篇|PV|泡面番/,
+      regexp: /本篇|完结篇|\bOVA([^编編篇]{1,}[编編篇]){0,1}|特典映像|番外篇|特辑篇|PV|泡面番/,
       before() {
         cur_filename = cur_filename.replace(/PV([0-9]{1,})/, "PV.E$1");
       },
@@ -773,12 +785,12 @@ export function parse_filename_for_video(
     {
       key: k("episode"),
       // 2012.05.01 05.01  和下面的区别就是 月，这里匹配 1-9 月下面的匹配 10-12 月
-      regexp: /^([123][0-9]{1,4}[-.]{0,1}){0,1}0[1-9][-.]{0,1}[0-3][0-9][期局场]{0,1}-{0,1}\.{0,1}[上下]{0,1}/,
+      regexp: /^([123][0-9]{1,4}[-.年]{0,1}){0,1}0[1-9][-.月]{0,1}[0-3][0-9][期局场]{0,1}-{0,1}\.{0,1}[上下]{0,1}/,
     },
     {
       key: k("episode"),
       // 2012.10.01 12.10.01 10.01
-      regexp: /^([123][0-9]{1,4}[-.]{0,1}){0,1}1[0-2][-.]{0,1}[0-3][0-9][期局场]{0,1}-{0,1}\.{0,1}[上下]{0,1}/,
+      regexp: /^([123][0-9]{1,4}[-.年]{0,1}){0,1}1[0-2][-.月]{0,1}[0-3][0-9][期局场]{0,1}-{0,1}\.{0,1}[上下]{0,1}/,
     },
     {
       key: k("episode"),
@@ -1763,10 +1775,10 @@ export function format_episode_number(n: string, options: { log: (...args: unkno
     }
   }
   log("[]format_episode_number - before 年.月.日 - 年月日", number);
-  if (number.match(/[0-9]{4}[-.][0-9]{2}[-.][0-9]{2}/)) {
+  if (number.match(/[0-9]{4}[-.年][0-9]{2}[-.月][0-9]{2}/)) {
     log("年.月.日 - 年月日");
     // 年.月.日 变成 年月日
-    const r = number.match(/([0-9]{4})[-.]([0-9]{2})[-.]([0-9]{2})/);
+    const r = number.match(/([0-9]{4})[-.年]([0-9]{2})[-.月]([0-9]{2})/);
     if (r) {
       return `${r[1]}${r[2]}${r[3]}`;
     }

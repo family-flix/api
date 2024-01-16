@@ -80,11 +80,43 @@ describe("电视剧4", () => {
   test("01买或死？ .mp4", () => {
     const name = "01买或死？ .mp4";
     const result = parse_filename_for_video(name);
+    // @todo 会有 数字+中文 的名字，比如 007系列
     expect(result).toStrictEqual({
-      name: "",
+      name: "01买或死",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("2018.妖精森林的小不点.12集全+OVA.1080p", () => {
+    const name = "2018.妖精森林的小不点.12集全+OVA.1080p";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "妖精森林的小不点",
+      original_name: "",
+      // @todo 不应该识别成 OVA
+      season: "OVA",
+      episode: "",
+    });
+  });
+  test("西行纪前缘篇_动漫_2023_01.mp4", () => {
+    const name = "西行纪前缘篇_动漫_2023_01.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "西行纪前缘篇",
       original_name: "",
       season: "",
       episode: "E01",
+    });
+  });
+  test("2018.斗罗大陆.264集全.4K", () => {
+    const name = "2018.斗罗大陆.264集全.4K";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "斗罗大陆",
+      original_name: "",
+      season: "",
+      episode: "",
     });
   });
 });

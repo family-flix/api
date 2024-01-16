@@ -908,6 +908,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
       code,
     });
     if (r1.error) {
+      // delete this.share_token[share_id];
       return Result.Err(r1.error);
     }
     const share_token_resp = await (async () => {

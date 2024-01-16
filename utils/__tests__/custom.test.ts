@@ -104,4 +104,18 @@ describe("自定义额外解析规则", () => {
       episode: "",
     });
   });
+  test("[ANi] 如果 30 歲還是處男，似乎就能成為魔法師 - 01 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4", () => {
+    const name = "[ANi] 如果 30 歲還是處男，似乎就能成為魔法師 - 01 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["如果.30.歲還是處男，似乎就能成為魔法師", "NAME"],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "如果.30.歲還是處男，似乎就能成為魔法師",
+      original_name: "",
+      season: "",
+      episode: "E01",
+    });
+  });
 });

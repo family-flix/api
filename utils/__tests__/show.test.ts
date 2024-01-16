@@ -829,6 +829,26 @@ describe("提取综艺信息", () => {
       episode: "20210319",
     });
   });
+  test("2022年01月29期.mp4", () => {
+    const name = "2022年01月29期.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "20220129",
+    });
+  });
+  test("1120.PDvlog.第3期：吴千语结婚大计.mp4", () => {
+    const name = "1120.PDvlog.第3期：吴千语结婚大计.mp4;";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "1120",
+    });
+  });
   // test("慢直播第01期 _Tacit0924.mp4", () => {
   //   const name = "慢直播第01期 _Tacit0924.mp4";
   //   const result = parse_filename_for_video(name);
