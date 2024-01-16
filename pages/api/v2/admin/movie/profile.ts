@@ -14,18 +14,18 @@ import { store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { movie_id } = req.body as Partial<{ movie_id: string }>;
+  const { media_id } = req.body as Partial<{ media_id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  if (!movie_id) {
+  if (!media_id) {
     return e(Result.Err("缺少电影 id"));
   }
   const movie = await store.prisma.media.findFirst({
     where: {
-      id: movie_id,
+      id: media_id,
       type: MediaTypes.Movie,
       user_id: user.id,
     },

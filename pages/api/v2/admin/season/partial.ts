@@ -4,13 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { season_to_chinese_num } from "@/utils";
 import { ResourceSyncTaskStatus } from "@/constants";
+import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

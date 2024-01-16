@@ -991,6 +991,54 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     );
     return r3;
   }
+  async fetch_shared_file(file_id: string, options: { share_id?: string } = {}) {
+    const { share_id } = options;
+    if (this.share_token === null) {
+      return Result.Err("Please invoke fetch_share_profile first");
+    }
+    if (!share_id) {
+      return Result.Err("Please invoke fetch_share_profile first");
+    }
+    const r3 = await this.request.post<{
+      drive_id: string;
+      domain_id: string;
+      file_id: string;
+      share_id: string;
+      name: string;
+      type: string;
+      created_at: string;
+      updated_at: string;
+      file_extension: string;
+      mime_type: string;
+      mime_extension: string;
+      size: number;
+      parent_file_id: string;
+      thumbnail: string;
+      category: string;
+      video_media_metadata: {
+        width: number;
+        height: number;
+        duration: string;
+      };
+      punish_flag: number;
+      revision_id: string;
+      ex_fields_info: {
+        video_meta_processed: string;
+      };
+    }>(
+      API_HOST + "/adrive/v2/file/get_by_share",
+      {
+        drive_id: "",
+        fields: "*",
+        file_id,
+        share_id,
+      },
+      {
+        "x-share-token": this.share_token[share_id].token,
+      }
+    );
+    return r3;
+  }
   async search_shared_files(
     keyword: string,
     options: Partial<{

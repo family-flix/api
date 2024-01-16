@@ -171,7 +171,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     const r1 = await client.fetch_share_profile(url, { code: pwd, force: true });
     if (r1.error) {
       if (["share_link is cancelled by the creator"].includes(r1.error.message)) {
-        // await store.update_sync_task(id, { invalid: 1 });
         await store.prisma.resource_sync_task.update({
           where: {
             id,
@@ -255,7 +254,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     }
     await this.consume_effects_for_shared_file(differ.effects);
     this.emit(Events.Print, Article.build_line(["完成资源同步"]));
-    return Result.Ok(null);
+    return Result.Ok(differ.effects);
   }
   /**
    * 执行 FolderDiffer 生成的 effect
@@ -348,28 +347,30 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           parent_paths,
           type: type === "file" ? FileType.File : FileType.Folder,
         });
+        await sleep(3000);
         const drive_file_existing = await this.drive.client.existing(this.drive.profile.root_folder_id!, name);
-        if (drive_file_existing.data) {
-          this.emit(Events.Print, Article.build_line([`转存文件「${name}」到云盘成功`]));
-          await store.prisma.tmp_file.create({
-            data: {
-              id: r_id(),
-              name,
-              file_id: drive_file_existing.data.file_id,
-              parent_paths,
-              type: type === "file" ? FileType.File : FileType.Folder,
-              user_id,
-              drive_id,
-            },
-          });
+        if (!drive_file_existing.data) {
+          this.emit(Events.Print, Article.build_line([`没有找到文件「${name}」`]));
+          continue;
         }
+        this.emit(Events.Print, Article.build_line([`转存文件「${name}」到云盘成功`]));
+        await store.prisma.tmp_file.create({
+          data: {
+            id: r_id(),
+            name,
+            file_id: drive_file_existing.data.file_id,
+            parent_paths,
+            type: type === "file" ? FileType.File : FileType.Folder,
+            user_id,
+            drive_id,
+          },
+        });
       }
     }
     // if (errors.length !== 0) {
     //   return Result.Err(errors.map((e) => e.message).join("\n"));
     // }
     //     log("完成同步");
-
     return Result.Ok(null);
   }
   /**

@@ -13,7 +13,7 @@ import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { ResourceSyncTaskStatus } from "@/constants";
 import { store } from "@/store";
-import { r_id } from "@/utils";
+import { r_id, sleep } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -95,6 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     drive.client.on_transfer_finish(async () => {
       job.output.write_line(["添加到待索引文件"]);
+      await sleep(5000);
       const r = await drive.client.existing(drive.profile.root_folder_id!, name);
       if (r.error) {
         job.output.write_line(["搜索已转存文件失败", r.error.message]);

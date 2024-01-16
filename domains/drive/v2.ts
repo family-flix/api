@@ -719,6 +719,10 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (r.error) {
       return Result.Err(r.error.message);
     }
+    const r2 = await this.delete_folder_record_and_relative_record(f.file_id);
+    if (r2.error) {
+      return Result.Err(r2.error.message);
+    }
     return Result.Ok(null);
   }
   /**
