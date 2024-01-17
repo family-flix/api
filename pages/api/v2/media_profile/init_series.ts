@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return Result.Ok(r.data.media_profiles);
   })();
   if (profiles_r.error) {
-    return e(profiles_r.error.message);
+    return e(Result.Err(profiles_r.error.message));
   }
   const profiles = profiles_r.data;
   const data = {

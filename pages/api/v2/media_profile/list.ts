@@ -54,6 +54,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           contains: name,
         },
       },
+      {
+        series: {
+          name: {
+            contains: name,
+          },
+        },
+      },
+      {
+        series: {
+          original_name: {
+            contains: name,
+          },
+        },
+      },
+      {
+        series: {
+          alias: {
+            contains: name,
+          },
+        },
+      },
     ];
   }
   if (series_id) {
@@ -82,6 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         where,
         include: {
           source_profiles: true,
+          series: true,
         },
         orderBy: {
           air_date: "desc",
@@ -94,7 +116,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const data = {
     list: result.list.map((media_profile) => {
-      const { id, type, name, original_name, poster_path, overview, air_date, order } = media_profile;
+      const { id, type, name, original_name, poster_path, overview, air_date, order, series } = media_profile;
       return {
         id,
         type,
@@ -104,6 +126,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         overview,
         air_date,
         order,
+        series: (() => {
+          if (!series) {
+            return null;
+          }
+          const { name, original_name, poster_path } = series;
+          return {
+            name,
+            original_name,
+            poster_path,
+          };
+        })(),
       };
     }),
     next_marker: result.next_marker,

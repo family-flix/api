@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const {
     name,
-    empty = 1,
+    empty = 0,
     type,
     page_size,
     next_marker,
@@ -98,62 +98,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     next_marker,
   });
+  const data = {
+    page_size,
+    total: count,
+    next_marker: result.next_marker,
+    list: result.list.map((parsed_media) => {
+      const { id, name, type, original_name, season_text, parsed_sources, media_profile, _count } = parsed_media;
+      return {
+        id,
+        type,
+        name: name || original_name,
+        season_text,
+        profile: (() => {
+          if (!media_profile) {
+            return null;
+          }
+          return {
+            id: media_profile.id,
+            name: media_profile.name,
+            poster_path: media_profile.poster_path,
+            air_date: media_profile.air_date,
+          };
+        })(),
+        sources: parsed_sources.map((episode) => {
+          const { id, name, original_name, season_text, episode_text, file_name, parent_paths, media_source, drive } =
+            episode;
+          return {
+            id,
+            name,
+            original_name,
+            season_text,
+            episode_text,
+            file_name,
+            parent_paths,
+            profile: (() => {
+              if (!media_source) {
+                return null;
+              }
+              const { id, name, order } = media_source.profile;
+              return {
+                id,
+                name,
+                order,
+              };
+            })(),
+            drive: {
+              id: drive.id,
+              name: drive.name,
+            },
+          };
+        }),
+        has_more_sources: parsed_sources.length < _count.parsed_sources,
+      };
+    }),
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      page_size,
-      total: count,
-      next_marker: result.next_marker,
-      list: result.list.map((parsed_tv) => {
-        const { id, name, type, original_name, season_text, parsed_sources, media_profile, _count } = parsed_tv;
-        return {
-          id,
-          type,
-          name: name || original_name,
-          season_text,
-          profile: (() => {
-            if (!media_profile) {
-              return null;
-            }
-            return {
-              id: media_profile.id,
-              name: media_profile.name,
-              poster_path: media_profile.poster_path,
-              air_date: media_profile.air_date,
-            };
-          })(),
-          sources: parsed_sources.map((episode) => {
-            const { id, name, original_name, season_text, episode_text, file_name, parent_paths, media_source, drive } =
-              episode;
-            return {
-              id,
-              name,
-              original_name,
-              season_text,
-              episode_text,
-              file_name,
-              parent_paths,
-              profile: (() => {
-                if (!media_source) {
-                  return null;
-                }
-                const { id, name, order } = media_source.profile;
-                return {
-                  id,
-                  name,
-                  order,
-                };
-              })(),
-              drive: {
-                id: drive.id,
-                name: drive.name,
-              },
-            };
-          }),
-          has_more_sources: parsed_sources.length < _count.parsed_sources,
-        };
-      }),
-    },
+    data,
   });
 }

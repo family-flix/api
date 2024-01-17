@@ -988,7 +988,11 @@ export class MediaProfileClient {
       }
       return `${r_id()}.jpg`;
     })();
-    const r = await this.$upload.download(url, `/${parent_dir}/${filename}`);
+    const img_proxy = "https://proxy.f1x.fun/api/tmdb_site";
+    const r = await this.$upload.download(
+      url.replace("https://www.themoviedb.org", img_proxy),
+      `/${parent_dir}/${filename}`
+    );
     if (r.error) {
       return url;
     }
