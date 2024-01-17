@@ -67,7 +67,7 @@ export class FileUpload {
         return Result.Err(r.error.message);
       }
       if (r.data) {
-        return Result.Err("文件已存在");
+        return Result.Ok(key);
       }
       // console.log("[DOMAIN]Uploader - before request");
       const response = await axios({

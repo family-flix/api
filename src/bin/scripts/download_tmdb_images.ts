@@ -28,6 +28,20 @@ async function main() {
   await walk_model_with_cursor({
     fn(extra) {
       return store.prisma.media_profile.findMany({
+        where: {
+          OR: [
+            {
+              poster_path: {
+                contains: "themoviedb",
+              },
+            },
+            {
+              backdrop_path: {
+                contains: "themoviedb",
+              },
+            },
+          ],
+        },
         ...extra,
       });
     },
@@ -35,9 +49,7 @@ async function main() {
       const { id, name, original_name, type, poster_path, backdrop_path, created, updated } = media_profile;
       console.log(name, original_name);
       if (poster_path && poster_path.includes("themoviedb")) {
-        console.log(performance.now());
-        const r = await client.download_image(poster_path.replace("https://www.themoviedb.org", img_proxy), "poster");
-        console.log(performance.now());
+        const r = await client.download_image(poster_path, "poster");
         if (r !== poster_path) {
           await store.prisma.media_profile.update({
             where: {
@@ -50,9 +62,7 @@ async function main() {
         }
       }
       if (backdrop_path && backdrop_path.includes("themoviedb")) {
-        console.log(performance.now());
-        const r = await client.download_image(backdrop_path.replace("https://www.themoviedb.org", img_proxy), "poster");
-        console.log(performance.now());
+        const r = await client.download_image(backdrop_path, "backdrop");
         if (r !== backdrop_path) {
           await store.prisma.media_profile.update({
             where: {
