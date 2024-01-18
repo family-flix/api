@@ -130,11 +130,11 @@ import { notice_push_deer } from "../notice";
     "0 30 23 * * *",
     async () => {
       console.log("执行任务 at 0 0 23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      await schedule.archive_daily_update_collection();
-      notice_push_deer({
-        title: "归档",
-        markdown: "归档了当天更新",
-      });
+      // await schedule.archive_daily_update_collection();
+      // notice_push_deer({
+      //   title: "归档",
+      //   markdown: "归档了当天更新",
+      // });
     },
     null,
     true,
@@ -144,7 +144,7 @@ import { notice_push_deer } from "../notice";
     "0 0 2 * * *",
     async () => {
       console.log("执行任务 at 0 0 2 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      await schedule.refresh_media_profile_list();
+      await schedule.update_media_profile_with_douban();
       notice_push_deer({
         title: "影视剧刷新",
         markdown: "执行了一次影视剧刷新任务",

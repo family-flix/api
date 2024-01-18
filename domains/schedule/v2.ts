@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { Application } from "@/domains/application";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DatabaseStore } from "@/domains/store";
-import { FileRecord, ModelQuery } from "@/domains/store/types";
+import { FileRecord, MediaProfileRecord, ModelQuery } from "@/domains/store/types";
 import { User } from "@/domains/user";
 import { DriveTypes } from "@/domains/drive/constants";
 import { Drive } from "@/domains/drive/v2";
@@ -14,6 +14,7 @@ import { MediaSearcher } from "@/domains/searcher/v2";
 import { MediaProfileClient } from "@/domains/media_profile";
 import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
 import { TencentDoc } from "@/domains/tencent_doc";
+import { DoubanClient } from "@/domains/media_profile/douban";
 import { Result } from "@/types";
 import {
   CollectionTypes,
@@ -1196,6 +1197,171 @@ export class ScheduleTask {
         },
       });
       console.log("处理完成");
+    });
+  }
+
+  async update_media_profile_with_douban() {
+    const store = this.store;
+    const client = new DoubanClient({
+      token: "",
+    });
+    await walk_model_with_cursor({
+      fn(extra) {
+        return store.prisma.media_profile.findMany({
+          where: {
+            persons: {
+              none: {},
+            },
+          },
+          include: {
+            series: true,
+          },
+          ...extra,
+        });
+      },
+      async handler(data, index) {
+        const { id, name, poster_path, series } = data;
+        const tips: string[] = [];
+        await (async () => {
+          const media_name = series ? [series.name, data.order].filter(Boolean).join("") : name;
+          const normalize_name = media_name.replace(/ {0,1}第([0-9一二三四五六七八九]{1,})季/, "$1");
+          if (series) {
+            if (!name.includes(series.name)) {
+              tips.push(`季名称 '${name}' 没有包含电视剧名称 '${series.name}'`);
+            }
+          }
+          if (!poster_path) {
+            tips.push(`没有海报`);
+          }
+          const r = await client.search(normalize_name);
+          if (r.error) {
+            tips.push(`无法根据名称 '${normalize_name}' 搜索到结果，原因 ${r.error.message}`);
+            return;
+          }
+          const matched = (() => {
+            let matched = r.data.list.find((media) => {
+              const n = media.name.trim();
+              if (normalize_name === n && data.air_date === media.air_date) {
+                return true;
+              }
+              return false;
+            });
+            if (matched) {
+              return matched;
+            }
+            matched = r.data.list.find((media) => {
+              const n = media.name.trim();
+              if (normalize_name === n) {
+                return true;
+              }
+              return false;
+            });
+            if (matched) {
+              return matched;
+            }
+            return null;
+          })();
+          if (!matched) {
+            tips.push(`根据名称 '${normalize_name}' 搜索到结果，但是没有找到完美匹配的记录`);
+            return;
+          }
+          const profile_r = await client.fetch_media_profile(matched.id);
+          if (profile_r.error) {
+            tips.push(`获取详情失败，因为 ${profile_r.error.message}`);
+            return;
+          }
+          const profile = profile_r.data;
+          const persons = [
+            ...profile.actors.map((actor) => {
+              return {
+                ...actor,
+                role: "star",
+              };
+            }),
+            ...profile.director.map((actor) => {
+              return {
+                ...actor,
+                role: "director",
+              };
+            }),
+            ...profile.author.map((actor) => {
+              return {
+                ...actor,
+                role: "scriptwriter",
+              };
+            }),
+          ];
+          for (let i = 0; i < persons.length; i += 1) {
+            const person = persons[i];
+            const e = await store.prisma.person_profile.findFirst({
+              where: {
+                id: person.id,
+              },
+            });
+            if (!e) {
+              await store.prisma.person_profile.create({
+                data: {
+                  id: person.id,
+                  name: person.name,
+                  douban_id: person.id,
+                },
+              });
+            }
+          }
+          for (let i = 0; i < persons.length; i += 1) {
+            const person = persons[i];
+            await (async () => {
+              const e = await store.prisma.person_in_media.findFirst({
+                where: {
+                  name: person.name,
+                  order: person.order,
+                  known_for_department: person.role,
+                  media_id: id,
+                  profile_id: String(person.id),
+                },
+              });
+              if (!e) {
+                await store.prisma.person_in_media.create({
+                  data: {
+                    id: r_id(),
+                    name: person.name,
+                    order: person.order,
+                    known_for_department: person.role,
+                    media_id: id,
+                    profile_id: String(person.id),
+                  },
+                });
+                return;
+              }
+            })();
+          }
+          const payload: Partial<MediaProfileRecord> = {
+            douban_id: String(profile.id),
+          };
+          if (profile.air_date && data.air_date !== profile.air_date) {
+            payload.air_date = profile.air_date;
+          }
+          if (profile.source_count && data.source_count !== profile.source_count) {
+            payload.source_count = profile.source_count;
+          }
+          await store.prisma.media_profile.update({
+            where: {
+              id,
+            },
+            data: payload,
+          });
+        })();
+        if (tips.length !== 0) {
+          await store.prisma.media_profile.update({
+            where: {
+              id,
+            },
+            data: {
+              tips: tips.join("\n"),
+            },
+          });
+        }
+      },
     });
   }
 }
