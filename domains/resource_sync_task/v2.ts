@@ -348,7 +348,8 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           type: type === "file" ? FileType.File : FileType.Folder,
         });
         await sleep(3000);
-        const drive_file_existing = await this.drive.client.existing(this.drive.profile.root_folder_id!, name);
+        this.emit(Events.Print, Article.build_line(["client.existing", prev_folder.id, name]));
+        const drive_file_existing = await this.drive.client.existing(prev_folder.id, name);
         if (!drive_file_existing.data) {
           this.emit(Events.Print, Article.build_line([`没有找到文件「${name}」`]));
           continue;

@@ -1130,13 +1130,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       await this.store.prisma.season_profile.create({
         data: this.cached_season_profiles[unique_id],
       });
-      await this.insert_persons_of_season({
-        profile: {
-          ...this.cached_season_profiles[unique_id],
-          persons: [],
-        },
-        tv,
-      });
+      // await this.insert_persons_of_season({
+      //   profile: {
+      //     ...this.cached_season_profiles[unique_id],
+      //     persons: [],
+      //   },
+      //   tv,
+      // });
       return Result.Ok(this.cached_season_profiles[unique_id]);
     }
     if (s_n === "其他") {
@@ -1175,13 +1175,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       await this.store.prisma.season_profile.create({
         data: this.cached_season_profiles[unique_id],
       });
-      await this.insert_persons_of_season({
-        profile: {
-          ...this.cached_season_profiles[unique_id],
-          persons: [],
-        },
-        tv,
-      });
+      // await this.insert_persons_of_season({
+      //   profile: {
+      //     ...this.cached_season_profiles[unique_id],
+      //     persons: [],
+      //   },
+      //   tv,
+      // });
       return Result.Ok(this.cached_season_profiles[unique_id]);
     }
     return Result.Err("季信息异常，无法识别");
@@ -1809,15 +1809,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         profile_id: profile.id,
       },
       include: {
-        profile: {
-          include: {
-            persons: {
-              include: {
-                profile: true,
-              },
-            },
-          },
-        },
+        profile: true,
       },
     });
     if (existing) {
@@ -1837,16 +1829,8 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         user_id: this.user.id,
       },
       include: {
-        profile: {
-          include: {
-            persons: {
-              include: {
-                profile: true,
-              },
-            },
-          },
-        },
-      },
+        profile: true,
+      }
     });
     this.emit(
       Events.Print,
@@ -1854,7 +1838,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     );
     this.emit(Events.MovieAdded, created);
     this.emit(Events.Print, Article.build_line([`[${prefix}]`, "before insert persons"]));
-    await this.insert_persons_of_movie(created);
+    // await this.insert_persons_of_movie(created);
     return Result.Ok(created);
   }
   /** 使用名字在 tmdb 搜索电影，并返回 movie_profile 记录 */
@@ -1976,171 +1960,171 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(this.cached_movie_profiles[unique_id]);
   }
   async fetch_person_profile(unique_id: string | number) {
-    const existing = await this.store.prisma.person_profile.findFirst({
-      where: {
-        unique_id: String(unique_id),
-      },
-    });
-    if (existing) {
-      return Result.Ok(existing);
-    }
-    const r2 = await this.client.fetch_person_profile({ person_id: unique_id });
-    if (r2.error) {
-      return Result.Err(r2.error.message);
-    }
-    const profile = r2.data;
-    const { id, name, biography, birthday, place_of_birth, profile_path, known_for_department } = profile;
-    const created = await this.store.prisma.person_profile.create({
-      data: {
-        id: r_id(),
-        unique_id: String(id),
-        sources: JSON.stringify({ tmdb_id: id }),
-        name,
-        biography,
-        profile_path,
-        birthday,
-        place_of_birth,
-        known_for_department,
-      },
-    });
-    return Result.Ok(created);
+    // const existing = await this.store.prisma.person_profile.findFirst({
+    //   where: {
+    //     unique_id: String(unique_id),
+    //   },
+    // });
+    // if (existing) {
+    //   return Result.Ok(existing);
+    // }
+    // const r2 = await this.client.fetch_person_profile({ person_id: unique_id });
+    // if (r2.error) {
+    //   return Result.Err(r2.error.message);
+    // }
+    // const profile = r2.data;
+    // const { id, name, biography, birthday, place_of_birth, profile_path, known_for_department } = profile;
+    // const created = await this.store.prisma.person_profile.create({
+    //   data: {
+    //     id: r_id(),
+    //     unique_id: String(id),
+    //     sources: JSON.stringify({ tmdb_id: id }),
+    //     name,
+    //     biography,
+    //     profile_path,
+    //     birthday,
+    //     place_of_birth,
+    //     known_for_department,
+    //   },
+    // });
+    // return Result.Ok(created);
   }
   /** 获取指定季的参演人员 */
-  async insert_persons_of_season(season: {
-    profile: SeasonProfileRecord & { persons: (PersonRecord & { profile: PersonProfileRecord })[] };
-    tv: TVRecord & { profile: TVProfileRecord };
-  }) {
-    if (!season.profile.season_number) {
-      return Result.Err("没有季数");
-    }
-    const r = await this.client.fetch_persons_of_season({
-      tv_id: season.tv.profile.unique_id,
-      season_number: season.profile.season_number,
-    });
-    if (r.error) {
-      return Result.Err(r.error.message);
-    }
-    const partial_persons_in_tmdb = r.data;
-    for (let i = 0; i < partial_persons_in_tmdb.length; i += 1) {
-      await (async () => {
-        const person_in_tmdb = partial_persons_in_tmdb[i];
-        // console.log(person_in_tmdb.name);
-        if (season.profile.persons.find((p) => p.profile.unique_id === String(person_in_tmdb.id))) {
-          this.emit(Events.Print, Article.build_line(["", person_in_tmdb.name, "已存在该季中，跳过"]));
-          return;
-        }
-        const person_profile_r = await this.fetch_person_profile(person_in_tmdb.id);
-        if (person_profile_r.error) {
-          this.emit(Events.Print, Article.build_line(["获取演员详情失败，因为", person_profile_r.error.message]));
-          return;
-        }
-        const person_profile_record = person_profile_r.data;
-        const person_record = await (async () => {
-          const ex = await this.store.prisma.person_in_media.findFirst({
-            where: {
-              id: r_id(),
-              profile_id: person_profile_record.id,
-              order: person_in_tmdb.order,
-              season_id: season.profile.id,
-            },
-          });
-          if (ex) {
-            return ex;
-          }
-          const created = await this.store.prisma.person_in_media.create({
-            data: {
-              id: r_id(),
-              profile_id: person_profile_record.id,
-              name: person_in_tmdb.name,
-              order: person_in_tmdb.order,
-              season_id: season.profile.id,
-            },
-          });
-          return created;
-        })();
-        await this.store.prisma.season_profile.update({
-          where: {
-            id: season.profile.id,
-          },
-          data: {
-            persons: {
-              set: {
-                id: person_record.id,
-              },
-            },
-          },
-        });
-      })();
-    }
-    return Result.Ok(null);
-  }
+  // async insert_persons_of_season(season: {
+  //   profile: SeasonProfileRecord & { persons: (PersonRecord & { profile: PersonProfileRecord })[] };
+  //   tv: TVRecord & { profile: TVProfileRecord };
+  // }) {
+  //   if (!season.profile.season_number) {
+  //     return Result.Err("没有季数");
+  //   }
+  //   const r = await this.client.fetch_persons_of_season({
+  //     tv_id: season.tv.profile.unique_id,
+  //     season_number: season.profile.season_number,
+  //   });
+  //   if (r.error) {
+  //     return Result.Err(r.error.message);
+  //   }
+  //   const partial_persons_in_tmdb = r.data;
+  //   for (let i = 0; i < partial_persons_in_tmdb.length; i += 1) {
+  //     await (async () => {
+  //       const person_in_tmdb = partial_persons_in_tmdb[i];
+  //       // console.log(person_in_tmdb.name);
+  //       if (season.profile.persons.find((p) => p.profile.unique_id === String(person_in_tmdb.id))) {
+  //         this.emit(Events.Print, Article.build_line(["", person_in_tmdb.name, "已存在该季中，跳过"]));
+  //         return;
+  //       }
+  //       const person_profile_r = await this.fetch_person_profile(person_in_tmdb.id);
+  //       if (person_profile_r.error) {
+  //         this.emit(Events.Print, Article.build_line(["获取演员详情失败，因为", person_profile_r.error.message]));
+  //         return;
+  //       }
+  //       const person_profile_record = person_profile_r.data;
+  //       const person_record = await (async () => {
+  //         const ex = await this.store.prisma.person_in_media.findFirst({
+  //           where: {
+  //             id: r_id(),
+  //             profile_id: person_profile_record.id,
+  //             order: person_in_tmdb.order,
+  //             season_id: season.profile.id,
+  //           },
+  //         });
+  //         if (ex) {
+  //           return ex;
+  //         }
+  //         const created = await this.store.prisma.person_in_media.create({
+  //           data: {
+  //             id: r_id(),
+  //             profile_id: person_profile_record.id,
+  //             name: person_in_tmdb.name,
+  //             order: person_in_tmdb.order,
+  //             season_id: season.profile.id,
+  //           },
+  //         });
+  //         return created;
+  //       })();
+  //       await this.store.prisma.season_profile.update({
+  //         where: {
+  //           id: season.profile.id,
+  //         },
+  //         data: {
+  //           persons: {
+  //             set: {
+  //               id: person_record.id,
+  //             },
+  //           },
+  //         },
+  //       });
+  //     })();
+  //   }
+  //   return Result.Ok(null);
+  // }
   /** 获取指定季的参演人员 */
-  async insert_persons_of_movie(
-    movie: MovieRecord & {
-      profile: MovieProfileRecord & { persons: (PersonRecord & { profile: PersonProfileRecord })[] };
-    }
-  ) {
-    const r = await this.client.fetch_persons_of_movie({
-      movie_id: movie.profile.unique_id,
-    });
-    if (r.error) {
-      return Result.Err(r.error.message);
-    }
-    const partial_persons_in_tmdb = r.data;
-    for (let i = 0; i < partial_persons_in_tmdb.length; i += 1) {
-      await (async () => {
-        const person_in_tmdb = partial_persons_in_tmdb[i];
-        // console.log(person_in_tmdb.name);
-        if (movie.profile.persons.find((p) => p.profile.unique_id === String(person_in_tmdb.id))) {
-          this.emit(Events.Print, Article.build_line(["", person_in_tmdb.name, "已存在该电影中，跳过"]));
-          return;
-        }
-        const person_profile_r = await this.fetch_person_profile(person_in_tmdb.id);
-        if (person_profile_r.error) {
-          this.emit(Events.Print, Article.build_line(["获取演员详情失败，因为", person_profile_r.error.message]));
-          return;
-        }
-        const person_profile_record = person_profile_r.data;
-        const person_record = await (async () => {
-          const ex = await this.store.prisma.person_in_media.findFirst({
-            where: {
-              id: r_id(),
-              order: person_in_tmdb.order,
-              profile_id: person_profile_record.id,
-              movie_id: movie.profile_id,
-            },
-          });
-          if (ex) {
-            return ex;
-          }
-          const created = await this.store.prisma.person_in_media.create({
-            data: {
-              id: r_id(),
-              name: person_in_tmdb.name,
-              order: person_in_tmdb.order,
-              known_for_department: person_in_tmdb.known_for_department,
-              profile_id: person_profile_record.id,
-              movie_id: movie.profile_id,
-            },
-          });
-          return created;
-        })();
-        await this.store.prisma.movie_profile.update({
-          where: {
-            id: movie.profile_id,
-          },
-          data: {
-            persons: {
-              set: {
-                id: person_record.id,
-              },
-            },
-          },
-        });
-      })();
-    }
-    return Result.Ok(null);
-  }
+  // async insert_persons_of_movie(
+  //   movie: MovieRecord & {
+  //     profile: MovieProfileRecord & { persons: (PersonRecord & { profile: PersonProfileRecord })[] };
+  //   }
+  // ) {
+  //   const r = await this.client.fetch_persons_of_movie({
+  //     movie_id: movie.profile.unique_id,
+  //   });
+  //   if (r.error) {
+  //     return Result.Err(r.error.message);
+  //   }
+  //   const partial_persons_in_tmdb = r.data;
+  //   for (let i = 0; i < partial_persons_in_tmdb.length; i += 1) {
+  //     await (async () => {
+  //       const person_in_tmdb = partial_persons_in_tmdb[i];
+  //       // console.log(person_in_tmdb.name);
+  //       if (movie.profile.persons.find((p) => p.profile.unique_id === String(person_in_tmdb.id))) {
+  //         this.emit(Events.Print, Article.build_line(["", person_in_tmdb.name, "已存在该电影中，跳过"]));
+  //         return;
+  //       }
+  //       const person_profile_r = await this.fetch_person_profile(person_in_tmdb.id);
+  //       if (person_profile_r.error) {
+  //         this.emit(Events.Print, Article.build_line(["获取演员详情失败，因为", person_profile_r.error.message]));
+  //         return;
+  //       }
+  //       const person_profile_record = person_profile_r.data;
+  //       const person_record = await (async () => {
+  //         const ex = await this.store.prisma.person_in_media.findFirst({
+  //           where: {
+  //             id: r_id(),
+  //             order: person_in_tmdb.order,
+  //             profile_id: person_profile_record.id,
+  //             movie_id: movie.profile_id,
+  //           },
+  //         });
+  //         if (ex) {
+  //           return ex;
+  //         }
+  //         const created = await this.store.prisma.person_in_media.create({
+  //           data: {
+  //             id: r_id(),
+  //             name: person_in_tmdb.name,
+  //             order: person_in_tmdb.order,
+  //             known_for_department: person_in_tmdb.known_for_department,
+  //             profile_id: person_profile_record.id,
+  //             movie_id: movie.profile_id,
+  //           },
+  //         });
+  //         return created;
+  //       })();
+  //       await this.store.prisma.movie_profile.update({
+  //         where: {
+  //           id: movie.profile_id,
+  //         },
+  //         data: {
+  //           persons: {
+  //             set: {
+  //               id: person_record.id,
+  //             },
+  //           },
+  //         },
+  //       });
+  //     })();
+  //   }
+  //   return Result.Ok(null);
+  // }
   /**
    * 上传 tmdb 图片到七牛云
    * @param tmdb

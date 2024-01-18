@@ -64,15 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const list = await store.prisma.movie.findMany({
     where,
     include: {
-      profile: {
-        include: {
-          persons: {
-            include: {
-              profile: true,
-            },
-          },
-        },
-      },
+      profile: true,
       parsed_movies: true,
     },
     orderBy: {
@@ -99,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         popularity,
         genres,
         origin_country,
-        persons,
+        // persons,
       } = profile;
       return {
         id,
@@ -113,20 +105,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         genres,
         origin_country,
         runtime,
-        persons: persons
-          .map((person) => {
-            const {
-              order,
-              profile: { id, name, profile_path },
-            } = person;
-            return {
-              id,
-              name,
-              profile_path,
-              order,
-            };
-          })
-          .sort((a, b) => a.order - b.order),
+        persons: [],
+        // persons: persons
+        //   .map((person) => {
+        //     const {
+        //       order,
+        //       profile: { id, name, profile_path },
+        //     } = person;
+        //     return {
+        //       id,
+        //       name,
+        //       profile_path,
+        //       order,
+        //     };
+        //   })
+        //   .sort((a, b) => a.order - b.order),
       };
     }),
   };

@@ -107,19 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where,
     include: {
       _count: true,
-      profile: {
-        include: {
-          persons: {
-            take: 5,
-            include: {
-              profile: true,
-            },
-            orderBy: {
-              order: "asc",
-            },
-          },
-        },
-      },
+      profile: true,
       tv: {
         include: {
           profile: true,
@@ -149,14 +137,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         genres,
         origin_country,
         vote_average: profile.vote_average,
-        actors: profile.persons.map((p) => {
-          const { profile } = p;
-          return {
-            id: profile.id,
-            name: profile.name,
-            avatar: profile.profile_path,
-          };
-        }),
+        actors: [],
+        // actors: profile.persons.map((p) => {
+        //   const { profile } = p;
+        //   return {
+        //     id: profile.id,
+        //     name: profile.name,
+        //     avatar: profile.profile_path,
+        //   };
+        // }),
       };
     }),
     page,

@@ -15,83 +15,83 @@ async function walk_season() {
   });
   const store = app.store;
   const schedule = new ScheduleTask({ app, store });
-  await schedule.walk_drive(async (drive, user) => {
-    const searcher = new MediaSearcher({
-      user,
-      drive,
-      assets: app.assets,
-      store,
-    });
-    await walk_model_with_cursor({
-      fn(extra) {
-        return store.prisma.season.findMany({
-          where: {},
-          include: {
-            tv: {
-              include: {
-                profile: true,
-              },
-            },
-            profile: {
-              include: {
-                persons: {
-                  include: {
-                    profile: true,
-                  },
-                },
-              },
-            },
-          },
-          ...extra,
-        });
-      },
-      async handler(season) {
-        if (season.season_number === 0) {
-          return;
-        }
-        if (!season.tv) {
-          return;
-        }
-        if (!season.tv.profile) {
-          return;
-        }
-        console.log(season.tv.profile.name, season.season_number);
-        if (season.profile.persons.length) {
-          return;
-        }
-        await searcher.insert_persons_of_season(season);
-      },
-    });
-    await walk_model_with_cursor({
-      fn(extra) {
-        return store.prisma.movie.findMany({
-          where: {},
-          include: {
-            profile: {
-              include: {
-                persons: {
-                  include: {
-                    profile: true,
-                  },
-                },
-              },
-            },
-          },
-          ...extra,
-        });
-      },
-      async handler(movie) {
-        if (!movie.profile) {
-          return;
-        }
-        console.log(movie.profile.name);
-        if (movie.profile.persons.length) {
-          return;
-        }
-        await searcher.insert_persons_of_movie(movie);
-      },
-    });
-  });
+  // await schedule.walk_drive(async (drive, user) => {
+  //   const searcher = new MediaSearcher({
+  //     user,
+  //     drive,
+  //     assets: app.assets,
+  //     store,
+  //   });
+  //   await walk_model_with_cursor({
+  //     fn(extra) {
+  //       return store.prisma.season.findMany({
+  //         where: {},
+  //         include: {
+  //           tv: {
+  //             include: {
+  //               profile: true,
+  //             },
+  //           },
+  //           profile: {
+  //             include: {
+  //               persons: {
+  //                 include: {
+  //                   profile: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //         ...extra,
+  //       });
+  //     },
+  //     async handler(season) {
+  //       if (season.season_number === 0) {
+  //         return;
+  //       }
+  //       if (!season.tv) {
+  //         return;
+  //       }
+  //       if (!season.tv.profile) {
+  //         return;
+  //       }
+  //       console.log(season.tv.profile.name, season.season_number);
+  //       if (season.profile.persons.length) {
+  //         return;
+  //       }
+  //       await searcher.insert_persons_of_season(season);
+  //     },
+  //   });
+  //   await walk_model_with_cursor({
+  //     fn(extra) {
+  //       return store.prisma.movie.findMany({
+  //         where: {},
+  //         include: {
+  //           profile: {
+  //             include: {
+  //               persons: {
+  //                 include: {
+  //                   profile: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //         ...extra,
+  //       });
+  //     },
+  //     async handler(movie) {
+  //       if (!movie.profile) {
+  //         return;
+  //       }
+  //       console.log(movie.profile.name);
+  //       if (movie.profile.persons.length) {
+  //         return;
+  //       }
+  //       await searcher.insert_persons_of_movie(movie);
+  //     },
+  //   });
+  // });
 }
 
 walk_season();

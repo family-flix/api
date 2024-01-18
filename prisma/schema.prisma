@@ -137,7 +137,6 @@ model season_profile {
         vote_average  Float?  @default(0)
 
         seasons season[]
-        persons person_in_media[]
 
         @@map("SeasonProfile")
 }
@@ -183,8 +182,7 @@ model movie_profile {
         genres            String? @default("")
         runtime           Int?    @default(0)
 
-        movies  movie[]
-        persons person_in_media[]
+        movies movie[]
 }
 
 model person_profile {
@@ -192,22 +190,24 @@ model person_profile {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        unique_id            String
-        source               Int?              @default(0)
-        sources              String?           @default("")
         name                 String
-        profile              String?           @default("")
         alias                String?
         biography            String?
         profile_path         String?
         birthday             String?
         place_of_birth       String?
         known_for_department String?
-        persons_in_media     person_in_media[]
+        profile              String  @default("")
+        tmdb_id              String? @unique
+        douban_id            String? @unique
+        imdb_id              String? @unique
+
+        persons_in_media person_in_media[]
 
         @@map("PersonProfile")
 }
 
+// 一个人在影视剧中的角色，一个人参与的影视剧越多，该人的记录会越多，不像 person_profile 一个人永远只有一条记录
 model person_in_media {
         id      String   @id
         created DateTime @default(now())
@@ -220,11 +220,9 @@ model person_in_media {
         known_for_department String?
 
         profile_id String
-        profile    person_profile  @relation(fields: [profile_id], references: [id])
-        season_id  String?
-        season     season_profile? @relation(fields: [season_id], references: [id])
-        movie_id   String?
-        movie      movie_profile?  @relation(fields: [movie_id], references: [id])
+        profile    person_profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+        media_id   String
+        media      media_profile  @relation(fields: [media_id], references: [id])
 
         @@map("Person")
 }
@@ -566,8 +564,10 @@ model media_profile {
         source_count  Int
         vote_average  Float   @default(0)
         in_production Int     @default(0)
+        tips          String?
         tmdb_id       String? @unique
         douban_id     String? @unique
+        imdb_id       String? @unique
 
         series_id String?
         series    media_series_profile? @relation(fields: [series_id], references: [id])
@@ -577,6 +577,7 @@ model media_profile {
         media           media[]
         genres          media_genre[]
         origin_country  media_country[]
+        persons         person_in_media[]
 
         @@map("MediaProfile")
 }

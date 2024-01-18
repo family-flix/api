@@ -92,19 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const list = await store.prisma.movie.findMany({
     where,
     include: {
-      profile: {
-        include: {
-          persons: {
-            take: 5,
-            include: {
-              profile: true,
-            },
-            orderBy: {
-              order: "asc",
-            },
-          },
-        },
-      },
+      profile: true,
     },
     orderBy: {
       profile: { air_date: "desc" },
@@ -128,14 +116,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         origin_country,
         vote_average,
         runtime,
-        actors: profile.persons.map((p) => {
-          const { profile } = p;
-          return {
-            id: profile.id,
-            name: profile.name,
-            avatar: profile.profile_path,
-          };
-        }),
+        actors: [],
+        // actors: profile.persons.map((p) => {
+        //   const { profile } = p;
+        //   return {
+        //     id: profile.id,
+        //     name: profile.name,
+        //     avatar: profile.profile_path,
+        //   };
+        // }),
       };
     }),
     page,

@@ -24,12 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       id,
     },
     include: {
-      persons_in_media: {
-        include: {
-          season: true,
-          movie: true,
-        },
-      },
+      persons_in_media: {},
     },
   });
   if (!profile) {

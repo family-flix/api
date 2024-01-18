@@ -2,6 +2,8 @@
  * @file 豆瓣 api
  */
 import axios from "axios";
+// import cheerio from "cheerio";
+
 import { Result, Unpacked, UnpackedResult } from "@/types";
 // import { query_stringify } from "@/utils";
 
@@ -51,12 +53,10 @@ const request: RequestClient = {
       const resp = await client.get(url, {
         params: query,
         headers: {
-          Host: "frodo.douban.com",
           Connection: "keep-alive",
           "content-type": "application/json",
           "User-Agent":
             "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.42(0x18002a2d) NetType/WIFI Language/en",
-          Referer: "https://servicewechat.com/wx2f9b06c1de1ccfca/94/page-frame.html",
         },
       });
       return Result.Ok<T>(resp.data);
@@ -70,12 +70,10 @@ const request: RequestClient = {
       // console.log("[LOG](request)", "post", API_HOST + endpoint, body);
       const resp = await client.post(endpoint, body, {
         headers: {
-          Host: "frodo.douban.com",
           Connection: "keep-alive",
           "content-type": "application/json",
           "User-Agent":
             "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.42(0x18002a2d) NetType/WIFI Language/en",
-          Referer: "https://servicewechat.com/wx2f9b06c1de1ccfca/94/page-frame.html",
         },
       });
       return Result.Ok<T>(resp.data);
@@ -239,148 +237,262 @@ export type MovieProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof s
 
 /**
  * 获取电视剧详情
- * @link https://developers.themoviedb.org/3/tv/get-tv-details
- * @param id 电视剧 tmdb id
  */
-export async function fetch_tv_profile(id: number | undefined, query: RequestCommonPart) {
+export async function fetch_media_profile(id: number | undefined, query: RequestCommonPart) {
   if (id === undefined) {
     return Result.Err("请传入电视剧 id");
   }
-  const endpoint = `/tv/${id}`;
-  const { api_key } = query;
-  const r = await request.get<{
-    backdrop_path: string | null;
-    created_by: {
-      id: number;
-      credit_id: string;
-      name: string;
-      gender: number;
-      profile_path: string;
-    }[];
-    episode_run_time: number[];
-    first_air_date: string;
-    genres: {
-      id: number;
-      name: string;
-    }[];
-    homepage: string;
-    id: number;
-    in_production: boolean;
-    languages: string[];
-    last_air_date: string;
-    last_episode_to_air: {
-      air_date: string;
-      episode_number: number;
-      id: number;
-      name: string;
-      overview: string;
-      production_code: string;
-      season_number: number;
-      still_path: string;
-      vote_average: number;
-      vote_count: number;
-    };
+  const endpoint = `https://movie.douban.com/subject/${id}/`;
+  const {} = query;
+  const resp = await axios.get<string>(endpoint, {});
+  const html = resp.data;
+  const fields = html.match(/<div\s+id="info"[^>]*>([\s\S]*?)<\/div>/);
+  if (!fields) {
+    return Result.Err("匹配不到");
+  }
+  const content = fields[1];
+  const lines = content.split("<br/>");
+  const data: {
     name: string | null;
-    next_episode_to_air: null;
-    networks: {
-      name: string;
-      id: number;
-      logo_path: string;
-      origin_country: string;
-    }[];
-    number_of_episodes: number;
-    number_of_seasons: number;
-    origin_country: string[];
-    original_language: string;
     original_name: string | null;
     overview: string | null;
-    popularity: number;
-    poster_path: string | null;
-    production_companies: {
-      id: number;
-      logo_path: string;
+    source_count: number;
+    air_date: string | null;
+    genres: string[];
+    origin_country: string | null;
+    alias: string | null;
+    type: "tv" | "movie";
+    actors: {
+      id: string;
       name: string;
-      origin_country: string;
+      order: number;
     }[];
-    production_countries: {
-      iso_3166_1: string;
+    director: {
+      id: string;
       name: string;
+      order: number;
     }[];
-    seasons: {
-      air_date: string;
-      episode_count: number;
-      id: number;
+    author: {
+      id: string;
       name: string;
-      overview: string;
-      poster_path: string;
-      season_number: number;
-      vote_average: number;
+      order: number;
     }[];
-    spoken_languages: {
-      english_name: string;
-      iso_639_1: string;
-      name: string;
-    }[];
-    /** 状态 Ended|Canceled|Returning Series */
-    status: string;
-    /** 一句话说明 */
-    tagline: string;
-    type: string;
-    vote_average: number;
-    vote_count: number;
-  }>(endpoint, {
-    api_key,
-    // language,
-  });
-  if (r.error) {
-    return Result.Err(r.error);
+    IMDb: string | null;
+  } = {
+    name: null,
+    original_name: null,
+    overview: null,
+    alias: null,
+    source_count: 0,
+    air_date: null,
+    origin_country: null,
+    type: "tv",
+    genres: [],
+    actors: [],
+    director: [],
+    author: [],
+    IMDb: null,
+  };
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i] as string;
+    if (line.includes("集数")) {
+      const r = line.match(/([0-9]{1,})/);
+      if (r) {
+        data.source_count = Number(r[1]);
+      }
+    }
+    if (line.includes("首播") || line.includes("上映日期")) {
+      const r = line.match(/([0-9]{4}-[0-9]{2}-[0-9]{2})/);
+      if (r) {
+        data.air_date = r[1];
+      }
+    }
+    if (line.includes("上映日期")) {
+      data.type = "movie";
+    }
+    if (line.includes("又名")) {
+      const r = line.match(/\/span> {0,1}([\s\S]{1,})$/);
+      if (r) {
+        data.alias = r[1];
+      }
+    }
+    if (line.includes("制片国家")) {
+      const r = line.match(/\/span> {0,1}([\s\S]{1,})$/);
+      if (r) {
+        data.origin_country = r[1];
+      }
+    }
+    if (line.includes("类型")) {
+      const genres = line.match(/<span property="v:genre">([^<]{1,})<\/span>/g);
+      if (genres) {
+        data.genres = genres
+          .map((genre) => {
+            const r = genre.match(/>([^<]{1,})</);
+            if (r) {
+              return r[1];
+            }
+            return null;
+          })
+          .filter(Boolean) as string[];
+      }
+    }
+    if (line.includes("IMDb")) {
+      const r = line.match(/\/span> {0,1}([\s\S]{1,})$/);
+      if (r) {
+        data.IMDb = r[1];
+      }
+    }
+    const regexp = `"\/celebrity\/([0-9]{1,})\/"[^>]{0,}>([^<]{1,})<\/a>`;
+    const regexp1 = new RegExp(regexp, "g");
+    const regexp2 = new RegExp(regexp);
+    if (line.includes("主演")) {
+      const actors = line.match(regexp1);
+      if (actors) {
+        data.actors = actors
+          .map((actor, i) => {
+            const r = actor.match(regexp2);
+            if (r) {
+              return {
+                id: r[1],
+                name: r[2],
+                order: i + 1,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as {
+          id: string;
+          name: string;
+          order: number;
+        }[];
+      }
+    }
+    if (line.includes("导演")) {
+      const actors = line.match(regexp1);
+      if (actors) {
+        data.director = actors
+          .map((actor, i) => {
+            const r = actor.match(regexp2);
+            if (r) {
+              return {
+                id: r[1],
+                name: r[2],
+                order: i + 1,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as {
+          id: string;
+          name: string;
+          order: number;
+        }[];
+      }
+    }
+    if (line.includes("编剧")) {
+      const actors = line.match(regexp1);
+      if (actors) {
+        data.author = actors
+          .map((actor, i) => {
+            const r = actor.match(regexp2);
+            if (r) {
+              return {
+                id: r[1],
+                name: r[2],
+                order: i + 1,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as {
+          id: string;
+          name: string;
+          order: number;
+        }[];
+      }
+    }
+  }
+  const name_r = html.match(/property="v:itemreviewed">([^<]{1,})</);
+  if (name_r) {
+    const name = name_r[1];
+    const { name: n, origin_name } = (() => {
+      const [n, origin_n] = name.split(" ");
+      if (origin_n) {
+        return { name: n, origin_name: origin_n };
+      }
+      return {
+        name,
+        origin_name: null,
+      };
+    })();
+    data.name = n;
+    data.original_name = origin_name;
+  }
+  const overview_r = html.match(/<span property="v:summary"[^>]*>([\s\S]*?)<\/span>/);
+  if (overview_r) {
+    data.overview = overview_r[1]
+      .replace(/<br {0,1}\/>/, "\n")
+      .replace(/^\s{1,}|\s{1,}$/, "")
+      .trim();
   }
   const {
     name,
     original_name,
     overview,
-    first_air_date,
-    tagline,
-    status,
-    vote_average,
-    poster_path,
-    backdrop_path,
-    popularity,
-    seasons,
-    number_of_episodes,
-    number_of_seasons,
-    in_production,
-  } = r.data;
+    air_date,
+    source_count,
+    alias,
+    // tagline,
+    // status,
+    // vote_average,
+    // poster_path,
+    // backdrop_path,
+    // popularity,
+    // seasons,
+    // number_of_episodes,
+    // number_of_seasons,
+    genres,
+    origin_country,
+    actors,
+    director,
+    author,
+    // in_production,
+  } = data;
   return Result.Ok({
     id,
     name,
     original_name,
-    first_air_date,
+    air_date,
     overview,
-    tagline,
-    status,
-    vote_average,
-    popularity,
-    number_of_episodes,
-    number_of_seasons,
-    in_production,
-    ...fix_TMDB_image_path({
-      poster_path,
-      backdrop_path,
-    }),
-    seasons: seasons.map((season) => {
-      const { poster_path } = season;
-      return {
-        ...season,
-        ...fix_TMDB_image_path({ poster_path }),
-      };
-    }),
-    genres: r.data.genres,
-    origin_country: r.data.origin_country,
+    source_count,
+    alias,
+    actors,
+    director,
+    author,
+    // tagline,
+    // status,
+    // vote_average,
+    // popularity,
+    // number_of_episodes,
+    // number_of_seasons,
+    // in_production,
+    // ...fix_TMDB_image_path({
+    //   poster_path,
+    //   backdrop_path,
+    // }),
+    // seasons: seasons.map((season) => {
+    //   const { poster_path } = season;
+    //   return {
+    //     ...season,
+    //     ...fix_TMDB_image_path({ poster_path }),
+    //   };
+    // }),
+    genres,
+    origin_country,
   });
 }
-export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_tv_profile>>>;
-export type PartialSeasonFromTMDB = TVProfileFromTMDB["seasons"][number];
+export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_media_profile>>>;
+// export type PartialSeasonFromTMDB = TVProfileFromTMDB["seasons"][number];
 
 /**
  * 获取电视剧某一季详情
@@ -452,7 +564,6 @@ export async function fetch_season_profile(
     // language,
   });
   if (result.error) {
-    // console.log("find season in tmdb failed", result.error.message);
     if (result.error.message.includes("404")) {
       return Result.Ok(null);
     }
@@ -542,106 +653,3 @@ export async function fetch_episode_profile(
 }
 
 export type EpisodeProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_episode_profile>>>;
-
-/**
- * 获取电视剧详情
- * @link https://developers.themoviedb.org/3/tv/get-tv-details
- * @param id 电视剧 tmdb id
- */
-export async function fetch_movie_profile(id: number | undefined, query: RequestCommonPart) {
-  if (id === undefined) {
-    return Result.Err("请传入电影 id");
-  }
-  const endpoint = `/movie/${id}`;
-  const { api_key, language } = query;
-  const r = await request.get<{
-    adult: boolean;
-    backdrop_path: string;
-    belongs_to_collection: {
-      id: number;
-      name: string;
-      poster_path: string;
-      backdrop_path: string;
-    };
-    budget: number;
-    genres: {
-      id: number;
-      name: string;
-    }[];
-    homepage: string;
-    id: number;
-    imdb_id: string;
-    original_language: string;
-    original_title: string;
-    overview: string;
-    popularity: number;
-    poster_path: string;
-    production_companies: {
-      id: number;
-      logo_path: string;
-      name: string;
-      origin_country: string;
-    }[];
-    production_countries: {
-      iso_3166_1: string;
-      name: string;
-    }[];
-    release_date: string;
-    revenue: number;
-    runtime: number;
-    spoken_languages: {
-      english_name: string;
-      iso_639_1: string;
-      name: string;
-    }[];
-    status: string;
-    tagline: string;
-    title: string;
-    video: boolean;
-    vote_average: number;
-    vote_count: number;
-  }>(endpoint, {
-    api_key,
-    language,
-  });
-  if (r.error) {
-    return Result.Err(r.error);
-  }
-  const {
-    overview,
-    tagline,
-    status,
-    title,
-    original_title,
-    vote_average,
-    release_date,
-    poster_path,
-    backdrop_path,
-    popularity,
-    runtime,
-  } = r.data;
-  return Result.Ok({
-    id,
-    title,
-    original_title,
-    name: title,
-    original_name: original_title,
-    air_date: release_date,
-    release_date,
-    overview,
-    tagline,
-    status,
-    vote_average,
-    popularity,
-    genres: r.data.genres,
-    runtime,
-    origin_country: r.data.production_countries.map((country) => {
-      return country["iso_3166_1"];
-    }),
-    ...fix_TMDB_image_path({
-      poster_path,
-      backdrop_path,
-    }),
-  });
-}
-export type MovieProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_movie_profile>>>;

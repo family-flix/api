@@ -40,7 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
     include: {
       seasons: true,
-      persons: true,
     },
   });
   if (!profile) {
@@ -60,11 +59,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: user.id,
     },
   });
-  await store.prisma.person_in_media.deleteMany({
-    where: {
-      season_id: profile.id,
-    },
-  });
+  // await store.prisma.person_in_media.deleteMany({
+  //   where: {
+  //     season_id: profile.id,
+  //   },
+  // });
   await store.prisma.season_profile.delete({
     where: {
       id: profile.id,

@@ -151,6 +151,37 @@ export enum MediaGenresTypes {
   /** 黑色电影 */
   FilmNoir = 31,
 }
+
+export const DOUBAN_GENRE_TEXT_TO_VALUE: Record<string, MediaGenresTypes> = {
+  纪录片: MediaGenresTypes.Documentary,
+  传记: MediaGenresTypes.Biography,
+  犯罪: MediaGenresTypes.Crime,
+  历史: MediaGenresTypes.History,
+  动作: MediaGenresTypes.Action,
+  情色: MediaGenresTypes.Adult,
+  歌舞: MediaGenresTypes.Musical,
+  儿童: MediaGenresTypes.Children,
+  悬疑: MediaGenresTypes.Suspense,
+  剧情: MediaGenresTypes.Plot,
+  灾难: MediaGenresTypes.Disaster,
+  爱情: MediaGenresTypes.Romance,
+  音乐: MediaGenresTypes.Music,
+  冒险: MediaGenresTypes.Adventure,
+  奇幻: MediaGenresTypes.Fantasy,
+  科幻: MediaGenresTypes.ScienceFiction,
+  运动: MediaGenresTypes.Sports,
+  惊悚: MediaGenresTypes.Thriller,
+  恐怖: MediaGenresTypes.Horror,
+  战争: MediaGenresTypes.War,
+  短片: MediaGenresTypes.ShortFilm,
+  喜剧: MediaGenresTypes.Comedy,
+  动画: MediaGenresTypes.Animation,
+  西部: MediaGenresTypes.Western,
+  家庭: MediaGenresTypes.Family,
+  武侠: MediaGenresTypes.Wuxia,
+  古装: MediaGenresTypes.CostumeDrama,
+  黑色电影: MediaGenresTypes.FilmNoir,
+};
 export const TMDB_GENRES_MAP_TO_DOUBAN = {
   /** 动画 */
   16: MediaGenresTypes.Animation,
