@@ -7,7 +7,7 @@ import { Member } from "@/domains/user/member";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { MediaTypes } from "@/constants";
+import { MediaTypes, SubtitleFileTypes, SubtitleLanguageMap } from "@/constants";
 import {
   MediaSourceProfileRecord,
   MediaSourceRecord,
@@ -92,7 +92,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               current_time: 0,
               thumbnail_path: sources[0].profile.still_path,
               index: 0,
-              subtitles: sources[0].subtitles,
+              subtitles: sources[0].subtitles.map((subtitle) => {
+                const { id, name, language, unique_id } = subtitle;
+                return {
+                  id,
+                  type: SubtitleFileTypes.LocalFile,
+                  name,
+                  language: SubtitleLanguageMap[language as "chi"] || [],
+                  url: unique_id,
+                };
+              }),
               files: sources[0].files,
               order: sources[0].profile.order,
             }
@@ -138,7 +147,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         thumbnail_path,
         index: sources.findIndex((s) => s.id === media_source.id),
         files: media_source.files,
-        subtitles: media_source.subtitles,
+        subtitles: media_source.subtitles.map((subtitle) => {
+          const { id, name, language, unique_id } = subtitle;
+          return {
+            id,
+            type: SubtitleFileTypes.LocalFile,
+            name,
+            language: SubtitleLanguageMap[language as "chi"] || [],
+            url: unique_id,
+          };
+        }),
         order: media_source.profile.order,
       },
     };
@@ -263,12 +281,13 @@ function format_episode(
       };
     }),
     subtitles: subtitles.map((subtitle) => {
-      const { id, type, name, language } = subtitle;
+      const { id, type, name, language, unique_id } = subtitle;
       return {
         id,
         type,
         name,
-        language,
+        language: SubtitleLanguageMap[language as "chi"] || [],
+        url: unique_id,
       };
     }),
   };

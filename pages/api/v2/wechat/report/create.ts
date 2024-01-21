@@ -69,19 +69,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   );
   if (media_id && media_source_id) {
     // 1. 影视剧存在问题
-    const existing = await store.prisma.report_v2.findFirst({
-      where: {
-        type,
-        data,
-        media_id,
-        media_source_id,
-        member_id: member.id,
-        user_id: member.user.id,
-      },
-    });
-    if (existing) {
-      return e(Result.Err("已经提交过该内容了"));
-    }
+    // const existing = await store.prisma.report_v2.findFirst({
+    //   where: {
+    //     type,
+    //     data,
+    //     media_id,
+    //     media_source_id,
+    //     member_id: member.id,
+    //     user_id: member.user.id,
+    //   },
+    // });
+    // if (existing) {
+    //   return e(Result.Err("已经提交过该内容了"));
+    // }
     const r = await store.prisma.report_v2.create({
       data: {
         id: r_id(),
@@ -102,18 +102,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   if (media_id) {
     // 1. 影视剧存在问题
-    const existing = await store.prisma.report_v2.findFirst({
-      where: {
-        type,
-        data,
-        media_id,
-        member_id: member.id,
-        user_id: member.user.id,
-      },
-    });
-    if (existing) {
-      return e(Result.Err("已经提交过该内容了"));
-    }
+    // const existing = await store.prisma.report_v2.findFirst({
+    //   where: {
+    //     type,
+    //     data,
+    //     media_id,
+    //     member_id: member.id,
+    //     user_id: member.user.id,
+    //   },
+    // });
+    // if (existing) {
+    //   return e(Result.Err("已经提交过该内容了"));
+    // }
     const r = await store.prisma.report_v2.create({
       data: {
         id: r_id(),
@@ -132,17 +132,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return;
   }
   // 2. 意见/反馈/想看
-  const existing = await store.prisma.report_v2.findFirst({
-    where: {
-      type,
-      data,
-      member_id: member.id,
-      user_id: member.user.id,
-    },
-  });
-  if (existing) {
-    return e(Result.Err("已经提交过该内容了"));
-  }
+  // const existing = await store.prisma.report_v2.findFirst({
+  //   where: {
+  //     type,
+  //     data,
+  //     member_id: member.id,
+  //     user_id: member.user.id,
+  //   },
+  // });
+  // if (existing) {
+  //   return e(Result.Err("已经提交过该内容了"));
+  // }
   const r = await store.prisma.report_v2.create({
     data: {
       id: r_id(),

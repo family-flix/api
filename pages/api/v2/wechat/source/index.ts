@@ -110,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         id,
         name,
         url,
-        language: SubtitleLanguageMap[language],
+        language: SubtitleLanguageMap[language] || [],
       };
     }),
   };

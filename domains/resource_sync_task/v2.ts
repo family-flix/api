@@ -347,21 +347,32 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           parent_paths,
           type: type === "file" ? FileType.File : FileType.Folder,
         });
-        await sleep(3000);
-        this.emit(Events.Print, Article.build_line(["client.existing", prev_folder.id, name]));
-        const drive_file_existing = await this.drive.client.existing(prev_folder.id, name);
-        if (!drive_file_existing.data) {
-          this.emit(Events.Print, Article.build_line([`没有找到文件「${name}」`]));
+        // await sleep(3000);
+        // this.emit(Events.Print, Article.build_line(["client.existing", prev_folder.id, name]));
+        // const drive_file_existing = await this.drive.client.existing(prev_folder.id, name);
+        // if (!drive_file_existing.data) {
+        //   this.emit(Events.Print, Article.build_line([`没有找到文件「${name}」`]));
+        //   continue;
+        // }
+        this.emit(
+          Events.Print,
+          Article.build_line(["将同步目录记录下来，后面直接索引同步目录而非新增文件 ", prev_folder.id])
+        );
+        const e = await store.prisma.tmp_file.findFirst({
+          where: {
+            file_id: prev_folder.id,
+          },
+        });
+        if (e) {
           continue;
         }
-        this.emit(Events.Print, Article.build_line([`转存文件「${name}」到云盘成功`]));
         await store.prisma.tmp_file.create({
           data: {
             id: r_id(),
-            name,
-            file_id: drive_file_existing.data.file_id,
-            parent_paths,
-            type: type === "file" ? FileType.File : FileType.Folder,
+            name: prev_folder.name,
+            file_id: prev_folder.id,
+            parent_paths: this.drive.profile.root_folder_name!,
+            type: FileType.Folder,
             user_id,
             drive_id,
           },

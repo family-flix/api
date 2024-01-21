@@ -1,4 +1,4 @@
-import { FileType } from "@/constants";
+import { FileType, ResourceSyncTaskStatus } from "@/constants";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { Application } from "@/domains/application";
 import { ScheduleTask } from "@/domains/schedule/v2";
@@ -36,6 +36,7 @@ async function main() {
       fn(extra) {
         return store.prisma.resource_sync_task.findMany({
           where: {
+            status: ResourceSyncTaskStatus.WorkInProgress,
             drive_id: drive.id,
             user_id: user.id,
           },

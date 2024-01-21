@@ -1149,7 +1149,7 @@ export class ScheduleTask {
         async handler(item, index) {
           const prefix = `[${item.name}]`;
           const res = await drive.client.fetch_file(item.file_id);
-          console.log([prefix, `第 ${index + 1}`]);
+          // console.log([prefix, `第 ${index + 1}`]);
           if (res.error) {
             if (res.error.message.includes("file not exist")) {
               console.log([prefix, "删除云盘文件", item.name]);
@@ -1187,7 +1187,7 @@ export class ScheduleTask {
           if (Object.keys(payload).length === 0) {
             return;
           }
-          console.log([prefix, "更新云盘文件"]);
+          console.log([prefix, "更新云盘文件", JSON.stringify(payload)]);
           await store.prisma.file.update({
             where: {
               id: item.id,
@@ -1196,7 +1196,7 @@ export class ScheduleTask {
           });
         },
       });
-      console.log("处理完成");
+      console.log(drive.name, "处理完成");
     });
   }
 
@@ -1221,6 +1221,7 @@ export class ScheduleTask {
       },
       async handler(data, index) {
         const { id, name, poster_path, series } = data;
+        console.log(`第${index}个`, name);
         const tips: string[] = [];
         await (async () => {
           const media_name = series ? [series.name, data.order].filter(Boolean).join("") : name;

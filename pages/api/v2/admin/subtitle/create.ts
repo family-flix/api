@@ -22,8 +22,6 @@ export const config = {
   },
 };
 
-function create_subtitle() {}
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
@@ -70,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { filepath, originalFilename: filename, newFilename: tmp_filename } = file;
   // const file_buffer = fs.readFileSync(filepath);
   const correct_filename = filename || tmp_filename;
-  const r = await $upload.upload_subtitle(filepath);
+  const r = await $upload.upload_subtitle(filepath, correct_filename);
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
