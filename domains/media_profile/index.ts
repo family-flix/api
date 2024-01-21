@@ -14,6 +14,7 @@ import { Result } from "@/types";
 import { r_id } from "@/utils";
 
 import { TMDBClient } from "./tmdb_v2";
+import { SeasonProfileFromTMDB } from "./tmdb_v2/services";
 import { format_season_name, map_season_number } from "./utils";
 
 type MediaProfileSearchProps = {
@@ -442,6 +443,38 @@ export class MediaProfileClient {
         return Result.Ok(existing);
       }
     }
+    const r = await this.client.fetch_season_profile({
+      tv_id: Number(tv_id),
+      season_number,
+    });
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    await this.apply_episodes(r.data.episodes, {
+      tv_id,
+      season_id,
+      season_number,
+    });
+    const existing2 = await this.store.prisma.media_profile.findFirst({
+      where: {
+        id: season_id,
+      },
+      include: {
+        source_profiles: true,
+        // genres: true,
+        // origin_country: true,
+      },
+    });
+    if (existing2) {
+      return Result.Ok(existing2);
+    }
+    return Result.Err("未知错误493");
+  }
+  async apply_episodes(
+    episodes: SeasonProfileFromTMDB["episodes"],
+    values: { tv_id: string | number; season_id: string; season_number: number }
+  ) {
+    const { tv_id, season_id, season_number } = values;
     const episode_records: {
       id: string;
       name: string;
@@ -452,15 +485,8 @@ export class MediaProfileClient {
       runtime: number;
       // tmdb_id: null | string;
     }[] = [];
-    const r = await this.client.fetch_season_profile({
-      tv_id: Number(tv_id),
-      season_number,
-    });
-    if (r.error) {
-      return Result.Err(r.error.message);
-    }
-    for (let i = 0; i < r.data.episodes.length; i += 1) {
-      const { name, overview, air_date, still_path, episode_number, runtime } = r.data.episodes[i];
+    for (let i = 0; i < episodes.length; i += 1) {
+      const { name, overview, air_date, still_path, episode_number, runtime } = episodes[i];
       const episode_tmdb_id = [tv_id, season_number, episode_number].join("/");
       await (async () => {
         const existing = await this.store.prisma.media_source_profile.findFirst({
@@ -505,20 +531,7 @@ export class MediaProfileClient {
         });
       })();
     }
-    const existing2 = await this.store.prisma.media_profile.findFirst({
-      where: {
-        id: season_id,
-      },
-      include: {
-        source_profiles: true,
-        // genres: true,
-        // origin_country: true,
-      },
-    });
-    if (existing2) {
-      return Result.Ok(existing2);
-    }
-    return Result.Err("未知错误493");
+    return episode_records;
   }
   async search_movie(query: { keyword: string; year: string | null; platform?: string }) {
     const keyword = (() => {
@@ -744,6 +757,18 @@ export class MediaProfileClient {
         },
         data: payload,
       });
+      const count = await this.store.prisma.media_source_profile.count({
+        where: {
+          media_profile_id: id,
+        },
+      });
+      if (count !== episodes.length) {
+        await this.apply_episodes(episodes, {
+          tv_id: tmdb_id,
+          season_id: id,
+          season_number: Number(season_number),
+        });
+      }
       await walk_model_with_cursor({
         fn: (extra) => {
           return this.store.prisma.media_source_profile.findMany({
