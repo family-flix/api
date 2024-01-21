@@ -457,7 +457,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
             parent_file_id: cur.parent_file_id,
           });
           await walker.run(file, parents);
-          await this.searcher.run2([file.id]);
+          await this.searcher.run2([file.id], { force });
           return;
         }
         const folder = new Folder(cur.file_id, {
@@ -492,7 +492,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
           }
           const file_ids = this.parsed_media_sources.map((source) => source.file_id);
           this.parsed_media_sources = [];
-          await this.searcher.run2(file_ids);
+          await this.searcher.run2(file_ids, { force });
         }
       })();
     }

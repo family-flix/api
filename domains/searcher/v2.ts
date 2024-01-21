@@ -206,13 +206,13 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }
 
   /** 开始搜索 */
-  async run2(file_ids: string[] = []) {
-    await this.process_parsed_media_source_list_by_file_id(file_ids);
+  async run2(file_ids: string[] = [], options: { force?: boolean } = {}) {
+    await this.process_parsed_media_source_list_by_file_id(file_ids, options);
     this.emit(Events.Finish);
     return Result.Ok(null);
   }
-  async process_parsed_media_source_list_by_file_id(file_ids: string[]) {
-    const { force = false } = this.options;
+  async process_parsed_media_source_list_by_file_id(file_ids: string[], options: { force?: boolean } = {}) {
+    const force = options.force || this.options.force;
     const where: ModelQuery<"parsed_media_source"> = {
       media_source_id: null,
       file_id: {

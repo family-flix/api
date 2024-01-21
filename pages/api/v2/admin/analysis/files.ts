@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
       };
     });
-    await analysis.run2(the_files_prepare_analysis, { force: !!force });
+    await analysis.run2(the_files_prepare_analysis, { force: true });
     job.output.write(
       new ArticleLineNode({
         children: [
