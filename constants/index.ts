@@ -1,3 +1,5 @@
+export const __VERSION__ = "2.1.0";
+
 export enum FileType {
   File = 1,
   Folder = 2,

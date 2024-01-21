@@ -263,6 +263,7 @@ export async function fetch_media_profile(id: number | undefined, query: Request
     origin_country: string | null;
     alias: string | null;
     type: "tv" | "movie";
+    vote_average: number;
     actors: {
       id: string;
       name: string;
@@ -286,6 +287,7 @@ export async function fetch_media_profile(id: number | undefined, query: Request
     alias: null,
     source_count: 0,
     air_date: null,
+    vote_average: 0,
     origin_country: null,
     type: "tv",
     genres: [],
@@ -436,6 +438,10 @@ export async function fetch_media_profile(id: number | undefined, query: Request
       .replace(/^\s{1,}|\s{1,}$/, "")
       .trim();
   }
+  const rating_r = html.match(/v:average"[^>]{1,}>([^<]{1,})</);
+  if (rating_r) {
+    data.vote_average = Number(rating_r[1]);
+  }
   const {
     name,
     original_name,
@@ -457,6 +463,7 @@ export async function fetch_media_profile(id: number | undefined, query: Request
     actors,
     director,
     author,
+    vote_average,
     // in_production,
   } = data;
   return Result.Ok({
@@ -470,6 +477,7 @@ export async function fetch_media_profile(id: number | undefined, query: Request
     actors,
     director,
     author,
+    vote_average,
     // tagline,
     // status,
     // vote_average,

@@ -4,7 +4,7 @@
 import { describe, expect, test } from "vitest";
 import dayjs from "dayjs";
 
-import { season_to_chinese_num } from "..";
+import { compare_versions_with_timestamp, season_to_chinese_num } from "..";
 
 describe("季 转中文描述", () => {
   test("一位数", () => {
@@ -310,5 +310,32 @@ describe("根据缺少的剧集，修复剧集分组", () => {
       missing_episodes: [],
     });
     expect(range).toStrictEqual([[1, 1]]);
+  });
+});
+
+describe("版本号比较", () => {
+  test("bugfix 版本比较", () => {
+    const r = compare_versions_with_timestamp("0.0.2", "0.0.8");
+    expect(r).toStrictEqual(-1);
+  });
+  test("小版本比较", () => {
+    const r = compare_versions_with_timestamp("0.10.2", "0.2.8");
+    expect(r).toStrictEqual(1);
+  });
+  test("大版本比较", () => {
+    const r = compare_versions_with_timestamp("2.0.0", "1.10.100");
+    expect(r).toStrictEqual(1);
+  });
+  test("版本号相同", () => {
+    const r = compare_versions_with_timestamp("2.1.0", "2.1.0");
+    expect(r).toStrictEqual(0);
+  });
+  test("日常发布版本", () => {
+    const r = compare_versions_with_timestamp("2.1.0-2101212302", "2.1.0-2101212310");
+    expect(r).toStrictEqual(-1);
+  });
+  test("日常发布版本", () => {
+    const r = compare_versions_with_timestamp("2.1.0-2101212302", "2.2.0-2101212301");
+    expect(r).toStrictEqual(-1);
   });
 });

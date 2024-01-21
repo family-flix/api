@@ -1209,8 +1209,9 @@ export class ScheduleTask {
       fn(extra) {
         return store.prisma.media_profile.findMany({
           where: {
-            persons: {
-              none: {},
+            douban_id: null,
+            order: {
+              not: 0,
             },
           },
           include: {
@@ -1220,111 +1221,120 @@ export class ScheduleTask {
         });
       },
       async handler(data, index) {
-        const { id, name, poster_path, series } = data;
-        console.log(`第${index}个`, name);
+        const { id, name, series } = data;
         const tips: string[] = [];
         await (async () => {
-          const media_name = series ? [series.name, data.order].filter(Boolean).join("") : name;
-          const normalize_name = media_name.replace(/ {0,1}第([0-9一二三四五六七八九]{1,})季/, "$1");
+          const media_name = series
+            ? [series.name, data.order !== 1 ? data.order : null].filter(Boolean).join("")
+            : name;
+          const normalize_name = media_name.replace(/ {0,1}第([0-9]{1,})季/, "$1");
+          // console.log(media_name);
           if (series) {
             if (!name.includes(series.name)) {
-              tips.push(`季名称 '${name}' 没有包含电视剧名称 '${series.name}'`);
+              const tip = `季名称 '${name}' 没有包含电视剧名称 '${series.name}'`;
+              tips.push(tip);
             }
           }
-          if (!poster_path) {
-            tips.push(`没有海报`);
-          }
-          const r = await client.search(normalize_name);
-          if (r.error) {
-            tips.push(`无法根据名称 '${normalize_name}' 搜索到结果，原因 ${r.error.message}`);
-            return;
-          }
-          const matched = (() => {
-            let matched = r.data.list.find((media) => {
-              const n = media.name.trim();
-              if (normalize_name === n && data.air_date === media.air_date) {
-                return true;
-              }
-              return false;
-            });
-            if (matched) {
-              return matched;
+          try {
+            const r = await client.search(normalize_name);
+            if (r.error) {
+              const tip = `无法根据名称 '${normalize_name}' 搜索到结果，原因 ${r.error.message}`;
+              tips.push(tip);
+              return;
             }
-            matched = r.data.list.find((media) => {
-              const n = media.name.trim();
-              if (normalize_name === n) {
-                return true;
-              }
-              return false;
-            });
-            if (matched) {
-              return matched;
-            }
-            return null;
-          })();
-          if (!matched) {
-            tips.push(`根据名称 '${normalize_name}' 搜索到结果，但是没有找到完美匹配的记录`);
-            return;
-          }
-          const profile_r = await client.fetch_media_profile(matched.id);
-          if (profile_r.error) {
-            tips.push(`获取详情失败，因为 ${profile_r.error.message}`);
-            return;
-          }
-          const profile = profile_r.data;
-          const persons = [
-            ...profile.actors.map((actor) => {
-              return {
-                ...actor,
-                role: "star",
-              };
-            }),
-            ...profile.director.map((actor) => {
-              return {
-                ...actor,
-                role: "director",
-              };
-            }),
-            ...profile.author.map((actor) => {
-              return {
-                ...actor,
-                role: "scriptwriter",
-              };
-            }),
-          ];
-          for (let i = 0; i < persons.length; i += 1) {
-            const person = persons[i];
-            const e = await store.prisma.person_profile.findFirst({
-              where: {
-                id: person.id,
-              },
-            });
-            if (!e) {
-              await store.prisma.person_profile.create({
-                data: {
-                  id: person.id,
-                  name: person.name,
-                  douban_id: person.id,
-                },
+            const matched = (() => {
+              let matched = r.data.list.find((media) => {
+                const n = media.name.trim();
+                if (normalize_name === n && data.air_date === media.air_date) {
+                  return true;
+                }
+                return false;
               });
+              if (matched) {
+                return matched;
+              }
+              matched = r.data.list.find((media) => {
+                const n = media.name.trim();
+                if (normalize_name === n) {
+                  return true;
+                }
+                return false;
+              });
+              if (matched) {
+                return matched;
+              }
+              return null;
+            })();
+            if (!matched) {
+              const tip = `根据名称 '${normalize_name}' 搜索到结果，但是没有找到完美匹配的记录`;
+              tips.push(tip);
+              return;
             }
-          }
-          for (let i = 0; i < persons.length; i += 1) {
-            const person = persons[i];
-            await (async () => {
-              const e = await store.prisma.person_in_media.findFirst({
+            const profile_r = await client.fetch_media_profile(matched.id);
+            if (profile_r.error) {
+              const tip = `获取详情失败，因为 ${profile_r.error.message}`;
+              tips.push(tip);
+              return;
+            }
+            const profile = profile_r.data;
+            for (let i = 0; i < profile.genres.length; i += 1) {
+              const { id, text } = profile.genres[i];
+              const e = await store.prisma.media_genre.findFirst({
                 where: {
-                  name: person.name,
-                  order: person.order,
-                  known_for_department: person.role,
-                  media_id: id,
-                  profile_id: String(person.id),
+                  id,
                 },
               });
               if (!e) {
-                await store.prisma.person_in_media.create({
+                await store.prisma.media_genre.create({
                   data: {
-                    id: r_id(),
+                    id,
+                    text,
+                  },
+                });
+              }
+            }
+            const persons = [
+              ...profile.actors.map((actor) => {
+                return {
+                  ...actor,
+                  role: "star",
+                };
+              }),
+              ...profile.director.map((actor) => {
+                return {
+                  ...actor,
+                  role: "director",
+                };
+              }),
+              ...profile.author.map((actor) => {
+                return {
+                  ...actor,
+                  role: "scriptwriter",
+                };
+              }),
+            ];
+            for (let i = 0; i < persons.length; i += 1) {
+              const person = persons[i];
+              const e = await store.prisma.person_profile.findFirst({
+                where: {
+                  id: person.id,
+                },
+              });
+              if (!e) {
+                await store.prisma.person_profile.create({
+                  data: {
+                    id: person.id,
+                    name: person.name,
+                    douban_id: person.id,
+                  },
+                });
+              }
+            }
+            for (let i = 0; i < persons.length; i += 1) {
+              const person = persons[i];
+              await (async () => {
+                const e = await store.prisma.person_in_media.findFirst({
+                  where: {
                     name: person.name,
                     order: person.order,
                     known_for_department: person.role,
@@ -1332,25 +1342,55 @@ export class ScheduleTask {
                     profile_id: String(person.id),
                   },
                 });
-                return;
-              }
-            })();
+                if (!e) {
+                  await store.prisma.person_in_media.create({
+                    data: {
+                      id: r_id(),
+                      name: person.name,
+                      order: person.order,
+                      known_for_department: person.role,
+                      media_id: id,
+                      profile_id: String(person.id),
+                    },
+                  });
+                  return;
+                }
+              })();
+            }
+            const payload: Partial<MediaProfileRecord> = {
+              douban_id: String(profile.id),
+            };
+            if (profile.air_date && data.air_date !== profile.air_date) {
+              payload.air_date = profile.air_date;
+            }
+            if (profile.source_count && data.source_count !== profile.source_count) {
+              payload.source_count = profile.source_count;
+            }
+            if (profile.vote_average && data.vote_average !== profile.vote_average) {
+              payload.vote_average = profile.vote_average;
+            }
+            // console.log("add douban_id for media ", name, profile.genres);
+            await store.prisma.media_profile.update({
+              where: {
+                id,
+              },
+              data: {
+                ...payload,
+                genres: {
+                  set: profile.genres.map((g) => {
+                    return {
+                      id: g.id,
+                    };
+                  }),
+                },
+              },
+            });
+          } catch (err) {
+            const e = err as Error;
+            const tip = e.message;
+            console.log(tip);
+            tips.push(tip);
           }
-          const payload: Partial<MediaProfileRecord> = {
-            douban_id: String(profile.id),
-          };
-          if (profile.air_date && data.air_date !== profile.air_date) {
-            payload.air_date = profile.air_date;
-          }
-          if (profile.source_count && data.source_count !== profile.source_count) {
-            payload.source_count = profile.source_count;
-          }
-          await store.prisma.media_profile.update({
-            where: {
-              id,
-            },
-            data: payload,
-          });
         })();
         if (tips.length !== 0) {
           await store.prisma.media_profile.update({

@@ -177,6 +177,9 @@ async function main() {
           if (profile.source_count && data.source_count !== profile.source_count) {
             payload.source_count = profile.source_count;
           }
+          if (profile.vote_average && data.vote_average !== profile.vote_average) {
+            payload.vote_average = profile.vote_average;
+          }
           console.log("add douban_id for media ", name, profile.genres);
           await store.prisma.media_profile.update({
             where: {
@@ -184,13 +187,13 @@ async function main() {
             },
             data: {
               ...payload,
-              // genres: {
-              //   set: profile.genres.map((g) => {
-              //     return {
-              //       id: g.id,
-              //     };
-              //   }),
-              // },
+              genres: {
+                set: profile.genres.map((g) => {
+                  return {
+                    id: g.id,
+                  };
+                }),
+              },
             },
           });
         } catch (err) {

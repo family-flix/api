@@ -327,3 +327,31 @@ export function parseJSONStr<T extends JSONObject | JSONArray>(json: string | nu
     return Result.Err(e);
   }
 }
+
+export function compare_versions_with_timestamp(version1: string, version2: string): number {
+  const [part1, timestamp1] = version1.split("-");
+  const [part2, timestamp2] = version2.split("-");
+
+  const parts1 = part1.split(".");
+  const parts2 = part2.split(".");
+
+  const max_length = Math.max(parts1.length, parts2.length);
+
+  for (let i = 0; i < max_length; i++) {
+    const part1_num = parseInt(parts1[i], 10) || 0;
+    const part2_num = parseInt(parts2[i], 10) || 0;
+
+    if (part1_num < part2_num) {
+      return -1;
+    } else if (part1_num > part2_num) {
+      return 1;
+    }
+  }
+
+  if (timestamp1 && timestamp2) {
+    const timestamp_diff = parseInt(timestamp1) - parseInt(timestamp2);
+    return timestamp_diff < 0 ? -1 : timestamp_diff > 0 ? 1 : 0;
+  }
+
+  return 0;
+}

@@ -105,18 +105,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             include: {
               genres: true,
               origin_country: true,
+              persons: {
+                take: 5,
+                include: {
+                  profile: true,
+                },
+                orderBy: {
+                  order: "asc",
+                },
+              },
             },
-            // include: {
-            // persons: {
-            //   take: 5,
-            //   include: {
-            //     profile: true,
-            //   },
-            //   orderBy: {
-            //     order: "asc",
-            //   },
-            // },
-            // },
           },
         },
         orderBy: {
@@ -171,19 +169,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         genres: genres.map((genre) => {
           return {
             value: genre.id,
-            label: genre.id,
+            label: genre.text,
           };
         }),
         vote_average,
-        actors: [],
-        // actors: profile.persons.map((p) => {
-        //   const { profile } = p;
-        //   return {
-        //     id: profile.id,
-        //     name: profile.name,
-        //     avatar: profile.profile_path,
-        //   };
-        // }),
+        // actors: [],
+        actors: profile.persons.map((p) => {
+          const { profile } = p;
+          return {
+            id: profile.id,
+            name: profile.name,
+            avatar: profile.profile_path,
+          };
+        }),
       };
     }),
     page_size,
