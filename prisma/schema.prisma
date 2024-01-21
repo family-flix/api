@@ -1220,6 +1220,7 @@ model member_token {
         used       Float?  @default(0)
         // 过期时间
         expired_at String?
+        invalid    Int     @default(0)
 
         // 关联 member 表
         member_id String

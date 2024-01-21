@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const member = t_res.data;
-  if (!type) {
+  if (type === undefined) {
     return e(Result.Err("缺少问题类型"));
   }
   if (!data) {
