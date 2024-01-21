@@ -5,6 +5,7 @@ import axios from "axios";
 // import cheerio from "cheerio";
 
 import { Result, Unpacked, UnpackedResult } from "@/types";
+import { DOUBAN_GENRE_TEXT_TO_VALUE } from "@/constants";
 // import { query_stringify } from "@/utils";
 
 const API_HOST = "https://frodo.douban.com/api/v2";
@@ -487,7 +488,18 @@ export async function fetch_media_profile(id: number | undefined, query: Request
     //     ...fix_TMDB_image_path({ poster_path }),
     //   };
     // }),
-    genres,
+    genres: genres
+      .map((g) => {
+        const v = DOUBAN_GENRE_TEXT_TO_VALUE[g];
+        if (!v) {
+          return null;
+        }
+        return {
+          id: v,
+          text: g,
+        };
+      })
+      .filter(Boolean) as { id: number; text: string }[],
     origin_country,
   });
 }

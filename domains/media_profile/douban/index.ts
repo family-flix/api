@@ -47,7 +47,7 @@ export class DoubanClient {
     for (let i = 0; i < items.length; i += 1) {
       (() => {
         const { id, title, cover_url, abstract, abstract_2, rating, labels } = items[i];
-        const { count, value, star_count } = rating;
+        // const { count, value, star_count } = rating;
         const fields = abstract.split("/").map((t) => t.trim());
         const genres = fields
           .map((field) => {
@@ -96,7 +96,7 @@ export class DoubanClient {
           overview: null,
           poster_path: cover_url,
           air_date: air_date ? air_date[1] : null,
-          vote_average: value,
+          vote_average: rating?.value || null,
           type,
           genres,
         };
