@@ -37,7 +37,7 @@ async function main() {
     console.log("没有匹配的记录");
     return;
   }
-  await client.refresh_media_profile(media_profile);
+  await client.refresh_media_profile_with_tmdb(media_profile);
   console.log("Success");
 }
 

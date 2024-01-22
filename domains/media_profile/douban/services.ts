@@ -1,6 +1,9 @@
 /**
  * @file 豆瓣 api
  */
+import fs from "fs";
+import path from "path";
+
 import axios from "axios";
 // import cheerio from "cheerio";
 
@@ -438,7 +441,8 @@ export async function fetch_media_profile(id: number | undefined, query: Request
       .replace(/^\s{1,}|\s{1,}$/, "")
       .trim();
   }
-  const rating_r = html.match(/v:average"[^>]{1,}>([^<]{1,})</);
+  // fs.writeFileSync(path.join(__dirname, "mock", "profile3.html"), html);
+  const rating_r = html.match(/v:average[^>]{1,}>([^<]{1,})</);
   if (rating_r) {
     data.vote_average = Number(rating_r[1]);
   }

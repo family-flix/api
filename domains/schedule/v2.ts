@@ -403,7 +403,7 @@ export class ScheduleTask {
         });
       },
       handler: async (data) => {
-        await profile_client.refresh_media_profile(data);
+        await profile_client.refresh_media_profile_with_tmdb(data);
       },
     });
     job.output.write_line(["全部影视剧详情刷新完成"]);

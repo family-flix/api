@@ -32,9 +32,9 @@ export class DoubanClient {
   }
 
   async search(keyword: string) {
-    const resp = await axios.get<string>(
-      `https://search.douban.com/movie/subject_search?search_text=${keyword.replace(" ", "+")}`
-    );
+    const text = keyword.replace(" ", "+");
+    console.log("[SERVICE]media_profile/douban/index - search", text);
+    const resp = await axios.get<string>(`https://search.douban.com/movie/subject_search?search_text=${text}`);
     const html = resp.data;
     const r = /__DATA__ {0,1}= {0,1}"([^"]{1,})"/;
     const m = html.match(r);

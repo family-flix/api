@@ -173,15 +173,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           };
         }),
         vote_average,
-        // actors: [],
-        actors: profile.persons.map((p) => {
-          const { profile } = p;
-          return {
-            id: profile.id,
-            name: profile.name,
-            avatar: profile.profile_path,
-          };
-        }),
+        actors: profile.persons
+          .map((person) => {
+            const { known_for_department, profile, order } = person;
+            return {
+              id: profile.id,
+              name: profile.name,
+              avatar: profile.profile_path,
+              role: known_for_department,
+              order,
+            };
+          })
+          .sort((a, b) => {
+            const map: Record<string, number> = {
+              star: 1,
+              director: 2,
+              scriptwriter: 3,
+            };
+            if (a.role && b.role) {
+              return map[a.role] - map[b.role];
+            }
+            return a.order - b.order;
+          }),
       };
     }),
     page_size,

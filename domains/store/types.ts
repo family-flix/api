@@ -8,6 +8,7 @@ import {
   file,
   media,
   media_profile,
+  media_series_profile,
   media_source,
   media_source_profile,
   movie,
@@ -55,6 +56,7 @@ export type MovieProfileRecord = movie_profile;
 export type PersonProfileRecord = person_profile;
 export type PersonRecord = person_in_media;
 export type MediaProfileRecord = media_profile;
+export type MediaSeriesProfileRecord = media_series_profile;
 export type SubtitleRecord = subtitle_v2;
 export type MediaSourceProfileRecord = media_source_profile;
 

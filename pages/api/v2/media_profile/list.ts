@@ -6,7 +6,12 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
-import { MediaTypes } from "@/constants";
+import {
+  MediaOriginCountries,
+  MediaTypes,
+  MovieMediaOriginCountryTextMap,
+  SeasonMediaOriginCountryTextMap,
+} from "@/constants";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
@@ -104,6 +109,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         include: {
           source_profiles: true,
           series: true,
+          persons: {
+            include: {
+              profile: true,
+            },
+          },
+          genres: true,
+          origin_country: true,
         },
         orderBy: {
           air_date: "desc",
@@ -116,7 +128,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   const data = {
     list: result.list.map((media_profile) => {
-      const { id, type, name, original_name, poster_path, overview, air_date, order, series } = media_profile;
+      const {
+        id,
+        type,
+        name,
+        original_name,
+        poster_path,
+        overview,
+        air_date,
+        order,
+        vote_average,
+        source_count,
+        source_profiles,
+        series,
+        persons,
+        genres,
+        origin_country,
+      } = media_profile;
       return {
         id,
         type,
@@ -125,6 +153,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         poster_path,
         overview,
         air_date,
+        vote_average,
+        source_count,
         order,
         series: (() => {
           if (!series) {
@@ -137,6 +167,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             poster_path,
           };
         })(),
+        episodes: source_profiles.map((source_profile) => {
+          const { id, name, order } = source_profile;
+          return {
+            id,
+            name,
+            order,
+          };
+        }),
+        persons: persons
+          .map((person) => {
+            const { known_for_department, profile, order } = person;
+            return {
+              id: profile.id,
+              name: profile.name,
+              role: known_for_department,
+              order,
+            };
+          })
+          .sort((a, b) => {
+            const map: Record<string, number> = {
+              star: 1,
+              director: 2,
+              scriptwriter: 3,
+            };
+            if (a.role && b.role) {
+              return map[a.role] - map[b.role];
+            }
+            return a.order - b.order;
+          }),
+        genres: genres.map((g) => {
+          return g.text;
+        }),
+        origin_country: origin_country
+          .map((g) => {
+            if (type === MediaTypes.Movie) {
+              return MovieMediaOriginCountryTextMap[g.id as MediaOriginCountries];
+            }
+            if (type === MediaTypes.Season) {
+              return SeasonMediaOriginCountryTextMap[g.id as MediaOriginCountries];
+            }
+            return null;
+          })
+          .filter(Boolean),
       };
     }),
     next_marker: result.next_marker,

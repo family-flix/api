@@ -1,5 +1,5 @@
 /**
- * @file 刷新电影详情
+ * @file 刷新影视剧详情
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -21,20 +21,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!media_id) {
     return e(Result.Err("缺少记录 id"));
   }
-  const media = await store.prisma.media.findFirst({
+  const media = await store.prisma.media_profile.findFirst({
     where: {
       id: media_id,
-      user_id: user.id,
     },
     include: {
-      profile: true,
+      series: true,
     },
   });
   if (media === null) {
     return e(Result.Err("没有匹配的记录"));
-  }
-  if (media.profile === null) {
-    return e(Result.Err("该记录没有匹配详情"));
   }
   const client_res = await MediaProfileClient.New({
     token: user.settings.tmdb_token,
@@ -45,9 +41,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err(client_res.error.message));
   }
   const client = client_res.data;
-  const r = await client.refresh_media_profile_with_tmdb(media.profile);
+  const r = await client.refresh_media_profile_with_tmdb(media);
   if (r.error) {
     return e(Result.Err(r.error.message));
+  }
+  const r2 = await client.refresh_profile_with_douban(media);
+  if (r2.error) {
+    return e(Result.Err(r2.error.message));
   }
   res.status(200).json({
     code: 0,

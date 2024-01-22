@@ -6,7 +6,7 @@
 import dayjs from "dayjs";
 
 import { DatabaseStore } from "@/domains/store";
-import { MediaProfileRecord, MediaSourceProfileRecord } from "@/domains/store/types";
+import { MediaProfileRecord, MediaSeriesProfileRecord, MediaSourceProfileRecord } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { FileUpload } from "@/domains/uploader";
 import { MediaTypes } from "@/constants";
@@ -16,6 +16,7 @@ import { r_id } from "@/utils";
 import { TMDBClient } from "./tmdb_v2";
 import { SeasonProfileFromTMDB } from "./tmdb_v2/services";
 import { format_season_name, map_season_number } from "./utils";
+import { DoubanClient } from "./douban";
 
 type MediaProfileSearchProps = {
   token: string;
@@ -45,20 +46,22 @@ export class MediaProfileClient {
   }
 
   token: string;
-  store: DatabaseStore;
+  $store: DatabaseStore;
   $upload: FileUpload;
-  client: TMDBClient;
+  $tmdb: TMDBClient;
+  $douban: DoubanClient;
 
   constructor(props: MediaProfileSearchProps) {
     // super();
     const { token, uploader, store } = props;
     this.token = token;
-    this.store = store;
+    this.$store = store;
     this.$upload = uploader;
 
-    this.client = new TMDBClient({
+    this.$tmdb = new TMDBClient({
       token: this.token,
     });
+    this.$douban = new DoubanClient({});
   }
 
   async search_season(query: { keyword: string; platform?: number; year: string | null; season_text: string | null }) {
@@ -103,7 +106,7 @@ export class MediaProfileClient {
         year,
       };
     })();
-    const r = await this.client.search_tv(name);
+    const r = await this.$tmdb.search_tv(name);
     if (r.error) {
       return Result.Err(r.error.message);
     }
@@ -234,7 +237,7 @@ export class MediaProfileClient {
    * 如果 season 很多可能太过耗时
    */
   async cache_tv_profile(matched_tv: { id: number | string }) {
-    const r1 = await this.store.prisma.media_series_profile.findFirst({
+    const r1 = await this.$store.prisma.media_series_profile.findFirst({
       where: {
         id: String(matched_tv.id),
       },
@@ -253,7 +256,7 @@ export class MediaProfileClient {
     if (r1 && r1.media_profiles.length) {
       return Result.Ok(r1);
     }
-    const r = await this.client.fetch_tv_profile(matched_tv.id as number);
+    const r = await this.$tmdb.fetch_tv_profile(matched_tv.id as number);
     if (r.error) {
       return Result.Err(r.error.message);
     }
@@ -275,7 +278,7 @@ export class MediaProfileClient {
       if (r1) {
         return r1;
       }
-      const created = await this.store.prisma.media_series_profile.create({
+      const created = await this.$store.prisma.media_series_profile.create({
         data: {
           id: String(matched_tv.id),
           name,
@@ -340,7 +343,7 @@ export class MediaProfileClient {
           vote_average,
         } = season;
         const season_tmdb_id = [created.id, season_number].join("/");
-        const existing = await this.store.prisma.media_profile.findFirst({
+        const existing = await this.$store.prisma.media_profile.findFirst({
           where: {
             id: season_tmdb_id,
           },
@@ -354,7 +357,7 @@ export class MediaProfileClient {
           created.media_profiles.push(existing);
           return;
         }
-        const created_season = await this.store.prisma.media_profile.create({
+        const created_season = await this.$store.prisma.media_profile.create({
           data: {
             id: season_tmdb_id,
             type: MediaTypes.Season,
@@ -428,7 +431,7 @@ export class MediaProfileClient {
       return Result.Err("缺少 season_number");
     }
     const season_id = [tv_id, season_number].join("/");
-    const existing = await this.store.prisma.media_profile.findFirst({
+    const existing = await this.$store.prisma.media_profile.findFirst({
       where: {
         id: season_id,
       },
@@ -443,7 +446,7 @@ export class MediaProfileClient {
         return Result.Ok(existing);
       }
     }
-    const r = await this.client.fetch_season_profile({
+    const r = await this.$tmdb.fetch_season_profile({
       tv_id: Number(tv_id),
       season_number,
     });
@@ -455,7 +458,7 @@ export class MediaProfileClient {
       season_id,
       season_number,
     });
-    const existing2 = await this.store.prisma.media_profile.findFirst({
+    const existing2 = await this.$store.prisma.media_profile.findFirst({
       where: {
         id: season_id,
       },
@@ -489,7 +492,7 @@ export class MediaProfileClient {
       const { name, overview, air_date, still_path, episode_number, runtime } = episodes[i];
       const episode_tmdb_id = [tv_id, season_number, episode_number].join("/");
       await (async () => {
-        const existing = await this.store.prisma.media_source_profile.findFirst({
+        const existing = await this.$store.prisma.media_source_profile.findFirst({
           where: {
             id: episode_tmdb_id,
           },
@@ -507,7 +510,7 @@ export class MediaProfileClient {
           });
           return;
         }
-        const created = await this.store.prisma.media_source_profile.create({
+        const created = await this.$store.prisma.media_source_profile.create({
           data: {
             id: episode_tmdb_id,
             name,
@@ -631,7 +634,7 @@ export class MediaProfileClient {
   }
   /** 获取电影详情记录 */
   async cache_movie_profile(matched_movie: { id: string | number }) {
-    const r1 = await this.store.prisma.media_profile.findFirst({
+    const r1 = await this.$store.prisma.media_profile.findFirst({
       where: {
         id: String(matched_movie.id),
       },
@@ -644,13 +647,13 @@ export class MediaProfileClient {
     if (r1) {
       return Result.Ok(r1);
     }
-    const r = await this.client.fetch_movie_profile(matched_movie.id as number);
+    const r = await this.$tmdb.fetch_movie_profile(matched_movie.id as number);
     if (r.error) {
       return Result.Err(r.error.message);
     }
     const { name, original_name, overview, poster_path, backdrop_path, runtime, air_date, origin_country, genres } =
       r.data;
-    const created = await this.store.prisma.media_profile.create({
+    const created = await this.$store.prisma.media_profile.create({
       data: {
         id: String(matched_movie.id),
         type: MediaTypes.Movie,
@@ -721,14 +724,14 @@ export class MediaProfileClient {
     return Result.Ok(created);
   }
   /** 使用 TDMB 刷新本地影视剧详情 */
-  async refresh_media_profile(media_profile: MediaProfileRecord) {
+  async refresh_media_profile_with_tmdb(media_profile: MediaProfileRecord) {
     const { id, type } = media_profile;
     if (type === MediaTypes.Season) {
       const [tmdb_id, season_number] = id.split("/");
       if (season_number === undefined) {
         return Result.Err("详情 id 不包含 season_number");
       }
-      const r = await this.client.fetch_season_profile({
+      const r = await this.$tmdb.fetch_season_profile({
         tv_id: Number(tmdb_id),
         season_number: Number(season_number),
       });
@@ -751,13 +754,13 @@ export class MediaProfileClient {
       if (Object.keys(payload).length === 1) {
         return Result.Ok(null);
       }
-      const updated_media_profile = await this.store.prisma.media_profile.update({
+      const updated_media_profile = await this.$store.prisma.media_profile.update({
         where: {
           id,
         },
         data: payload,
       });
-      const count = await this.store.prisma.media_source_profile.count({
+      const count = await this.$store.prisma.media_source_profile.count({
         where: {
           media_profile_id: id,
         },
@@ -771,7 +774,7 @@ export class MediaProfileClient {
       }
       await walk_model_with_cursor({
         fn: (extra) => {
-          return this.store.prisma.media_source_profile.findMany({
+          return this.$store.prisma.media_source_profile.findMany({
             where: {
               media_profile_id: id,
             },
@@ -804,7 +807,7 @@ export class MediaProfileClient {
             if (Object.keys(payload).length === 0) {
               return;
             }
-            await this.store.prisma.media_source_profile.update({
+            await this.$store.prisma.media_source_profile.update({
               where: {
                 id: data.id,
               },
@@ -817,7 +820,7 @@ export class MediaProfileClient {
     }
     if (type === MediaTypes.Movie) {
       const tmdb_id = id;
-      const r = await this.client.fetch_movie_profile(Number(tmdb_id));
+      const r = await this.$tmdb.fetch_movie_profile(Number(tmdb_id));
       if (r.error) {
         return Result.Err(r.error.message);
       }
@@ -837,7 +840,7 @@ export class MediaProfileClient {
       if (Object.keys(payload).length === 1) {
         return Result.Ok(null);
       }
-      const updated_media_profile = await this.store.prisma.media_profile.update({
+      const updated_media_profile = await this.$store.prisma.media_profile.update({
         where: {
           id,
         },
@@ -845,7 +848,7 @@ export class MediaProfileClient {
       });
       await walk_model_with_cursor({
         fn: (extra) => {
-          return this.store.prisma.media_source_profile.findMany({
+          return this.$store.prisma.media_source_profile.findMany({
             where: {
               media_profile_id: id,
             },
@@ -853,8 +856,9 @@ export class MediaProfileClient {
           });
         },
         handler: async (data) => {
+          const { updated } = payload;
           const source_payload: Partial<MediaSourceProfileRecord> = {
-            ...payload,
+            updated,
           };
           const { runtime } = r.data;
           if (runtime && runtime !== data.runtime) {
@@ -863,7 +867,7 @@ export class MediaProfileClient {
           if (Object.keys(source_payload).length === 1) {
             return Result.Ok(null);
           }
-          await this.store.prisma.media_source_profile.update({
+          await this.$store.prisma.media_source_profile.update({
             where: {
               id,
             },
@@ -875,7 +879,7 @@ export class MediaProfileClient {
     }
     return Result.Err("未知类型");
   }
-  async refresh_media_source_profile(media_source_profile: MediaSourceProfileRecord) {
+  async refresh_media_source_profile_with_tmdb(media_source_profile: MediaSourceProfileRecord) {
     const { id, type } = media_source_profile;
     if (type === MediaTypes.Season) {
       const [tmdb_id, season_number, episode_number] = id.split("/");
@@ -885,7 +889,7 @@ export class MediaProfileClient {
       if (!episode_number) {
         return Result.Err("没有剧集顺序信息");
       }
-      const r = await this.client.fetch_episode_profile({
+      const r = await this.$tmdb.fetch_episode_profile({
         tv_id: Number(tmdb_id),
         season_number: Number(season_number),
         episode_number: Number(episode_number),
@@ -910,7 +914,7 @@ export class MediaProfileClient {
       if (Object.keys(payload).length === 1) {
         return Result.Ok(null);
       }
-      await this.store.prisma.media_source_profile.update({
+      await this.$store.prisma.media_source_profile.update({
         where: {
           id,
         },
@@ -922,11 +926,198 @@ export class MediaProfileClient {
     }
     return Result.Err("未知类型");
   }
+  async refresh_profile_with_douban(data: MediaProfileRecord & { series: MediaSeriesProfileRecord | null }) {
+    const { id, name, series } = data;
+    const client = this.$douban;
+    const store = this.$store;
+    const tips: string[] = [];
+    await (async () => {
+      const media_name = series ? [series.name, data.order !== 1 ? data.order : null].filter(Boolean).join("") : name;
+      const normalize_name = media_name.replace(/ {0,1}第([0-9]{1,})季/, "$1");
+      // console.log(media_name);
+      if (series) {
+        if (!name.includes(series.name)) {
+          const tip = `季名称 '${name}' 没有包含电视剧名称 '${series.name}'`;
+          tips.push(tip);
+        }
+      }
+      try {
+        const r = await client.search(normalize_name);
+        if (r.error) {
+          const tip = `无法根据名称 '${normalize_name}' 搜索到结果，原因 ${r.error.message}`;
+          tips.push(tip);
+          return;
+        }
+        const matched = (() => {
+          let matched = r.data.list.find((media) => {
+            const n = media.name.trim();
+            if (normalize_name === n && data.air_date === media.air_date) {
+              return true;
+            }
+            return false;
+          });
+          if (matched) {
+            return matched;
+          }
+          matched = r.data.list.find((media) => {
+            const n = media.name.trim();
+            if (normalize_name === n) {
+              return true;
+            }
+            return false;
+          });
+          if (matched) {
+            return matched;
+          }
+          return null;
+        })();
+        if (!matched) {
+          const tip = `根据名称 '${normalize_name}' 搜索到结果，但是没有找到完美匹配的记录`;
+          tips.push(tip);
+          return;
+        }
+        const profile_r = await client.fetch_media_profile(matched.id);
+        if (profile_r.error) {
+          const tip = `获取详情失败，因为 ${profile_r.error.message}`;
+          tips.push(tip);
+          return;
+        }
+        const profile = profile_r.data;
+        for (let i = 0; i < profile.genres.length; i += 1) {
+          const { id, text } = profile.genres[i];
+          const e = await store.prisma.media_genre.findFirst({
+            where: {
+              id,
+            },
+          });
+          if (!e) {
+            await store.prisma.media_genre.create({
+              data: {
+                id,
+                text,
+              },
+            });
+          }
+        }
+        const persons = [
+          ...profile.actors.map((actor) => {
+            return {
+              ...actor,
+              role: "star",
+            };
+          }),
+          ...profile.director.map((actor) => {
+            return {
+              ...actor,
+              role: "director",
+            };
+          }),
+          ...profile.author.map((actor) => {
+            return {
+              ...actor,
+              role: "scriptwriter",
+            };
+          }),
+        ];
+        for (let i = 0; i < persons.length; i += 1) {
+          const person = persons[i];
+          const e = await store.prisma.person_profile.findFirst({
+            where: {
+              id: person.id,
+            },
+          });
+          if (!e) {
+            await store.prisma.person_profile.create({
+              data: {
+                id: person.id,
+                name: person.name,
+                douban_id: person.id,
+              },
+            });
+          }
+        }
+        for (let i = 0; i < persons.length; i += 1) {
+          const person = persons[i];
+          await (async () => {
+            const e = await store.prisma.person_in_media.findFirst({
+              where: {
+                name: person.name,
+                order: person.order,
+                known_for_department: person.role,
+                media_id: id,
+                profile_id: String(person.id),
+              },
+            });
+            if (!e) {
+              await store.prisma.person_in_media.create({
+                data: {
+                  id: r_id(),
+                  name: person.name,
+                  order: person.order,
+                  known_for_department: person.role,
+                  media_id: id,
+                  profile_id: String(person.id),
+                },
+              });
+              return;
+            }
+          })();
+        }
+        const payload: Partial<MediaProfileRecord> = {
+          douban_id: String(profile.id),
+        };
+        if (profile.alias && data.alias !== profile.alias) {
+          payload.alias = profile.alias;
+        }
+        if (profile.air_date && data.air_date !== profile.air_date) {
+          payload.air_date = profile.air_date;
+        }
+        if (profile.source_count && data.source_count !== profile.source_count) {
+          payload.source_count = profile.source_count;
+        }
+        if (profile.vote_average && data.vote_average !== profile.vote_average) {
+          payload.vote_average = profile.vote_average;
+        }
+        // console.log("add douban_id for media ", name, profile.genres);
+        await store.prisma.media_profile.update({
+          where: {
+            id,
+          },
+          data: {
+            ...payload,
+            genres: {
+              set: profile.genres.map((g) => {
+                return {
+                  id: g.id,
+                };
+              }),
+            },
+          },
+        });
+      } catch (err) {
+        const e = err as Error;
+        const tip = e.message;
+        tips.push(tip);
+      }
+    })();
+    if (tips.length !== 0) {
+      await store.prisma.media_profile.update({
+        where: {
+          id,
+        },
+        data: {
+          tips: tips.join("\n"),
+        },
+      });
+      return Result.Err(tips.join("\n"));
+    }
+    return Result.Ok(null);
+  }
   /** 遍历所有图片，如果是 themoviedb 域名，就下载到本地 */
   async upload_images_in_profile() {
     await walk_model_with_cursor({
       fn: (extra) => {
-        return this.store.prisma.media_profile.findMany({
+        return this.$store.prisma.media_profile.findMany({
           where: {
             OR: [
               {
@@ -959,7 +1150,7 @@ export class MediaProfileClient {
         if (poster_path) {
           payload.backdrop_path = await this.download_image(backdrop_path, "backdrop");
         }
-        await this.store.prisma.media_profile.update({
+        await this.$store.prisma.media_profile.update({
           where: {
             id,
           },
@@ -969,7 +1160,7 @@ export class MediaProfileClient {
     });
     await walk_model_with_cursor({
       fn: (extra) => {
-        return this.store.prisma.media_source_profile.findMany({
+        return this.$store.prisma.media_source_profile.findMany({
           where: {
             OR: [
               {
@@ -992,7 +1183,7 @@ export class MediaProfileClient {
         if (still_path) {
           payload.still_path = still_path;
         }
-        await this.store.prisma.media_source_profile.update({
+        await this.$store.prisma.media_source_profile.update({
           where: {
             id,
           },
