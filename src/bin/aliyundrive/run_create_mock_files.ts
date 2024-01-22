@@ -6,7 +6,7 @@ import { Application } from "@/domains/application";
 import { Folder } from "@/domains/folder";
 import { folder_client } from "@/domains/store/utils";
 import { MockFileClient } from "@/domains/clients/mock";
-import { data, id } from "@/mock/xu_ni_wan_jia_deng_huo";
+// import { data, id } from "@/mock/xu_ni_wan_jia_deng_huo";
 import { Result } from "@/types";
 
 (async () => {
@@ -47,28 +47,28 @@ import { Result } from "@/types";
   //   console.log(r.error.message);
   //   return;
   // }
-  const folder = new Folder("63fef6384b033675d1c9433b9a995f73993a5e74", {
-    // @ts-ignore
-    client: new MockFileClient({ data }),
-  });
-  const r = await folder.walk(async (file) => {
-    const { name, type, parents, mime_type } = file;
-    const filepath = [...parents].map((p) => p.name).join("/");
-    if (type === "file" && name.endsWith(".mp4")) {
-      console.log("\n");
-      console.log("filepath: ", filepath);
-      console.log("name: ", name);
-      await original_client.upload(video_filepath, {
-        name: [filepath, name].join("/"),
-        parent_file_id: "65a49ebae33fc9fe9f554362aa556130b4887ba8",
-      });
-    }
-    return true;
-  });
-  if (r.error) {
-    console.log(r.error.message);
-    return;
-  }
+  // const folder = new Folder("63fef6384b033675d1c9433b9a995f73993a5e74", {
+  //   // @ts-ignore
+  //   client: new MockFileClient({ data }),
+  // });
+  // const r = await folder.walk(async (file) => {
+  //   const { name, type, parents, mime_type } = file;
+  //   const filepath = [...parents].map((p) => p.name).join("/");
+  //   if (type === "file" && name.endsWith(".mp4")) {
+  //     console.log("\n");
+  //     console.log("filepath: ", filepath);
+  //     console.log("name: ", name);
+  //     await original_client.upload(video_filepath, {
+  //       name: [filepath, name].join("/"),
+  //       parent_file_id: "65a49ebae33fc9fe9f554362aa556130b4887ba8",
+  //     });
+  //   }
+  //   return true;
+  // });
+  // if (r.error) {
+  //   console.log(r.error.message);
+  //   return;
+  // }
   console.log("Completed");
 })();
 
