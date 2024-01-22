@@ -94,6 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (to_drive_res.error) {
     return e(Result.Err(to_drive_res.error.message));
   }
+  const to_drive = to_drive_res.data;
   const job_res = await Job.New({
     unique_id: file.id,
     desc: `文件「${file.name}」归档`,
@@ -105,7 +106,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err(job_res.error.message));
   }
   const job = job_res.data;
-  const to_drive = to_drive_res.data;
   async function run(payload: {
     type: MediaTypes;
     name: string;
@@ -163,7 +163,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return r.data;
     })();
     if (folder_in_to_drive === null) {
-      job.output.write_line(["目标云盘没有文件夹存放电影文件"]);
+      job.output.write_line(["目标云盘没有文件夹存放资源文件"]);
       job.finish();
       return;
     }
@@ -192,7 +192,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return;
     }
     const analysis_res = await DriveAnalysis.New({
-      drive: from_drive,
+      drive: to_drive,
       user,
       store,
       assets: app.assets,
@@ -224,10 +224,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.output.write_line(["索引失败，因为", r.error.message]);
       return;
     }
-    const source_in_to_drive = await store.prisma.parsed_media_source.findFirst({
+    const source_in_from_drive = await store.prisma.parsed_media_source.findFirst({
       where: {
         file_id,
-        drive_id: to_drive.id,
+        drive_id: from_drive.id,
       },
       include: {
         parsed_media: true,
@@ -236,15 +236,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         created: "desc",
       },
     });
-    if (!source_in_to_drive) {
+    if (!source_in_from_drive) {
       job.output.write_line(["没有找到修改文件名后的文件"]);
       return;
     }
-    const same_file_in_from_drive = await store.prisma.parsed_media_source.findFirst({
+    const same_file_in_to_drive = await store.prisma.parsed_media_source.findFirst({
       where: {
-        file_name: source_in_to_drive.file_name,
+        file_name: source_in_from_drive.file_name,
         parent_paths: [to_drive.profile.root_folder_name!, folder_in_from_drive.file_name].join("/"),
-        drive_id: from_drive.id,
+        drive_id: to_drive.id,
         user_id: user.id,
       },
       include: {
@@ -256,30 +256,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       },
     });
-    if (!same_file_in_from_drive) {
+    if (!same_file_in_to_drive) {
       job.output.write_line(["没有在目标云盘找到文件"]);
       return;
     }
     await store.prisma.parsed_media_source.update({
       where: {
-        id: source_in_to_drive.id,
+        id: same_file_in_to_drive.id,
       },
       data: {
-        media_source_id: same_file_in_from_drive.media_source_id,
+        media_source_id: source_in_from_drive.media_source_id,
       },
     });
     if (
-      source_in_to_drive.parsed_media &&
-      !source_in_to_drive.parsed_media.media_profile_id &&
-      same_file_in_from_drive.parsed_media &&
-      same_file_in_from_drive.parsed_media.media_profile_id
+      source_in_from_drive.parsed_media &&
+      !source_in_from_drive.parsed_media.media_profile_id &&
+      same_file_in_to_drive.parsed_media &&
+      same_file_in_to_drive.parsed_media.media_profile_id
     ) {
       await store.prisma.parsed_media.update({
         where: {
-          id: source_in_to_drive.parsed_media.id,
+          id: same_file_in_to_drive.parsed_media.id,
         },
         data: {
-          media_profile_id: same_file_in_from_drive.parsed_media.media_profile_id,
+          media_profile_id: source_in_from_drive.parsed_media.media_profile_id,
         },
       });
     }

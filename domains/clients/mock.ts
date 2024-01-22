@@ -27,8 +27,9 @@ export class MockFileClient implements AliyunDriveClient {
     }> = {}
   ) {
     const { marker, page_size: size = 20 } = options;
-    // console.log("[](fake fetchFiles)", id, marker);
+    // console.log("[](fake fetchFiles)", file_id, marker);
     const matched = find_child_recursive(this.tree, file_id);
+    // console.log("[](fake fetchFiles)", matched);
     if (matched) {
       const { items = [] } = matched;
       const first_items_result = {

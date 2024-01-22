@@ -441,6 +441,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
             name: "",
             original_name: "",
             season: "",
+            year: "",
           };
         });
         const cur = parents_and_cur[parents_and_cur.length - 1];

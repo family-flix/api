@@ -1221,7 +1221,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
     });
     // 可能容量已经超出，这时不会尝试创建转存任务，直接返回失败
     const error_body = responses.find((resp) => {
-      return ![200, 202].includes(resp.status);
+      return ![200, 201, 202].includes(resp.status);
     });
     if (error_body) {
       const err = new Error(`存在转存失败的记录，第 ${error_body.index} 个，因为 ${JSON.stringify(error_body)}`);

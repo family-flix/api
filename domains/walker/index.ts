@@ -63,7 +63,10 @@ export type SearchedMovie = {
   md5?: string;
   _position: string;
 };
-export type ParentFolder = Pick<ReturnType<typeof parse_filename_for_video>, "name" | "original_name" | "season"> & {
+export type ParentFolder = Pick<
+  ReturnType<typeof parse_filename_for_video>,
+  "name" | "original_name" | "season" | "year"
+> & {
   /** 文件夹或文件 id */
   file_id: string;
   /** 原始文件名称 */
@@ -187,7 +190,14 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
    */
   async walk(
     data: Folder | File,
-    parents: { file_id: string; file_name: string; name: string; original_name: string; season: string }[] = []
+    parents: {
+      file_id: string;
+      file_name: string;
+      name: string;
+      original_name: string;
+      season: string;
+      year: string;
+    }[] = []
   ) {
     const { id: file_id, type, name, size, parent_file_id, md5 } = data;
     // console.log("[DOMAIN]walker - walk", file_id, name, parents);
@@ -283,6 +293,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
                 name: parsed_name,
                 original_name,
                 season,
+                year,
               });
             await this.walk(file, parent_folders);
           }
@@ -397,7 +408,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           file_name: name,
           name: last_parent?.name,
           original_name: last_parent?.original_name,
-          year: parsed_info.year,
+          year: parsed_info.year || last_parent?.year,
           parent_paths,
           parent_file_id,
           size,
@@ -411,7 +422,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         file_name: name,
         name: parsed_info.name,
         original_name: parsed_info.original_name,
-        year: parsed_info.year,
+        year: parsed_info.year || last_parent?.year,
         parent_paths,
         parent_file_id,
         size,
@@ -442,7 +453,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
             const tasks = create_tasks({
               tv: tv_and_season_folder.tv,
               season: tv_and_season_folder.season,
-              episode: parsed_info,
+              episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
               _position: "normal1",
             });
             await this.on_episode(tasks);
@@ -489,7 +500,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
               // season: DEFAULT_SEASON_NUMBER,
               season: null,
             },
-            episode: parsed_info,
+            episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
             _position: "normal2",
           });
           await this.on_episode(tasks);
@@ -572,7 +583,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
             const tasks = create_tasks({
               tv: tv_and_season_folder.tv,
               season: tv_and_season_folder.season,
-              episode: parsed_info,
+              episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
               _position: "normal3",
             });
             await this.on_episode(tasks);
@@ -619,7 +630,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
               // season: DEFAULT_SEASON_NUMBER,
               season: null,
             },
-            episode: parsed_info,
+            episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
             _position: "normal4",
           });
           await this.on_episode(tasks);
@@ -795,7 +806,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           const tasks = create_tasks({
             tv: tv_and_season_folder.tv,
             season: tv_and_season_folder.season,
-            episode: parsed_info,
+            episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
             _position: "normal6",
           });
           await this.on_episode(tasks);
@@ -839,7 +850,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         const tasks = create_tasks({
           tv: tv_and_season_folder.tv,
           season: { season: parsed_info.season },
-          episode: parsed_info,
+          episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
           _position: "tip2",
         });
         await this.on_episode(tasks);
@@ -881,7 +892,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       const tasks = create_tasks({
         tv: tv_and_season_folder.tv,
         season: parsed_info,
-        episode: parsed_info,
+        episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
         _position: "normal7",
       });
       await this.on_episode(tasks);
@@ -974,7 +985,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           const tasks = create_tasks({
             tv: tv_and_season_folder.tv,
             season: tv_and_season_folder.season,
-            episode: parsed_info,
+            episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
             _position: "normal9",
           });
           await this.on_episode(tasks);
@@ -1018,7 +1029,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         const tasks = create_tasks({
           tv: tv_and_season_folder.tv,
           season: parsed_info,
-          episode: parsed_info,
+          episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
           _position: "tip3",
         });
         await this.on_episode(tasks);
@@ -1060,7 +1071,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       const tasks = create_tasks({
         tv: tv_and_season_folder.tv,
         season: parsed_info,
-        episode: parsed_info,
+        episode: { ...parsed_info, year: parsed_info.year || tv_and_season_folder.year },
         _position: "normal10",
       });
       await this.on_episode(tasks);
@@ -1236,7 +1247,14 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
    */
   async run(
     data: Folder | File,
-    parents: { file_id: string; file_name: string; name: string; original_name: string; season: string }[] = []
+    parents: {
+      file_id: string;
+      file_name: string;
+      name: string;
+      original_name: string;
+      season: string;
+      year: string;
+    }[] = []
   ) {
     this.start_folder_id = data.id;
     await this.walk(data, parents);
@@ -1291,6 +1309,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           const result = {
             tv: v,
             season: v,
+            year: v.year,
           };
           return result;
         }
@@ -1303,6 +1322,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         const result = {
           tv: v,
           season: matched_season_folder,
+          year: matched_season_folder?.year || "",
         };
         return result;
       }
