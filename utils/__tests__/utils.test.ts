@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import dayjs from "dayjs";
 
 import { compare_versions_with_timestamp, season_to_chinese_num } from "..";
+import { build_media_name } from "../parse_filename_for_video";
 
 describe("季 转中文描述", () => {
   test("一位数", () => {
@@ -337,5 +338,12 @@ describe("版本号比较", () => {
   test("日常发布版本", () => {
     const r = compare_versions_with_timestamp("2.1.0-2101212302", "2.2.0-2101212301");
     expect(r).toStrictEqual(-1);
+  });
+});
+
+describe("构建名称", () => {
+  test("MEGALO BOX", () => {
+    const r = build_media_name({ name: "MEGALO BOX", original_name: null });
+    expect(r).toStrictEqual("MEGALO.BOX");
   });
 });

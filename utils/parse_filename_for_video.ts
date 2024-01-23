@@ -1925,7 +1925,7 @@ export function build_media_name(values: { name: string | null; original_name: s
     ? name
         .split(" ")
         .map((t) => t.trim())
-        .join("")
+        .join(".")
     : null;
   const n = [first_char_pin_yin, nn].filter(Boolean).join(" ");
   const original_n = (() => {

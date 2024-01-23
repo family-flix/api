@@ -12,7 +12,7 @@ import { app, store } from "@/store";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { media_id } = req.body as Partial<{ media_id: string }>;
+  const { media_id, douban_id } = req.body as Partial<{ media_id: string; douban_id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -45,7 +45,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
-  const r2 = await client.refresh_profile_with_douban(media);
+  const r2 = await (async () => {
+    if (douban_id) {
+      return client.refresh_profile_with_douban_id(media, { douban_id: Number(douban_id) });
+    }
+    return client.refresh_profile_with_douban(media);
+  })();
   if (r2.error) {
     return e(Result.Err(r2.error.message));
   }

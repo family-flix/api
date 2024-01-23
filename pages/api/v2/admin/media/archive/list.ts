@@ -93,6 +93,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           _count: true,
           profile: true,
           media_sources: {
+            where: {
+              files: {
+                some: {},
+              },
+            },
             include: {
               profile: true,
               files: {

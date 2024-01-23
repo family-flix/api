@@ -15,12 +15,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const {
     status,
-    page = 1,
     page_size = 20,
+    next_marker,
   } = req.body as Partial<{
     status: number;
-    page: number;
     page_size: number;
+    next_marker: string;
   }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
@@ -44,6 +44,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         ...extra,
       });
     },
+    next_marker,
+    page_size,
   });
   const data = {
     total: count,

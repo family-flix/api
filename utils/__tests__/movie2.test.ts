@@ -46,6 +46,16 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("[电锯惊魂9].2021.2160p.UHD.BluRay.x265.10bit.HDR.DTS-HD.MA.TrueHD.7.1.Atmos-SWTYBLZ.mkv", () => {
+    const name = "[电锯惊魂9].2021.2160p.UHD.BluRay.x265.10bit.HDR.DTS-HD.MA.TrueHD.7.1.Atmos-SWTYBLZ.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "电锯惊魂9",
+      original_name: "UHD",
+      season: "",
+      episode: "",
+    });
+  });
   // test("up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv", () => {
   //   const name = "up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv";
   //   const result = parse_filename_for_video(name);

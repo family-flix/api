@@ -119,4 +119,14 @@ describe("电视剧4", () => {
       episode: "",
     });
   });
+  test("D.P：逃兵追缉令第2季.E01.1080p.WEB-DL.x264.DDP2.0.mkv", () => {
+    const name = "D.P：逃兵追缉令第2季.E01.1080p.WEB-DL.x264.DDP2.0.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "D.P：逃兵追缉令",
+      original_name: "",
+      season: "S02",
+      episode: "E01",
+    });
+  });
 });

@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const parsed_episode = await store.prisma.parsed_media_source.findFirst({
     where: {
       file_id,
-      user_id: user.id,
+      // user_id: user.id,
     },
     include: {
       media_source: {

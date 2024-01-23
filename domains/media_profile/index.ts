@@ -11,7 +11,7 @@ import { walk_model_with_cursor } from "@/domains/store/utils";
 import { FileUpload } from "@/domains/uploader";
 import { MediaTypes } from "@/constants";
 import { Result } from "@/types";
-import { r_id } from "@/utils";
+import { num_to_chinese, r_id } from "@/utils";
 
 import { TMDBClient } from "./tmdb_v2";
 import { SeasonProfileFromTMDB } from "./tmdb_v2/services";
@@ -927,14 +927,13 @@ export class MediaProfileClient {
     return Result.Err("未知类型");
   }
   async refresh_profile_with_douban(data: MediaProfileRecord & { series: MediaSeriesProfileRecord | null }) {
-    const { id, name, series } = data;
+    const { id, name, order, air_date, series } = data;
     const client = this.$douban;
     const store = this.$store;
     const tips: string[] = [];
     await (async () => {
-      const media_name = series ? [series.name, data.order !== 1 ? data.order : null].filter(Boolean).join("") : name;
+      const media_name = series ? [series.name, order !== 1 ? order : null].filter(Boolean).join("") : name;
       const normalize_name = media_name.replace(/ {0,1}第([0-9]{1,})季/, "$1");
-      // console.log(media_name);
       if (series) {
         if (!name.includes(series.name)) {
           const tip = `季名称 '${name}' 没有包含电视剧名称 '${series.name}'`;
@@ -942,7 +941,7 @@ export class MediaProfileClient {
         }
       }
       try {
-        const r = await client.search(normalize_name);
+        const r = await client.search([normalize_name, air_date].filter(Boolean).join(" "));
         if (r.error) {
           const tip = `无法根据名称 '${normalize_name}' 搜索到结果，原因 ${r.error.message}`;
           tips.push(tip);
@@ -969,6 +968,31 @@ export class MediaProfileClient {
           if (matched) {
             return matched;
           }
+          matched = r.data.list.find((media) => {
+            const n = media.name.trim();
+            if (!series) {
+              return false;
+            }
+            const nnn = `${series.name} 第${order}季`;
+            if (nnn === n) {
+              return true;
+            }
+            return false;
+          });
+          if (matched) {
+            return matched;
+          }
+          matched = r.data.list.find((media) => {
+            const n = media.name.trim();
+            if (!series) {
+              return false;
+            }
+            const nnn = `${series.name} 第${num_to_chinese(order)}季`;
+            if (nnn === n) {
+              return true;
+            }
+            return false;
+          });
           return null;
         })();
         if (!matched) {
@@ -976,124 +1000,10 @@ export class MediaProfileClient {
           tips.push(tip);
           return;
         }
-        const profile_r = await client.fetch_media_profile(matched.id);
-        if (profile_r.error) {
-          const tip = `获取详情失败，因为 ${profile_r.error.message}`;
-          tips.push(tip);
-          return;
+        const r2 = await this.refresh_profile_with_douban_id(data, { douban_id: matched.id });
+        if (r2.error) {
+          tips.push(r2.error.message);
         }
-        const profile = profile_r.data;
-        for (let i = 0; i < profile.genres.length; i += 1) {
-          const { id, text } = profile.genres[i];
-          const e = await store.prisma.media_genre.findFirst({
-            where: {
-              id,
-            },
-          });
-          if (!e) {
-            await store.prisma.media_genre.create({
-              data: {
-                id,
-                text,
-              },
-            });
-          }
-        }
-        const persons = [
-          ...profile.actors.map((actor) => {
-            return {
-              ...actor,
-              role: "star",
-            };
-          }),
-          ...profile.director.map((actor) => {
-            return {
-              ...actor,
-              role: "director",
-            };
-          }),
-          ...profile.author.map((actor) => {
-            return {
-              ...actor,
-              role: "scriptwriter",
-            };
-          }),
-        ];
-        for (let i = 0; i < persons.length; i += 1) {
-          const person = persons[i];
-          const e = await store.prisma.person_profile.findFirst({
-            where: {
-              id: person.id,
-            },
-          });
-          if (!e) {
-            await store.prisma.person_profile.create({
-              data: {
-                id: person.id,
-                name: person.name,
-                douban_id: person.id,
-              },
-            });
-          }
-        }
-        for (let i = 0; i < persons.length; i += 1) {
-          const person = persons[i];
-          await (async () => {
-            const e = await store.prisma.person_in_media.findFirst({
-              where: {
-                name: person.name,
-                order: person.order,
-                known_for_department: person.role,
-                media_id: id,
-                profile_id: String(person.id),
-              },
-            });
-            if (!e) {
-              await store.prisma.person_in_media.create({
-                data: {
-                  id: r_id(),
-                  name: person.name,
-                  order: person.order,
-                  known_for_department: person.role,
-                  media_id: id,
-                  profile_id: String(person.id),
-                },
-              });
-              return;
-            }
-          })();
-        }
-        const payload: Partial<MediaProfileRecord> = {
-          douban_id: String(profile.id),
-        };
-        if (profile.alias && data.alias !== profile.alias) {
-          payload.alias = profile.alias;
-        }
-        if (profile.air_date && data.air_date !== profile.air_date) {
-          payload.air_date = profile.air_date;
-        }
-        if (profile.source_count && data.source_count !== profile.source_count) {
-          payload.source_count = profile.source_count;
-        }
-        if (profile.vote_average && data.vote_average !== profile.vote_average) {
-          payload.vote_average = profile.vote_average;
-        }
-        // console.log("add douban_id for media ", name, profile.genres);
-        await store.prisma.media_profile.update({
-          where: {
-            id,
-          },
-          data: {
-            ...payload,
-            genres: {
-              set: profile.genres.map((g) => {
-                return {
-                  id: g.id,
-                };
-              }),
-            },
-          },
-        });
       } catch (err) {
         const e = err as Error;
         const tip = e.message;
@@ -1111,6 +1021,134 @@ export class MediaProfileClient {
       });
       return Result.Err(tips.join("\n"));
     }
+    return Result.Ok(null);
+  }
+  async refresh_profile_with_douban_id(
+    media: MediaProfileRecord & { series: MediaSeriesProfileRecord | null },
+    values: { douban_id: number }
+  ) {
+    const { douban_id } = values;
+    const client = this.$douban;
+    const store = this.$store;
+    const tips: string[] = [];
+    const profile_r = await client.fetch_media_profile(douban_id);
+    if (profile_r.error) {
+      const tip = `获取详情失败，因为 ${profile_r.error.message}`;
+      // tips.push(tip);
+      return Result.Err(tip);
+    }
+    const profile = profile_r.data;
+    for (let i = 0; i < profile.genres.length; i += 1) {
+      const { id, text } = profile.genres[i];
+      const e = await store.prisma.media_genre.findFirst({
+        where: {
+          id,
+        },
+      });
+      if (!e) {
+        await store.prisma.media_genre.create({
+          data: {
+            id,
+            text,
+          },
+        });
+      }
+    }
+    const persons = [
+      ...profile.actors.map((actor) => {
+        return {
+          ...actor,
+          role: "star",
+        };
+      }),
+      ...profile.director.map((actor) => {
+        return {
+          ...actor,
+          role: "director",
+        };
+      }),
+      ...profile.author.map((actor) => {
+        return {
+          ...actor,
+          role: "scriptwriter",
+        };
+      }),
+    ];
+    for (let i = 0; i < persons.length; i += 1) {
+      const person = persons[i];
+      const e = await store.prisma.person_profile.findFirst({
+        where: {
+          id: person.id,
+        },
+      });
+      if (!e) {
+        await store.prisma.person_profile.create({
+          data: {
+            id: person.id,
+            name: person.name,
+            douban_id: person.id,
+          },
+        });
+      }
+    }
+    for (let i = 0; i < persons.length; i += 1) {
+      const person = persons[i];
+      await (async () => {
+        const e = await store.prisma.person_in_media.findFirst({
+          where: {
+            name: person.name,
+            order: person.order,
+            known_for_department: person.role,
+            media_id: media.id,
+            profile_id: String(person.id),
+          },
+        });
+        if (!e) {
+          await store.prisma.person_in_media.create({
+            data: {
+              id: r_id(),
+              name: person.name,
+              order: person.order,
+              known_for_department: person.role,
+              media_id: media.id,
+              profile_id: String(person.id),
+            },
+          });
+          return;
+        }
+      })();
+    }
+    const payload: Partial<MediaProfileRecord> = {
+      douban_id: String(profile.id),
+    };
+    if (profile.alias && media.alias !== profile.alias) {
+      payload.alias = profile.alias;
+    }
+    if (profile.air_date && media.air_date !== profile.air_date) {
+      payload.air_date = profile.air_date;
+    }
+    if (profile.source_count && media.source_count !== profile.source_count) {
+      payload.source_count = profile.source_count;
+    }
+    if (profile.vote_average && media.vote_average !== profile.vote_average) {
+      payload.vote_average = profile.vote_average;
+    }
+    // console.log("add douban_id for media ", name, profile.genres);
+    await store.prisma.media_profile.update({
+      where: {
+        id: media.id,
+      },
+      data: {
+        ...payload,
+        genres: {
+          set: profile.genres.map((g) => {
+            return {
+              id: g.id,
+            };
+          }),
+        },
+      },
+    });
     return Result.Ok(null);
   }
   /** 遍历所有图片，如果是 themoviedb 域名，就下载到本地 */

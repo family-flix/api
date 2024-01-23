@@ -1,3 +1,4 @@
+// @ts-nocheck
 import os from "os";
 import path from "path";
 
@@ -6,7 +7,7 @@ import { Application } from "@/domains/application";
 import { Folder } from "@/domains/folder";
 import { folder_client } from "@/domains/store/utils";
 import { MockFileClient } from "@/domains/clients/mock";
-// import { data, id } from "@/mock/xu_ni_wan_jia_deng_huo";
+import { data, id } from "@/mock/zhi_ming_lu_xiang_dai";
 import { Result } from "@/types";
 
 (async () => {
@@ -19,7 +20,7 @@ import { Result } from "@/types";
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
-  const original_drive_res = await AliyunDriveClient.Get({ drive_id: "625667282", store });
+  const original_drive_res = await AliyunDriveClient.Get({ drive_id: "622310670", store });
   if (original_drive_res.error) {
     console.log(original_drive_res.error.message);
     return;
@@ -47,28 +48,30 @@ import { Result } from "@/types";
   //   console.log(r.error.message);
   //   return;
   // }
-  // const folder = new Folder("63fef6384b033675d1c9433b9a995f73993a5e74", {
-  //   // @ts-ignore
-  //   client: new MockFileClient({ data }),
-  // });
-  // const r = await folder.walk(async (file) => {
-  //   const { name, type, parents, mime_type } = file;
-  //   const filepath = [...parents].map((p) => p.name).join("/");
-  //   if (type === "file" && name.endsWith(".mp4")) {
-  //     console.log("\n");
-  //     console.log("filepath: ", filepath);
-  //     console.log("name: ", name);
-  //     await original_client.upload(video_filepath, {
-  //       name: [filepath, name].join("/"),
-  //       parent_file_id: "65a49ebae33fc9fe9f554362aa556130b4887ba8",
-  //     });
-  //   }
-  //   return true;
-  // });
-  // if (r.error) {
-  //   console.log(r.error.message);
-  //   return;
-  // }
+  // 许你万家灯火 63fef6384b033675d1c9433b9a995f73993a5e74
+  // 致命录像带 63dc947efb67a1c74018416cbcff45c3e137fa6e
+  const folder = new Folder("63dc947efb67a1c74018416cbcff45c3e137fa6e", {
+    // @ts-ignore
+    client: new MockFileClient({ data }),
+  });
+  const r = await folder.walk(async (file) => {
+    const { name, type, parents, mime_type } = file;
+    const filepath = [...parents].map((p) => p.name).join("/");
+    if (type === "file" && name.endsWith(".mp4")) {
+      console.log("\n");
+      console.log("filepath: ", filepath);
+      console.log("name: ", name);
+      await original_client.upload(video_filepath, {
+        name: [filepath, name].join("/"),
+        parent_file_id: original_client.root_folder_id,
+      });
+    }
+    return true;
+  });
+  if (r.error) {
+    console.log(r.error.message);
+    return;
+  }
   console.log("Completed");
 })();
 
