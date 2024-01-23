@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     payload.alias = alias;
   }
   if (source_count) {
-    payload.source_count = source_count;
+    payload.source_count = Number(source_count);
   }
   if (air_date) {
     payload.air_date = dayjs(air_date).format("YYYY-MM-DD");

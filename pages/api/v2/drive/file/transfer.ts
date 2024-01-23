@@ -67,10 +67,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (!parsed_episode) {
-    return e(Result.Err("该文件没有关联剧集解析结果"));
+    return e(Result.Err("该文件没有关联解析结果"));
   }
   if (!parsed_episode.media_source) {
-    return e(Result.Err("没有匹配的剧集信息"));
+    return e(Result.Err("没有匹配的信息"));
   }
   const { name, original_name, air_date } = parsed_episode.media_source.media.profile;
   const n = name || original_name;

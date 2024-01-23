@@ -9,23 +9,25 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { MediaProfileRecord, ParsedMediaRecord, ParsedMediaSourceRecord } from "@/domains/store/types";
 import { MediaSearcher } from "@/domains/searcher/v2";
+import { MediaProfileClient } from "@/domains/media_profile";
 import { BaseApiResp, Result } from "@/types";
 import { MediaTypes } from "@/constants";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";
-import { MediaProfileClient } from "@/domains/media_profile";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { parsed_media_source_id, media_profile } = req.body as Partial<{
+  const { parsed_media_source_id, media_profile, media_source_profile } = req.body as Partial<{
     parsed_media_source_id: string;
     media_profile: {
       id: string;
       type: MediaTypes;
       name: string;
+    };
+    media_source_profile: {
+      id: string;
     };
   }>;
   const t_res = await User.New(authorization, store);
@@ -58,17 +60,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!parsed_media_source) {
     return e(Result.Err("请先索引该文件"));
   }
-  const source_profile = await store.prisma.media_source_profile.findFirst({
-    where: {
-      id: media_profile.id,
-    },
-    include: {
-      media_profile: true,
-    },
-  });
-  if (!source_profile) {
-    return e(Result.Err("没有匹配的剧集详情记录"));
+  const source_profile_r = await (async () => {
+    const existing = await store.prisma.media_source_profile.findFirst({
+      where: {
+        id: media_profile.id,
+      },
+      include: {
+        media_profile: true,
+      },
+    });
+    if (existing) {
+      return Result.Ok(existing.media_profile);
+    }
+    const profile_client_res = await MediaProfileClient.New({
+      token: user.settings.tmdb_token,
+      assets: app.assets,
+      store,
+    });
+    if (profile_client_res.error) {
+      return Result.Err(profile_client_res.error.message);
+    }
+    const profile_client = profile_client_res.data;
+    if (media_profile.type === MediaTypes.Movie) {
+      return profile_client.cache_movie_profile({ id: media_profile.id });
+    }
+    if (media_profile.type === MediaTypes.Season) {
+      const [series_id, season_number] = media_profile.id.split("/").filter(Boolean).map(Number);
+      return profile_client.cache_season_profile({ tv_id: String(series_id), season_number });
+    }
+    return Result.Err("未知的 type");
+  })();
+  if (source_profile_r.error) {
+    return e(Result.Err(source_profile_r.error.message));
   }
+  const profile = source_profile_r.data;
   const searcher_res = await MediaSearcher.New({
     user,
     store,
@@ -79,8 +104,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const searcher = searcher_res.data;
   if (media_profile.type === MediaTypes.Movie) {
-    const media = await searcher.get_movie_media_record_by_profile(source_profile.media_profile);
-    const media_source = await searcher.get_movie_media_source_record_by_profile(source_profile, {
+    const media = await searcher.get_movie_media_record_by_profile(media_profile);
+    const media_source = await searcher.get_movie_media_source_record_by_profile(media_profile, {
       id: media.id,
     });
     await store.prisma.parsed_media_source.update({
@@ -97,8 +122,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return;
   }
   if (media_profile.type === MediaTypes.Season) {
-    const media = await searcher.get_season_media_record_by_profile(source_profile.media_profile);
-    const media_source = await searcher.get_season_media_source_record_by_profile(source_profile, {
+    if (!media_source_profile) {
+      return e(Result.Err("缺少剧集详情"));
+    }
+    const media = await searcher.get_season_media_record_by_profile(media_profile);
+    const media_source = await searcher.get_season_media_source_record_by_profile(media_source_profile, {
       id: media.id,
       name: media_profile.name,
     });
