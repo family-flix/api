@@ -384,7 +384,6 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         // _start_folder_id: start_folder_id,
       };
     }
-
     if (!parsed_info.episode) {
       const last_parent = parents.slice(-1)[0];
       if (!parsed_info.name && !parsed_info.original_name) {

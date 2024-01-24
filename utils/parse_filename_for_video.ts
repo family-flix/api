@@ -44,7 +44,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("如果")) {
+    if (!filename.includes("小城之春")) {
       return;
     }
     // console.log(...args);
@@ -64,6 +64,7 @@ export function parse_filename_for_video(
   // 移除 [name][] 前面的 [name]，大部分日本动漫前面的 [name] 是发布者信息
   log("filename is", filename);
   let original_filename = filename
+    .trim()
     .replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
     .replace(/^\[[^\]]{1,}\](?=\[)/, "")
     .replace(/^【[^】0-9]{1,}】/, "")
