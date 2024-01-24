@@ -41,9 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!media_profile) {
     return e(Result.Err("缺少详情信息"));
   }
-  // if (media_profile.type === MediaTypes.Season && !source_profile_id) {
-  //   return e(Result.Err("缺少详情 id"));
-  // }
   const parsed_media_source = await store.prisma.parsed_media_source.findFirst({
     where: {
       id: parsed_media_source_id,
@@ -60,40 +57,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!parsed_media_source) {
     return e(Result.Err("请先索引该文件"));
   }
-  const source_profile_r = await (async () => {
-    const existing = await store.prisma.media_source_profile.findFirst({
-      where: {
-        id: media_profile.id,
-      },
-      include: {
-        media_profile: true,
-      },
-    });
-    if (existing) {
-      return Result.Ok(existing.media_profile);
-    }
-    const profile_client_res = await MediaProfileClient.New({
-      token: user.settings.tmdb_token,
-      assets: app.assets,
-      store,
-    });
-    if (profile_client_res.error) {
-      return Result.Err(profile_client_res.error.message);
-    }
-    const profile_client = profile_client_res.data;
-    if (media_profile.type === MediaTypes.Movie) {
-      return profile_client.cache_movie_profile({ id: media_profile.id });
-    }
-    if (media_profile.type === MediaTypes.Season) {
-      const [series_id, season_number] = media_profile.id.split("/").filter(Boolean).map(Number);
-      return profile_client.cache_season_profile({ tv_id: String(series_id), season_number });
-    }
-    return Result.Err("未知的 type");
-  })();
-  if (source_profile_r.error) {
-    return e(Result.Err(source_profile_r.error.message));
-  }
-  const profile = source_profile_r.data;
   const searcher_res = await MediaSearcher.New({
     user,
     store,

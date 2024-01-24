@@ -738,28 +738,7 @@ export class MediaProfileClient {
       if (r.error) {
         return Result.Err(r.error.message);
       }
-      const payload: Partial<MediaProfileRecord> = {
-        updated: dayjs().toDate(),
-      };
       const { poster_path, backdrop_path, air_date, episodes } = r.data;
-      if (poster_path && poster_path !== media_profile.poster_path) {
-        payload.poster_path = await this.download_image(poster_path, "poster");
-      }
-      if (backdrop_path && backdrop_path !== media_profile.backdrop_path) {
-        payload.backdrop_path = await this.download_image(backdrop_path, "backdrop");
-      }
-      if (air_date && air_date !== media_profile.air_date) {
-        payload.air_date = air_date;
-      }
-      if (Object.keys(payload).length === 1) {
-        return Result.Ok(null);
-      }
-      const updated_media_profile = await this.$store.prisma.media_profile.update({
-        where: {
-          id,
-        },
-        data: payload,
-      });
       const count = await this.$store.prisma.media_source_profile.count({
         where: {
           media_profile_id: id,
@@ -815,6 +794,27 @@ export class MediaProfileClient {
             });
           }
         },
+      });
+      const payload: Partial<MediaProfileRecord> = {
+        updated: dayjs().toDate(),
+      };
+      if (poster_path && poster_path !== media_profile.poster_path) {
+        payload.poster_path = await this.download_image(poster_path, "poster");
+      }
+      if (backdrop_path && backdrop_path !== media_profile.backdrop_path) {
+        payload.backdrop_path = await this.download_image(backdrop_path, "backdrop");
+      }
+      if (air_date && air_date !== media_profile.air_date) {
+        payload.air_date = air_date;
+      }
+      if (Object.keys(payload).length === 1) {
+        return Result.Ok(null);
+      }
+      const updated_media_profile = await this.$store.prisma.media_profile.update({
+        where: {
+          id,
+        },
+        data: payload,
       });
       return Result.Ok(updated_media_profile);
     }
@@ -1124,7 +1124,7 @@ export class MediaProfileClient {
     if (profile.alias && media.alias !== profile.alias) {
       payload.alias = profile.alias;
     }
-    if (profile.air_date && media.air_date !== profile.air_date) {
+    if (!media.air_date && profile.air_date && media.air_date !== profile.air_date) {
       payload.air_date = profile.air_date;
     }
     if (profile.source_count && media.source_count !== profile.source_count) {

@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
-import { MediaTypes } from "@/constants";
+import { MediaTypes, ResourceSyncTaskStatus } from "@/constants";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
@@ -91,6 +91,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         where,
         include: {
           _count: true,
+          resource_sync_tasks: {
+            where: {
+              status: {
+                in: [ResourceSyncTaskStatus.WorkInProgress],
+              },
+            },
+            take: 1,
+          },
           profile: true,
           media_sources: {
             where: {
@@ -128,7 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const data = {
     total: count,
     list: result.list.map((media) => {
-      const { id, type, profile, media_sources, _count } = media;
+      const { id, type, profile, media_sources, resource_sync_tasks, _count } = media;
       return {
         id,
         type,
@@ -137,6 +145,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         air_date: profile.air_date,
         cur_episode_count: type === MediaTypes.Movie ? null : _count.media_sources,
         episode_count: type === MediaTypes.Movie ? 1 : profile.source_count,
+        in_production: resource_sync_tasks.length,
         sources: media_sources.map((source) => {
           const { id, profile, files } = source;
           return {

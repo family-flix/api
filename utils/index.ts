@@ -10,9 +10,6 @@ import { cn as nzhcn } from "./nzh/index";
 
 dayjs.locale("zh-cn");
 
-export const video_file_type_regexp =
-  /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$|\.[mM][oO][vV]$/;
-
 export function add_zeros(n: number, m: number) {
   let str = n.toString();
   const zeros_to_add = Math.max(0, m - str.length);
@@ -180,6 +177,8 @@ export function is_video_relative_file(filename: string) {
   return types.some((reg) => reg.test(filename));
 }
 
+export const video_file_type_regexp =
+  /\.[mM][kK][vV]$|\.[mM][pP]4$|\.[tT][sS]$|\.[fF][lL][vV]$|\.[rR][mM][vV][bB]$|\.[mM][oO][vV]$/;
 export function is_video_file(filename: string) {
   return video_file_type_regexp.test(filename);
 }
