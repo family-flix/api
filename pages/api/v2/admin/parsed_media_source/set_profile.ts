@@ -57,6 +57,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!parsed_media_source) {
     return e(Result.Err("请先索引该文件"));
   }
+  const source_profile_r = await (async () => {
+    const existing = await store.prisma.media_profile.findFirst({
+      where: {
+        id: media_profile.id,
+      },
+    });
+    if (existing) {
+      return Result.Ok(existing);
+    }
+    const profile_client_res = await MediaProfileClient.New({
+      token: user.settings.tmdb_token,
+      assets: app.assets,
+      store,
+    });
+    if (profile_client_res.error) {
+      return Result.Err(profile_client_res.error.message);
+    }
+    const profile_client = profile_client_res.data;
+    if (media_profile.type === MediaTypes.Movie) {
+      return profile_client.cache_movie_profile({ id: media_profile.id });
+    }
+    if (media_profile.type === MediaTypes.Season) {
+      const [series_id, season_number] = media_profile.id.split("/").filter(Boolean).map(Number);
+      return profile_client.cache_season_profile({ tv_id: String(series_id), season_number });
+    }
+    return Result.Err("未知的 type");
+  })();
+  if (source_profile_r.error) {
+    return e(Result.Err(source_profile_r.error.message));
+  }
+  const profile = source_profile_r.data;
   const searcher_res = await MediaSearcher.New({
     user,
     store,
@@ -67,8 +98,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const searcher = searcher_res.data;
   if (media_profile.type === MediaTypes.Movie) {
-    const media = await searcher.get_movie_media_record_by_profile(media_profile);
-    const media_source = await searcher.get_movie_media_source_record_by_profile(media_profile, {
+    const media = await searcher.get_movie_media_record_by_profile(profile);
+    const media_source = await searcher.get_movie_media_source_record_by_profile(profile, {
       id: media.id,
     });
     await store.prisma.parsed_media_source.update({
@@ -88,10 +119,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (!media_source_profile) {
       return e(Result.Err("缺少剧集详情"));
     }
-    const media = await searcher.get_season_media_record_by_profile(media_profile);
+    const media = await searcher.get_season_media_record_by_profile(profile);
     const media_source = await searcher.get_season_media_source_record_by_profile(media_source_profile, {
       id: media.id,
-      name: media_profile.name,
+      name: profile.name,
     });
     if (!parsed_media_source.parsed_media) {
       // 默认情况都会有 parsed_media，但是如果曾经设置过详情，可能会被清掉
