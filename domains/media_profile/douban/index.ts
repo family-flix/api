@@ -3,8 +3,8 @@
  */
 import axios from "axios";
 
-import { Result } from "@/types";
-import { DOUBAN_GENRE_TEXT_TO_VALUE } from "@/constants";
+import { Result, Unpacked, UnpackedResult } from "@/types";
+import { DOUBAN_GENRE_TEXT_TO_VALUE, MediaTypes } from "@/constants";
 
 import {
   fetch_episode_profile,
@@ -14,6 +14,7 @@ import {
   search_movie_in_tmdb,
 } from "./services";
 import { decrypt } from "./utils";
+import { num_to_chinese } from "@/utils";
 
 export class DoubanClient {
   options: {
@@ -30,9 +31,8 @@ export class DoubanClient {
       token,
     };
   }
-
   async search(keyword: string) {
-    const text = keyword.replace(" ", "+");
+    const text = keyword;
     console.log("[SERVICE]media_profile/douban/index - search", text);
     const resp = await axios.get<string>(`https://search.douban.com/movie/subject_search?search_text=${text}`);
     const html = resp.data;
@@ -60,7 +60,10 @@ export class DoubanClient {
             }
             return null;
           })
-          .filter(Boolean);
+          .filter(Boolean) as {
+          value: number;
+          label: string;
+        }[];
         const type = (() => {
           if (labels.length === 0) {
             return null;
@@ -91,7 +94,7 @@ export class DoubanClient {
         })();
         const payload = {
           id,
-          name: n,
+          name: n.trim().replace(/ {2,}/g, " "),
           origin_name,
           overview: null,
           poster_path: cover_url,
@@ -107,7 +110,59 @@ export class DoubanClient {
       list: result,
     });
   }
-
+  /** 在搜索结果列表中，找到最匹配的结果 */
+  match_exact_media(
+    season: { type: MediaTypes; name: string; original_name: string | null; order: number; air_date: string | null },
+    list: UnpackedResult<Unpacked<ReturnType<typeof this.search>>>["list"]
+  ) {
+    const { type, name, original_name, order, air_date } = season;
+    const matched = (() => {
+      if (type === MediaTypes.Movie) {
+        const matched = list.find((media) => {
+          if (air_date) {
+            return name === media.name && air_date === media.air_date;
+          }
+          return name === media.name;
+        });
+        if (matched) {
+          return matched;
+        }
+        return null;
+      }
+      if (type === MediaTypes.Season) {
+        const maybe_season_num = [order, ` 第${order}季`, ` 第${num_to_chinese(order)}季`, ` Season ${order}`];
+        const maybe_chinese_names = maybe_season_num.map((n) => {
+          return [name, n].filter(Boolean).join("");
+        });
+        const maybe_original_names = original_name
+          ? maybe_season_num.map((n) => {
+              return [original_name, n].filter(Boolean).join("");
+            })
+          : [];
+        const maybe_names = [
+          ...maybe_chinese_names,
+          ...maybe_original_names,
+          ...maybe_chinese_names.flatMap((item1) => maybe_original_names.map((item2) => [item1, item2].join(" "))),
+        ];
+        console.log(maybe_names);
+        for (let i = 0; i < maybe_names.length; i += 1) {
+          const maybe_name = maybe_names[i];
+          const matched = list.find((media) => {
+            return maybe_name === media.name;
+          });
+          if (matched) {
+            return matched;
+          }
+        }
+        return null;
+      }
+      return null;
+    })();
+    if (!matched) {
+      return Result.Err("没有完美匹配结果");
+    }
+    return Result.Ok(matched);
+  }
   /** 根据关键字搜索电视剧 */
   async search_tv(keyword: string, extra: Partial<{ page: number; language: "zh-CN" | "en-US" }> = {}) {
     const { token } = this.options;

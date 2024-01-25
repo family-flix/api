@@ -1,6 +1,5 @@
 /**
  * @file
- * @deprecated
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -11,7 +10,7 @@ import { Statistics } from "@/domains/store/types";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { bytes_to_size, parseJSONStr } from "@/utils";
+import { parseJSONStr } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

@@ -372,7 +372,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
             name: prev_folder.name,
             file_id: prev_folder.id,
             parent_paths: this.drive.profile.root_folder_name!,
-            type: FileType.Folder,
+            type: type === "file" ? FileType.File : FileType.Folder,
             user_id,
             drive_id,
           },

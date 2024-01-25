@@ -15,8 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
-    next_marker = "",
     type,
+    next_marker = "",
     page_size = 20,
   } = req.body as Partial<{ next_marker: string; page_size: number; type: number }>;
   const t_res = await User.New(authorization, store);
@@ -25,6 +25,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
   const where: ModelQuery<"invalid_media"> = {
+    media: {
+      profile: {
+        order: {
+          not: 0,
+        },
+      },
+    },
     user_id: user.id,
   };
   if (type !== undefined) {

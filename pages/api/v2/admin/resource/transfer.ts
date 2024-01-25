@@ -131,6 +131,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       });
     });
+    (async () => {
+      const e = await store.prisma.shared_file_in_progress.findFirst({
+        where: {
+          id: r_id(),
+          url,
+          user_id: user.id,
+        },
+      });
+      if (e) {
+        return;
+      }
+      await store.prisma.shared_file_in_progress.create({
+        data: {
+          id: r_id(),
+          url,
+          pwd: code,
+          file_id,
+          name,
+          drive_id: drive.id,
+          user_id: user.id,
+        },
+      });
+    })();
+
     const r = await drive.client.save_multiple_shared_files({
       url,
       code,

@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { Application } from "@/domains/application";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DatabaseStore } from "@/domains/store";
-import { FileRecord, MediaProfileRecord, ModelQuery } from "@/domains/store/types";
+import { FileRecord, MediaProfileRecord, ModelQuery, Statistics } from "@/domains/store/types";
 import { User } from "@/domains/user";
 import { DriveTypes } from "@/domains/drive/constants";
 import { Drive } from "@/domains/drive/v2";
@@ -25,7 +25,7 @@ import {
   ReportTypes,
   ResourceSyncTaskStatus,
 } from "@/constants";
-import { r_id } from "@/utils";
+import { bytes_to_size, r_id } from "@/utils";
 
 type TVProfileError = {
   id: string;
@@ -674,6 +674,11 @@ export class ScheduleTask {
       fn: (extra) => {
         return this.store.prisma.media.findMany({
           where: {
+            profile: {
+              order: {
+                not: 0,
+              },
+            },
             user_id: user.id,
           },
           include: {
@@ -734,13 +739,22 @@ export class ScheduleTask {
             user_id: user.id,
           },
         });
+        const error_type = (() => {
+          if (type === MediaTypes.Season) {
+            return MediaErrorTypes.Season;
+          }
+          if (type === MediaTypes.Movie) {
+            return MediaErrorTypes.Movie;
+          }
+          return MediaErrorTypes.Unknown;
+        })();
         if (existing) {
           await this.store.prisma.invalid_media.update({
             where: {
               id: existing.id,
             },
             data: {
-              type,
+              type: error_type,
               profile: JSON.stringify(payload),
               updated: dayjs().toISOString(),
             },
@@ -751,7 +765,7 @@ export class ScheduleTask {
           data: {
             id: r_id(),
             media_id: media.id,
-            type,
+            type: error_type,
             profile: JSON.stringify(payload),
             user_id: user.id,
           },
@@ -826,32 +840,38 @@ export class ScheduleTask {
   async update_stats() {
     const store = this.store;
     await this.walk_user(async (user) => {
-      const payload = {
+      const payload: Statistics = {
         drive_count: await store.prisma.drive.count({
           where: {
             user_id: user.id,
           },
         }),
         drive_total_size_count: 0,
+        drive_total_size_count_text: "0",
         drive_used_size_count: 0,
-        movie_count: await store.prisma.media.count({
-          where: {
-            type: MediaTypes.Movie,
-            user_id: user.id,
-          },
-        }),
+        drive_used_size_count_text: "0",
+        /** 电视剧总数 */
         season_count: await store.prisma.media.count({
           where: {
             type: MediaTypes.Season,
             user_id: user.id,
           },
         }),
+        /** 电影总数 */
+        movie_count: await store.prisma.media.count({
+          where: {
+            type: MediaTypes.Movie,
+            user_id: user.id,
+          },
+        }),
+        /** 剧集总数 */
         episode_count: await store.prisma.media_source.count({
           where: {
             type: MediaTypes.Season,
             user_id: user.id,
           },
         }),
+        /** 所有同步任务数 */
         sync_task_count: await store.prisma.resource_sync_task.count({
           where: {
             status: ResourceSyncTaskStatus.WorkInProgress,
@@ -859,18 +879,35 @@ export class ScheduleTask {
             user_id: user.id,
           },
         }),
+        /** 存在问题的同步任务数 */
         invalid_sync_task_count: await store.prisma.resource_sync_task.count({
           where: {
             invalid: 1,
             user_id: user.id,
           },
         }),
+        /** 存在问题的电视剧数 */
         invalid_season_count: await store.prisma.invalid_media.count({
           where: {
             type: MediaErrorTypes.Season,
             user_id: user.id,
           },
         }),
+        /** 存在问题的电影数 */
+        invalid_movie_count: await store.prisma.invalid_media.count({
+          where: {
+            type: MediaErrorTypes.Season,
+            user_id: user.id,
+          },
+        }),
+        /** 未识别的解析结果数 */
+        unknown_media_count: await store.prisma.parsed_media.count({
+          where: {
+            media_profile_id: null,
+            user_id: user.id,
+          },
+        }),
+        /** 用户反馈问题数 */
         report_count: await store.prisma.report_v2.count({
           where: {
             type: {
@@ -887,6 +924,7 @@ export class ScheduleTask {
             user_id: user.id,
           },
         }),
+        /** 用户想看请求数 */
         media_request_count: await store.prisma.report_v2.count({
           where: {
             type: ReportTypes.Want,
@@ -901,15 +939,33 @@ export class ScheduleTask {
             user_id: user.id,
           },
         }),
+        updated_at: dayjs().format("YYYY-MM-DD MM:HH:ss"),
       };
-      await this.walk_drive(async (drive, user) => {
-        if (drive.type === DriveTypes.AliyunBackupDrive) {
-          return;
-        }
-        const { total_size, used_size } = drive.profile;
-        payload.drive_used_size_count += used_size || 0;
-        payload.drive_total_size_count += total_size || 0;
-        return Result.Ok(null);
+      await walk_model_with_cursor({
+        fn: (extra) => {
+          return this.store.prisma.drive.findMany({
+            where: {
+              // type: DriveTypes.AliyunBackupDrive,
+              user_id: user.id,
+            },
+            ...extra,
+          });
+        },
+        handler: async (data, index) => {
+          const { id } = data;
+          const drive_res = await Drive.Get({ id, user, store: this.store });
+          if (drive_res.error) {
+            return;
+          }
+          const drive = drive_res.data;
+          if (drive.type === DriveTypes.AliyunBackupDrive) {
+            return;
+          }
+          const { total_size, used_size } = drive.profile;
+          payload.drive_used_size_count += used_size || 0;
+          payload.drive_total_size_count += total_size || 0;
+          return Result.Ok(null);
+        },
       });
       const e = await store.prisma.statistics.findFirst({
         where: {
@@ -927,25 +983,34 @@ export class ScheduleTask {
         report_count,
         media_request_count,
         invalid_season_count,
+        invalid_movie_count,
         invalid_sync_task_count,
+        unknown_media_count,
+        updated_at,
       } = payload;
+      const d: Statistics = {
+        drive_count,
+        drive_total_size_count,
+        drive_total_size_count_text: bytes_to_size(drive_total_size_count),
+        drive_used_size_count,
+        drive_used_size_count_text: bytes_to_size(drive_used_size_count),
+        movie_count,
+        season_count,
+        episode_count,
+        sync_task_count,
+        report_count,
+        media_request_count,
+        invalid_season_count,
+        invalid_movie_count,
+        invalid_sync_task_count,
+        unknown_media_count,
+        updated_at,
+      };
       if (!e) {
         await store.prisma.statistics.create({
           data: {
             id: r_id(),
-            drive_count: String(drive_count),
-            drive_total_size_count: String(drive_total_size_count),
-            drive_used_size_count: String(drive_used_size_count),
-            movie_count: String(movie_count),
-            tv_count: "0",
-            // tv_count: String(tv_count),
-            season_count: String(season_count),
-            episode_count: String(episode_count),
-            sync_task_count: String(sync_task_count),
-            report_count: String(report_count),
-            media_request_count: String(media_request_count),
-            invalid_season_count: String(invalid_season_count),
-            invalid_sync_task_count: String(invalid_sync_task_count),
+            data: JSON.stringify(d),
             user_id: user.id,
           },
         });
@@ -956,20 +1021,9 @@ export class ScheduleTask {
           id: e.id,
         },
         data: {
-          drive_count: String(drive_count),
-          drive_total_size_count: String(drive_total_size_count),
-          drive_used_size_count: String(drive_used_size_count),
-          movie_count: String(movie_count),
-          tv_count: "0",
-          // tv_count: String(tv_count),
-          season_count: String(season_count),
-          episode_count: String(episode_count),
-          sync_task_count: String(sync_task_count),
-          invalid_season_count: String(invalid_season_count),
-          invalid_sync_task_count: String(invalid_sync_task_count),
-          report_count: String(report_count),
-          media_request_count: String(media_request_count),
+          data: JSON.stringify(d),
           updated: dayjs().toISOString(),
+          user_id: user.id,
         },
       });
     });
@@ -1221,55 +1275,36 @@ export class ScheduleTask {
         });
       },
       async handler(data, index) {
-        const { id, name, series } = data;
+        const { id, type, name, order, air_date, series } = data;
         const tips: string[] = [];
         await (async () => {
-          const media_name = series
-            ? [series.name, data.order !== 1 ? data.order : null].filter(Boolean).join("")
-            : name;
-          const normalize_name = media_name.replace(/ {0,1}第([0-9]{1,})季/, "$1");
+          if (!series) {
+            return;
+          }
+          const media_name = [series.name, data.order !== 1 ? data.order : null].filter(Boolean).join("");
+          // const normalize_name = media_name.replace(/ {0,1}第([0-9]{1,})季/, "$1");
           // console.log(media_name);
-          if (series) {
-            if (!name.includes(series.name)) {
-              const tip = `季名称 '${name}' 没有包含电视剧名称 '${series.name}'`;
-              tips.push(tip);
-            }
+          if (!name.includes(series.name)) {
+            const tip = `季名称 '${name}' 没有包含电视剧名称 '${series.name}'`;
+            tips.push(tip);
           }
           try {
-            const r = await client.search(normalize_name);
+            const r = await client.search(media_name);
             if (r.error) {
-              const tip = `无法根据名称 '${normalize_name}' 搜索到结果，原因 ${r.error.message}`;
+              const tip = `无法根据名称 '${media_name}' 搜索到结果，原因 ${r.error.message}`;
+              console.log(tip);
               tips.push(tip);
               return;
             }
-            const matched = (() => {
-              let matched = r.data.list.find((media) => {
-                const n = media.name.trim();
-                if (normalize_name === n && data.air_date === media.air_date) {
-                  return true;
-                }
-                return false;
-              });
-              if (matched) {
-                return matched;
-              }
-              matched = r.data.list.find((media) => {
-                const n = media.name.trim();
-                if (normalize_name === n) {
-                  return true;
-                }
-                return false;
-              });
-              if (matched) {
-                return matched;
-              }
-              return null;
-            })();
-            if (!matched) {
-              const tip = `根据名称 '${normalize_name}' 搜索到结果，但是没有找到完美匹配的记录`;
-              tips.push(tip);
+            const r2 = client.match_exact_media(
+              { type, name: series.name, original_name: series.original_name, order, air_date },
+              r.data.list
+            );
+            if (r2.error) {
+              tips.push(r2.error.message);
               return;
             }
+            const matched = r2.data;
             const profile_r = await client.fetch_media_profile(matched.id);
             if (profile_r.error) {
               const tip = `获取详情失败，因为 ${profile_r.error.message}`;

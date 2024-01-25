@@ -939,6 +939,7 @@ model tv_profile_quick {
         @@map("TVProfileQuick")
 }
 
+// 一次分享资源获取记录
 model shared_file {
         id      String   @id
         created DateTime @default(now())
@@ -947,6 +948,7 @@ model shared_file {
         title   String?
         // 分享链接
         url     String
+        pwd     String?
 
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -962,6 +964,7 @@ model shared_file_in_progress {
 
         // 分享文件夹所属 url
         url     String
+        pwd     String?
         // 转存的分享文件夹 file_id
         file_id String
         // 转存的分享文件夹名称
@@ -1005,6 +1008,7 @@ model bind_for_parsed_tv {
         @@map("BindForParsedTV")
 }
 
+// 阿里云盘资源同步任务
 model resource_sync_task {
         id      String   @id
         created DateTime @default(now())
@@ -1035,6 +1039,7 @@ model resource_sync_task {
         @@map("ResourceSyncTask")
 }
 
+// 云盘签到记录
 model drive_check_in {
         id         String    @id
         created    DateTime  @default(now())
@@ -1098,6 +1103,7 @@ model file {
         @@map("File")
 }
 
+// @depracated
 model log {
         id      String   @id
         created DateTime @default(now())
@@ -1116,6 +1122,7 @@ model log {
 //         @@map("Qrcode")
 // }
 
+// 后台添加的成员
 model member {
         id         String   @id
         created    DateTime @default(now())
@@ -1135,8 +1142,10 @@ model member {
         delete     Int      @default(0)
 
         inviter_id     String?
+        // 邀请人
         inviter        member?        @relation("InviterToInvitees", fields: [inviter_id], references: [id])
         from_invite_id String?
+        // 被谁邀请
         from_invite    member_invite? @relation("FromWhiceMemberInvite", fields: [from_invite_id], references: [id])
         user_id        String
         user           user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -1162,6 +1171,7 @@ model member {
         @@map("Member")
 }
 
+// 这个是啥表？
 model member_invite {
         id      String   @id
         created DateTime @default(now())
@@ -1356,18 +1366,7 @@ model statistics {
         created DateTime @default(now())
         updated DateTime @default(now())
 
-        drive_count             String @default("0")
-        drive_total_size_count  String @default("0")
-        drive_used_size_count   String @default("0")
-        movie_count             String @default("0")
-        season_count            String @default("0")
-        tv_count                String @default("0")
-        episode_count           String @default("0")
-        sync_task_count         String @default("0")
-        invalid_sync_task_count String @default("0")
-        invalid_season_count    String @default("0")
-        report_count            String @default("0")
-        media_request_count     String @default("0")
+        data String @default("{}")
 
         user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)

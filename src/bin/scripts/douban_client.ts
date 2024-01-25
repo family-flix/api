@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { MediaTypes } from "@/constants";
 import { Application } from "@/domains/application";
 import { MediaProfileClient } from "@/domains/media_profile";
 import { ScheduleTask } from "@/domains/schedule/v2";
@@ -26,32 +27,21 @@ async function main() {
     return;
   }
   const client = profile_r.data;
-  const media_profile = await store.prisma.media_profile.findFirst({
-    where: {
-      name: {
-        contains: "西区故事",
-      },
-    },
-    include: {
-      series: true,
-    },
-  });
-  if (!media_profile) {
-    console.log("没有匹配的记录");
-    return;
-  }
-  await store.prisma.person_in_media.deleteMany({
-    where: {
-      media_id: media_profile.id,
-    },
-  });
-  const r = await client.refresh_profile_with_douban_id(media_profile, {
-    douban_id: 26820621,
-  });
+  const r = await client.$douban.search("老友记 3");
   if (r.error) {
     console.log(r.error.message);
     return;
   }
+  console.log(r.data.list);
+  const rr = await client.$douban.match_exact_media(
+    { type: MediaTypes.Season, name: "老友记", original_name: "Friends", order: 3 },
+    r.data.list
+  );
+  if (rr.error) {
+    console.log(rr.error.message);
+    return;
+  }
+  console.log(rr.data);
   console.log("Success");
 }
 

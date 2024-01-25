@@ -397,19 +397,19 @@ export class MediaProfileClient {
                 };
               }),
             },
-            genres: {
-              connectOrCreate: created.genres.map((genre) => {
-                return {
-                  where: {
-                    id: genre.id,
-                  },
-                  create: {
-                    id: genre.id,
-                    text: genre.text,
-                  },
-                };
-              }),
-            },
+            // genres: {
+            //   connectOrCreate: created.genres.map((genre) => {
+            //     return {
+            //       where: {
+            //         id: genre.id,
+            //       },
+            //       create: {
+            //         id: genre.id,
+            //         text: genre.text,
+            //       },
+            //     };
+            //   }),
+            // },
           },
           include: {
             source_profiles: true,
@@ -681,19 +681,19 @@ export class MediaProfileClient {
             };
           }),
         },
-        genres: {
-          connectOrCreate: genres.map((genre) => {
-            return {
-              where: {
-                id: genre.id,
-              },
-              create: {
-                id: genre.id,
-                text: genre.name,
-              },
-            };
-          }),
-        },
+        // genres: {
+        //   connectOrCreate: genres.map((genre) => {
+        //     return {
+        //       where: {
+        //         id: genre.id,
+        //       },
+        //       create: {
+        //         id: genre.id,
+        //         text: genre.name,
+        //       },
+        //     };
+        //   }),
+        // },
         source_profiles: {
           connectOrCreate: [
             {

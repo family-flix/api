@@ -69,6 +69,25 @@ export type RecordCommonPart = {
   id: string;
 };
 
+export type Statistics = {
+  drive_count: number;
+  drive_total_size_count: number;
+  drive_total_size_count_text: string;
+  drive_used_size_count: number;
+  drive_used_size_count_text: string;
+  movie_count: number;
+  season_count: number;
+  episode_count: number;
+  sync_task_count: number;
+  report_count: number;
+  media_request_count: number;
+  invalid_season_count: number;
+  invalid_movie_count: number;
+  invalid_sync_task_count: number;
+  unknown_media_count: number;
+  updated_at: string;
+};
+
 export type ModelKeys = keyof Omit<
   PrismaClient,
   | "$on"

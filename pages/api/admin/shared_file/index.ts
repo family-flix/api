@@ -10,7 +10,7 @@ import { AliyunDriveProfile } from "@/domains/aliyundrive/types";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types";
-import { parseJSONStr } from "@/utils";
+import { parseJSONStr, r_id } from "@/utils";
 
 let cached_drive: null | AliyunDriveClient = null;
 
@@ -74,6 +74,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const r1 = await client.fetch_share_profile(url, {
     code,
   });
+  (async () => {
+    if (parent_file_id !== "root") {
+      return;
+    }
+    const e = await store.prisma.shared_file.findFirst({
+      where: {
+        url,
+        user_id: user.id,
+      },
+    });
+    if (e) {
+      return;
+    }
+    await store.prisma.shared_file.create({
+      data: {
+        id: r_id(),
+        url,
+        pwd: code,
+        user_id: user.id,
+      },
+    });
+  })();
   if (r1.error) {
     if (r1.error.message.includes("share_link is cancelled by the creator")) {
       return Result.Err("分享链接被取消");
