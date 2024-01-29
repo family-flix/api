@@ -6,6 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { Drive } from "@/domains/drive";
 import { DriveTypes } from "@/domains/drive/constants";
+import { Administrator } from "@/domains/administrator";
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
@@ -15,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { type = DriveTypes.AliyunBackupDrive, payload } = req.body as { type: number; payload: unknown };
-  const t_res = await User.New(authorization, store);
+  const t_res = await Administrator.New(authorization, store);
   if (t_res.error) {
     return e(t_res.error);
   }
@@ -27,6 +28,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
+  user.update_stats({
+    drive_count: user.statistics.drive_count + 1,
+    drive_total_size_count: user.statistics.drive_total_size_count + r.data.profile.total_size,
+    drive_used_size_count: user.statistics.drive_used_size_count + r.data.profile.used_size,
+  });
   res.status(200).json({
     code: 0,
     msg: "新增云盘成功",

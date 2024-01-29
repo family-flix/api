@@ -6,7 +6,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { TaskTypes } from "@/domains/job/constants";
-import { User } from "@/domains/user";
+import { Administrator } from "@/domains/administrator";
 import { Drive } from "@/domains/drive/v2";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { Job } from "@/domains/job";
@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { drive_id } = req.body as Partial<{
     drive_id: string;
   }>;
-  const t_res = await User.New(authorization, store);
+  const t_res = await Administrator.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
@@ -74,6 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   async function run() {
     await analysis.run();
     job.output.write_line(["索引完成"]);
+    user.refresh_stats();
     job.finish();
   }
   run();

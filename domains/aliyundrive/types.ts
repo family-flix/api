@@ -55,14 +55,14 @@ export type AliyunDrivePayload = {
   user_name: string;
   user_id: string;
   /** 这个名称是导出云盘凭证时会有的，和 user_name、nick_name 相比优先取这个 */
-  name?: string;
-  resource_drive_id?: string;
+  name: string | null;
+  resource_drive_id: string | null;
   /** 这个是导出云盘凭证时会有的 */
   root_folder_id: string | null;
   /** 这个是导出云盘凭证时会有的 */
-  total_size?: number;
+  total_size: number;
   /** 这个是导出云盘凭证时会有的 */
-  used_size?: number;
+  used_size: number;
 };
 
 export type AliyunDriveProfile = {

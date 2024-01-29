@@ -51,7 +51,13 @@ type TheTypesOfEvents = {
 type DriveProps = {
   id: string;
   type: DriveTypes;
-  profile: Pick<DriveRecord, "name" | "type" | "root_folder_id" | "root_folder_name" | "total_size" | "used_size"> & {
+  profile: {
+    name: string;
+    type: DriveTypes;
+    root_folder_id: string | null;
+    root_folder_name: string | null;
+    total_size: number;
+    used_size: number;
     drive_id: string;
     token_id: string;
   } & AliyunDriveProfile;
@@ -98,14 +104,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         id,
         type: type ?? DriveTypes.AliyunBackupDrive,
         profile: {
-          type,
+          type: type ?? DriveTypes.AliyunBackupDrive,
           name,
           drive_id,
           token_id: drive_token_id,
           root_folder_id,
           root_folder_name,
-          used_size,
-          total_size,
+          used_size: used_size ?? 0,
+          total_size: total_size ?? 0,
           ...rest,
         },
         client: client_res.data,
@@ -152,14 +158,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         id: drive_record.id,
         type: type ?? DriveTypes.AliyunBackupDrive,
         profile: {
-          type,
+          type: type ?? DriveTypes.AliyunBackupDrive,
           name,
           drive_id,
           token_id: drive_token_id,
           root_folder_id,
           root_folder_name,
-          total_size,
-          used_size,
+          total_size: total_size ?? 0,
+          used_size: used_size ?? 0,
           ...rest,
         },
         client: client_res.data,
@@ -351,6 +357,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           access_token,
           refresh_token,
           root_folder_id,
+          resource_drive_id: null,
           store,
         });
         // console.log("[DOMAIN]drive/index - before store.prisma.drive.create");
@@ -415,8 +422,8 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           token_id: drive_token_id,
           root_folder_id: root_folder_id,
           root_folder_name: root_folder_name,
-          used_size,
-          total_size,
+          used_size: used_size ?? 0,
+          total_size: total_size ?? 0,
           ...json_res.data,
         },
         client,

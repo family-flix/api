@@ -7,6 +7,7 @@ import { parseJSONStr, r_id } from "@/utils";
 import { Credentials } from "./services";
 import { compare, prepare, parse_token } from "./utils";
 import { encode_token } from "./jwt";
+import { DEFAULT_STATS } from "@/constants";
 
 const credentialsSchema = Joi.object({
   email: Joi.string().email().message("邮箱格式错误").required(),
@@ -33,7 +34,7 @@ type UserProps = {
   settings?: UserSettings | null;
   store: DatabaseStore;
 };
-type UserUniqueID = string;
+export type UserUniqueID = string;
 
 export class User {
   /** token 秘钥 */
@@ -152,6 +153,12 @@ export class User {
           create: {
             id: r_id(),
             nickname,
+          },
+        },
+        statistics: {
+          create: {
+            id: r_id(),
+            data: JSON.stringify(DEFAULT_STATS),
           },
         },
       },

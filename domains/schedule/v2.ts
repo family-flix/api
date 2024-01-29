@@ -13,6 +13,7 @@ import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
 import { MediaSearcher } from "@/domains/searcher/v2";
 import { MediaProfileClient } from "@/domains/media_profile";
 import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
+import { Administrator } from "@/domains/administrator";
 import { TencentDoc } from "@/domains/tencent_doc";
 import { DoubanClient } from "@/domains/media_profile/douban";
 import { Result } from "@/types";
@@ -125,7 +126,7 @@ export class ScheduleTask {
   }
 
   /** 遍历用户 */
-  async walk_user(handler: (user: User) => Promise<unknown>) {
+  async walk_user(handler: (user: Administrator) => Promise<unknown>) {
     await walk_model_with_cursor({
       fn: (extra) => {
         return this.store.prisma.user.findMany({
@@ -134,7 +135,7 @@ export class ScheduleTask {
         });
       },
       handler: async (d, index) => {
-        const t_res = await User.Get({ id: d.id }, this.store);
+        const t_res = await Administrator.Get({ id: d.id }, this.store);
         if (t_res.error) {
           return;
         }
@@ -839,194 +840,14 @@ export class ScheduleTask {
 
   async update_stats() {
     const store = this.store;
+    console.log("[SCHEDULE]begin update_stats");
     await this.walk_user(async (user) => {
-      const payload: Statistics = {
-        drive_count: await store.prisma.drive.count({
-          where: {
-            user_id: user.id,
-          },
-        }),
-        drive_total_size_count: 0,
-        drive_total_size_count_text: "0",
-        drive_used_size_count: 0,
-        drive_used_size_count_text: "0",
-        /** 电视剧总数 */
-        season_count: await store.prisma.media.count({
-          where: {
-            type: MediaTypes.Season,
-            user_id: user.id,
-          },
-        }),
-        /** 电影总数 */
-        movie_count: await store.prisma.media.count({
-          where: {
-            type: MediaTypes.Movie,
-            user_id: user.id,
-          },
-        }),
-        /** 剧集总数 */
-        episode_count: await store.prisma.media_source.count({
-          where: {
-            type: MediaTypes.Season,
-            user_id: user.id,
-          },
-        }),
-        /** 所有同步任务数 */
-        sync_task_count: await store.prisma.resource_sync_task.count({
-          where: {
-            status: ResourceSyncTaskStatus.WorkInProgress,
-            invalid: 0,
-            user_id: user.id,
-          },
-        }),
-        /** 存在问题的同步任务数 */
-        invalid_sync_task_count: await store.prisma.resource_sync_task.count({
-          where: {
-            invalid: 1,
-            user_id: user.id,
-          },
-        }),
-        /** 存在问题的电视剧数 */
-        invalid_season_count: await store.prisma.invalid_media.count({
-          where: {
-            type: MediaErrorTypes.Season,
-            user_id: user.id,
-          },
-        }),
-        /** 存在问题的电影数 */
-        invalid_movie_count: await store.prisma.invalid_media.count({
-          where: {
-            type: MediaErrorTypes.Season,
-            user_id: user.id,
-          },
-        }),
-        /** 未识别的解析结果数 */
-        unknown_media_count: await store.prisma.parsed_media.count({
-          where: {
-            media_profile_id: null,
-            user_id: user.id,
-          },
-        }),
-        /** 用户反馈问题数 */
-        report_count: await store.prisma.report_v2.count({
-          where: {
-            type: {
-              in: [ReportTypes.Movie, ReportTypes.TV, ReportTypes.Question],
-            },
-            OR: [
-              {
-                answer: null,
-              },
-              {
-                answer: "",
-              },
-            ],
-            user_id: user.id,
-          },
-        }),
-        /** 用户想看请求数 */
-        media_request_count: await store.prisma.report_v2.count({
-          where: {
-            type: ReportTypes.Want,
-            OR: [
-              {
-                answer: null,
-              },
-              {
-                answer: "",
-              },
-            ],
-            user_id: user.id,
-          },
-        }),
-        updated_at: dayjs().format("YYYY-MM-DD MM:HH:ss"),
-      };
-      await walk_model_with_cursor({
-        fn: (extra) => {
-          return this.store.prisma.drive.findMany({
-            where: {
-              // type: DriveTypes.AliyunBackupDrive,
-              user_id: user.id,
-            },
-            ...extra,
-          });
-        },
-        handler: async (data, index) => {
-          const { id } = data;
-          const drive_res = await Drive.Get({ id, user, store: this.store });
-          if (drive_res.error) {
-            return;
-          }
-          const drive = drive_res.data;
-          if (drive.type === DriveTypes.AliyunBackupDrive) {
-            return;
-          }
-          const { total_size, used_size } = drive.profile;
-          payload.drive_used_size_count += used_size || 0;
-          payload.drive_total_size_count += total_size || 0;
-          return Result.Ok(null);
-        },
-      });
-      const e = await store.prisma.statistics.findFirst({
-        where: {
-          user_id: user.id,
-        },
-      });
-      const {
-        drive_count,
-        drive_total_size_count,
-        drive_used_size_count,
-        movie_count,
-        season_count,
-        episode_count,
-        sync_task_count,
-        report_count,
-        media_request_count,
-        invalid_season_count,
-        invalid_movie_count,
-        invalid_sync_task_count,
-        unknown_media_count,
-        updated_at,
-      } = payload;
-      const d: Statistics = {
-        drive_count,
-        drive_total_size_count,
-        drive_total_size_count_text: bytes_to_size(drive_total_size_count),
-        drive_used_size_count,
-        drive_used_size_count_text: bytes_to_size(drive_used_size_count),
-        movie_count,
-        season_count,
-        episode_count,
-        sync_task_count,
-        report_count,
-        media_request_count,
-        invalid_season_count,
-        invalid_movie_count,
-        invalid_sync_task_count,
-        unknown_media_count,
-        updated_at,
-      };
-      if (!e) {
-        await store.prisma.statistics.create({
-          data: {
-            id: r_id(),
-            data: JSON.stringify(d),
-            user_id: user.id,
-          },
-        });
-        return;
-      }
-      await store.prisma.statistics.update({
-        where: {
-          id: e.id,
-        },
-        data: {
-          data: JSON.stringify(d),
-          updated: dayjs().toISOString(),
-          user_id: user.id,
-        },
-      });
+      await this.update_stats_of_user(user);
     });
+    console.log("[SCHEDULE]finish update_stats");
+  }
+  async update_stats_of_user(user: Administrator) {
+    user.refresh_stats();
   }
   /** 更新同步资源链接 */
   async update_sync_task_resources(url: string) {

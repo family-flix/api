@@ -1,3 +1,5 @@
+import { Statistics } from "@/domains/store/types";
+
 export const __VERSION__ = "2.1.0";
 
 export enum FileType {
@@ -446,4 +448,21 @@ export const SubtitleLanguageMap = {
   chi: [MediaOriginCountries.CN],
   eng: [MediaOriginCountries.US],
   jpn: [MediaOriginCountries.JP],
+};
+
+export const DEFAULT_STATS: Statistics = {
+  drive_count: 0,
+  drive_total_size_count: 0,
+  drive_used_size_count: 0,
+  sync_task_count: 0,
+  movie_count: 0,
+  season_count: 0,
+  episode_count: 0,
+  unknown_media_count: 0,
+  invalid_season_count: 0,
+  invalid_movie_count: 0,
+  invalid_sync_task_count: 0,
+  report_count: 0,
+  media_request_count: 0,
+  updated_at: null,
 };

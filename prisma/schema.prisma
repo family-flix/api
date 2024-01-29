@@ -1368,7 +1368,7 @@ model statistics {
 
         data String @default("{}")
 
-        user_id String
+        user_id String @unique
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("Statistics")
@@ -1493,6 +1493,7 @@ model user {
         credential              credential?
         profile                 profile?
         settings                settings?
+        statistics              statistics?
         accounts                account[]
         drives                  drive[]
         tv                      tv[]
@@ -1521,7 +1522,6 @@ model user {
         subtitles_v2            subtitle_v2[]
         permission              permission[]
         tv_lives                tv_live[]
-        statistics              statistics[]
         media_errors            media_error_need_process[]
         parsed_medias           parsed_media[]
         parsed_sources          parsed_media_source[]

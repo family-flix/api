@@ -71,7 +71,7 @@ type AliyunDriveProps = {
   id: string;
   drive_id: string;
   token_id?: string;
-  resource_drive_id?: string;
+  resource_drive_id: string | null;
   device_id: string;
   root_folder_id: string | null;
   access_token: string;
@@ -140,7 +140,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
         drive_id,
         device_id,
         token_id,
-        resource_drive_id,
+        resource_drive_id: resource_drive_id || null,
         root_folder_id,
         access_token,
         refresh_token,
@@ -155,7 +155,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> {
   token_id: string | null = null;
   /** 阿里云盘 id */
   drive_id: string;
-  resource_drive_id?: string;
+  resource_drive_id: string | null;
   /** 设备id */
   device_id: string;
   root_folder_id: string | null;

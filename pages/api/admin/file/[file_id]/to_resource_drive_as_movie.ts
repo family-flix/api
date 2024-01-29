@@ -106,6 +106,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }) {
     const { parsed_movie } = payload;
     const { id, file_id, name, file_name, parent_file_id, parent_paths } = parsed_movie;
+    if (!from_drive.client.resource_drive_id) {
+      job.output.write_line(["初始化失败，因为没有资源盘"]);
+      job.finish();
+      return;
+    }
     const to_drive_res = await Drive.GetByUniqueId({ id: from_drive.client.resource_drive_id, user, store });
     if (to_drive_res.error) {
       job.output.write_line(["初始化失败，因为", to_drive_res.error.message]);

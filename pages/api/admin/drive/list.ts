@@ -20,9 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type,
     name,
     hidden,
-    page = 1,
+    next_marker,
     page_size = 20,
-  } = req.body as { type: number; name: string; hidden: number; page: number; page_size: number };
+  } = req.body as { type: number; name: string; hidden: number; next_marker: string; page_size: number };
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
@@ -43,21 +43,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where.hidden = hidden;
   }
   const count = await store.prisma.drive.count({ where });
-  const list = await store.prisma.drive.findMany({
-    where,
-    skip: (page - 1) * page_size,
-    take: page_size,
-    orderBy: {
-      created: "desc",
+  const result = await store.list_with_cursor({
+    fetch(extra) {
+      return store.prisma.drive.findMany({
+        where,
+        orderBy: {
+          created: "desc",
+        },
+        ...extra,
+      });
     },
+    page_size,
+    next_marker,
   });
   // const { list, page, page_size, total, no_more } = r.data;
   const data = [];
-  for (let i = 0; i < list.length; i += 1) {
-    const drive = list[i];
+  for (let i = 0; i < result.list.length; i += 1) {
+    const drive = result.list[i];
     const { name, avatar, remark, total_size, used_size, root_folder_id, profile } = drive;
     const r = await parseJSONStr<AliyunDriveProfile>(profile);
-    const payload = {
+    const payload: {
+      id: string;
+      name: string;
+      avatar: string;
+      total_size: number | null;
+      used_size: number | null;
+      root_folder_id: string | null;
+      vip?: unknown;
+      drive_id?: string;
+    } = {
       id: drive.id,
       name: remark || name,
       avatar,
@@ -66,8 +80,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       root_folder_id,
     };
     if (r.data) {
-      // @ts-ignore
       payload.vip = r.data.vip;
+      payload.drive_id = r.data.drive_id;
     }
     data.push(payload);
   }
@@ -75,10 +89,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     code: 0,
     msg: "",
     data: {
-      page,
       page_size,
       total: count,
-      no_more: list.length + (page - 1) * page_size >= count,
+      next_marker: result.next_marker,
       list: data,
     },
   });

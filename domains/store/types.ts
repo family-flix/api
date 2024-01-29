@@ -72,9 +72,7 @@ export type RecordCommonPart = {
 export type Statistics = {
   drive_count: number;
   drive_total_size_count: number;
-  drive_total_size_count_text: string;
   drive_used_size_count: number;
-  drive_used_size_count_text: string;
   movie_count: number;
   season_count: number;
   episode_count: number;
@@ -85,7 +83,7 @@ export type Statistics = {
   invalid_movie_count: number;
   invalid_sync_task_count: number;
   unknown_media_count: number;
-  updated_at: string;
+  updated_at: string | null;
 };
 
 export type ModelKeys = keyof Omit<

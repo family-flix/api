@@ -350,6 +350,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         const client = new AliyunDriveClient({
           id: drive_record_id,
           drive_id: _resource_drive_id,
+          resource_drive_id: null,
           device_id,
           access_token,
           refresh_token,
@@ -769,7 +770,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (!f) {
       return Result.Ok(null);
     }
-    await this.store.prisma.file.update({
+    const updated = await this.store.prisma.file.update({
       where: {
         id: f.id,
       },
@@ -777,35 +778,6 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         name,
       },
     });
-    await (async () => {
-      const existing_tmp = await this.store.prisma.tmp_file.findFirst({
-        where: {
-          file_id: file.file_id,
-        },
-      });
-      if (existing_tmp) {
-        await this.store.prisma.tmp_file.update({
-          where: {
-            id: existing_tmp.id,
-          },
-          data: {
-            name,
-          },
-        });
-        return;
-      }
-      await this.store.prisma.tmp_file.create({
-        data: {
-          id: file.file_id,
-          name,
-          file_id: file.file_id,
-          type: f.type,
-          parent_paths: f.parent_paths,
-          drive_id: f.drive_id,
-          user_id: f.user_id,
-        },
-      });
-    })();
     if (f.type === FileType.File) {
       const existing_parsed_episode = await this.store.prisma.parsed_media_source.findFirst({
         where: {
@@ -839,6 +811,21 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           file_name_link_resource: name,
         },
       });
+      await this.store.prisma.file.updateMany({
+        where: {
+          parent_file_id: f.id,
+          user_id: this.user.id,
+        },
+        data: {
+          parent_paths: [updated.parent_paths, updated.name].join("/"),
+        },
+      });
+      // const folder = new Folder(f.id, {
+      //   client: this.client,
+      // });
+      // await folder.walk(async (sub_file) => {
+      //   return true;
+      // });
     }
     return Result.Ok(null);
   }

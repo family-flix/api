@@ -72,9 +72,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return {
         id,
         media_id,
+        type: media_profile.type,
         name: media_profile.name,
         poster_path: media_profile.poster_path,
         air_date: media_profile.air_date,
+        order: media_profile.order,
         text: (() => {
           if (type === MediaTypes.Movie) {
             return null;
