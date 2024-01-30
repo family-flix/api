@@ -129,4 +129,14 @@ describe("电视剧4", () => {
       episode: "E01",
     });
   });
+  test("[ANi] 狩火之王 第二季 - 01 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4", () => {
+    const name = "[ANi] 狩火之王 第二季 - 01 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "狩火之王",
+      original_name: "",
+      season: "S02",
+      episode: "E01",
+    });
+  });
 });

@@ -1411,6 +1411,7 @@ model report_v2 {
         status Int     @default(1)
         data   String
         answer String?
+        hidden Int     @default(0)
 
         media_id        String?
         media           media?        @relation("ErrorInReport", fields: [media_id], references: [id], onDelete: Cascade)

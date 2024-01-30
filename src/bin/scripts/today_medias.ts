@@ -1,25 +1,24 @@
-/**
- * @file 获取当天新增的影视剧
- */
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
-import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
-import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { MediaProfileSourceTypes, MediaTypes } from "@/constants";
+import { CollectionTypes, MediaTypes } from "@/constants";
+import { Application } from "@/domains/application";
+import { walk_model_with_cursor } from "@/domains/store/utils";
+import { parseJSONStr, r_id } from "@/utils";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
-  const e = response_error_factory(res);
-  const { authorization } = req.headers;
-  const { start, end } = req.body as Partial<{ start: string; end: string }>;
-  const t_res = await Member.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res);
+async function main() {
+  const OUTPUT_PATH = process.env.OUTPUT_PATH;
+  //   const DATABASE_PATH = "file://$OUTPUT_PATH/data/family-flix.db?connection_limit=1";
+  if (!OUTPUT_PATH) {
+    console.error("缺少数据库文件路径");
+    return;
   }
-  const member = t_res.data;
+  const app = new Application({
+    root_path: OUTPUT_PATH,
+  });
+  const store = app.store;
+  console.log("Start");
+  const start = null;
+  const end = null;
   const range = [
     start ? dayjs(start).toISOString() : dayjs().startOf("day").toISOString(),
     end ? dayjs(end).toISOString() : dayjs().endOf("day").toISOString(),
@@ -30,7 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         gte: range[0],
         lt: range[1],
       },
-      user_id: member.user.id,
     },
     include: {
       media: {
@@ -56,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     text: string | null;
     created: number;
   };
-  const episode_medias: MediaPayload[] = [];
+  const medias: MediaPayload[] = [];
   for (let i = 0; i < episodes.length; i += 1) {
     await (async () => {
       const episode = episodes[i];
@@ -98,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             },
           });
           if (media.profile.source_count === episode_count) {
-            return `更新至全 ${media.profile.source_count} 集！`;
+            return `全 ${media.profile.source_count} 集`;
           }
           if (episode_count === episode_recently[0]?.profile.order) {
             return `更新 ${episode_recently.map((e) => e.profile.order).join("、")}`;
@@ -107,15 +105,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         })(),
         created: episode_recently[0] ? dayjs(episode_recently[0].created).unix() : 0,
       } as MediaPayload;
-      episode_medias.push(payload);
+      medias.push(payload);
     })();
   }
-  res.status(200).json({
-    code: 0,
-    msg: "",
-    data: {
-      total: episode_medias.length,
-      list: episode_medias,
-    },
-  });
+  console.log(medias);
+  console.log("Success");
 }
+
+main();

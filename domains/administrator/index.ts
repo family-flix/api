@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 
-import { DEFAULT_STATS, MediaErrorTypes, MediaTypes, ReportTypes, ResourceSyncTaskStatus } from "@/constants";
+import { DEFAULT_STATS, FileType, MediaErrorTypes, MediaTypes, ReportTypes, ResourceSyncTaskStatus } from "@/constants";
 import { DatabaseStore } from "@/domains/store";
 import { Statistics } from "@/domains/store/types";
 import { User, UserSettings, UserUniqueID } from "@/domains/user";
@@ -145,6 +145,7 @@ export class Administrator extends User {
   }
   async refresh_stats() {
     const store = this.store;
+    const range_today = [dayjs().startOf("day").toISOString(), dayjs().endOf("day").toISOString()];
     const payload: Statistics = {
       drive_count: await store.prisma.drive.count({
         where: {
@@ -242,6 +243,16 @@ export class Administrator extends User {
           user_id: this.id,
         },
       }),
+      new_files_today: await store.prisma.file.count({
+        where: {
+          type: FileType.File,
+          created: {
+            gte: range_today[0],
+            lt: range_today[1],
+          },
+          user_id: this.id,
+        },
+      }),
       updated_at: dayjs().format("YYYY-MM-DD HH:mm:ss"),
     };
     await walk_model_with_cursor({
@@ -289,6 +300,7 @@ export class Administrator extends User {
       invalid_movie_count,
       invalid_sync_task_count,
       unknown_media_count,
+      new_files_today,
       updated_at,
     } = payload;
     const d: Statistics = {
@@ -305,6 +317,7 @@ export class Administrator extends User {
       invalid_movie_count,
       invalid_sync_task_count,
       unknown_media_count,
+      new_files_today,
       updated_at,
     };
     if (!e) {

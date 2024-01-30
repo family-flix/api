@@ -933,7 +933,7 @@ export class MediaProfileClient {
     const tips: string[] = [];
     await (async () => {
       const media_name = series ? [series.name, order !== 1 ? order : null].filter(Boolean).join("") : name;
-      const normalize_name = media_name.replace(/ {0,1}第([0-9]{1,})季/, "$1");
+      // const normalize_name = media_name.replace(/ {0,1}第([0-9]{1,})季/, "$1");
       if (series) {
         if (!name.includes(series.name)) {
           const tip = `季名称 '${name}' 没有包含电视剧名称 '${series.name}'`;
@@ -941,65 +941,32 @@ export class MediaProfileClient {
         }
       }
       try {
-        const r = await client.search([normalize_name, air_date].filter(Boolean).join(" "));
+        const r = await client.search(media_name);
         if (r.error) {
-          const tip = `无法根据名称 '${normalize_name}' 搜索到结果，原因 ${r.error.message}`;
+          const tip = `无法根据名称 '${media_name}' 搜索到结果，原因 ${r.error.message}`;
           tips.push(tip);
           return;
         }
-        const matched = (() => {
-          let matched = r.data.list.find((media) => {
-            const n = media.name.trim();
-            if (normalize_name === n && data.air_date === media.air_date) {
-              return true;
-            }
-            return false;
-          });
-          if (matched) {
-            return matched;
-          }
-          matched = r.data.list.find((media) => {
-            const n = media.name.trim();
-            if (normalize_name === n) {
-              return true;
-            }
-            return false;
-          });
-          if (matched) {
-            return matched;
-          }
-          matched = r.data.list.find((media) => {
-            const n = media.name.trim();
-            if (!series) {
-              return false;
-            }
-            const nnn = `${series.name} 第${order}季`;
-            if (nnn === n) {
-              return true;
-            }
-            return false;
-          });
-          if (matched) {
-            return matched;
-          }
-          matched = r.data.list.find((media) => {
-            const n = media.name.trim();
-            if (!series) {
-              return false;
-            }
-            const nnn = `${series.name} 第${num_to_chinese(order)}季`;
-            if (nnn === n) {
-              return true;
-            }
-            return false;
-          });
-          return null;
-        })();
-        if (!matched) {
-          const tip = `根据名称 '${normalize_name}' 搜索到结果，但是没有找到完美匹配的记录`;
+        if (!series) {
+          const tip = `没有关联 series`;
           tips.push(tip);
           return;
         }
+        const match_r = this.$douban.match_exact_media(
+          {
+            type: data.type,
+            name: series.name,
+            original_name: data.original_name,
+            order: data.order,
+            air_date: data.air_date,
+          },
+          r.data.list
+        );
+        if (match_r.error) {
+          tips.push(match_r.error.message);
+          return;
+        }
+        const matched = match_r.data;
         const r2 = await this.refresh_profile_with_douban_id(data, { douban_id: matched.id });
         if (r2.error) {
           tips.push(r2.error.message);

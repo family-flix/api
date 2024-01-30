@@ -31,61 +31,97 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     return [dayjs().startOf("day").toISOString(), dayjs().endOf("day").toISOString()];
   })();
-  const result = await store.list_with_cursor({
-    fetch: async (extra) => {
-      return await store.prisma.media_source.findMany({
+  const episodes = await store.prisma.media_source.findMany({
+    where: {
+      created: {
+        gte: range[0],
+        lt: range[1],
+      },
+      user_id: user.id,
+    },
+    include: {
+      media: {
+        include: {
+          profile: true,
+        },
+      },
+    },
+    distinct: ["media_id"],
+    take: 20,
+    orderBy: [
+      {
+        created: "desc",
+      },
+    ],
+  });
+  type MediaPayload = {
+    id: string;
+    type: MediaTypes;
+    name: string;
+    poster_path: string;
+    air_date: string;
+    text: string | null;
+    created: number;
+  };
+  const medias: MediaPayload[] = [];
+  for (let i = 0; i < episodes.length; i += 1) {
+    await (async () => {
+      const episode = episodes[i];
+      const { media } = episode;
+      const episode_recently = await store.prisma.media_source.findMany({
         where: {
+          media_id: media.id,
+          files: {
+            some: {},
+          },
           created: {
             gte: range[0],
             lt: range[1],
           },
-          user_id: user.id,
         },
         include: {
           profile: true,
-          media: {
-            include: {
-              profile: true,
-            },
+        },
+        orderBy: {
+          profile: {
+            order: "desc",
           },
         },
-        orderBy: [
-          {
-            created: "desc",
-          },
-        ],
-        ...extra,
+        take: 1,
       });
-    },
-    page_size,
-    next_marker,
-  });
-  const data = {
-    next_marker: result.next_marker,
-    list: result.list.map((source) => {
-      const {
-        id,
-        profile,
-        media: { id: media_id, type, profile: media_profile },
-        created,
-      } = source;
-      return {
-        id,
-        media_id,
-        type: media_profile.type,
-        name: media_profile.name,
-        poster_path: media_profile.poster_path,
-        air_date: media_profile.air_date,
-        order: media_profile.order,
-        text: (() => {
-          if (type === MediaTypes.Movie) {
-            return null;
+      const payload = {
+        id: media.id,
+        type: media.type,
+        name: media.profile.name,
+        poster_path: media.profile.poster_path,
+        air_date: dayjs(media.profile.air_date).format("YYYY/MM/DD"),
+        text: await (async () => {
+          const episode_count = await store.prisma.media_source.count({
+            where: {
+              media_id: media.id,
+              files: {
+                some: {},
+              },
+            },
+          });
+          if (media.profile.source_count === episode_count) {
+            return `全 ${media.profile.source_count} 集`;
           }
-          return `${profile.order}、${profile.name}`;
+          if (episode_count === episode_recently[0]?.profile.order) {
+            return `更新 ${episode_recently.map((e) => e.profile.order).join("、")}`;
+          }
+          return `收录 ${episode_recently.map((e) => e.profile.order).join("、")}`;
         })(),
-        created_at: created,
-      };
-    }),
-  };
-  res.status(200).json({ code: 0, msg: "", data });
+        created: episode_recently[0] ? dayjs(episode_recently[0].created).unix() : 0,
+      } as MediaPayload;
+      medias.push(payload);
+    })();
+  }
+  res.status(200).json({
+    code: 0,
+    msg: "",
+    data: {
+      list: medias,
+    },
+  });
 }

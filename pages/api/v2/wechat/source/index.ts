@@ -86,6 +86,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("视频文件无法播放，请修改 refresh_token"));
   }
   const { url, width, height } = recommend_resolution;
+  if (!url) {
+    return e(Result.Err("源地址失效"));
+  }
   const result: MediaFile & { other: MediaFile[]; subtitles: { language: MediaOriginCountries[]; url: string }[] } = {
     id,
     url,
@@ -93,16 +96,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type: recommend_resolution.type,
     width,
     height,
-    other: info.sources.map((res) => {
-      const { url, type, width, height } = res;
-      return {
-        cur: recommend_resolution.type === type,
-        url,
-        type,
-        width,
-        height,
-      };
-    }),
+    other: info.sources
+      .map((res) => {
+        const { url, type, width, height } = res;
+        return {
+          cur: recommend_resolution.type === type,
+          url,
+          type,
+          width,
+          height,
+        };
+      })
+      .filter((source) => {
+        return !!source.url;
+      }),
     subtitles: info.subtitles.map((subtitle) => {
       const { id, name, url, language } = subtitle;
       return {

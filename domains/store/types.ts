@@ -77,7 +77,11 @@ export type Statistics = {
   season_count: number;
   episode_count: number;
   sync_task_count: number;
+  /** 今日新增文件 */
+  new_files_today: number;
+  /** 总提交问题数 */
   report_count: number;
+  /** 想看 数 */
   media_request_count: number;
   invalid_season_count: number;
   invalid_movie_count: number;

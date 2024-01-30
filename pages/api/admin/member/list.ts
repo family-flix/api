@@ -9,27 +9,24 @@ import { ModelQuery } from "@/domains/store/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
     name,
-    page: page_str,
-    page_size: page_size_str,
-  } = req.query as Partial<{
+    next_marker,
+    page_size = 20,
+  } = req.body as Partial<{
     name: string;
-    page: string;
-    page_size: string;
+    next_marker: string;
+    page_size: number;
   }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
-  const page = to_number(page_str, 1);
-  const page_size = to_number(page_size_str, 20);
   const where: ModelQuery<"member"> = {
     user_id,
     delete: 0,
@@ -40,28 +37,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
   }
   const count = await store.prisma.member.count({ where });
-  const list = await store.prisma.member.findMany({
-    where,
-    include: {
-      tokens: {
-        select: {
-          id: true,
-          token: true,
+  const result = await store.list_with_cursor({
+    fetch(extra) {
+      return store.prisma.member.findMany({
+        where,
+        include: {
+          tokens: {
+            take: 5,
+          },
+          inviter: true,
         },
-      },
-      inviter: true,
+        orderBy: {
+          created: "desc",
+        },
+        ...extra,
+      });
     },
-    orderBy: {
-      created: "desc",
-    },
-    skip: (page - 1) * page_size,
-    take: page_size,
+    next_marker,
+    page_size,
   });
   res.status(200).json({
     code: 0,
     msg: "",
     data: {
-      list: list.map((member) => {
+      next_marker: result.next_marker,
+      list: result.list.map((member) => {
         const { id, inviter, remark, tokens } = member;
         return {
           id,
@@ -72,13 +72,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                 remark: inviter.remark,
               }
             : null,
-          tokens,
+          tokens: tokens.map((token) => {
+            const { id, token: value } = token;
+            return {
+              id,
+              token: value,
+            };
+          }),
         };
       }),
       total: count,
-      page,
       page_size,
-      no_more: list.length + (page - 1) * page_size >= count,
     },
   });
 }
