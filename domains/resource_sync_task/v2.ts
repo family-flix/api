@@ -9,7 +9,7 @@ import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
 import { Article, ArticleCardNode, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
+import { Drive } from "@/domains/drive/v2";
 import { DatabaseStore } from "@/domains/store";
 import { ResourceSyncTaskRecord } from "@/domains/store/types";
 import { AliyunDriveClient } from "@/domains/aliyundrive";
