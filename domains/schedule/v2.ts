@@ -1002,78 +1002,6 @@ export class ScheduleTask {
       })();
     }
   }
-  /**
-   * 清理过期（在阿里云盘页面删除了文件或修改文件名这种情况）的文件
-   */
-  async clear_expired_drive_files() {
-    const store = this.store;
-    await this.walk_drive(async (drive, user) => {
-      const where: ModelQuery<"file"> = {
-        drive_id: drive.id,
-        user_id: user.id,
-      };
-      const count = await store.prisma.file.count({ where });
-      console.log(["共", String(count), "条记录"]);
-      await walk_model_with_cursor({
-        fn(extra) {
-          return store.prisma.file.findMany({
-            where,
-            ...extra,
-          });
-        },
-        async handler(item, index) {
-          const prefix = `[${item.name}]`;
-          const res = await drive.client.fetch_file(item.file_id);
-          // console.log([prefix, `第 ${index + 1}`]);
-          if (res.error) {
-            if (res.error.message.includes("file not exist")) {
-              console.log([prefix, "删除云盘文件", item.name]);
-              console.log(item.id);
-              console.log(item.file_id);
-              await store.prisma.file.delete({
-                where: {
-                  id: item.id,
-                },
-              });
-              await store.prisma.parsed_episode.deleteMany({
-                where: {
-                  file_id: item.file_id,
-                },
-              });
-              await store.prisma.parsed_movie.deleteMany({
-                where: {
-                  file_id: item.file_id,
-                },
-              });
-            }
-            return;
-          }
-          const { name, content_hash, size } = res.data;
-          const payload: Partial<FileRecord> = {};
-          if (!item.md5) {
-            payload.md5 = content_hash;
-          }
-          if (!item.size) {
-            payload.size = size;
-          }
-          if (item.name !== name) {
-            payload.name = name;
-          }
-          if (Object.keys(payload).length === 0) {
-            return;
-          }
-          console.log([prefix, "更新云盘文件", JSON.stringify(payload)]);
-          await store.prisma.file.update({
-            where: {
-              id: item.id,
-            },
-            data: payload,
-          });
-        },
-      });
-      console.log(drive.name, "处理完成");
-    });
-  }
 
   async update_media_profile_with_douban() {
     const store = this.store;
@@ -1259,6 +1187,50 @@ export class ScheduleTask {
           });
         }
       },
+    });
+  }
+  /** 清理不存在云盘，但没有删除的文件记录 */
+  async clear_expired_parsed_source() {
+    const store = this.store;
+    await this.walk_drive(async (drive, user) => {
+      const where: ModelQuery<"file"> = {
+        drive_id: drive.id,
+        user_id: user.id,
+      };
+      const count = await store.prisma.file.count({ where });
+      console.log(["共", String(count), "条记录"].join(""));
+      await walk_model_with_cursor({
+        fn(extra) {
+          return store.prisma.parsed_media_source.findMany({
+            where,
+            ...extra,
+          });
+        },
+        async handler(file, index) {
+          const prefix = `[${file.name}]`;
+          const res = await drive.client.fetch_file(file.file_id);
+          if (res.error) {
+            if (res.error.message.includes("file not exist")) {
+              console.log([prefix, "删除云盘文件", file.name]);
+              console.log([file.id]);
+              console.log([file.file_id]);
+              console.log([""]);
+              await store.prisma.parsed_media_source.delete({
+                where: {
+                  id: file.id,
+                },
+              });
+              await store.prisma.file.deleteMany({
+                where: {
+                  file_id: file.file_id,
+                },
+              });
+            }
+            return;
+          }
+        },
+      });
+      return true;
     });
   }
 }

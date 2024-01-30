@@ -87,7 +87,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             order: "desc",
           },
         },
-        take: 1,
       });
       const payload = {
         id: media.id,
@@ -96,6 +95,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         poster_path: media.profile.poster_path,
         air_date: dayjs(media.profile.air_date).format("YYYY/MM/DD"),
         text: await (async () => {
+          if (media.type === MediaTypes.Movie) {
+            return media.profile.air_date;
+          }
           const episode_count = await store.prisma.media_source.count({
             where: {
               media_id: media.id,
