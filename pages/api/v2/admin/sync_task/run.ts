@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       {
         file_id: task.profile.file_id_link_resource,
         name: task.profile.file_name_link_resource,
-        type: FileType.File,
+        type: FileType.Folder,
       },
     ].map((f) => {
       const { file_id, name, type } = f;

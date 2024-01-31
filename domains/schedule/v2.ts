@@ -225,6 +225,7 @@ export class ScheduleTask {
     };
     const count = await this.store.prisma.resource_sync_task.count({ where });
     job.output.write_line(["共", count, "个同步任务"]);
+    const folders_need_analysis: { file_id: string; name: string; drive_id: string; type: FileType }[] = [];
     await walk_model_with_cursor({
       fn: (extra) => {
         return this.store.prisma.resource_sync_task.findMany({
@@ -251,70 +252,74 @@ export class ScheduleTask {
         });
         job.output.write_line([`开始更新「${name}]`]);
         await task.run();
+        if (task.added_file_count) {
+          folders_need_analysis.push({
+            file_id: task.profile.file_id_link_resource,
+            name: task.profile.file_name_link_resource,
+            drive_id: task.profile.drive_id,
+            type: FileType.Folder,
+          });
+        }
       },
     });
     job.output.write_line(["同步任务执行完毕，开始索引新增影片"]);
-    await walk_model_with_cursor({
-      fn: (extra) => {
-        return this.store.prisma.drive.findMany({
-          where: {
-            user_id: user.id,
-          },
-          ...extra,
-        });
-      },
-      handler: async (data, index) => {
-        const { id } = data;
-        const drive_res = await Drive.Get({ id, user, store: this.store });
-        if (drive_res.error) {
-          return;
-        }
-        const drive = drive_res.data;
-        const tmp_folders = await this.store.prisma.tmp_file.findMany({
-          where: {
-            drive_id: drive.id,
-            user_id: user.id,
-          },
-        });
-        if (tmp_folders.length === 0) {
-          job.output.write_line(["云盘", `[${drive.name}]`, "没有新增视频文件，跳过"]);
-          return;
-        }
-        job.output.write_line(["云盘", `[${drive.name}]`, "有新增视频文件", tmp_folders.length, "个"]);
-        const r2 = await DriveAnalysis.New({
-          drive,
-          store: this.store,
-          user,
-          assets: this.app.assets,
-          on_print(v) {
-            job.output.write(v);
-          },
-          on_error(error) {
-            job.throw(error);
-          },
-        });
-        if (r2.error) {
-          job.output.write_line(["初始化云盘索引失败，因为", r2.error.message]);
-          return;
-        }
-        const analysis = r2.data;
-        await analysis.run2(
-          tmp_folders
-            .filter((f) => {
-              return f.file_id;
-            })
-            .map((file) => {
-              const { file_id, name, type } = file;
-              return {
-                file_id: file_id as string,
-                name,
-                type,
-              };
-            })
-        );
-        job.output.write_line(["云盘", `[${drive.name}]`, "索引完毕"]);
-      },
-    });
+    const drives_with_folder: Record<
+      string,
+      {
+        file_id: string;
+        name: string;
+        drive_id: string;
+        type: FileType;
+      }[]
+    > = {};
+    for (let i = 0; i < folders_need_analysis.length; i += 1) {
+      const folder = folders_need_analysis[i];
+      drives_with_folder[folder.drive_id] = drives_with_folder[folder.drive_id] || [];
+      drives_with_folder[folder.drive_id].push(folder);
+    }
+    const drive_ids = Object.keys(drives_with_folder);
+    for (let i = 0; i < drive_ids.length; i += 1) {
+      const id = drive_ids[i];
+      const drive_res = await Drive.Get({ id, user, store: this.store });
+      if (drive_res.error) {
+        job.output.write_line(["初始化云盘失败，因为 ", drive_res.error.message]);
+        return;
+      }
+      const drive = drive_res.data;
+      const resource_folders = drives_with_folder[id];
+      const r2 = await DriveAnalysis.New({
+        drive,
+        store: this.store,
+        user,
+        assets: this.app.assets,
+        on_print(v) {
+          job.output.write(v);
+        },
+        on_error(error) {
+          job.throw(error);
+        },
+      });
+      if (r2.error) {
+        job.output.write_line(["初始化云盘索引失败，因为", r2.error.message]);
+        return;
+      }
+      const analysis = r2.data;
+      await analysis.run2(
+        resource_folders
+          .filter((f) => {
+            return f.file_id;
+          })
+          .map((file) => {
+            const { file_id, name, type } = file;
+            return {
+              file_id: file_id as string,
+              name,
+              type,
+            };
+          })
+      );
+      job.output.write_line(["云盘", `[${drive.name}]`, "索引完毕"]);
+    }
     job.output.write_line(["所有索引完成"]);
     job.finish();
     return results;
@@ -837,7 +842,6 @@ export class ScheduleTask {
       },
     });
   }
-
   async update_stats() {
     const store = this.store;
     console.log("[SCHEDULE]begin update_stats");

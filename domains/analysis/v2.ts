@@ -430,6 +430,10 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         const file = files[i];
         const parent_paths_r = await client.fetch_parent_paths(file.file_id);
         if (parent_paths_r.error) {
+          this.emit(
+            Events.Print,
+            Article.build_line(["client.fetch_parent_paths failed, because ", parent_paths_r.error.message])
+          );
           return;
         }
         const parents_and_cur = parent_paths_r.data.map((folder) => {
@@ -466,7 +470,11 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
           name: cur.name,
         });
         await folder.profile();
+        this.emit(Events.Print, Article.build_line(["before walker run"]));
         const r = await walker.run(folder, parents);
+        if (r.error) {
+          this.emit(Events.Print, Article.build_line(["walker run failed", r.error.message]));
+        }
         this.emit(
           Events.Print,
           Article.build_line([

@@ -131,6 +131,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   assets: ResourceSyncTaskProps["assets"];
 
   need_stop = false;
+  added_file_count = 0;
   differ: null | FolderDiffer = null;
 
   constructor(options: Partial<{}> & ResourceSyncTaskProps) {
@@ -347,6 +348,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           parent_paths,
           type: type === "file" ? FileType.File : FileType.Folder,
         });
+        this.added_file_count += 1;
         // await sleep(3000);
         // this.emit(Events.Print, Article.build_line(["client.existing", prev_folder.id, name]));
         // const drive_file_existing = await this.drive.client.existing(prev_folder.id, name);

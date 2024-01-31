@@ -101,15 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       };
     });
     await analysis.run2(the_files_prepare_analysis, { force: true });
-    job.output.write(
-      new ArticleLineNode({
-        children: [
-          new ArticleTextNode({
-            text: "索引完成",
-          }),
-        ],
-      })
-    );
+    job.output.write_line(["索引完成"]);
     job.finish();
   }
   run();
