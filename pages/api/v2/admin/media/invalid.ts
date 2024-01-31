@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     where.type = type;
   }
   const count = await store.prisma.invalid_media.count({ where });
-  const data = await store.list_with_cursor({
+  const result = await store.list_with_cursor({
     fetch: (args) => {
       return store.prisma.invalid_media.findMany({
         where,
@@ -67,35 +67,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     next_marker,
   });
+  const data = {
+    total: count,
+    next_marker: result.next_marker,
+    list: result.list.map((tip) => {
+      const {
+        media: { id, type, profile },
+        profile: text,
+      } = tip;
+      const d = parseJSONStr<{ tips: string[] }>(text);
+      return {
+        id: tip.id,
+        type: tip.type,
+        media: {
+          id,
+          type,
+          name: profile.name,
+          poster_path: profile.poster_path,
+        },
+        tips: (() => {
+          if (d.error) {
+            return [];
+          }
+          return d.data.tips;
+        })(),
+      };
+    }),
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      total: count,
-      next_marker: data.next_marker,
-      list: data.list.map((tip) => {
-        const {
-          media: { id, type, profile },
-          profile: text,
-        } = tip;
-        const d = parseJSONStr<{ tips: string[] }>(text);
-        return {
-          id: tip.id,
-          type: tip.type,
-          media: {
-            id,
-            type,
-            name: profile.name,
-            poster_path: profile.poster_path,
-          },
-          tips: (() => {
-            if (d.error) {
-              return [];
-            }
-            return d.data.tips;
-          })(),
-        };
-      }),
-    },
+    data,
   });
 }

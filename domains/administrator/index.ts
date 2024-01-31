@@ -200,7 +200,7 @@ export class Administrator extends User {
       /** 存在问题的电影数 */
       invalid_movie_count: await store.prisma.invalid_media.count({
         where: {
-          type: MediaErrorTypes.Season,
+          type: MediaErrorTypes.Movie,
           user_id: this.id,
         },
       }),
