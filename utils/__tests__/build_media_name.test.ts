@@ -25,6 +25,6 @@ test("喂 帅哥！！", () => {
       name: "喂 帅哥！！",
       original_name: "おいハンサム!!",
     });
-    expect(result).toBe("W 喂帅哥！！.おいハンサム!!");
+    expect(result).toBe("W 喂 帅哥！！.おいハンサム!!");
   });
 });

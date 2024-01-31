@@ -464,6 +464,7 @@ export const DEFAULT_STATS: Statistics = {
   invalid_sync_task_count: 0,
   report_count: 0,
   media_request_count: 0,
-  new_files_today: 0,
+  new_file_count_today: 0,
+  file_size_count_today: 0,
   updated_at: null,
 };

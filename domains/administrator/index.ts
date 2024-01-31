@@ -243,7 +243,7 @@ export class Administrator extends User {
           user_id: this.id,
         },
       }),
-      new_files_today: await store.prisma.file.count({
+      new_file_count_today: await store.prisma.file.count({
         where: {
           type: FileType.File,
           created: {
@@ -253,6 +253,34 @@ export class Administrator extends User {
           user_id: this.id,
         },
       }),
+      file_size_count_today: await (async () => {
+        let size_count = 0;
+        await walk_model_with_cursor({
+          fn(extra) {
+            return store.prisma.file.findMany({
+              where: {
+                created: {
+                  gte: range_today[0],
+                  lt: range_today[1],
+                },
+              },
+              orderBy: [
+                {
+                  created: "desc",
+                },
+              ],
+              ...extra,
+            });
+          },
+          batch_handler(list, index) {
+            size_count += list.reduce((total, f) => {
+              return total + f.size || 0;
+            }, 0);
+          },
+          page_size: 100,
+        });
+        return size_count;
+      })(),
       updated_at: dayjs().format("YYYY-MM-DD HH:mm:ss"),
     };
     await walk_model_with_cursor({
@@ -300,7 +328,8 @@ export class Administrator extends User {
       invalid_movie_count,
       invalid_sync_task_count,
       unknown_media_count,
-      new_files_today,
+      new_file_count_today: new_files_today,
+      file_size_count_today,
       updated_at,
     } = payload;
     const d: Statistics = {
@@ -317,7 +346,8 @@ export class Administrator extends User {
       invalid_movie_count,
       invalid_sync_task_count,
       unknown_media_count,
-      new_files_today,
+      new_file_count_today: new_files_today,
+      file_size_count_today,
       updated_at,
     };
     if (!e) {

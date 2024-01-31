@@ -44,7 +44,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("小城之春")) {
+    if (!filename.includes("帅哥")) {
       return;
     }
     // console.log(...args);
@@ -527,7 +527,10 @@ export function parse_filename_for_video(
       regexp: /【{0,1}[0-9]{1,5}(\.[0-9]{1,5}){0,1}([gG]|[mM])[bB]{0,1}】{0,1}\.{0,1}$/,
     },
     {
-      regexp: /[nN][oO]\.[0-9]{1,}｜/,
+      regexp: /[nN][oO]\.[0-9]{1,}｜{0,1}/,
+    },
+    {
+      regexp: /^№[0-9]{1,}\.{1,}/,
     },
     { regexp: /GB/ },
     // 剧集的额外信息
@@ -1003,7 +1006,7 @@ export function parse_filename_for_video(
       key: k("name"),
       desc: "japanese name",
       regexp:
-        /^\[{0,1}[0-9]{0,}([\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff][0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff，：· ]{0,}[0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff])\]{0,1}/,
+        /^\[{0,1}[0-9]{0,}([\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff][0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff，：！· ]{0,}[0-9a-zA-Z\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff！])\]{0,1}/,
       before() {
         // cur_filename = cur_filename.replace(/^\.{2,}/, "");
         const include_japanese = is_japanese(cur_filename);
@@ -1059,10 +1062,10 @@ export function parse_filename_for_video(
       desc: "chinese name3",
       // 中文开头，中间可以包含数字，以中文结尾
       regexp:
-        /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！：，（）～,·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5！：，（）～])\]{0,1}/,
+        /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！：，（）～~,·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5！：，（）～！])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
-        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z0-9！：，（）～~·、■.-]{1,})/;
+        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z0-9！：，（）～~,·、■.-]{1,})/;
         // 针对 1883 这个剧特殊处理？？1883.2002 这样的名字，1883 是剧名
         // const r2 = /([12][01789][0-9]{2})\.{0,}[12][01789][0-9]{2}/;
         // if (cur_filename.match(r2)) {
@@ -1924,9 +1927,10 @@ export function build_media_name(values: { name: string | null; original_name: s
   const first_char_pin_yin = get_first_letter(name);
   const nn = name
     ? name
+        .replace(/ {2,}/, " ")
         .split(" ")
         .map((t) => t.trim())
-        .join(".")
+        .join(" ")
     : null;
   const n = [first_char_pin_yin, nn].filter(Boolean).join(" ");
   const original_n = (() => {

@@ -276,11 +276,14 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       const { id: shared_file_id, name, type, parents, prev_folder } = payload;
       const parent_paths = parents.map((f) => f.name).join("/");
       const prefix = `${parent_paths}/${name}`;
-      //       log(`[${prefix}]`, "是", effect_type === DiffTypes.Deleting ? "删除" : "新增");
+      this.emit(
+        Events.Print,
+        Article.build_line([`「${prefix}」是 `, effect_type === DiffTypes.Deleting ? "删除" : "新增"])
+      );
       if (effect_type === DiffTypes.Deleting) {
         // log(`[${prefix}]`, "删除文件", shared_file_id);
         // 如果是转存，要同时删除云盘和本地数据库记录
-        // await store.prisma.file.deleteMany({ where: { file_id } });
+        await store.prisma.file.deleteMany({ where: { name, parent_paths } });
         continue;
       }
       if (effect_type === DiffTypes.Adding) {

@@ -32,6 +32,7 @@ async function main() {
     update_stats: schedule.update_stats,
     check_in: schedule.check_in,
     refresh_media_profile_list: schedule.refresh_media_profile_list,
+    clear_expired_parsed_source: schedule.clear_expired_parsed_source,
   };
   const allow_actions = Object.keys(actions);
   if (!allow_actions.includes(action)) {

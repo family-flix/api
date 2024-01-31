@@ -78,7 +78,7 @@ export type Statistics = {
   episode_count: number;
   sync_task_count: number;
   /** 今日新增文件 */
-  new_files_today: number;
+  new_file_count_today: number;
   /** 总提交问题数 */
   report_count: number;
   /** 想看 数 */
@@ -87,6 +87,7 @@ export type Statistics = {
   invalid_movie_count: number;
   invalid_sync_task_count: number;
   unknown_media_count: number;
+  file_size_count_today: number;
   updated_at: string | null;
 };
 
