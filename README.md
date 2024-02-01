@@ -1,13 +1,102 @@
-# 飞乐
+<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 
-类似 `Alist`，但专注影视剧观看、更新。
+<a name="readme-top"></a>
 
-## 功能
+<!-- PROJECT SHIELDS -->
+<!--
+*** I'm using markdown "reference style" links for readability.
+*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
+*** See the bottom of this document for the declaration of the reference variables
+*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
+*** https://www.markdownguide.org/basic-syntax/#reference-style-links
+-->
 
-1. 索引云盘文件并通过海报墙展示云盘内影视文件
-2. 在线观看云盘视频、记录观看历史
-3. 家庭成员可直接通过授权链接访问，无需登录
-4. 自动追踪影视剧更新并同步至云盘
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
+
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/othneildrew/Best-README-Template">
+    <img src="assets/logo.jpg" alt="Logo" width="80" height="100">
+  </a>
+
+  <h3 align="center">FamilyFlix</h3>
+
+  <p align="center">
+    视频刮削 + 云盘管理 + 自动更新 + 在线观看
+    <br />
+    <a href="https://family-flix.github.io/docs/"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <!-- <a href="https://github.com/othneildrew/Best-README-Template">View Demo</a> -->
+    ·
+    <a href="https://github.com/family-flix/api/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/family-flix/api/issues">Request Feature</a>
+  </p>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
+
+<!-- ABOUT THE PROJECT -->
+
+## ⭐️ About The Project
+
+[![管理后台首页][assets/admin-home.png]](https://docs.family-flix.github.com)
+[![移动端1][assets/mobile-example1.png]](https://docs.family-flix.github.com)
+[![移动端2][assets/mobile-example2.png]](https://docs.family-flix.github.com)
+
+There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
+
+Here's why:
+
+- Your time should be focused on creating something amazing. A project that solves a problem and helps others
+- You shouldn't be doing the same tasks over and over like creating a README from scratch
+- You should implement DRY principles to the rest of your life :smile:
+
+Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
+
+Use the `BLANK_README.md` to get started.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## ✨ 功能
+
+- 🌈 索引云盘文件刮削影视剧信息
+- 💅 在线观看云盘视频、记录观看历史
+- 🚀 自动追踪影视剧更新并同步至云盘，追剧更快更简单
+- 📦 无需下载 App 在微信内点开即看
+
+4.
 
 ## 使用前须知
 
@@ -37,15 +126,15 @@ docker run -d -v /local/output:/output -p 8000:8000 --name flix.prod flix
 
 `clone` 项目后安装依赖，执行 `node scripts/ncc.js`。然后 `yarn dev` 就可以了。
 
-## 单元测试
+<!-- ## 单元测试
 
 先生成 `db` 文件
 
 ```bash
 DATABASE_PATH=file://$PWD/domains/__tests__/output/data/family-flix.db yarn prisma db push
-```
+``` -->
 
-## 效果预览
+<!-- ## 效果预览
 
 ### 管理后台
 
@@ -68,4 +157,4 @@ DATABASE_PATH=file://$PWD/domains/__tests__/output/data/family-flix.db yarn pris
 
 1. [视频播放移动端](https://github.com/family-flix/mobile1)
 2. [视频播放 PC 端](https://github.com/family-flix/pc2)
-3. [管理后台](https://github.com/family-flix/admin1)
+3. [管理后台](https://github.com/family-flix/admin1) -->
