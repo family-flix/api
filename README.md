@@ -21,7 +21,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
+  <a href="https://family-flix.github.io/docs/">
     <img src="assets/logo.jpg" alt="Logo" width="80" height="100">
   </a>
 
@@ -69,11 +69,12 @@
 
 <!-- ABOUT THE PROJECT -->
 
-## ⭐️ About The Project
+## ⭐️ 概览
 
-[![管理后台首页][assets/admin-home.png]](https://docs.family-flix.github.com)
+![管理后台首页](assets/admin-home.png)
+<!-- [![管理后台首页][assets/admin-home.png]](https://docs.family-flix.github.com)
 [![移动端1][assets/mobile-example1.png]](https://docs.family-flix.github.com)
-[![移动端2][assets/mobile-example2.png]](https://docs.family-flix.github.com)
+[![移动端2][assets/mobile-example2.png]](https://docs.family-flix.github.com) -->
 
 There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
 
@@ -95,8 +96,6 @@ Use the `BLANK_README.md` to get started.
 - 💅 在线观看云盘视频、记录观看历史
 - 🚀 自动追踪影视剧更新并同步至云盘，追剧更快更简单
 - 📦 无需下载 App 在微信内点开即看
-
-4.
 
 ## 使用前须知
 
