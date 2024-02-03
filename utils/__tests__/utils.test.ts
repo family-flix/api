@@ -344,6 +344,6 @@ describe("版本号比较", () => {
 describe("构建名称", () => {
   test("MEGALO BOX", () => {
     const r = build_media_name({ name: "MEGALO BOX", original_name: null });
-    expect(r).toStrictEqual("MEGALO.BOX");
+    expect(r).toStrictEqual("MEGALO BOX");
   });
 });

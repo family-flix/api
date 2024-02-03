@@ -86,6 +86,26 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("B 别叫我“赌神”.2023.4K..国语中字.mp4", () => {
+    const name = "B 别叫我“赌神”.2023.4K..国语中字.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "别叫我“赌神”",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("2008.BURN-E.电焊工波力.HR-HDTV.AC3.1024X576.x264-人人影视制作.mkv", () => {
+    const name = "2008.BURN-E.电焊工波力.HR-HDTV.AC3.1024X576.x264-人人影视制作.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
   // test("up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv", () => {
   //   const name = "up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv";
   //   const result = parse_filename_for_video(name);

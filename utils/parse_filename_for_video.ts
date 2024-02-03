@@ -44,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("帅哥")) {
+    if (!filename.includes("电焊工波力")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -1062,10 +1062,10 @@ export function parse_filename_for_video(
       desc: "chinese name3",
       // 中文开头，中间可以包含数字，以中文结尾
       regexp:
-        /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！：，（）～~,·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5！：，（）～！])\]{0,1}/,
+        /^\[{0,1}[0-9]{0,}([\u4e00-\u9fa5][0-9a-zA-Z\u4e00-\u9fa5！：，（）～~“”,·、■（）]{0,}[0-9a-zA-Z\u4e00-\u9fa5！：，（）～！“”])\]{0,1}/,
       before() {
         // 把 1981.阿蕾拉 这种情况转换成 阿蕾拉.1981
-        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z0-9！：，（）～~,·、■.-]{1,})/;
+        const r1 = /^([12][0-9]{3}\.{1,})([\u4e00-\u9fa5A-Za-z0-9！：，（）～~“”,·、■.-]{1,})/;
         // 针对 1883 这个剧特殊处理？？1883.2002 这样的名字，1883 是剧名
         // const r2 = /([12][01789][0-9]{2})\.{0,}[12][01789][0-9]{2}/;
         // if (cur_filename.match(r2)) {
@@ -1108,7 +1108,7 @@ export function parse_filename_for_video(
       key: k("name"),
       desc: "chinese name4",
       // 字母开头，如 Doctor异乡人
-      regexp: /^[A-Za-z]{1,}\.{0,1}[A-Za-z0-9\u4e00-\u9fa5！：，（）～~-]{1,}[\u4e00-\u9fa5！：，（）～~-]{1,}/,
+      regexp: /^[A-Za-z]{1,}\.{0,1}[A-Za-z0-9\u4e00-\u9fa5！：，（）～~“”-]{1,}[\u4e00-\u9fa5！：，（）～~“”-]{1,}/,
       // regexp: /^[A-Za-z]{1,}[0-9\u4e00-\u9fa5！，.-]{1,}[\u4e00-\u9fa5-]{1,}/,
       after(matched) {
         const episode_index = result.episode ? original_filename.indexOf(result.episode) : -1;
@@ -1119,6 +1119,20 @@ export function parse_filename_for_video(
             skip: true,
           };
         }
+        if (!matched?.match(/[\u4e00-\u9fa5]/)) {
+          return { skip: true };
+        }
+        // if (!matched?.match(/[\u4e00-\u9fa5]/) && !result.name && !result.original_name) {
+        //   // 英文名在中文名前面，这里可以处理，但是会影响其他场景
+        //   const r = cur_filename.match(/([-A-Za-z~“”.]{1,})([\u4e00-\u9fa5]{1,})/);
+        //   if (r) {
+        //     result.name = r[2].replace(/\.{1,}/, "");
+        //     result.original_name = r[1].replace(/\.{1,}/, "");
+        //   }
+        //   return {
+        //     skip: true,
+        //   };
+        // }
       },
     },
     {
@@ -1133,6 +1147,11 @@ export function parse_filename_for_video(
       //   }
       // },
     },
+    // {
+    //   key: k("name"),
+    //   desc: "chinese name5",
+    //   regexp: /^[\u4e00-\u9fa5]{1,}[\u4e00-\u9fa5！：，（）～~-]{1,}/,
+    // },
     // 发布年，必须在「分辨率」后面，因为分辨率有 2160p 这种，为了方便处理，先把分辨率剔除，再来处理发布年
     // 也要放在 name 先后面，因为有些影视剧名称包含了年份，比如「回到1988」，如果先把 1988 处理了，名字就不对了
     {
