@@ -1,8 +1,12 @@
+/**
+ * 获取指定时间内新增影视剧
+ */
+import dayjs from "dayjs";
+
 import { CollectionTypes, MediaTypes } from "@/constants";
 import { Application } from "@/domains/application";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { parseJSONStr, r_id } from "@/utils";
-import dayjs from "dayjs";
 
 async function main() {
   const OUTPUT_PATH = process.env.OUTPUT_PATH;

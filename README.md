@@ -88,11 +88,11 @@
 
 该项目**「不提供影视剧资源」**，使用该项目前，你必须有
 
-- 1. 存储了影视剧文件的云盘（目前仅支持阿里云盘）
-- 2. 能够抓包查看网络请求、安装了阿里云盘的手机
-- 3. 下面两个二选一
-  - 3.1 要求外网可以访问，需要一台可以公网访问的服务器（性能要求低，视频播放直接走阿里云盘不占服务器流量）
-  - 3.2 只在家庭范围内使用，一台电脑即可
+- 存储了影视剧文件的云盘（目前仅支持阿里云盘）
+- 能够抓包查看网络请求、安装了阿里云盘的手机
+- 下面两个二选一
+  - 要求外网可以访问，需要一台可以公网访问的服务器（性能要求低，视频播放直接走阿里云盘不占服务器流量）
+  - 只在家庭范围内使用，一台电脑即可
 
 ## 🖥️ 部署
 
@@ -124,19 +124,19 @@ yarn prisma migrate apply
 
 在控制台会打印网站访问地址，在浏览器中访问即可。共有三个应用
 
-- 1. http://127.0.0.1:3200/admin/home/index 管理后台
-- 2. http://127.0.0.1:3200/mobile/home/index 视频播放移动端
-- 3. http://127.0.0.1:3200/pc/home/index 视频播放 PC 端
+- http://127.0.0.1:3200/admin/home/index 管理后台
+- http://127.0.0.1:3200/mobile/home/index 视频播放移动端
+- http://127.0.0.1:3200/pc/home/index 视频播放 PC 端
 
 添加云盘、刮削等操作可以参考文档。<a href="https://family-flix.github.io/docs/"><strong>Explore the docs »</strong></a>
 
 ## API 文档
 
-1. [管理后台 API](https://documenter.getpostman.com/view/7312751/2s93sXdEzv)
-2. [视频播放 API](https://documenter.getpostman.com/view/7312751/2s93sXdF5R)
+- [管理后台 API](https://documenter.getpostman.com/view/7312751/2s93sXdEzv)
+- [视频播放 API](https://documenter.getpostman.com/view/7312751/2s93sXdF5R)
 
 ## 相关项目
 
-1. [视频播放移动端](https://github.com/family-flix/mobile1)
-2. [视频播放 PC 端](https://github.com/family-flix/pc2)
-3. [管理后台](https://github.com/family-flix/admin1)
+- [视频播放移动端](https://github.com/family-flix/mobile1)
+- [视频播放 PC 端](https://github.com/family-flix/pc2)
+- [管理后台](https://github.com/family-flix/admin1)

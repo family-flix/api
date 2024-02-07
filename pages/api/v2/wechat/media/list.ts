@@ -56,26 +56,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   }
   if (genres) {
-    // queries = queries.concat({
-    //   OR: genres.split("|").map((g) => {
-    //     return {
-    //       genres: {
-    //         contains: g,
-    //       },
-    //     };
-    //   }),
-    // });
+    queries = queries.concat({
+      genres: {
+        some: {
+          id: {
+            in: genres.split("|").map(Number),
+          },
+        },
+      },
+    });
   }
   if (language) {
-    // queries = queries.concat({
-    //   OR: language.split("|").map((g) => {
-    //     return {
-    //       origin_country: {
-    //         contains: g,
-    //       },
-    //     };
-    //   }),
-    // });
+    queries = queries.concat({
+      origin_country: {
+        some: {
+          id: {
+            in: language.split("|"),
+          },
+        },
+      },
+    });
   }
   const where: NonNullable<Parameters<typeof store.prisma.media.findMany>[0]>["where"] = {
     media_sources: {

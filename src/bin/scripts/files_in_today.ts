@@ -1,3 +1,7 @@
+/**
+ * 列出指定时间内新增的文件
+ * 新增文件的大小，和最大的10个文件
+ */
 import dayjs from "dayjs";
 
 import { CollectionTypes, MediaTypes } from "@/constants";
@@ -17,12 +21,13 @@ async function main() {
   });
   const store = app.store;
   console.log("Start");
-  const start = null;
-  const end = null;
-  const range = [
-    start ? dayjs(start).toISOString() : dayjs().startOf("day").toISOString(),
-    end ? dayjs(end).toISOString() : dayjs().endOf("day").toISOString(),
-  ];
+  const day = "2024/02/04";
+  const range = (() => {
+    if (day) {
+      return [dayjs(day).startOf("day").toISOString(), dayjs(day).endOf("day").toISOString()];
+    }
+    return [dayjs().startOf("day").toISOString(), dayjs().endOf("day").toISOString()];
+  })();
   let size_count = 0;
   //   let max_size_file: {
   //     name: string;
