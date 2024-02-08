@@ -16,8 +16,8 @@ const handle = app.getRequestHandler();
 app.prepare().then(() => {
   const server = express();
 
-  const assets = path.resolve(output_path, "storage");
-  server.use(express.static(assets, { maxAge: "7d", immutable: true }));
+  // const assets = path.resolve(output_path, "storage");
+  // server.use(express.static(assets, { maxAge: "7d", immutable: true }));
 
   server.all("*", (req, res) => {
     const url = parse(req.url, true);
