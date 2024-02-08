@@ -16,8 +16,8 @@ import { parseJSONStr } from "@/utils";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const {
-    next_marker,
     type = CollectionTypes.Manually,
+    next_marker = "",
     page_size,
   } = req.body as Partial<{
     type: CollectionTypes;

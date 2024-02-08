@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     name,
     status,
     invalid = 0,
-    next_marker,
+    next_marker = "",
     page_size = 20,
   } = req.body as Partial<{
     name: string;

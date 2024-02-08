@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const {
     media_id,
-    next_marker,
+    next_marker = "",
     page_size = 20,
     start,
     end,
@@ -129,6 +129,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         });
       },
       page_size,
+      next_marker,
     });
     const data = {
       total: count,

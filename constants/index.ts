@@ -44,6 +44,9 @@ export enum ResourceSyncTaskStatus {
   WorkInProgress = 3,
   Completed = 4,
 }
+export enum MemberNotifyTypes {
+  Common = 1,
+}
 
 /** 影片分辨率 */
 export enum MediaResolutionTypes {

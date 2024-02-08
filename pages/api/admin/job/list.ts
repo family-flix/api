@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const {
     status,
     page_size = 20,
-    next_marker,
+    next_marker = "",
   } = req.body as Partial<{
     status: number;
     page_size: number;

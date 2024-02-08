@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const {
     media_id,
     page_size = 20,
-    next_marker,
+    next_marker = "",
   } = req.body as Partial<{
     media_id: string;
     page_size: number;

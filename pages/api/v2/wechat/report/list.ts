@@ -15,7 +15,12 @@ import { ModelQuery } from "@/domains/store/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const { status, type, page_size, next_marker } = req.body as Partial<{
+  const {
+    status,
+    type,
+    page_size,
+    next_marker = "",
+  } = req.body as Partial<{
     status: number;
     type: number;
     data: string;

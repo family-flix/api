@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type,
     name,
     series_id,
-    next_marker,
+    next_marker = "",
     page_size = 20,
   } = req.body as Partial<{
     type: MediaTypes;

@@ -455,7 +455,7 @@ export class DatabaseStore {
   }
   async list_with_cursor<F extends (extra: { take: number }) => any>(options: {
     fetch: F;
-    next_marker?: string;
+    next_marker: string;
     page_size?: number;
   }) {
     const { fetch, next_marker = "", page_size = 20 } = options;

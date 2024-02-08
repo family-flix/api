@@ -14,9 +14,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const {
-    next_marker = "",
     type,
     page_size = 20,
+    next_marker = "",
   } = req.body as Partial<{ next_marker: string; page_size: number; type: number }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {

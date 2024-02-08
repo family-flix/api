@@ -15,7 +15,7 @@ import { response_error_factory } from "@/utils/server";
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { next_marker, page_size } = req.body as Partial<{
+  const { next_marker = "", page_size } = req.body as Partial<{
     episode_id: string;
     next_marker: string;
     page_size: number;
@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const count = await store.prisma.play_history_v2.count({
     where,
   });
-  const data = await store.list_with_cursor({
+  const result = await store.list_with_cursor({
     fetch: (args) => {
       return store.prisma.play_history_v2.findMany({
         where,
@@ -63,59 +63,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     next_marker,
   });
+  const data = {
+    list: result.list
+      .map((history) => {
+        const { id, media, media_source, current_time, duration, updated, thumbnail_path } = history;
+        if (media.type === MediaTypes.Season) {
+          const { name, original_name, poster_path, air_date, source_count } = media.profile;
+          const latest_episode = media.media_sources[0];
+          const has_update = latest_episode && dayjs(latest_episode.created).isAfter(updated);
+          return {
+            id,
+            type: media.type,
+            media_id: media.id,
+            name: name || original_name,
+            poster_path: poster_path,
+            cur_episode_number: media_source.profile.order,
+            cur_episode_count: media._count.media_sources,
+            episode_count: source_count,
+            current_time,
+            duration,
+            thumbnail_path,
+            has_update,
+            air_date,
+            updated,
+          };
+        }
+        if (media.type === MediaTypes.Movie) {
+          const { name, poster_path, original_name, air_date } = media.profile;
+          return {
+            id,
+            type: media.type,
+            media_id: media.id,
+            name: name || original_name,
+            poster_path,
+            current_time,
+            cur_episode_number: 0,
+            cur_episode_count: 0,
+            episode_count: 0,
+            duration,
+            thumbnail_path,
+            has_update: false,
+            air_date,
+            updated,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean),
+    total: count,
+    page_size,
+    next_marker: result.next_marker,
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      list: data.list
-        .map((history) => {
-          const { id, media, media_source, current_time, duration, updated, thumbnail_path } = history;
-          if (media.type === MediaTypes.Season) {
-            const { name, original_name, poster_path, air_date, source_count } = media.profile;
-            const latest_episode = media.media_sources[0];
-            const has_update = latest_episode && dayjs(latest_episode.created).isAfter(updated);
-            return {
-              id,
-              type: media.type,
-              media_id: media.id,
-              name: name || original_name,
-              poster_path: poster_path,
-              cur_episode_number: media_source.profile.order,
-              cur_episode_count: media._count.media_sources,
-              episode_count: source_count,
-              current_time,
-              duration,
-              thumbnail_path,
-              has_update,
-              air_date,
-              updated,
-            };
-          }
-          if (media.type === MediaTypes.Movie) {
-            const { name, poster_path, original_name, air_date } = media.profile;
-            return {
-              id,
-              type: media.type,
-              media_id: media.id,
-              name: name || original_name,
-              poster_path,
-              current_time,
-              cur_episode_number: 0,
-              cur_episode_count: 0,
-              episode_count: 0,
-              duration,
-              thumbnail_path,
-              has_update: false,
-              air_date,
-              updated,
-            };
-          }
-          return null;
-        })
-        .filter(Boolean),
-      total: count,
-      page_size,
-      next_marker: data.next_marker,
-    },
+    data,
   });
 }

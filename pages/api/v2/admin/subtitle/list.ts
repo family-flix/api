@@ -13,7 +13,11 @@ import { to_number } from "@/utils/primitive";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const { name, next_marker, page_size } = req.body as Partial<{
+  const {
+    name,
+    next_marker = "",
+    page_size,
+  } = req.body as Partial<{
     name: string;
     next_marker: string;
     page_size: number;

@@ -13,7 +13,14 @@ import { MediaTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const { type, name, genres, language, next_marker, page_size } = req.body as Partial<{
+  const {
+    type,
+    name,
+    genres,
+    language,
+    next_marker = "",
+    page_size,
+  } = req.body as Partial<{
     name: string;
     genres: string;
     language: string;

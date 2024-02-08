@@ -12,6 +12,7 @@ import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { r_id } from "@/utils";
+import { MemberNotifyTypes } from "@/constants";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -47,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           content: JSON.stringify({
             msg: content,
           }),
-          type: 1,
+          type: MemberNotifyTypes.Common,
           status: 1,
           is_delete: 0,
           member_id: data.id,
