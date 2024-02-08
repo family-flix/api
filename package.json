@@ -3,8 +3,8 @@
   "version": "2.1.0",
   "private": true,
   "scripts": {
-    "dev": "PORT=3200 NODE_ENV=development node server.js",
-    "start": "PORT=3200 NODE_ENV=production node server.js",
+    "dev": "next dev --port 3200",
+    "start": "next start --port 3200",
     "build": "next build",
     "db": "npx prisma studio",
     "check": "tsc --noEmit",
