@@ -57,6 +57,17 @@ export class FileUpload {
       });
     });
   }
+  delete_subtitle(filename: string): Promise<Result<string>> {
+    return new Promise((resolve) => {
+      const subtitle_path = path.resolve(this.root, "subtitle", filename);
+      unlink(subtitle_path, (err) => {
+        if (err) {
+          return resolve(Result.Err(err.message));
+        }
+        return resolve(Result.Ok("/" + path.relative(path.resolve(this.root), subtitle_path)));
+      });
+    });
+  }
   /** 下载网络图片到本地 */
   async download(url: string, key: string): Promise<Result<string>> {
     try {

@@ -44,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("电焊工波力")) {
+    if (!filename.includes("Thinking")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -736,7 +736,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("season"),
-      regexp: /\bVI{1,3}|\bIX|\bIV|\bIII|Ⅱ|\bII/,
+      regexp: /\bVI{1,3}\b|\bIX|\bIV|\bIII|Ⅱ|\bII/,
     },
     {
       key: k("season"),

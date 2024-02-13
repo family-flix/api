@@ -106,6 +106,17 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("Im.Thinking.of.Ending.Things.2020.中文字幕.WEBrip.AAC.1080p.x264-VINEnc.mp4", () => {
+    const name = "Im.Thinking.of.Ending.Things.2020.中文字幕.WEBrip.AAC.1080p.x264-VINEnc.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Im.Thinking.of.Ending.Things",
+      season: "",
+      episode: "",
+    });
+  });
+  //
   // test("up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv", () => {
   //   const name = "up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv";
   //   const result = parse_filename_for_video(name);
