@@ -13,7 +13,7 @@ import { notice_push_deer } from "../notice";
  * 其他数字同理，依次为 小时、
  */
 
-(() => {
+(async () => {
   const OUTPUT_PATH = process.env.OUTPUT_PATH;
   //   const DATABASE_PATH = "file://$OUTPUT_PATH/data/family-flix.db?connection_limit=1";
   if (!OUTPUT_PATH) {
@@ -27,6 +27,19 @@ import { notice_push_deer } from "../notice";
   const store = app.store;
   const schedule = new ScheduleTask({ app, store });
 
+  const start = dayjs("2024/02/01");
+  const end = dayjs("2024/03/08");
+
+  let cur = start.clone();
+  const dates = [];
+  while (cur.isBefore(end)) {
+    dates.push(cur.format("YYYY-MM-DD"));
+    cur = cur.add(1, "day");
+  }
+  for (let i = 0; i < dates.length; i += 1) {
+    const date = dates[i];
+    await schedule.fetch_added_files_daily(date);
+  }
   //   new CronJob.CronJob(
   //     "0 */5 * * * *",
   //     async () => {

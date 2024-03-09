@@ -1112,7 +1112,7 @@ model drive_statistics {
         date String
         data String @default("{}")
 
-        user_id String @unique
+        user_id String
         user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         @@map("DriveStatistics")
@@ -1545,7 +1545,7 @@ model user {
         media_sources           media_source[]
         invalid_medias          invalid_media[]
         invalid_media_sources   invalid_media_source[]
-        drive_statistics        drive_statistics?
+        drive_statistics        drive_statistics[]
 
         @@map("User")
 }
