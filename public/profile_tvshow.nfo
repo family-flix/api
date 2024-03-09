@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<tvshow>
+  <plot><![CDATA[　　《请回答1988》为韩国tvN自2015年10月30日起播出的金土连续剧，由《请回答1997》、《请回答1994》制作班底申元浩导演和李祐汀作家再度携手合作。此剧与以往将初恋作为重心的另两部同系列作品不同，将以家族 关系和邻里感情作为剧情主轴。而且1988年也是香港电影的巅峰时期，张国荣、周润发等影星在韩国皆具有高知名度，因此也可能被列为剧情素材之一。]]></plot>
+  <outline><![CDATA[　　《请回答1988》为韩国tvN自2015年10月30日起播出的金土连续剧，由《请回答1997》、《请回答1994》制作班底申元浩导演和李祐汀作家再度携手合作。此剧与以往将初恋作为重心的另两部同系列作品不同，将以家族 关系和邻里感情作为剧情主轴。而且1988年也是香港电影的巅峰时期，张国荣、周润发等影星在韩国皆具有高知名度，因此也可能被列为剧情素材之一。]]></outline>
+  <lockdata>false</lockdata>
+  <dateadded>2021-08-08 19:34:57</dateadded>
+  <title>请回答1988</title>
+  <originaltitle>응답하라 1988</originaltitle>
+  <actor>
+    <name>Lee Hye-ri</name>
+    <role>Sung Deok-sun</role>
+    <type>Actor</type>
+    <tmdbid>1413827</tmdbid>
+  </actor>
+  <actor>
+    <name>Ryu Jun-yeol</name>
+    <role>Kim Jung-hwan</role>
+    <type>Actor</type>
+    <tmdbid>1530733</tmdbid>
+  </actor>
+  <actor>
+    <name>Park Bo-gum</name>
+    <role>Choi Taek</role>
+    <type>Actor</type>
+    <tmdbid>587634</tmdbid>
+  </actor>
+  <actor>
+    <name>Go Kyung-pyo</name>
+    <role>Sung Sun-woo</role>
+    <type>Actor</type>
+    <tmdbid>1257601</tmdbid>
+  </actor>
+  <actor>
+    <name>Lee Dong-hwi</name>
+    <role>Ryu Dong-ryong</role>
+    <type>Actor</type>
+    <tmdbid>1418580</tmdbid>
+  </actor>
+  <actor>
+    <name>Ryu Hye-young</name>
+    <role>Sung Bo-ra</role>
+    <type>Actor</type>
+    <tmdbid>1386540</tmdbid>
+  </actor>
+  <actor>
+    <name>Choi Sung-won</name>
+    <role>Sung No-eul</role>
+    <type>Actor</type>
+    <tmdbid>1530744</tmdbid>
+  </actor>
+  <actor>
+    <name>Ahn Jae-hong</name>
+    <role>Kim Jung-bong</role>
+    <type>Actor</type>
+    <tmdbid>1164507</tmdbid>
+  </actor>
+  <actor>
+    <name>Kim Seol</name>
+    <role>Sung Jin-ju</role>
+    <type>Actor</type>
+    <tmdbid>1876418</tmdbid>
+  </actor>
+  <actor>
+    <name>Sung Dong-il</name>
+    <role>Sung Dong-il</role>
+    <type>Actor</type>
+    <tmdbid>1020859</tmdbid>
+  </actor>
+  <actor>
+    <name>Lee Il-hwa</name>
+    <role>Lee Il-hwa</role>
+    <type>Actor</type>
+    <tmdbid>1348579</tmdbid>
+  </actor>
+  <actor>
+    <name>Kim Sung-kyun</name>
+    <role>Kim Sung-kyun</role>
+    <type>Actor</type>
+    <tmdbid>1024396</tmdbid>
+  </actor>
+  <actor>
+    <name>Ra Mi-ran</name>
+    <role>Ra Mi-ran</role>
+    <type>Actor</type>
+    <tmdbid>980225</tmdbid>
+  </actor>
+  <actor>
+    <name>Choi Moo-seong</name>
+    <role>Choi Moo-seong</role>
+    <type>Actor</type>
+    <tmdbid>240081</tmdbid>
+  </actor>
+  <actor>
+    <name>Kim Sun-young</name>
+    <role>Kim Sun-young</role>
+    <type>Actor</type>
+    <tmdbid>1352930</tmdbid>
+  </actor>
+  <actor>
+    <name>Yoo Jae-myung</name>
+    <role>Ryu Jae-myung</role>
+    <type>Actor</type>
+    <tmdbid>1336804</tmdbid>
+  </actor>
+  <actor>
+    <name>Lee Min-ji</name>
+    <role>Jang Mi-ok</role>
+    <type>Actor</type>
+    <tmdbid>1551424</tmdbid>
+  </actor>
+  <actor>
+    <name>Lee Se-young</name>
+    <role>Wang Ja-hyun</role>
+    <type>Actor</type>
+    <tmdbid>2497859</tmdbid>
+  </actor>
+  <rating>9.1</rating>
+  <year>2015</year>
+  <mpaa>KR-15</mpaa>
+  <imdb_id>tt5182866</imdb_id>
+  <tmdbid>64010</tmdbid>
+  <premiered>2015-11-06</premiered>
+  <releasedate>2015-11-06</releasedate>
+  <enddate>2016-01-16</enddate>
+  <runtime>90</runtime>
+  <country>韩国</country>
+  <genre>Comedy</genre>
+  <studio>tvN</studio>
+  <tag>friendship</tag>
+  <tag>school</tag>
+  <tag>1980s</tag>
+  <uniqueid type="Imdb">tt5182866</uniqueid>
+  <uniqueid type="Tmdb">64010</uniqueid>
+  <uniqueid type="Tvdb">301078</uniqueid>
+  <tvdbid>301078</tvdbid>
+  <id>301078</id>
+  <episodeguide>
+    <url cache="301078.xml">https://www.thetvdb.com/api/1D62F2F90030C444/series/301078/all/zh-CN.zip</url>
+  </episodeguide>
+  <season>-1</season>
+  <episode>-1</episode>
+  <displayorder>aired</displayorder>
+  <status>Ended</status>
+  <showtitle>请回答1988</showtitle>
+  <votes>47</votes>
+  <thumb aspect="poster">https://image.tmdb.org/t/p/original/mqhYVbe20pB0PQXVZVdtbMakOCF.jpg</thumb>
+  <namedseason number="0">特别篇</namedseason>
+  <namedseason number="1">第 1 季</namedseason>
+  <thumb aspect="poster" season="1" type="season">https://image.tmdb.org/t/p/original/vn5NXBU97m2fwq1z4P0bOSjb3mE.jpg</thumb>
+  <fanart>
+    <thumb>https://image.tmdb.org/t/p/original/pIapTdND1pMSwLPjbvG1Iy6eUf1.jpg</thumb>
+    <thumb>https://image.tmdb.org/t/p/original/sZH7lGs06skRKkrqp1LRi57VVMb.jpg</thumb>
+    <thumb>https://image.tmdb.org/t/p/original/oDEPqQstDYUHUxzyHotV8yrnzGk.jpg</thumb>
+    <thumb>https://image.tmdb.org/t/p/original/xa6TFV34VH1HPJmV5DmTaXvVREt.jpg</thumb>
+  </fanart>
+  <certification />
+  <user_note />
+</tvshow>

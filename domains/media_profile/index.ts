@@ -1,31 +1,36 @@
 /**
  * @file 影视剧详情管理
- * 1、使用 TMDB API 搜索影视剧详情，并保存详情
+ * 1、使用 TMDB API 搜索影视剧详情，并保存详情到数据库
  * 2、获取详情时复用保存好的详情信息
  */
 import dayjs from "dayjs";
 
-import { DatabaseStore } from "@/domains/store";
-import { MediaProfileRecord, MediaSeriesProfileRecord, MediaSourceProfileRecord } from "@/domains/store/types";
+import {
+  DataStore,
+  MediaProfileRecord,
+  MediaSeriesProfileRecord,
+  MediaSourceProfileRecord,
+} from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
-import { FileUpload } from "@/domains/uploader";
+import { DriveClient } from "@/domains/clients/types";
+import { FileManage } from "@/domains/uploader";
 import { MediaTypes } from "@/constants";
 import { Result } from "@/types";
-import { num_to_chinese, r_id } from "@/utils";
+import { r_id } from "@/utils";
 
-import { TMDBClient } from "./tmdb_v2";
-import { SeasonProfileFromTMDB } from "./tmdb_v2/services";
-import { format_season_name, map_season_number } from "./utils";
 import { DoubanClient } from "./douban";
+import { TMDBClient } from "./tmdb_v2";
+import { SearchedTVItem, SearchedSeasonProfile } from "./types";
+import { format_season_name, map_season_number } from "./utils";
 
 type MediaProfileSearchProps = {
   token: string;
-  uploader: FileUpload;
-  store: DatabaseStore;
+  uploader: FileManage;
+  store: DataStore;
 };
 
 export class MediaProfileClient {
-  static New(props: { token?: string; assets: string; store: DatabaseStore }) {
+  static New(props: { token?: string; assets: string; store: DataStore }) {
     const { token, assets, store } = props;
     if (!token) {
       return Result.Err("缺少 token");
@@ -40,14 +45,15 @@ export class MediaProfileClient {
       new MediaProfileClient({
         token,
         store,
-        uploader: new FileUpload({ root: assets }),
+        uploader: new FileManage({ root: assets }),
       })
     );
   }
 
   token: string;
-  $store: DatabaseStore;
-  $upload: FileUpload;
+
+  $store: DataStore;
+  $upload: FileManage;
   $tmdb: TMDBClient;
   $douban: DoubanClient;
 
@@ -232,8 +238,9 @@ export class MediaProfileClient {
     return Result.Ok(data);
   }
   /**
-   * 保存 tv、tv 下的所有 season 详情到数据库
-   * 但是不保存剧集，因为获取 season 只需要调用一次 fetch_tv_profile。保存剧集还需要遍历 season 依次获取详情
+   * 调用 TMDB 接口，根据传入的电视剧 tmdb_id 创建电视剧详情记录
+   * 保存 tv 及 tv 下的所有 season 详情到数据库
+   * 不保存剧集，因为获取 season 只需要调用一次 fetch_tv_profile。保存剧集还需要遍历 season 依次获取详情
    * 如果 season 很多可能太过耗时
    */
   async cache_tv_profile(matched_tv: { id: number | string }) {
@@ -260,7 +267,18 @@ export class MediaProfileClient {
     if (r.error) {
       return Result.Err(r.error.message);
     }
+    return this.create_series_profile({
+      ...r.data,
+      tmdb_id: String(r.data.id),
+    });
+  }
+  async create_series_profile(
+    data: SearchedTVItem & {
+      tmdb_id: string | null;
+    }
+  ) {
     const {
+      id,
       name,
       original_name,
       overview,
@@ -273,14 +291,34 @@ export class MediaProfileClient {
       next_episode_to_air,
       in_production,
       genres,
-    } = r.data;
+      tmdb_id,
+    } = data;
     const created = await (async () => {
-      if (r1) {
-        return r1;
+      const existing = await this.$store.prisma.media_series_profile.findFirst({
+        where: {
+          id: String(id),
+          type: MediaTypes.Season,
+        },
+
+        include: {
+          media_profiles: {
+            include: {
+              source_profiles: true,
+              origin_country: true,
+              genres: true,
+            },
+          },
+          origin_country: true,
+          genres: true,
+        },
+      });
+      if (existing) {
+        return existing;
       }
       const created = await this.$store.prisma.media_series_profile.create({
         data: {
-          id: String(matched_tv.id),
+          id: String(id),
+          type: MediaTypes.Season,
           name,
           original_name: name === original_name ? null : original_name,
           alias: "",
@@ -288,7 +326,7 @@ export class MediaProfileClient {
           poster_path: await this.download_image(poster_path, "poster_path"),
           backdrop_path: await this.download_image(backdrop_path, "backdrop"),
           air_date: first_air_date,
-          tmdb_id: String(matched_tv.id),
+          tmdb_id,
           origin_country: {
             connectOrCreate: origin_country.map((text) => {
               return {
@@ -367,7 +405,7 @@ export class MediaProfileClient {
             poster_path: await this.download_image(poster_path || created.poster_path, "poster"),
             backdrop_path: await this.download_image(backdrop_path, "backdrop"),
             air_date,
-            vote_average,
+            vote_average: vote_average || undefined,
             order: season_number,
             source_count: episode_count,
             in_production: (() => {
@@ -424,6 +462,7 @@ export class MediaProfileClient {
   }
   /**
    * 获取电视剧季详情
+   * 同时创建剧集详情
    */
   async cache_season_profile(body: { tv_id: number | string; season_number: number }) {
     const { tv_id, season_number } = body;
@@ -474,8 +513,14 @@ export class MediaProfileClient {
     return Result.Err("未知错误493");
   }
   async apply_episodes(
-    episodes: SeasonProfileFromTMDB["episodes"],
-    values: { tv_id: string | number; season_id: string; season_number: number }
+    episodes: SearchedSeasonProfile["episodes"],
+    values: {
+      /** media_profile 记录 id */
+      season_id: string;
+      /** tmdb 查询结果 id */
+      tv_id: string | number;
+      season_number: number;
+    }
   ) {
     const { tv_id, season_id, season_number } = values;
     const episode_records: {
@@ -486,7 +531,6 @@ export class MediaProfileClient {
       still_path: null | string;
       order: number;
       runtime: number;
-      // tmdb_id: null | string;
     }[] = [];
     for (let i = 0; i < episodes.length; i += 1) {
       const { name, overview, air_date, still_path, episode_number, runtime } = episodes[i];
@@ -506,7 +550,7 @@ export class MediaProfileClient {
             air_date,
             still_path,
             order: episode_number,
-            runtime,
+            runtime: runtime || 0,
           });
           return;
         }
@@ -530,7 +574,7 @@ export class MediaProfileClient {
           air_date,
           still_path,
           order: episode_number,
-          runtime,
+          runtime: runtime || 0,
         });
       })();
     }
@@ -632,9 +676,11 @@ export class MediaProfileClient {
       ],
     });
   }
-  /** 获取电影详情记录 */
+  /**
+   * 调用 TMDB 接口，根据传入的电影 tmdb_id 创建电影详情记录
+   */
   async cache_movie_profile(matched_movie: { id: string | number }) {
-    const r1 = await this.$store.prisma.media_profile.findFirst({
+    const existing = await this.$store.prisma.media_profile.findFirst({
       where: {
         id: String(matched_movie.id),
       },
@@ -644,15 +690,14 @@ export class MediaProfileClient {
         source_profiles: true,
       },
     });
-    if (r1) {
-      return Result.Ok(r1);
+    if (existing) {
+      return Result.Ok(existing);
     }
     const r = await this.$tmdb.fetch_movie_profile(matched_movie.id as number);
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    const { name, original_name, overview, poster_path, backdrop_path, runtime, air_date, origin_country, genres } =
-      r.data;
+    const { name, original_name, overview, poster_path, backdrop_path, runtime, air_date, origin_country } = r.data;
     const created = await this.$store.prisma.media_profile.create({
       data: {
         id: String(matched_movie.id),
@@ -681,19 +726,6 @@ export class MediaProfileClient {
             };
           }),
         },
-        // genres: {
-        //   connectOrCreate: genres.map((genre) => {
-        //     return {
-        //       where: {
-        //         id: genre.id,
-        //       },
-        //       create: {
-        //         id: genre.id,
-        //         text: genre.name,
-        //       },
-        //     };
-        //   }),
-        // },
         source_profiles: {
           connectOrCreate: [
             {
@@ -738,7 +770,7 @@ export class MediaProfileClient {
       if (r.error) {
         return Result.Err(r.error.message);
       }
-      const { poster_path, backdrop_path, air_date, episodes } = r.data;
+      const { poster_path, air_date, episodes } = r.data;
       const count = await this.$store.prisma.media_source_profile.count({
         where: {
           media_profile_id: id,
@@ -800,9 +832,6 @@ export class MediaProfileClient {
       };
       if (poster_path && poster_path !== media_profile.poster_path) {
         payload.poster_path = await this.download_image(poster_path, "poster");
-      }
-      if (backdrop_path && backdrop_path !== media_profile.backdrop_path) {
-        payload.backdrop_path = await this.download_image(backdrop_path, "backdrop");
       }
       if (air_date && air_date !== media_profile.air_date) {
         payload.air_date = air_date;
@@ -1218,5 +1247,45 @@ export class MediaProfileClient {
       return url;
     }
     return r.data;
+  }
+  /**
+   * 针对影视剧详情、海报等信息在云盘中的
+   * 由具体的云盘实现来下载该云盘的图片
+   */
+  async download_image_with_client(values: { file_id: string; parent_dir: string; client: DriveClient }) {
+    const { file_id, parent_dir, client } = values;
+    const r = await client.download(file_id);
+    if (r.error) {
+      // @todo 返回一张默认图片
+      console.log("[]1 download_image_with_client failed, because", r.error.message);
+      return file_id;
+    }
+    const { url } = r.data;
+    const filename = (() => {
+      const segments = url.split("/");
+      const name = segments[segments.length - 1];
+      if (name.length >= 20) {
+        return `${file_id}.jpg`;
+      }
+      if (name.match(/[a-zA-Z0-9]{1,}\.jpg/)) {
+        return name;
+      }
+      return `${r_id()}.jpg`;
+    })();
+    if (url.startsWith("http")) {
+      const r2 = await this.$upload.download(url, `/${parent_dir}/${filename}`);
+      if (r2.error) {
+        console.log("[]2 download_image_with_client failed, because", r2.error.message);
+        return file_id;
+      }
+      return r2.data;
+    }
+    // 本地图片
+    const r2 = await this.$upload.copy_local_file(url, filename, parent_dir);
+    if (r2.error) {
+      console.log("[]3 download_image_with_client failed, because", r2.error.message);
+      return file_id;
+    }
+    return r2.data;
   }
 }

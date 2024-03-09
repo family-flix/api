@@ -4,13 +4,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
-import { MediaSearcher } from "@/domains/searcher";
-import { Job } from "@/domains/job";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Drive } from "@/domains/drive/index";
+import { MediaSearcher } from "@/domains/searcher/index";
+import { Job } from "@/domains/job/index";
 import { response_error_factory } from "@/utils/server";
-import { BaseApiResp, Result } from "@/types";
-import { app, store } from "@/store";
+import { BaseApiResp, Result } from "@/types/index";
 import { TaskTypes } from "@/domains/job/constants";
 import { to_number } from "@/utils/primitive";
 
@@ -43,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type: TaskTypes.SearchMedia,
     unique_id: drive.id,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

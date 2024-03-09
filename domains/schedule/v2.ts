@@ -212,6 +212,7 @@ export class ScheduleTask {
       desc: "[定时任务]同步资源文件夹新增影片",
       type: TaskTypes.FilesSync,
       user_id: user.id,
+      app: this.app,
       store: this.store,
     });
     if (job_res.error) {
@@ -340,6 +341,7 @@ export class ScheduleTask {
       type: TaskTypes.DriveAnalysis,
       unique_id: drive.id,
       user_id: user.id,
+      app: this.app,
       store: this.store,
     });
     if (job_res.error) {
@@ -387,6 +389,7 @@ export class ScheduleTask {
       unique_id: "update_movie_and_season",
       type: TaskTypes.RefreshMedia,
       user_id: user.id,
+      app: this.app,
       store: this.store,
     });
     if (job_res.error) {
@@ -1054,7 +1057,7 @@ export class ScheduleTask {
               r.data.list
             );
             if (r2.error) {
-              tips.push(r2.error.message);
+              tips.push(`根据名称 '${media_name}' 搜索到结果，但是${r2.error.message}`);
               return;
             }
             const matched = r2.data;
@@ -1165,11 +1168,13 @@ export class ScheduleTask {
               data: {
                 ...payload,
                 genres: {
-                  set: profile.genres.map((g) => {
-                    return {
-                      id: g.id,
-                    };
-                  }),
+                  set: profile.genres
+                    .filter((g) => g.id)
+                    .map((g) => {
+                      return {
+                        id: g.id,
+                      };
+                    }),
                 },
               },
             });
@@ -1235,6 +1240,118 @@ export class ScheduleTask {
         },
       });
       return true;
+    });
+  }
+  /**
+   * 列出指定时间内新增的文件
+   * 新增文件的大小，和最大的10个文件
+   */
+  async fetch_added_files_daily(day: string) {
+    // import dayjs from "dayjs";
+    // import { CollectionTypes, MediaTypes } from "@/constants";
+    // import { Application } from "@/domains/application";
+    // import { walk_model_with_cursor } from "@/domains/store/utils";
+    // import { bytes_to_size, parseJSONStr, r_id } from "@/utils";
+    // const day = "2024/02/04";
+    const range = (() => {
+      if (day) {
+        return [dayjs(day).startOf("day").toISOString(), dayjs(day).endOf("day").toISOString()];
+      }
+      return [dayjs().startOf("day").toISOString(), dayjs().endOf("day").toISOString()];
+    })();
+    await this.walk_user(async (user) => {
+      let size_count = 0;
+      await walk_model_with_cursor({
+        fn: (extra) => {
+          return this.store.prisma.file.findMany({
+            where: {
+              created: {
+                gte: range[0],
+                lt: range[1],
+              },
+              user_id: user.id,
+            },
+            orderBy: [
+              {
+                created: "desc",
+              },
+            ],
+            ...extra,
+          });
+        },
+        batch_handler(list, index) {
+          size_count += list.reduce((total, f) => {
+            return total + f.size || 0;
+          }, 0);
+        },
+      });
+      // console.log(bytes_to_size(size_count));
+      const files = await this.store.prisma.file.findMany({
+        where: {
+          created: {
+            gte: range[0],
+            lt: range[1],
+          },
+          user_id: user.id,
+        },
+        include: {
+          drive: true,
+        },
+        orderBy: {
+          size: "desc",
+        },
+        take: 30,
+      });
+      // 指定日期内新增的占用空间最大的 30 个文件
+      const records = files.map((f) => {
+        return {
+          size: f.size,
+          name: f.name,
+          filepath: [f.parent_paths, f.name].join("/"),
+          drive: {
+            id: f.drive.id,
+            name: f.drive.name,
+          },
+        };
+      });
+      const existing = await this.store.prisma.drive_statistics.findFirst({
+        where: {
+          date: day,
+          user_id: user.id,
+        },
+      });
+      if (existing) {
+        await this.store.prisma.drive_statistics.update({
+          where: {
+            id: existing.id,
+          },
+          data: {
+            data: JSON.stringify({
+              size_count,
+              files: records,
+            }),
+          },
+        });
+        return Result.Ok({
+          size_count,
+          files: records,
+        });
+      }
+      await this.store.prisma.drive_statistics.create({
+        data: {
+          id: r_id(),
+          date: day,
+          data: JSON.stringify({
+            size_count,
+            files: records,
+          }),
+          user_id: user.id,
+        },
+      });
+      return Result.Ok({
+        size_count,
+        files: records,
+      });
     });
   }
 }

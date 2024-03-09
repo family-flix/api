@@ -50,7 +50,7 @@ export class Member {
     if (member === null) {
       return Result.Err("无效身份凭证", 900);
     }
-    const settings = await User.parseSettings(member.user.settings);
+    const settings = await User.ParseSettings(member.user.settings);
     const user = new User({
       id: member.user_id,
       settings,
@@ -79,7 +79,7 @@ export class Member {
     if (!member) {
       return Result.Err("不存在");
     }
-    const settings = await User.parseSettings(member.user.settings);
+    const settings = await User.ParseSettings(member.user.settings);
     const user = new User({
       id: member.user_id,
       settings,

@@ -4,9 +4,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { Job, TaskTypes } from "@/domains/job";
@@ -61,6 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     unique_id: "delete_file",
     type: TaskTypes.DeleteDriveFile,
     user_id: user.id,
+    app,
     store,
   });
   if (task_res.error) {

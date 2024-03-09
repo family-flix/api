@@ -1,22 +1,23 @@
 import { describe, test, expect } from "vitest";
 
-import { fetch_files_factory } from "@/domains/walker/utils";
 import { data, id } from "@/mock/gong_su";
 import { data as updated_data } from "@/mock/gong_su.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
+import { MockFileClient } from "@/domains/clients/json";
+import { patch_drive_file } from "@/domains/clients/utils";
 
 describe("detect a tv dir", () => {
   test("公诉", async () => {
     const prev_folder = new Folder(id, {
-      client: fetch_files_factory({
-        tree: data,
+      client: new MockFileClient({
+        data: patch_drive_file(data),
       }),
     });
     await prev_folder.profile();
     const folder = new Folder(id, {
-      client: fetch_files_factory({
-        tree: updated_data,
+      client: new MockFileClient({
+        data: patch_drive_file(updated_data),
       }),
     });
     await folder.profile();

@@ -4,14 +4,14 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
+import { store } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { DriveWhereInput } from "@/domains/store/types";
-import { BaseApiResp } from "@/types";
+import { AliyunDriveProfile } from "@/domains/clients/alipan/types";
+import { BaseApiResp } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 import { to_number } from "@/utils/primitive";
-import { parseJSONStr } from "@/utils";
-import { AliyunDriveProfile } from "@/domains/aliyundrive/types";
+import { parseJSONStr } from "@/utils/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

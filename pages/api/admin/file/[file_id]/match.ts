@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 import { MediaSearcher } from "@/domains/searcher";
 import { Job, TaskTypes } from "@/domains/job";
 import { FileRecord } from "@/domains/store/types";
@@ -51,6 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: "搜索指定解析结果详情",
     type: TaskTypes.SearchMedia,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

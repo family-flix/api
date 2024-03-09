@@ -4,16 +4,16 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store/index";
 import { TaskTypes } from "@/domains/job/constants";
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
-import { DriveAnalysis } from "@/domains/analysis";
-import { Job } from "@/domains/job";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
+import { User } from "@/domains/user/index";
+import { Drive } from "@/domains/drive/index";
+import { DriveAnalysis } from "@/domains/analysis/index";
+import { Job } from "@/domains/job/index";
+import { ArticleLineNode, ArticleTextNode } from "@/domains/article/index";
 import { response_error_factory } from "@/utils/server";
-import { BaseApiResp, Result } from "@/types";
-import { FileType } from "@/constants";
-import { app, store } from "@/store";
+import { BaseApiResp, Result } from "@/types/index";
+import { FileType } from "@/constants/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -57,6 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type: TaskTypes.DriveAnalysis,
     unique_id: drive.id,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

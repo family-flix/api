@@ -3,12 +3,12 @@
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { store } from "@/store/index";
 import { Member } from "@/domains/user/member";
-import { Drive } from "@/domains/drive";
-import { BaseApiResp, Result } from "@/types";
+import { Drive } from "@/domains/drive/v2";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { MediaOriginCountries, MediaResolutionTypes, SubtitleFileTypes, SubtitleLanguageMap } from "@/constants";
+import { MediaOriginCountries, MediaResolutionTypes, SubtitleFileTypes, SubtitleLanguageMap } from "@/constants/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const result: MediaFile & { other: MediaFile[]; subtitles: { language: MediaOriginCountries[]; url: string }[] } = {
     id,
     url,
-    thumbnail_path: thumbnail,
+    thumbnail_path: thumbnail || undefined,
     type: recommend_resolution.type,
     width,
     height,

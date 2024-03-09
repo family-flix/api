@@ -1,16 +1,19 @@
 /**
  * @file 本地文件上传至阿里云盘
+ * 打包成 js 放在 nas 上用
  * yarn esbuild domains/media_upload/index.ts --platform=node --target=node12 --define:DEBUG=true --bundle --outfile=dist/client.js
  */
 import fs from "fs";
 import path from "path";
 
-import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { JSONFileStore } from "@/domains/store/jsonfile";
 import { BaseDomain, Handler } from "@/domains/base";
+import { AliyunDriveClient } from "@/domains/clients/alipan/index";
+import { file_info } from "@/domains/clients/alipan/utils";
+import { DataStore } from "@/domains/store/types";
+import { DriveClient } from "@/domains/clients/types";
 import { parse_argv } from "@/utils/server";
-import { file_info } from "@/domains/aliyundrive/utils";
-import { Result } from "@/types";
+import { Result } from "@/types/index";
+import { r_id } from "@/utils";
 
 enum Events {
   Change,
@@ -22,102 +25,92 @@ type TheTypesOfEvents = {
 };
 type MediaUploadProps = {
   drive_id: number | string;
-  db_url: string;
+  store: DataStore;
+  client: DriveClient;
 };
 
 export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
+  /** 添加云盘 */
+  static async Create(
+    payload: {
+      app_id: string;
+      drive_id: number | string;
+      device_id: string;
+      avatar: string;
+      name: string;
+      user_id: string;
+      access_token: string;
+      refresh_token: string;
+    },
+    store: DataStore
+  ) {
+    const { device_id, drive_id, name, access_token, refresh_token } = payload;
+    const existing = await store.prisma.drive.findFirst({ where: { unique_id: String(drive_id) } });
+    if (!existing) {
+      await store.prisma.drive.create({
+        data: {
+          id: r_id(),
+          avatar: "",
+          unique_id: String(drive_id),
+          name,
+          profile: JSON.stringify({
+            device_id,
+          }),
+          drive_token: {
+            create: {
+              id: r_id(),
+              data: JSON.stringify({
+                access_token,
+                refresh_token,
+              }),
+              expired_at: 0,
+            },
+          },
+          user: {
+            create: {
+              id: r_id(),
+            },
+          },
+        },
+      });
+    }
+    const r = await AliyunDriveClient.Get({
+      unique_id: String(drive_id),
+      store,
+    });
+    if (r.error) {
+      return Result.Err(`获取 drive 失败，因为, ${r.error.message}`);
+    }
+    const client = r.data;
+    client.debug = true;
+    const r2 = await client.ensure_initialized();
+    if (r2.error) {
+      return Result.Err(`initialize drive failed, because , ${r2.error.message}`);
+    }
+    const u = new MediaUpload({
+      drive_id,
+      client,
+      store,
+    });
+    return Result.Ok(u);
+  }
   static ParseArgv(args: string[]) {
     return parse_argv(args);
   }
 
   drive_id: number | string;
-  store: JSONFileStore;
+
+  store: DataStore;
+  client: DriveClient;
 
   constructor(props: Partial<{ _name: string }> & MediaUploadProps) {
     super(props);
 
-    const { drive_id, db_url } = props;
+    const { drive_id, store, client } = props;
+
     this.drive_id = drive_id;
-    this.store = new JSONFileStore({
-      filepath: db_url,
-    });
-  }
-  /** 获取云盘（如果没有就添加） */
-  async fetch_drive(payload: { drive_id: number | string }) {
-    const { drive_id } = payload;
-    const existing_r = this.store.find_drive({ unique_id: String(drive_id) });
-    if (existing_r.error) {
-      return Result.Err(`find drive failed, because ${existing_r.error.message}`);
-    }
-    const existing = existing_r.data;
-    if (!existing) {
-      return Result.Err("please create drive");
-    }
-    const r = await AliyunDriveClient.Get({
-      drive_id: String(drive_id),
-      // @ts-ignore
-      store: this.store,
-    });
-    if (r.error) {
-      return Result.Err(`获取 drive 失败，因为, ${r.error.message}`);
-    }
-    const client = r.data;
-    client.debug = true;
-    const r2 = await client.ensure_initialized();
-    if (r2.error) {
-      return Result.Err(`initialize drive failed, because , ${r2.error.message}`);
-    }
-    return Result.Ok(client);
-  }
-  /** 添加云盘 */
-  async create_drive(payload: {
-    app_id: string;
-    drive_id: number | string;
-    device_id: string;
-    avatar: string;
-    name: string;
-    user_id: string;
-    access_token: string;
-    refresh_token: string;
-  }) {
-    const { device_id, drive_id, name, access_token, refresh_token } = payload;
-    const existing_r = this.store.find_drive({ unique_id: String(drive_id) });
-    if (existing_r.error) {
-      return Result.Err(`find drive failed, because ${existing_r.error.message}`);
-    }
-    const existing = existing_r.data;
-    if (!existing) {
-      const drive_body = {
-        unique_id: drive_id,
-        name,
-        profile: JSON.stringify({
-          device_id,
-        }),
-        drive_token: {
-          data: JSON.stringify({
-            access_token,
-            refresh_token,
-          }),
-        },
-      };
-      // @ts-ignore
-      await this.store.create_drive(drive_body);
-    }
-    const r = await AliyunDriveClient.Get({
-      drive_id: String(drive_id),
-      // @ts-ignore
-      store: this.store,
-    });
-    if (r.error) {
-      return Result.Err(`获取 drive 失败，因为, ${r.error.message}`);
-    }
-    const client = r.data;
-    client.debug = true;
-    const r2 = await client.ensure_initialized();
-    if (r2.error) {
-      return Result.Err(`initialize drive failed, because , ${r2.error.message}`);
-    }
-    return Result.Ok(client);
+    this.store = store;
+    this.client = client;
   }
 
   async upload_file(body: {
@@ -127,10 +120,9 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     filename: string;
     /** 上传到哪个父文件夹 */
     parent_file_id: string;
-    client: AliyunDriveClient;
   }) {
-    const { client, parent_file_id, filename, filepath } = body;
-    const file_existing_r = await client.existing(parent_file_id, filename);
+    const { parent_file_id, filename, filepath } = body;
+    const file_existing_r = await this.client.existing(parent_file_id, filename);
     if (file_existing_r.error) {
       return Result.Err(`check existing failed, because ${file_existing_r.error.message}`);
     }
@@ -138,7 +130,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     if (file_existing) {
       return Result.Err(`the file existing`);
     }
-    const result = await client.upload(filepath, {
+    const result = await this.client.upload(filepath, {
       name: filename,
       parent_file_id,
       on_progress(v) {
@@ -150,14 +142,8 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(result.data);
   }
-
   async upload(filepath: string, options: { parent_file_id: string }) {
     const root_file_id = options.parent_file_id;
-    const r = await this.fetch_drive({ drive_id: this.drive_id });
-    if (r.error) {
-      return Result.Err(r.error.message);
-    }
-    const client = r.data;
     const filename = path.basename(filepath);
     const type_r = await file_info(filepath);
     if (type_r.error) {
@@ -168,7 +154,6 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
       this.emit(Events.Print, "共1个文件");
       this.emit(Events.Print, `第1个、${filename}`);
       const r = await this.upload_file({
-        client,
         filename,
         filepath: filepath,
         parent_file_id: root_file_id,
@@ -196,7 +181,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     };
     const dir = filepath;
     const files = fs.readdirSync(dir);
-    const folder_existing_r = await client.existing(root_file_id, folder.name);
+    const folder_existing_r = await this.client.existing(root_file_id, folder.name);
     if (folder_existing_r.error) {
       return Result.Err(["check existing failed, because ", folder_existing_r.error.message].join(""));
     }
@@ -206,12 +191,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
         }
       : null;
     if (!folder_existing) {
-      const r2 = await client.add_folder(
-        { parent_file_id: root_file_id, name: folder.name },
-        {
-          check_name_mode: "refuse",
-        }
-      );
+      const r2 = await this.client.create_folder({ parent_file_id: root_file_id, name: folder.name });
       if (r2.error) {
         this.debug && console.log(folder.name, " create folder failed, because ", r2.error.message);
         return Result.Err(["create folder failed, because ", r2.error.message].join(""));
@@ -234,7 +214,6 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
         const file_path = path.resolve(dir, filename);
         this.emit(Events.Print, `第${i + 1}个、${filename}`);
         const r = await this.upload_file({
-          client,
           parent_file_id: folder_existing.file_id,
           filename,
           filepath: file_path,

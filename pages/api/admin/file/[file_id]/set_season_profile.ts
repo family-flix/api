@@ -5,13 +5,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { FileRecord, ParsedTVRecord } from "@/domains/store/types";
 import { MediaSearcher } from "@/domains/searcher";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 import { Folder } from "@/domains/folder";
 import { Drive } from "@/domains/drive";
 import { FileType } from "@/constants";
@@ -49,6 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `文件夹[${file.name}]设置电视剧详情`,
     type: TaskTypes.RefreshMedia,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

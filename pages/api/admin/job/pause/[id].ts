@@ -4,12 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { store } from "@/store";
-import { response_error_factory } from "@/utils/server";
-import { BaseApiResp, Result } from "@/types";
-import { TaskStatus } from "@/domains/walker/constants";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { Job } from "@/domains/job";
+import { response_error_factory } from "@/utils/server";
+import { BaseApiResp, Result } from "@/types/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -27,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const user = t_res.data;
-  const job_res = await Job.Get({ id, user_id: user.id, store });
+  const job_res = await Job.Get({ id, user_id: user.id, app, store });
   if (job_res.error) {
     return e(Result.Err(job_res.error.message));
   }

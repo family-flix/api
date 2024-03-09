@@ -1,7 +1,7 @@
 /**
  * @file 一个云盘文件视频截图工具
  */
-import { FileUpload } from "@/domains/uploader";
+import { FileManage } from "@/domains/uploader";
 import { DatabaseStore } from "@/domains/store";
 import { Drive } from "@/domains/drive";
 import { r_id } from "@/utils";
@@ -20,13 +20,14 @@ export class MediaThumbnail {
 
   /** 资源存放根目录 */
   assets: string;
-  $upload: FileUpload;
+
+  $upload: FileManage;
 
   constructor(options: { assets: string }) {
     const { assets } = options;
 
     this.assets = assets;
-    this.$upload = new FileUpload({ root: assets });
+    this.$upload = new FileManage({ root: assets });
   }
 
   /** 上传海报 */

@@ -4,12 +4,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
+import { app, store } from "@/store/index";
+import { clear_expired_files_in_drive } from "@/domains/drive/index";
+import { Job, TaskTypes } from "@/domains/job/index";
+import { User } from "@/domains/user/index";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { clear_expired_files_in_drive } from "@/domains/drive";
-import { Job, TaskTypes } from "@/domains/job";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -28,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: "清理云盘失效文件",
     type: TaskTypes.ClearInvalidFiles,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

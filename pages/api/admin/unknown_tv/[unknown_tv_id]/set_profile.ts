@@ -4,15 +4,14 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { TVProfileItemInTMDB } from "@/domains/media_profile/tmdb/services";
-import { User } from "@/domains/user";
-import { MediaSearcher } from "@/domains/searcher";
-import { Drive } from "@/domains/drive";
-import { app, store } from "@/store";
-import { response_error_factory } from "@/utils/server";
-import { BaseApiResp, Result } from "@/types";
-import { Job, TaskTypes } from "@/domains/job";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Job, TaskTypes } from "@/domains/job/index";
 import { ParsedTVRecord } from "@/domains/store/types";
+import { MediaSearcher } from "@/domains/searcher/index";
+import { Drive } from "@/domains/drive/index";
+import { response_error_factory } from "@/utils/server";
+import { BaseApiResp, Result } from "@/types/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -63,6 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: "未知电视剧设置详情",
     type: TaskTypes.ChangeTVAndSeasonProfile,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

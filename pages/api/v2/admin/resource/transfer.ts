@@ -4,16 +4,16 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store/index";
 import { Drive } from "@/domains/drive";
-import { User } from "@/domains/user";
-import { Job } from "@/domains/job";
+import { User } from "@/domains/user/index";
+import { Job } from "@/domains/job/index";
 import { TaskTypes } from "@/domains/job/constants";
-import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
-import { BaseApiResp, Result } from "@/types";
+import { ArticleLineNode, ArticleTextNode } from "@/domains/article/index";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { ResourceSyncTaskStatus } from "@/constants";
-import { store } from "@/store";
-import { r_id, sleep } from "@/utils";
+import { ResourceSyncTaskStatus } from "@/constants/index";
+import { r_id, sleep } from "@/utils/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -81,6 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `转存资源「${file_name}」到云盘「${drive.name}」`,
     type: TaskTypes.Transfer,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

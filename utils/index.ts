@@ -152,7 +152,7 @@ export function chinese_num_to_num(str: string) {
  * @param nextItem
  * @returns
  */
-export function update<T>(arr: T[], index: number, nextItem: T) {
+export function update<T extends any>(arr: T[], index: number, nextItem: T) {
   if (index === -1) {
     return [...arr];
   }
@@ -182,8 +182,20 @@ export const video_file_type_regexp =
 export function is_video_file(filename: string) {
   return video_file_type_regexp.test(filename);
 }
+export const img_file_type_regexp = /\.[pP][nN][gG]$|\.[jJ][pP][eE]{0,1}[gG]$|\.[wW][eE][bB][pP]$/;
+export function is_img_file(filename: string) {
+  return img_file_type_regexp.test(filename);
+}
+export const subtitle_file_type_regexp = /\.[sS][rR][tT]$|\.[vV][tT][tT]$|\.[aA][sS][sS]$/;
+export function is_subtitle_file(filename: string) {
+  return subtitle_file_type_regexp.test(filename);
+}
+export function is_nfo_file(filename: string) {
+  return /\.[nN][fF][oO]$/.test(filename);
+}
 
-export function query_stringify(query: Record<string, string | number | undefined | null>) {
+/** 不带 ? */
+export function query_stringify(query: Record<string, string | number | boolean | undefined | null>) {
   return Object.keys(query)
     .filter((key) => {
       return query[key] !== undefined && query[key] !== null;

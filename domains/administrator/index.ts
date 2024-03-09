@@ -1,18 +1,24 @@
 import dayjs from "dayjs";
 
-import { DEFAULT_STATS, FileType, MediaErrorTypes, MediaTypes, ReportTypes, ResourceSyncTaskStatus } from "@/constants";
-import { DatabaseStore } from "@/domains/store";
-import { Statistics } from "@/domains/store/types";
+import { DataStore, Statistics } from "@/domains/store/types";
 import { User, UserSettings, UserUniqueID } from "@/domains/user";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { parse_token } from "@/domains/user/utils";
 import { Drive } from "@/domains/drive/v2";
 import { DriveTypes } from "@/domains/drive/constants";
-import { Result } from "@/types";
-import { parseJSONStr, r_id } from "@/utils";
+import {
+  DEFAULT_STATS,
+  FileType,
+  MediaErrorTypes,
+  MediaTypes,
+  ReportTypes,
+  ResourceSyncTaskStatus,
+} from "@/constants/index";
+import { parseJSONStr, r_id } from "@/utils/index";
+import { Result } from "@/types/index";
 
 export class Administrator extends User {
-  static async New(token: string | undefined, store: DatabaseStore) {
+  static async New(token: string | undefined, store: DataStore) {
     if (!token) {
       return Result.Err("缺少 token", 900);
     }
@@ -36,7 +42,7 @@ export class Administrator extends User {
     if (!existing) {
       return Result.Err("无效的 token", 900);
     }
-    const settings = await User.parseSettings(existing.settings);
+    const settings = await User.ParseSettings(existing.settings);
     // 要不要生成一个新的 token？
     const user = new Administrator({
       id,
@@ -56,7 +62,7 @@ export class Administrator extends User {
     });
     return Result.Ok(user);
   }
-  static async Get(body: { id: string }, store: DatabaseStore) {
+  static async Get(body: { id: string }, store: DataStore) {
     const { id } = body;
     const existing = await store.prisma.user.findUnique({
       where: { id },
@@ -70,7 +76,7 @@ export class Administrator extends User {
       return Result.Err("不存在");
     }
     const { settings: settings_str } = existing;
-    const settings = await User.parseSettings(settings_str);
+    const settings = await User.ParseSettings(settings_str);
     return Result.Ok(
       new Administrator({
         id,
@@ -98,7 +104,7 @@ export class Administrator extends User {
     token: string;
     settings?: UserSettings | null;
     statistics: Statistics;
-    store: DatabaseStore;
+    store: DataStore;
   }) {
     super(props);
 
@@ -187,6 +193,7 @@ export class Administrator extends User {
       invalid_sync_task_count: await store.prisma.resource_sync_task.count({
         where: {
           invalid: 1,
+          status: ResourceSyncTaskStatus.WorkInProgress,
           user_id: this.id,
         },
       }),

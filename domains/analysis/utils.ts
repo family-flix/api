@@ -118,7 +118,7 @@ export async function adding_file_safely(
   return Result.Ok({ id: adding_res.data.id });
 }
 
-export function get_diff_of_file(file: { size?: number; md5?: string }, record: FileRecord) {
+export function get_diff_of_file(file: { size: number; md5: string | null }, record: FileRecord) {
   const diff: Partial<FileRecord> = {};
   if (file.size && file.size !== record.size) {
     diff.size = file.size;

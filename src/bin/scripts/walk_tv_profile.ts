@@ -5,11 +5,11 @@
 import { DatabaseStore } from "@/domains/store";
 import { walk_records } from "@/domains/store/utils";
 import { TMDBClient } from "@/domains/media_profile/tmdb";
-import { FileUpload } from "@/domains/uploader";
+import { FileManage } from "@/domains/uploader";
 import { app, store } from "@/store";
 
 async function walk_tv_profile(store: DatabaseStore) {
-  const upload = new FileUpload({
+  const upload = new FileManage({
     root: app.assets,
   });
   const client = new TMDBClient({

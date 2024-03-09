@@ -7,16 +7,16 @@ import { Writable } from "stream";
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable from "formidable";
 
+import { app, store } from "@/store";
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { r_id } from "@/utils";
-import { build_media_name } from "@/utils/parse_filename_for_video";
 import { TVProfileRecord, TVRecord } from "@/domains/store/types";
 import { Job, TaskTypes } from "@/domains/job";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
+import { BaseApiResp, Result } from "@/types";
+import { response_error_factory } from "@/utils/server";
+import { build_media_name } from "@/utils/parse_filename_for_video";
+import { r_id } from "@/utils";
 
 export const config = {
   api: {
@@ -82,6 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `为 ${tv.profile.name} 上传字幕`,
     unique_id: tv_id,
     user_id: user.id,
+    app,
     store,
   });
   if (task_res.error) {

@@ -13,7 +13,7 @@ describe("删除文件夹及子孙文件夹", async () => {
       if (exiting_res.data) {
         return Result.Ok(exiting_res.data);
       }
-      return User.Add({ email: "litaowork@aliyun.com", password: "Test123456." }, store);
+      return User.Create({ email: "litaowork@aliyun.com", password: "Test123456." }, store);
     })();
     expect(user_res.error).toBe(null);
     if (user_res.error) {

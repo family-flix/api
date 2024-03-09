@@ -4,10 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store/index";
 import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
-import { Job } from "@/domains/job";
-import { DriveAnalysis } from "@/domains/analysis";
-import { Drive } from "@/domains/drive";
+import { Job } from "@/domains/job/index";
+import { DriveAnalysis } from "@/domains/analysis/index";
+import { Drive } from "@/domains/drive/index";
 import { TaskTypes } from "@/domains/job/constants";
 import { User } from "@/domains/user";
 import { ScheduleTask } from "@/domains/schedule";
@@ -16,7 +17,6 @@ import { walk_model_with_cursor } from "@/domains/store/utils";
 import { FileType, ResourceSyncTaskStatus } from "@/constants";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -31,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: "同步所有文件夹新增影片",
     type: TaskTypes.FilesSync,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

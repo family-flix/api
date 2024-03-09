@@ -5,17 +5,17 @@ import type { Handler } from "mitt";
 import dayjs from "dayjs";
 
 import { BaseDomain } from "@/domains/base";
-import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";
-import { Folder } from "@/domains/folder";
-import { Article, ArticleCardNode, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive/v2";
-import { DatabaseStore } from "@/domains/store";
-import { ResourceSyncTaskRecord } from "@/domains/store/types";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { Result } from "@/types";
-import { is_video_file, r_id, sleep } from "@/utils";
-import { FileType } from "@/constants";
+import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ/index";
+import { Folder } from "@/domains/folder/index";
+import { Article, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article/index";
+import { User } from "@/domains/user/index";
+import { DatabaseStore } from "@/domains/store/index";
+import { DriveClient } from "@/domains/clients/types";
+import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource/index";
+import { DataStore, ResourceSyncTaskRecord } from "@/domains/store/types";
+import { Result } from "@/types/index";
+import { is_video_file, r_id, sleep } from "@/utils/index";
+import { FileType } from "@/constants/index";
 
 enum Events {
   /** 新增文件 */
@@ -33,15 +33,14 @@ type TheTypesOfEvents = {
   [Events.Error]: Error;
 };
 type ResourceSyncTaskProps = {
-  task: ResourceSyncTaskRecord;
-  user: User;
-  drive: Drive;
-  store: DatabaseStore;
-  client: AliyunDriveClient;
-  TMDB_TOKEN?: string;
-  assets?: string;
+  profile: ResourceSyncTaskRecord;
+  assets: string;
   wait_complete?: boolean;
   ignore_invalid?: boolean;
+  user: User;
+  store: DataStore;
+  drive_client: DriveClient;
+  resource_client: DriveClient;
   on_file?: (v: { name: string; parent_paths: string; type: FileType }) => void;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
   on_finish?: () => void;
@@ -89,24 +88,46 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       const tip = "该更新已失效，请重新绑定更新";
       return Result.Err(tip);
     }
-    const { drive_id } = sync_task;
-    const drive_res = await Drive.Get({ id: drive_id, user, store });
-    if (drive_res.error) {
-      return Result.Err(drive_res.error);
-    }
-    const drive = drive_res.data;
-    if (drive.profile.root_folder_id === null || drive.profile.root_folder_name === null) {
-      return Result.Err("请先设置云盘索引根目录");
+    const { url, pwd, drive_id } = sync_task;
+    // const drive_res = await Drive.Get({ id: drive_id, user, store });
+    // if (drive_res.error) {
+    //   return Result.Err(drive_res.error);
+    // }
+    // const drive = drive_res.data;
+    // if (drive.profile.root_folder_id === null || drive.profile.root_folder_name === null) {
+    //   return Result.Err("请先设置云盘索引根目录");
+    // }
+    const r2 = await AliyunShareResourceClient.Get({
+      id: drive_id,
+      url,
+      code: pwd,
+      user,
+      store,
+    });
+    if (r2.error) {
+      if (["share_link is cancelled by the creator"].includes(r2.error.message)) {
+        await store.prisma.resource_sync_task.update({
+          where: {
+            id,
+          },
+          data: {
+            invalid: 1,
+          },
+        });
+        const tip = "分享资源失效，请关联新分享资源";
+        return Result.Err(tip);
+      }
+      return Result.Err(r2.error.message);
     }
     return Result.Ok(
       new ResourceSyncTask({
-        task: sync_task,
+        profile: sync_task,
         user,
-        drive,
         store,
         wait_complete,
         assets,
-        client: drive.client,
+        drive_client: r2.data.client,
+        resource_client: r2.data,
         on_file,
         on_print,
         on_finish,
@@ -114,21 +135,15 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       })
     );
   }
-  static async NewWithURL(values: {
-    url: string;
-    code?: string;
-    resource_file_id: string;
-    resource_file_name: string;
-  }) {}
 
   /** 任务信息 */
   profile: ResourceSyncTaskRecord;
-  user: ResourceSyncTaskProps["user"];
-  drive: ResourceSyncTaskProps["drive"];
-  client: AliyunDriveClient;
-  store: ResourceSyncTaskProps["store"];
-  TMDB_TOKEN: ResourceSyncTaskProps["TMDB_TOKEN"];
-  assets: ResourceSyncTaskProps["assets"];
+  user: User;
+  // drive: Drive;
+  drive_client: DriveClient;
+  resource_client: DriveClient;
+  store: DataStore;
+  assets: string;
 
   need_stop = false;
   added_file_count = 0;
@@ -137,14 +152,14 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   constructor(options: Partial<{}> & ResourceSyncTaskProps) {
     super();
 
-    const { user, drive, store, task, client, TMDB_TOKEN, assets, on_file, on_print, on_finish, on_error } = options;
-    this.profile = task;
+    const { user, store, profile, resource_client, drive_client, assets, on_file, on_print, on_finish, on_error } =
+      options;
+    this.profile = profile;
     this.store = store;
     this.user = user;
-    this.drive = drive;
-    this.TMDB_TOKEN = TMDB_TOKEN;
     this.assets = assets;
-    this.client = client;
+    this.resource_client = resource_client;
+    this.drive_client = drive_client;
     if (on_file) {
       this.on_file(on_file);
     }
@@ -159,82 +174,28 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     }
   }
   async run() {
-    const { profile, client, store } = this;
-    const { id, url, file_id, file_id_link_resource, file_name_link_resource, invalid, pwd } = profile;
-    // const { file_id: target_folder_id, file_name: target_folder_name } = parsed_tv;
-    // const drive_id = this.drive.id;
+    const { file_id, file_id_link_resource, file_name_link_resource, invalid } = this.profile;
     if (invalid) {
       const tip = "该更新已失效，请重新绑定更新";
       this.emit(Events.Print, Article.build_line([tip]));
       this.emit(Events.Error, new Error(tip));
       return Result.Err(tip);
     }
-    const r1 = await client.fetch_share_profile(url, { code: pwd, force: true });
-    if (r1.error) {
-      if (["share_link is cancelled by the creator"].includes(r1.error.message)) {
-        await store.prisma.resource_sync_task.update({
-          where: {
-            id,
-          },
-          data: {
-            invalid: 1,
-          },
-        });
-        const tip = "分享资源失效，请关联新分享资源";
-        this.emit(
-          Events.Print,
-          new ArticleSectionNode({
-            children: [
-              new ArticleLineNode({
-                children: [
-                  new ArticleTextNode({
-                    text: tip,
-                  }),
-                ],
-              }),
-              new ArticleLineNode({
-                children: [
-                  new ArticleCardNode({
-                    value: {
-                      task_id: profile.id,
-                    },
-                  }),
-                ],
-              }),
-            ],
-          })
-        );
-        this.emit(Events.Error, new Error(tip));
-        return Result.Err(tip);
-      }
-      const tip = "获取分享资源信息失败";
-      this.emit(Events.Print, Article.build_line([tip, r1.error.message]));
-      this.emit(Events.Error, new Error(tip));
-      return Result.Err(r1.error);
-    }
-    const { share_id } = r1.data;
-    const prev_folder = new Folder(file_id_link_resource, {
+    const drive_folder = new Folder(file_id_link_resource, {
       name: file_name_link_resource,
-      client,
+      client: this.drive_client,
     });
-    const folder = new Folder(file_id, {
+    const share_resource_folder = new Folder(file_id, {
       // 这里本应该用 file_name，但是很可能分享文件的名字改变了，但我还要认为它没变。
       // 比如原先名字是「40集更新中」，等更新完了，就变成「40集已完结」，而我已开始存的名字是「40集更新中」。
       // 后面在索引文件的时候，根本找不到「40集已完结」这个名字，所以继续用旧的「40集更新中」
       name: file_name_link_resource,
-      client: {
-        fetch_files: async (file_id: string, options: Partial<{ marker: string; page_size: number }> = {}) => {
-          return client.fetch_shared_files(file_id, {
-            ...options,
-            share_id,
-          });
-        },
-      },
+      client: this.resource_client,
     });
     const ignore_files = this.user.get_ignore_files();
     const differ = new FolderDiffer({
-      folder,
-      prev_folder,
+      folder: share_resource_folder,
+      prev_folder: drive_folder,
       unique_key: "name",
       filter(file) {
         const file_paths = [file.parent_paths, file.name].join("/");
@@ -261,10 +222,10 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
    * 执行 FolderDiffer 生成的 effect
    */
   async consume_effects_for_shared_file(effects: DifferEffect[]) {
-    const { profile, store, client } = this;
+    const { profile, store, resource_client: client } = this;
     const { url } = profile;
     const user_id = this.user.id;
-    const drive_id = this.drive.id;
+    const drive_id = this.resource_client.id;
     //     log("应用 diff 的结果，共", effects.length, "个");
     // const errors: Error[] = [];
     for (let i = 0; i < effects.length; i += 1) {
@@ -376,7 +337,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
             id: r_id(),
             name: prev_folder.name,
             file_id: prev_folder.id,
-            parent_paths: this.drive.profile.root_folder_name!,
+            parent_paths: this.resource_client.root_folder?.name!,
             type: type === "file" ? FileType.File : FileType.Folder,
             user_id,
             drive_id,
@@ -395,24 +356,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
    */
   async override(values: { url: string; resource_file_id?: string; resource_file_name?: string }) {
     const store = this.store;
-    const user = this.user;
     const { url, resource_file_id, resource_file_name } = values;
-    const duplicated_sync_task = await store.prisma.resource_sync_task.findFirst({
-      where: {
-        url,
-        OR: [
-          {
-            invalid: 0,
-          },
-        ],
-        user_id: user.id,
-      },
-    });
-    if (duplicated_sync_task) {
-      return Result.Err(`该分享资源已关联文件夹`, 40001, {
-        id: duplicated_sync_task.id,
-      });
-    }
     // 手动指定了要分享资源文件夹是哪个
     if (resource_file_id && resource_file_name) {
       await store.prisma.resource_sync_task.update({
@@ -429,20 +373,8 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       });
       return Result.Ok(null);
     }
-    const drive_res = await Drive.Get({ id: this.profile.drive_id, user, store });
-    if (drive_res.error) {
-      return Result.Err(drive_res.error.message);
-    }
-    const drive = drive_res.data;
     await sleep(1000);
-    const r1 = await drive.client.fetch_share_profile(url);
-    if (r1.error) {
-      return Result.Err(r1.error.message);
-    }
-    const { share_id } = r1.data;
-    const files_res = await drive.client.fetch_shared_files("root", {
-      share_id,
-    });
+    const files_res = await this.resource_client.fetch_files("root", {});
     if (files_res.error) {
       return Result.Err(files_res.error.message);
     }

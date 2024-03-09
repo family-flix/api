@@ -4,13 +4,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { Drive } from "@/domains/drive";
 import { FileType } from "@/constants";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 import { DriveAnalysis } from "@/domains/analysis";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -26,6 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type: TaskTypes.Other,
     desc: "给应用一些初始数据",
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

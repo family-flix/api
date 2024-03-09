@@ -123,6 +123,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               },
             },
           },
+          media_sources: {
+            include: {
+              profile: true,
+            },
+            take: 1,
+            orderBy: {
+              profile: {
+                order: "desc",
+              },
+            },
+          },
         },
         orderBy: {
           profile: { air_date: "desc" },
@@ -136,7 +147,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const data = {
     total: count,
     list: payload.list.map((media) => {
-      const { id, type, profile, _count } = media;
+      const { id, type, profile, media_sources, _count } = media;
       const {
         name,
         original_name,
@@ -165,8 +176,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           if (!source_count) {
             return null;
           }
+          if (media_sources.length === 0) {
+            return null;
+          }
+          const latest = media_sources[0];
           if (_count.media_sources === source_count) {
             return `全${source_count}集`;
+          }
+          if (latest.profile.order === source_count) {
+            return `收录${_count.media_sources}集`;
           }
           return `更新至${_count.media_sources}集`;
         })(),

@@ -4,16 +4,16 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { Drive } from "@/domains/drive";
 import { DriveTypes } from "@/domains/drive/constants";
-import { archive_season_files, TheFilePrepareTransfer } from "@/domains/aliyundrive/utils";
+import { archive_season_files, TheFilePrepareTransfer } from "@/domains/clients/alipan/utils";
 import { EpisodeRecord, ParsedEpisodeRecord } from "@/domains/store/types";
 import { DriveAnalysis } from "@/domains/analysis";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
-import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -77,6 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `移动电视剧「${tv_name}/${season_text}」到资源盘`,
     type: TaskTypes.MoveToResourceDrive,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -185,7 +186,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const folder_in_from_drive = archive_res.data;
-        if (from_drive.client.resource_drive_id !== to_drive.client.drive_id) {
+        if (from_drive.client.resource_drive_id !== to_drive.client.unique_id) {
           job.output.write_line([prefix, "资源盘不属于备份盘"]);
           return;
         }

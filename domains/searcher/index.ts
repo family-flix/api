@@ -20,11 +20,11 @@ import {
   ArticleListNode,
   ArticleSectionNode,
   ArticleTextNode,
-} from "@/domains/article";
-import { DatabaseStore } from "@/domains/store";
-import { User } from "@/domains/user";
+} from "@/domains/article/index";
+import { DatabaseStore } from "@/domains/store/index";
+import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive";
-import { FileUpload } from "@/domains/uploader";
+import { FileManage } from "@/domains/uploader/index";
 import {
   MovieProfileRecord,
   ParsedMovieRecord,
@@ -143,7 +143,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   user: User;
   drive?: Drive;
   client: TMDBClient;
-  $upload: FileUpload;
+  $upload: FileManage;
   options: Partial<{
     upload_image?: boolean;
     /** 忽略 can_search，强制重新搜索 */
@@ -173,7 +173,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     this.user = user;
     this.drive = drive;
     this.client = new TMDBClient({ token: user.settings.tmdb_token });
-    this.$upload = new FileUpload({ root: assets });
+    this.$upload = new FileManage({ root: assets });
     this.options = {
       upload_image,
       force,
@@ -1830,7 +1830,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       },
       include: {
         profile: true,
-      }
+      },
     });
     this.emit(
       Events.Print,

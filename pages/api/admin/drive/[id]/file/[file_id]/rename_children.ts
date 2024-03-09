@@ -5,15 +5,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
-import { User } from "@/domains/user";
-import { DriveAnalysis } from "@/domains/analysis";
-import { Drive } from "@/domains/drive";
-import { Folder } from "@/domains/folder";
-import { Job, TaskTypes } from "@/domains/job";
-import { BaseApiResp, Result } from "@/types";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Drive } from "@/domains/drive/index";
+import { Folder } from "@/domains/folder/index";
+import { Job, TaskTypes } from "@/domains/job/index";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
-import { FileType } from "@/constants";
+import { FileType } from "@/constants/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -48,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: "重命名子文件列表",
     type: TaskTypes.RenameFiles,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

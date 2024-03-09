@@ -4,15 +4,15 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { Drive } from "@/domains/drive";
-import { archive_movie_files } from "@/domains/aliyundrive/utils";
+import { archive_movie_files } from "@/domains/clients/alipan/utils";
 import { ParsedMovieRecord } from "@/domains/store/types";
 import { DriveAnalysis } from "@/domains/analysis";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
-import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/server";
 
 type TheFilePrepareTransfer = {
@@ -80,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `移动电影「${movie_name}」到云盘「${to_drive.name}]`,
     type: TaskTypes.MoveMovie,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

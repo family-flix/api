@@ -1,15 +1,16 @@
 /**
- * @file
+ * @file 使用阿里云分享资源，构建一个文件树
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { Folder } from "@/domains/folder";
+import { store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Folder } from "@/domains/folder/index";
+import { DriveTypes } from "@/domains/drive/constants";
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource";
+import { BaseApiResp, Result } from "@/types/index";
+import { response_error_factory } from "@/utils/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -24,11 +25,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     parent_file_id: string;
     next_marker: string;
   }>;
-  //   const t_res = await User.New(authorization, store);
-  //   if (t_res.error) {
-  //     return e(t_res);
-  //   }
-  //   const user = t_res.data;
+  const t_res = await User.New(authorization, store);
+  if (t_res.error) {
+    return e(t_res);
+  }
+  const user = t_res.data;
   if (!url) {
     return e(Result.Err("缺少资源链接"));
   }
@@ -37,14 +38,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("不是合法的资源链接"));
   }
   const share_id = id_r[1];
-  console.log("[]parent_file_id", parent_file_id);
+  const drive = await store.prisma.drive.findFirst({ where: { type: DriveTypes.AliyunBackupDrive, user_id: user.id } });
+  if (!drive) {
+    return Result.Err("请先添加一个云盘", 10002);
+  }
+  const r = await AliyunShareResourceClient.Get({ id: drive.id, url, code, user, store });
+  if (r.error) {
+    return e(Result.Err(r.error.message));
+  }
+  const client = r.data.client;
   const folder = new Folder(parent_file_id, {
-    client: new AliyunShareResourceClient({
-      share_id,
-      url,
-      code,
-      store,
-    }),
+    client,
   });
   type File = {
     file_id: string;

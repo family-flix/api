@@ -4,18 +4,18 @@
  * 2. 将获取到的剧集和电影在 TMDB 上搜索海报、简介等信息
  */
 import { BaseDomain, Handler } from "@/domains/base";
-import { EpisodeFileProcessor } from "@/domains/file_processor/episodeV2";
-import { MovieFileProcessor } from "@/domains/file_processor/movieV2";
+import { EpisodeFileProcessor } from "@/domains/file_processor/episode_v2";
+import { MovieFileProcessor } from "@/domains/file_processor/movie_v2";
+import { MediaProfileProcessor } from "@/domains/file_processor/media_profile";
 import { MediaSearcher } from "@/domains/searcher/v2";
-import { File, Folder } from "@/domains/folder";
-import { ParsedMediaSourceRecord } from "@/domains/store/types";
-import { Article, ArticleHeadNode, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
+import { File, Folder } from "@/domains/folder/index";
+import { DataStore, ParsedMediaSourceRecord } from "@/domains/store/types";
+import { Article, ArticleHeadNode, ArticleLineNode, ArticleSectionNode } from "@/domains/article/index";
 import { Drive } from "@/domains/drive/v2";
-import { User } from "@/domains/user";
-import { DatabaseStore } from "@/domains/store";
-import { FolderWalker } from "@/domains/walker";
-import { Result } from "@/types";
-import { FileType } from "@/constants";
+import { User } from "@/domains/user/index";
+import { FolderWalker } from "@/domains/walker/index";
+import { FileType } from "@/constants/index";
+import { Result } from "@/types/index";
 
 import { get_diff_of_file, need_skip_the_file_when_walk } from "./utils";
 
@@ -42,17 +42,17 @@ type TheTypesOfEvents = {
   [Events.Finished]: void;
 };
 type DriveAnalysisProps = {
-  user: User;
-  drive: Drive;
-  store: DatabaseStore;
-  walker: FolderWalker;
-  searcher: MediaSearcher;
   /** 用来标志一次任务中索引到的所有解析结果 */
   unique_id?: string;
   assets: string;
   tmdb_token: string;
   /** 当存在该值时会强制进行搜索 */
   extra_scope?: string[];
+  user: User;
+  drive: Drive;
+  store: DataStore;
+  walker: FolderWalker;
+  searcher: MediaSearcher;
   on_print?: (v: ArticleLineNode | ArticleSectionNode) => void;
   on_error?: (error: Error) => void;
   on_finish?: () => void;
@@ -109,18 +109,19 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(r);
   }
 
-  store: DriveAnalysisProps["store"];
-  drive: DriveAnalysisProps["drive"];
-  user: DriveAnalysisProps["user"];
-  walker: FolderWalker;
-  searcher: MediaSearcher;
+  unique_id?: string;
   tmdb_token: string;
+  assets: string;
+  extra_scope?: string[];
 
   need_stop = false;
-  unique_id?: string;
-  extra_scope?: string[];
   parsed_media_sources: ParsedMediaSourceRecord[] = [];
-  assets: string;
+
+  store: DataStore;
+  drive: Drive;
+  user: User;
+  walker: FolderWalker;
+  searcher: MediaSearcher;
 
   constructor(options: Partial<{}> & DriveAnalysisProps) {
     super();
@@ -287,11 +288,32 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       this.emit(Events.AddMovie, r.data);
       return;
     };
+    walker.on_profile = async (profile) => {
+      // console.log(JSON.stringify(profile, null, 2));
+      const processor = new MediaProfileProcessor({
+        token: tmdb_token,
+        assets,
+        store,
+        user,
+        drive,
+        searcher,
+      });
+      this.emit(Events.Print, Article.build_line(["解析出详情", profile.name || profile.original_name || ""]));
+      this.emit(Events.Print, Article.build_line(["on_profile before processor.run(profile)"]));
+      // console.log('media_profile before processor.run');
+      const r = await processor.run(profile);
+      // console.log('media_profile after processor.run');
+      if (r.error) {
+        this.emit(Events.Print, Article.build_line(["创建详情失败，因为", r.error.message]));
+        return;
+      }
+      this.emit(Events.Print, Article.build_line(["on_profile after processor.run(profile)"]));
+      return;
+    };
     searcher.on_percent((percent) => {
-      console.log("[DOMAIN]analysis/index - searcher.on_percent", `${(percent * 100).toFixed(2)}%`);
+      // console.log("[DOMAIN]analysis/index - searcher.on_percent", `${(percent * 100).toFixed(2)}%`);
       this.emit(Events.Percent, Number((0.5 + percent / 2).toFixed(2)));
     });
-
     // if (on_season_added) {
     //   this.on_add_season(on_season_added);
     // }
@@ -352,7 +374,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r.error);
     }
     // @todo 如果 run 由于内部调用 folder.next() 报错，这里没有处理会导致一直 pending
-    await walker.run(folder);
+    await walker.run(folder, []);
     this.emit(Events.Print, Article.build_line([`[${drive.name}]`, "云盘文件查找完成"]));
     (() => {
       if (episode_count + movie_count === 0) {
@@ -405,10 +427,9 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     }[],
     options: Partial<{ force: boolean; before_search?: () => Promise<boolean> }> = {}
   ) {
-    const { drive, user, store } = this;
     const { force = false, before_search } = options;
-    const { client } = drive;
-    if (!drive.has_root_folder()) {
+    const { client } = this.drive;
+    if (!this.drive.has_root_folder()) {
       const tip = "未设置索引目录，请先设置索引目录";
       this.emit(Events.Print, Article.build_line([tip]));
       this.emit(Events.Error, new Error(tip));
@@ -428,15 +449,19 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     for (let i = 0; i < files.length; i += 1) {
       await (async () => {
         const file = files[i];
-        const parent_paths_r = await client.fetch_parent_paths(file.file_id);
+        // 如果文件不存在，直接死循环了
+        // console.log('before client.fetch_parent_paths', client.root_folder, file.file_id);
+        const parent_paths_r = await client.fetch_parent_paths(file.file_id, file.type);
         if (parent_paths_r.error) {
+          // console.log("fetch_parent_paths failed,", parent_paths_r.error.message);
           this.emit(
             Events.Print,
             Article.build_line(["client.fetch_parent_paths failed, because ", parent_paths_r.error.message])
           );
           return;
         }
-        const parents_and_cur = parent_paths_r.data.map((folder) => {
+        const paths = parent_paths_r.data;
+        const parents_and_cur = paths.map((folder) => {
           return {
             id: folder.file_id,
             file_id: folder.file_id,
@@ -452,46 +477,61 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         const parents = parents_and_cur.slice(0, -1);
         if (file.type === FileType.File) {
           const file = new File(cur.file_id, {
-            client,
-            // name: cur.name,
+            name: cur.name,
             parents,
+            parent: null,
+            client,
           });
           await file.set_profile({
-            file_id: cur.file_id,
+            // id: file.id,
+            // parent_file_id: cur.parent_file_id,
             name: cur.file_name,
-            parent_file_id: cur.parent_file_id,
+            size: file.size,
+            content_hash: null,
+            mime_type: null,
           });
+          this.emit(Events.Print, Article.build_line(["before await walker.run(file)"]));
           await walker.run(file, parents);
+          if (before_search) {
+            const need_search = await before_search();
+            if (!need_search) {
+              this.emit(Events.Finished);
+              return Result.Ok(null);
+            }
+          }
           await this.searcher.run2([file.id], { force });
           return;
         }
-        const folder = new Folder(cur.file_id, {
-          client,
-          name: cur.name,
-        });
-        await folder.profile();
-        this.emit(Events.Print, Article.build_line(["before walker run"]));
-        const r = await walker.run(folder, parents);
-        if (r.error) {
-          this.emit(Events.Print, Article.build_line(["walker run failed", r.error.message]));
-        }
-        this.emit(
-          Events.Print,
-          Article.build_line([
-            `[${drive.name}]`,
-            "完成一个文件夹遍历，共",
-            episode_count,
-            "个剧集，",
-            movie_count,
-            "个电影",
-          ])
-        );
-        if (this.need_stop) {
-          return;
-        }
-        episode_count = 0;
-        movie_count = 0;
-        if (this.parsed_media_sources.length) {
+        if (file.type === FileType.Folder) {
+          const folder = new Folder(cur.file_id, {
+            client,
+            name: cur.name,
+          });
+          await folder.profile();
+          this.emit(Events.Print, Article.build_line(["before await walker.run(folder)"]));
+          const r = await walker.run(folder, parents);
+          if (r.error) {
+            this.emit(Events.Print, Article.build_line(["walker.run(folder) failed, because", r.error.message]));
+          }
+          this.emit(
+            Events.Print,
+            Article.build_line([
+              `[${this.drive.name}]`,
+              "完成一个文件夹遍历，共",
+              episode_count,
+              "个剧集，",
+              movie_count,
+              "个电影",
+            ])
+          );
+          if (this.need_stop) {
+            return;
+          }
+          episode_count = 0;
+          movie_count = 0;
+          if (this.parsed_media_sources.length === 0) {
+            return;
+          }
           if (before_search) {
             const need_search = await before_search();
             if (!need_search) {
@@ -501,8 +541,11 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
           }
           const file_ids = this.parsed_media_sources.map((source) => source.file_id);
           this.parsed_media_sources = [];
+          // console.log("before this.searcher.run2");
           await this.searcher.run2(file_ids, { force });
+          return;
         }
+        this.emit(Events.Print, Article.build_line([`[${this.drive.name}]`, `未知的文件类型 '${file.type}'`]));
       })();
     }
     this.emit(Events.Percent, 1);

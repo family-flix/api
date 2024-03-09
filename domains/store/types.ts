@@ -30,11 +30,17 @@ import {
   subtitle_v2,
   tv,
   tv_profile,
+  settings,
+  user,
+  media_genre,
+  media_country,
+  tmp_file,
 } from "@prisma/client";
 
 export type DriveRecord = drive;
 export type DriveTokenRecord = drive_token;
 export type FileRecord = file;
+export type TmpFileRecord = tmp_file;
 
 export type ParsedMediaRecord = parsed_media;
 export type ParsedMediaSourceRecord = parsed_media_source;
@@ -59,6 +65,8 @@ export type MediaProfileRecord = media_profile;
 export type MediaSeriesProfileRecord = media_series_profile;
 export type SubtitleRecord = subtitle_v2;
 export type MediaSourceProfileRecord = media_source_profile;
+export type MediaGenreRecord = media_genre;
+export type MediaCountryRecord = media_country;
 
 export type ReportRecord = report;
 export type AsyncTaskRecord = async_task;
@@ -68,6 +76,8 @@ export type SharedFilesInProgressRecord = shared_file_in_progress;
 export type RecordCommonPart = {
   id: string;
 };
+export type UserRecord = user;
+export type SettingsRecord = settings;
 
 export type Statistics = {
   drive_count: number;
@@ -116,3 +126,26 @@ export type EpisodeProfileWhereInput = NonNullable<ModelQuery<"episode_profile">
 export type MemberNotifyWhereInput = NonNullable<ModelQuery<"member_notification">>;
 export type MovieProfileWhereInput = NonNullable<ModelQuery<"movie_profile">>;
 export type MemberWhereInput = NonNullable<ModelQuery<"member">>;
+
+export interface DataStore {
+  prisma: PrismaClient;
+  // prisma: {
+  //   user: {
+  //     findFirst: PrismaClient["user"]["findFirst"];
+  //   };
+  //   settings: {
+  //     update: PrismaClient["settings"]["update"];
+  //   };
+  //   file: {
+  //     deleteMany: PrismaClient["file"]["deleteMany"];
+  //   };
+  //   tmp_file: {
+  //     create: PrismaClient["tmp_file"]["create"];
+  //     findFirst: PrismaClient["tmp_file"]["findFirst"];
+  //     deleteMany: PrismaClient["tmp_file"]["deleteMany"];
+  //   };
+  //   resource_sync_task: {
+  //     update: PrismaClient["resource_sync_task"]["update"];
+  //   };
+  // };
+}

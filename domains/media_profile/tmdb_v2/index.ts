@@ -5,11 +5,11 @@ import { Result } from "@/types";
 import { SearchedMovieItem, SearchedTVItem } from "../types";
 
 import {
+  Language,
   fetch_episode_profile,
   fetch_season_profile,
   fetch_tv_profile,
   fetch_movie_profile,
-  Language,
   search_tv,
   search_movie_in_tmdb,
   fetch_persons_of_season,

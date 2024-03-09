@@ -4,15 +4,15 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { Drive } from "@/domains/drive";
 import { EpisodeRecord, ParsedEpisodeRecord } from "@/domains/store/types";
 import { DriveAnalysis } from "@/domains/analysis";
-import { archive_season_files, TheFilePrepareTransfer } from "@/domains/aliyundrive/utils";
+import { archive_season_files, TheFilePrepareTransfer } from "@/domains/clients/alipan/utils";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
-import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -90,6 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `移动电视剧「${tv_name}/${season_text}」到云盘「${to_drive.name}]`,
     type: TaskTypes.MoveTV,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

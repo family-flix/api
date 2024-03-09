@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { Folder } from "@/domains/folder";
-import { folder_client } from "@/domains/store/utils";
-import { BaseApiResp } from "@/types";
+import { store } from "@/store/index";
+import { Folder } from "@/domains/folder/index";
+import { DatabaseDriveClient } from "@/domains/clients/database/index";
+import { BaseApiResp } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 
 type SimpleAliyunDriveFile = {
   file_id: string;
@@ -44,7 +44,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     items: [],
   };
   const folder = new Folder(file_id, {
-    client: folder_client({ drive_id }, store),
+    client: new DatabaseDriveClient({
+      drive_id,
+      store,
+    }),
   });
   await folder.profile();
   async function walk_folder(f: Folder, parent: SimpleAliyunDriveFile) {

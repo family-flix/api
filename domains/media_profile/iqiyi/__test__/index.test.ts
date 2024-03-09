@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
 import dayjs from "dayjs";
 
 const w = "howcuteitis";
-function get_sign() {
+function get_sign(...args: unknown[]) {
   var t = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {},
     e = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {},
     r = e.splitKey,

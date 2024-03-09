@@ -28,7 +28,7 @@ model drive {
         invalid          Int?      @default(0)
         hidden           Int?      @default(0)
         sort             Int?      @default(0)
-        // 最近一次索引该云盘的时间
+        // 最近一次索引该云盘的时间（废弃）
         latest_analysis  DateTime?
         // 网盘用于存放影视剧的目录
         root_folder_name String?
@@ -40,6 +40,7 @@ model drive {
         user_id        String
         user           user        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+        // statistics              drive_statistics?
         parsed_tvs              parsed_tv[]
         parsed_seasons          parsed_season[]
         parsed_episodes         parsed_episode[]
@@ -1103,6 +1104,20 @@ model file {
         @@map("File")
 }
 
+model drive_statistics {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        date String
+        data String @default("{}")
+
+        user_id String @unique
+        user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("DriveStatistics")
+}
+
 // @depracated
 model log {
         id      String   @id
@@ -1530,6 +1545,7 @@ model user {
         media_sources           media_source[]
         invalid_medias          invalid_media[]
         invalid_media_sources   invalid_media_source[]
+        drive_statistics        drive_statistics?
 
         @@map("User")
 }

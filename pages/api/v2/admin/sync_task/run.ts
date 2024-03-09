@@ -4,15 +4,16 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
-import { Job } from "@/domains/job";
+import { Job } from "@/domains/job/index";
+import { Drive } from "@/domains/drive/v2";
 import { TaskTypes } from "@/domains/job/constants";
 import { DriveAnalysis } from "@/domains/analysis/v2";
-import { BaseApiResp, Result } from "@/types";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
-import { FileType } from "@/constants";
+import { FileType } from "@/constants/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -36,12 +37,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err(task_res.error.message));
   }
   const task = task_res.data;
+  const drive_res = await Drive.Get({ id: task.resource_client.id, user, store });
+  if (drive_res.error) {
+    return e(Result.Err(drive_res.error.message));
+  }
+  const drive = drive_res.data;
   const { name } = task.profile;
   const job_res = await Job.New({
     unique_id: id,
     desc: `同步资源「${name}」`,
     type: TaskTypes.FilesSync,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -56,19 +63,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   });
   (async () => {
     await task.run();
-    const r2 = await DriveAnalysis.New({
-      drive: task.drive,
-      store,
-      user,
-      assets: app.assets,
-      on_print(v) {
-        job.output.write(v);
-      },
-    });
-    if (r2.error) {
-      return e(r2.error.message);
-    }
-    const analysis = r2.data;
     const the_files_prepare_analysis = [
       {
         file_id: task.profile.file_id_link_resource,
@@ -83,6 +77,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name,
       };
     });
+    const r2 = await DriveAnalysis.New({
+      drive,
+      store,
+      user,
+      assets: app.assets,
+      on_print(v) {
+        job.output.write(v);
+      },
+    });
+    if (r2.error) {
+      job.throw(r2.error);
+      return;
+    }
+    const analysis = r2.data;
     const r = await analysis.run2(the_files_prepare_analysis, { force: true });
     if (r.error) {
       job.throw(r.error);

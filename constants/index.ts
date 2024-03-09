@@ -1,6 +1,6 @@
 import { Statistics } from "@/domains/store/types";
 
-export const __VERSION__ = "2.1.0";
+export const __VERSION__ = "2.2.0";
 
 export enum FileType {
   File = 1,
@@ -58,6 +58,7 @@ export enum MediaResolutionTypes {
   HD = "HD",
   /** 超高清 */
   FHD = "FHD",
+  QHD = "QHD",
 }
 /** 影片分辨率中文描述 */
 export const MediaResolutionTypeTexts = {
@@ -65,6 +66,7 @@ export const MediaResolutionTypeTexts = {
   [MediaResolutionTypes.SD]: "普清",
   [MediaResolutionTypes.HD]: "高清",
   [MediaResolutionTypes.FHD]: "4K",
+  [MediaResolutionTypes.QHD]: "QHD",
 };
 
 export enum SubtitleFileTypes {

@@ -6,15 +6,15 @@ import fs from "fs";
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable from "formidable";
 
-import { User } from "@/domains/user";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { MediaProfileRecord, MediaRecord } from "@/domains/store/types";
-import { Job, TaskTypes } from "@/domains/job";
-import { FileUpload } from "@/domains/uploader";
-import { BaseApiResp, Result } from "@/types";
+import { Job, TaskTypes } from "@/domains/job/index";
+import { FileManage } from "@/domains/uploader";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { MediaTypes, SubtitleFileTypes } from "@/constants";
-import { r_id } from "@/utils";
-import { app, store } from "@/store";
+import { MediaTypes, SubtitleFileTypes } from "@/constants/index";
+import { r_id } from "@/utils/index";
 
 export const config = {
   api: {
@@ -101,12 +101,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (files.length === 0) {
     return e(Result.Err("没有文件"));
   }
-  const $upload = new FileUpload({ root: app.assets });
+  const $upload = new FileManage({ root: app.assets });
   const task_res = await Job.New({
     type: TaskTypes.UploadSubtitle,
     desc: `为「${media.profile.name}」上传字幕`,
     unique_id: media_id,
     user_id: user.id,
+    app,
     store,
   });
   if (task_res.error) {

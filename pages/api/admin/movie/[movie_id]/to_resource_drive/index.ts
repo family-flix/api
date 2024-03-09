@@ -4,16 +4,16 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { Drive } from "@/domains/drive";
 import { DriveTypes } from "@/domains/drive/constants";
 import { ParsedMovieRecord } from "@/domains/store/types";
-import { archive_movie_files } from "@/domains/aliyundrive/utils";
+import { archive_movie_files } from "@/domains/clients/alipan/utils";
 import { DriveAnalysis } from "@/domains/analysis";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
-import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/server";
 
 type TheFilePrepareTransfer = {
@@ -68,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `移动电影「${movie_name}」到资源盘`,
     type: TaskTypes.MoveMovie,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -162,7 +163,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const folder_in_from_drive = archive_res.data;
-        if (from_drive.client.resource_drive_id !== to_drive.client.drive_id) {
+        if (from_drive.client.resource_drive_id !== to_drive.client.unique_id) {
           job.output.write_line([prefix, "资源盘不属于备份盘"]);
           return;
         }

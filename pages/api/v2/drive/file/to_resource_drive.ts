@@ -4,17 +4,18 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { Drive } from "@/domains/drive/v2";
 import { DriveTypes } from "@/domains/drive/constants";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { MediaSourceProfileRecord, MediaSourceRecord, ParsedMediaSourceRecord } from "@/domains/store/types";
 import { DriveAnalysis } from "@/domains/analysis/v2";
-import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/aliyundrive/utilsV2";
+import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/clients/alipan/utilsV2";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { BaseApiResp, Result } from "@/types";
 import { FileType, MediaTypes } from "@/constants";
-import { app, store } from "@/store";
 import { response_error_factory } from "@/utils/server";
 import { padding_zero, sleep } from "@/utils";
 
@@ -83,6 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `移动文件「${file.name}」到资源盘`,
     type: TaskTypes.MoveToResourceDrive,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -107,6 +109,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return;
     }
     const from_drive = from_drive_res.data;
+    if (!(from_drive.client instanceof AliyunDriveClient)) {
+      job.output.write_line([`暂时仅 阿里云盘 支持移动到资源盘`]);
+      return;
+    }
     const prefix = `[${from_drive.name}]`;
     if (![DriveTypes.AliyunBackupDrive].includes(from_drive.type)) {
       job.output.write_line([prefix, `不是阿里云备份盘，无法移动到资源盘`]);
@@ -150,13 +156,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       job.output.write_line([prefix, "该备份盘未初始化资源盘"]);
       return;
     }
-    const to_drive_res = await Drive.GetByUniqueId({ id: from_drive.client.resource_drive_id, user, store });
+    const to_drive_res = await Drive.Get({ unique_id: from_drive.client.resource_drive_id, user, store });
     if (to_drive_res.error) {
       job.output.write_line([prefix, "初始化失败，因为", to_drive_res.error.message]);
       return;
     }
     const to_drive = to_drive_res.data;
-    if (from_drive.client.resource_drive_id !== to_drive.client.drive_id) {
+    if (from_drive.client.resource_drive_id !== to_drive.client.unique_id) {
       job.output.write_line([prefix, "该资源盘不是该备份盘的资源盘"]);
       return;
     }
@@ -175,7 +181,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (existing_res.data !== null) {
         return existing_res.data;
       }
-      const r = await to_drive.client.add_folder({
+      const r = await to_drive.client.create_folder({
         parent_file_id: to_drive.profile.root_folder_id!,
         name: folder_in_from_drive.file_name,
       });
@@ -311,9 +317,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     job.output.write_line([prefix, "归档完成"]);
     job.output.write_line(["所有归档任务完成"]);
-    job.finish();
   }
-  run(media_payload);
+  (async () => {
+    await run(media_payload);
+    job.finish();
+  })();
   res.status(200).json({
     code: 0,
     msg: "开始转存",

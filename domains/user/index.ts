@@ -1,13 +1,14 @@
 import Joi from "joi";
 
 import { DatabaseStore } from "@/domains/store";
+import { DataStore } from "@/domains/store/types";
 import { Result, resultify } from "@/types";
 import { parseJSONStr, r_id } from "@/utils";
+import { DEFAULT_STATS } from "@/constants";
 
 import { Credentials } from "./services";
 import { compare, prepare, parse_token } from "./utils";
 import { encode_token } from "./jwt";
-import { DEFAULT_STATS } from "@/constants";
 
 const credentialsSchema = Joi.object({
   email: Joi.string().email().message("邮箱格式错误").required(),
@@ -32,7 +33,7 @@ type UserProps = {
   id: string;
   token: string;
   settings?: UserSettings | null;
-  store: DatabaseStore;
+  store: DataStore;
 };
 export type UserUniqueID = string;
 
@@ -44,7 +45,7 @@ export class User {
    * @param token
    * @returns
    */
-  static async New(token: string | undefined, store: DatabaseStore) {
+  static async New(token: string | undefined, store: DataStore) {
     if (!token) {
       return Result.Err("缺少 token", 900);
     }
@@ -68,7 +69,7 @@ export class User {
       return Result.Err("无效的 token", 900);
     }
     const { settings: settings_str } = existing;
-    const settings = await User.parseSettings(settings_str);
+    const settings = await User.ParseSettings(settings_str);
     // 要不要生成一个新的 token？
     const user = new User({
       id,
@@ -78,7 +79,7 @@ export class User {
     });
     return Result.Ok(user);
   }
-  static async NewWithPassword(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
+  static async GetByPassword(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
     const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
     if (r.error) {
       return Result.Err(r.error);
@@ -87,26 +88,79 @@ export class User {
     const credential = await store.prisma.credential.findUnique({
       where: { email },
       include: {
-        user: true,
+        user: {
+          include: {
+            settings: true,
+          },
+        },
       },
     });
     if (credential === null) {
-      return Result.Err("该邮箱不存在");
+      return Result.Err("该邮箱不存在", 904);
     }
     const matched = await compare(credential, password);
     if (!matched) {
       return Result.Err("密码错误");
     }
     const { id: user_id } = credential.user;
+    const { settings: settings_str } = credential.user;
+    const settings = await User.ParseSettings(settings_str);
     const res = await User.Token({ id: user_id });
     if (res.error) {
       return Result.Err(res.error);
     }
     const token = res.data;
-    const user = new User({ id: user_id, token, store });
+    const user = new User({ id: user_id, settings, token, store });
     return Result.Ok(user);
   }
-  static async Add(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
+  static async Get(body: { id: string }, store: DatabaseStore) {
+    const { id } = body;
+    const user = await store.prisma.user.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+        settings: true,
+      },
+    });
+    if (!user) {
+      return Result.Err("不存在");
+    }
+    const { settings: settings_str } = user;
+    const settings = await User.ParseSettings(settings_str);
+    return Result.Ok(
+      new User({
+        id,
+        token: "",
+        settings,
+        store,
+      })
+    );
+  }
+  static async Existing(body: { email: string }, store: DatabaseStore) {
+    const { email } = body;
+    const existing_user = await store.prisma.credential.findUnique({
+      where: { email },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
+    if (existing_user) {
+      const { email } = existing_user;
+      const { id, profile } = existing_user.user;
+      return Result.Ok({
+        id,
+        email,
+        avatar: profile?.avatar,
+        nickname: profile?.nickname,
+      });
+    }
+    return Result.Err("不存在");
+  }
+  static async Create(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
     const users = await store.prisma.user.findMany({
       include: {
         credential: true,
@@ -174,53 +228,6 @@ export class User {
       token,
     });
   }
-  static async Get(body: { id: string }, store: DatabaseStore) {
-    const { id } = body;
-    const user = await store.prisma.user.findUnique({
-      where: { id },
-      include: {
-        profile: true,
-        settings: true,
-      },
-    });
-    if (!user) {
-      return Result.Err("不存在");
-    }
-    const { settings: settings_str } = user;
-    const settings = await User.parseSettings(settings_str);
-    return Result.Ok(
-      new User({
-        id,
-        token: "",
-        settings,
-        store,
-      })
-    );
-  }
-  static async Existing(body: { email: string }, store: DatabaseStore) {
-    const { email } = body;
-    const existing_user = await store.prisma.credential.findUnique({
-      where: { email },
-      include: {
-        user: {
-          include: {
-            profile: true,
-          },
-        },
-      },
-    });
-    if (existing_user) {
-      const { email } = existing_user;
-      const { id, profile } = existing_user.user;
-      return Result.Ok({
-        id,
-        email,
-        avatar: profile?.avatar,
-        nickname: profile?.nickname,
-      });
-    }
-    return Result.Err("不存在");
-  }
   /** 根据给定的 id 生成一个 token */
   static async Token({ id }: { id: string }) {
     try {
@@ -274,7 +281,7 @@ export class User {
       token,
     });
   }
-  static async parseSettings(settings: null | { detail: string | null }) {
+  static async ParseSettings(settings: null | { detail: string | null }) {
     if (!settings) {
       return {};
     }
@@ -295,7 +302,7 @@ export class User {
   /** JWT token */
   token: string;
   settings: UserSettings;
-  store: DatabaseStore;
+  store: DataStore;
 
   constructor(options: UserProps) {
     const { id, token, settings, store } = options;

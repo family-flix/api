@@ -2,7 +2,6 @@
  * @file 对解析出的影视剧结果进行搜索
  */
 import dayjs from "dayjs";
-import uniqueBy from "lodash/fp/uniqBy";
 
 import { BaseDomain, Handler } from "@/domains/base";
 import {
@@ -11,18 +10,10 @@ import {
   PartialSeasonFromTMDB,
   TVProfileFromTMDB,
 } from "@/domains/media_profile/tmdb/services";
-import {
-  Article,
-  ArticleLineNode,
-  ArticleListItemNode,
-  ArticleListNode,
-  ArticleSectionNode,
-  ArticleTextNode,
-} from "@/domains/article";
-import { DatabaseStore } from "@/domains/store";
+import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive/v2";
-import { FileUpload } from "@/domains/uploader";
+import { FileManage } from "@/domains/uploader";
 import {
   MovieProfileRecord,
   TVProfileRecord,
@@ -35,6 +26,7 @@ import {
   ParsedMediaSourceRecord,
   MediaProfileRecord,
   MediaSourceProfileRecord,
+  DataStore,
 } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { MediaProfileClient } from "@/domains/media_profile";
@@ -75,7 +67,7 @@ type MediaSearcherProps = {
   /** 影视剧海报封面上传后的本地存储路径 */
   assets: string;
   /** 数据库实例 */
-  store: DatabaseStore;
+  store: DataStore;
   /** 仅处理该网盘下的所有未匹配电视剧 */
   drive?: Drive;
   /** 仅处理该用户的所有未匹配电视剧 */
@@ -139,11 +131,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(searcher);
   }
 
-  store: DatabaseStore;
-  user: User;
-  drive?: Drive;
-  client: MediaProfileClient;
-  upload: FileUpload;
   options: Partial<{
     upload_image?: boolean;
     unique_id?: string;
@@ -152,6 +139,12 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
   }> = {};
   /** 是否终止本次搜索 */
   need_stop: boolean = false;
+
+  user: User;
+  drive?: Drive;
+  client: MediaProfileClient;
+  upload: FileManage;
+  store: DataStore;
 
   constructor(options: MediaSearcherProps) {
     super();
@@ -174,7 +167,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     this.store = store;
     this.user = user;
     this.drive = drive;
-    this.upload = new FileUpload({ root: assets });
+    this.upload = new FileManage({ root: assets });
     this.client = new MediaProfileClient({
       token: user.settings.tmdb_token!,
       uploader: this.upload,
@@ -250,7 +243,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         const prefix = get_prefix_from_names({ name, original_name });
         this.emit(
           Events.Print,
-          Article.build_line([`第${i + 1}个、`, prefix, [season_text, episode_text].filter(Boolean).join("/")])
+          Article.build_line([`第${i + 1}个、`, [prefix, season_text, episode_text].filter(Boolean).join("/")])
         );
         const percent = (() => {
           const v = (i + 1) / count;
@@ -536,7 +529,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (existing) {
       return existing;
     }
-    const { name, id: media_id } = media;
+    const { id: media_id, name } = media;
     const created = await this.store.prisma.media_source.create({
       data: {
         id: r_id(),

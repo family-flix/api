@@ -215,9 +215,7 @@ export async function walk_records<T extends PrismaClient[ModelKeys]>(
 
 /**
  * 本地存储的 folder client，和 drive client 等同使用
- * @param body
- * @param store
- * @returns
+ * @deprecated 请使用 domains/clients/database
  */
 export function folder_client(body: { drive_id: string }, store: DatabaseStore) {
   const { drive_id } = body;

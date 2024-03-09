@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
-import { BaseApiResp, Result } from "@/types";
+import { store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Drive } from "@/domains/drive/v2";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { thumbnail } = file_profile_res.data;
   type MediaFile = Partial<{
     file_id: string;
-    thumbnail: string;
+    thumbnail: string | null;
     url: string;
     type: string;
     width: number;

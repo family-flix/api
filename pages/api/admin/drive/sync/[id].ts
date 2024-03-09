@@ -4,16 +4,16 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { FileType } from "@/constants";
-import { folder_client } from "@/domains/store/utils";
-import { User } from "@/domains/user";
-import { Folder } from "@/domains/folder";
-import { DiffTypes, FolderDiffer } from "@/domains/folder_differ";
-import { is_video_file } from "@/utils";
-import { Drive } from "@/domains/drive";
-import { BaseApiResp, Result } from "@/types";
+import { store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Folder } from "@/domains/folder/index";
+import { DiffTypes, FolderDiffer } from "@/domains/folder_differ/index";
+import { DatabaseDriveClient } from "@/domains/clients/database/index";
+import { is_video_file } from "@/utils/index";
+import { Drive } from "@/domains/drive/index";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
+import { FileType } from "@/constants/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -40,10 +40,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const client = drive.client;
   const prev_folder = new Folder(root_folder_id, {
     name: root_folder_name,
-    client: folder_client({ drive_id }, store),
+    client: new DatabaseDriveClient({ drive_id, store }),
   });
   const folder = new Folder(root_folder_id, {
     name: root_folder_name,
+    // @ts-ignore
     client: {
       fetch_files: async (file_id: string, options: Partial<{ marker: string; page_size: number }> = {}) => {
         const r = await client.fetch_files(file_id, {

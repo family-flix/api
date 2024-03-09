@@ -5,12 +5,12 @@ import { throttle } from "lodash";
 import dayjs from "dayjs";
 
 import { BaseDomain, Handler } from "@/domains/base";
-import { Article, ArticleLineNode, ArticleTextNode } from "@/domains/article";
-import { DatabaseStore } from "@/domains/store";
+import { Article, ArticleLineNode, ArticleTextNode } from "@/domains/article/index";
+import { Application } from "@/domains/application/index";
+import { DatabaseStore } from "@/domains/store/index";
 import { AsyncTaskRecord } from "@/domains/store/types";
-import { Result } from "@/types";
-import { app } from "@/store";
-import { r_id } from "@/utils";
+import { Result } from "@/types/index";
+import { r_id } from "@/utils/index";
 
 import { TaskStatus, TaskTypes } from "./constants";
 
@@ -28,6 +28,7 @@ type JobNewProps = {
   desc: string;
   user_id: string;
   store: DatabaseStore;
+  app: Application;
   on_print?: () => void;
 };
 type JobProps = {
@@ -37,13 +38,14 @@ type JobProps = {
     "unique_id" | "type" | "status" | "desc" | "user_id" | "output_id" | "error" | "created" | "updated"
   >;
   output: Article;
+  app: Application;
   store: DatabaseStore;
 };
 const cached_jobs: Record<string, Job> = {};
 
 export class Job extends BaseDomain<TheTypesOfEvents> {
-  static async Get(body: { id: string; user_id: string; store: DatabaseStore }) {
-    const { id, user_id, store } = body;
+  static async Get(body: { id: string; user_id: string; app: Application; store: DatabaseStore }) {
+    const { id, user_id, app, store } = body;
     if (cached_jobs[id]) {
       return Result.Ok(cached_jobs[id]);
     }
@@ -71,6 +73,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         updated,
       },
       output: new Article({}),
+      app,
       store,
     });
     cached_jobs[id] = job;
@@ -78,7 +81,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   }
 
   static async New(body: JobNewProps) {
-    const { desc, type, unique_id, user_id, store } = body;
+    const { desc, type, unique_id, user_id, app, store } = body;
     const existing = await store.prisma.async_task.findFirst({
       where: {
         type,
@@ -128,6 +131,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         updated,
       },
       output,
+      app,
       store,
     });
     cached_jobs[id] = job;
@@ -138,23 +142,26 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   output: Article;
   profile: JobProps["profile"];
   percent = 0;
-  store: DatabaseStore;
   prev_write_time: number;
   timer: null | NodeJS.Timer = null;
 
-  constructor(options: JobProps) {
+  store: DatabaseStore;
+  app: Application;
+
+  constructor(props: JobProps) {
     super();
 
-    const { id, profile, output, store } = options;
+    const { id, profile, output, app, store } = props;
     this.id = id;
     this.output = output;
     this.profile = profile;
     this.store = store;
+    this.app = app;
     this.prev_write_time = dayjs().valueOf();
     this.output.on_write(this.update_content);
   }
   pending_lines = [];
-  update_content = throttle(async () => {
+  update_content_force = async () => {
     this.prev_write_time = dayjs().valueOf();
     const content = this.output.to_json();
     this.output.clear();
@@ -173,7 +180,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (!filepath) {
       return;
     }
-    const log_filepath = path.resolve(app.root_path, "logs", filepath);
+    const log_filepath = path.resolve(this.app.root_path, "logs", filepath);
     fs.appendFileSync(
       log_filepath,
       [
@@ -183,7 +190,8 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         }),
       ].join("\n")
     );
-  }, 5000);
+  };
+  update_content = throttle(this.update_content_force, 5000);
   update_percent = throttle(async (percent: number) => {
     console.log("[DOMAIN]job/index - update_percent", `${(percent * 100).toFixed(2)}%`);
     await this.store.prisma.async_task.update({
@@ -256,7 +264,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     }
     let content = "";
     try {
-      const p = path.resolve(app.root_path, "logs", filepath);
+      const p = path.resolve(this.app.root_path, "logs", filepath);
       content = fs.readFileSync(p, "utf-8");
     } catch (err) {
       // ...
@@ -344,7 +352,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     if (output) {
       const { filepath } = output;
       if (filepath) {
-        const log_filepath = path.resolve(app.root_path, "logs", filepath);
+        const log_filepath = path.resolve(this.app.root_path, "logs", filepath);
         fs.appendFileSync(
           log_filepath,
           [
@@ -366,24 +374,27 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     }
     return Result.Ok(null);
   }
-  /** tag the task is finished */
+  /** mark the task is finished */
   async finish() {
-    const r = await this.store.update_task(this.id, {
-      need_stop: 0,
-      status: TaskStatus.Finished,
-    });
-    if (r.error) {
-      return Result.Err(r.error);
-    }
-    const output = await this.store.prisma.output.findUnique({
+    await this.update_content_force();
+    await this.store.prisma.async_task.update({
       where: {
-        id: this.profile.output_id,
+        id: this.id,
+      },
+      data: {
+        need_stop: 0,
+        status: TaskStatus.Finished,
       },
     });
-    if (output === null) {
-      return Result.Ok(null);
-    }
-    return Result.Ok(null);
+    // const output = await this.store.prisma.output.findUnique({
+    //   where: {
+    //     id: this.profile.output_id,
+    //   },
+    // });
+    // if (output === null) {
+    //   return Result.Ok(null);
+    // }
+    // return Result.Ok(null);
   }
   async throw(error: Error) {
     this.output.write(
@@ -395,6 +406,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         ],
       })
     );
+    this.update_content_force();
     const r = await this.store.update_task(this.id, {
       status: TaskStatus.Finished,
       error: error.message,
@@ -443,14 +455,14 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       // console.log("[DOMAIN]job/index - before TaskStatus.Paused", r.status);
       if (r.need_stop) {
         this.emit(Events.StopTask);
-        app.clearInterval(handler1);
+        this.app.clearInterval(handler1);
       }
       if ([TaskStatus.Paused, TaskStatus.Finished].includes(r.status)) {
-        app.clearInterval(handler1);
+        this.app.clearInterval(handler1);
       }
       return Result.Ok(null);
     };
-    app.startInterval(handler1, 5000);
+    this.app.startInterval(handler1, 5000);
     return this.on(Events.StopTask, handler);
   }
 }

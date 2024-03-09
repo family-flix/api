@@ -4,6 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { ResourceSyncTask } from "@/domains/resource_sync_task";
 import { Job } from "@/domains/job";
@@ -11,7 +12,6 @@ import { TaskTypes } from "@/domains/job/constants";
 import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `同步文件夹 '${name}'`,
     type: TaskTypes.FilesSync,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

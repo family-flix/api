@@ -3,10 +3,10 @@
  */
 require("dotenv").config();
 
-import { Folder } from "@/domains/folder";
-import { FolderWalker } from "@/domains/walker";
-import { folder_client } from "@/domains/store/utils";
-import { store } from "@/store";
+import { store } from "@/store/index";
+import { Folder } from "@/domains/folder/index";
+import { FolderWalker } from "@/domains/walker/index";
+import { DatabaseDriveClient } from "@/domains/clients/database/index";
 
 async function main() {
   const drive_folder = {
@@ -17,7 +17,7 @@ async function main() {
   const drive_id = drive_folder.id;
   const prev_folder = new Folder(drive_folder.file_id, {
     // name: drive_folder.file_name,
-    client: folder_client({ drive_id }, store),
+    client: new DatabaseDriveClient({ drive_id, store }),
   });
   const r = await prev_folder.profile();
   if (r.error) {

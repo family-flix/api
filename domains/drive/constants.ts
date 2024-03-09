@@ -3,4 +3,12 @@ export enum DriveTypes {
   AliyunBackupDrive = 0,
   /** 阿里云盘/资源盘 */
   AliyunResourceDrive = 1,
+  /** 天翼云 */
+  Cloud189Drive = 2,
+  /** 夸克 */
+  QuarkDrive = 3,
+  /** 迅雷 */
+  XunleiDrive = 4,
+  /** 本地文件 */
+  LocalFolder = 5,
 }

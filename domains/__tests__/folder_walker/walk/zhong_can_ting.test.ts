@@ -17,10 +17,12 @@ import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 
 import { FolderWalker } from "@/domains/walker";
 import { Folder } from "@/domains/folder";
-import { fetch_files_factory, add_parsed_infos_when_walk, adding_file_safely } from "@/domains/walker/utils";
+import { MockFileClient } from "@/domains/clients/json";
+import { patch_drive_file } from "@/domains/clients/utils";
+// import { fetch_files_factory } from "@/domains/walker/utils";
 // import { data, id } from "@/mock";
 
-import { test_store as store } from "../../store";
+// import { test_store as store } from "../../store";
 
 const id = "media";
 const data = {
@@ -101,13 +103,13 @@ describe("detect a tv dir", () => {
       return;
     };
     detector.on_episode = async (task) => {
-        //     console.log(task);
+      //     console.log(task);
       handle_episode(task);
       return;
     };
     const folder = new Folder(id, {
-      client: fetch_files_factory({
-        tree: data,
+      client: new MockFileClient({
+        data: patch_drive_file(data),
       }),
     });
     await folder.profile();

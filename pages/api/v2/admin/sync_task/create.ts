@@ -4,15 +4,14 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
+import { store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Drive } from "@/domains/drive/index";
 import { DriveTypes } from "@/domains/drive/constants";
-import { BaseApiResp, Result } from "@/types";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { FileType, ResourceSyncTaskStatus } from "@/constants";
-import { r_id } from "@/utils";
-import { initial_share_client } from "@/store/share_resource";
+import { ResourceSyncTaskStatus } from "@/constants/index";
+import { r_id } from "@/utils/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -182,7 +181,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(r1);
   }
   const { share_id } = r1.data;
-  const files_res = await drive.client.fetch_shared_files("root", {
+  const files_res = await drive.client.fetch_resource_files("root", {
     share_id,
   });
   if (files_res.error) {

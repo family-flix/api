@@ -5,18 +5,17 @@ import type { Handler } from "mitt";
 import dayjs from "dayjs";
 
 import { BaseDomain } from "@/domains/base";
-import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ";
-import { Folder } from "@/domains/folder";
-import { ArticleCardNode, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
-import { DatabaseStore } from "@/domains/store";
-import { SyncTaskRecord } from "@/domains/store/types";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { folder_client } from "@/domains/store/utils";
-import { Result } from "@/types";
-import { is_video_file, sleep } from "@/utils";
-import { FileType } from "@/constants";
+import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ/index";
+import { Folder } from "@/domains/folder/index";
+import { ArticleCardNode, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article/index";
+import { User } from "@/domains/user/index";
+import { DatabaseDriveClient } from "@/domains/clients/database/index";
+import { Drive } from "@/domains/drive/index";
+import { DataStore, SyncTaskRecord } from "@/domains/store/types";
+import { AliyunDriveClient } from "@/domains/clients/alipan/index";
+import { Result } from "@/types/index";
+import { is_video_file, r_id, sleep } from "@/utils/index";
+import { FileType } from "@/constants/index";
 
 enum Events {
   /** 新增文件 */
@@ -37,7 +36,7 @@ type ResourceSyncTaskProps = {
   task: SyncTaskRecord;
   user: User;
   drive: Drive;
-  store: DatabaseStore;
+  store: DataStore;
   client: AliyunDriveClient;
   TMDB_TOKEN?: string;
   assets?: string;
@@ -53,7 +52,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   static async Get(
     options: { id: string } & {
       user: User;
-      store: DatabaseStore;
+      store: DataStore;
     } & Pick<
         ResourceSyncTaskProps,
         "assets" | "wait_complete" | "ignore_invalid" | "on_file" | "on_print" | "on_finish" | "on_error"
@@ -115,7 +114,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       })
     );
   }
-  static async Create(values: { url: string; user: User; store: DatabaseStore }) {
+  static async Create(values: { url: string; user: User; store: DataStore }) {
     // const { url, user, store } = values;
     // const sync_tasks = await store.prisma.bind_for_parsed_tv.findMany({
     //   where: {
@@ -180,12 +179,13 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
 
   /** 任务信息 */
   profile: SyncTaskRecord;
-  user: ResourceSyncTaskProps["user"];
-  drive: ResourceSyncTaskProps["drive"];
+  TMDB_TOKEN?: string;
+  assets?: string;
+
+  user: User;
+  drive: Drive;
   client: AliyunDriveClient;
-  store: ResourceSyncTaskProps["store"];
-  TMDB_TOKEN: ResourceSyncTaskProps["TMDB_TOKEN"];
-  assets: ResourceSyncTaskProps["assets"];
+  store: DataStore;
 
   constructor(options: Partial<{}> & ResourceSyncTaskProps) {
     super();
@@ -236,7 +236,14 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     const r1 = await client.fetch_share_profile(url, { force: true });
     if (r1.error) {
       if (["share_link is cancelled by the creator"].includes(r1.error.message)) {
-        await store.update_sync_task(id, { invalid: 1 });
+        await store.prisma.bind_for_parsed_tv.update({
+          where: {
+            id,
+          },
+          data: {
+            invalid: 1,
+          },
+        });
         const tip = "分享资源失效，请关联新分享资源";
         this.emit(
           Events.Print,
@@ -284,16 +291,20 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     const { share_id } = r1.data;
     const prev_folder = new Folder(file_id_link_resource, {
       name: file_name_link_resource,
-      client: folder_client({ drive_id }, store),
+      client: new DatabaseDriveClient({
+        drive_id,
+        store,
+      }),
     });
     const folder = new Folder(file_id, {
       // 这里本应该用 file_name，但是很可能分享文件的名字改变了，但我还要认为它没变。
       // 比如原先名字是「40集更新中」，等更新完了，就变成「40集已完结」，而我已开始存的名字是「40集更新中」。
       // 后面在索引文件的时候，根本找不到「40集已完结」这个名字，所以继续用旧的「40集更新中」
       name: file_name_link_resource,
+      // @ts-ignore
       client: {
         fetch_files: async (file_id: string, options: Partial<{ marker: string; page_size: number }> = {}) => {
-          return client.fetch_shared_files(file_id, {
+          return client.fetch_resource_files(file_id, {
             ...options,
             share_id,
           });
@@ -388,18 +399,15 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         }
         // log(`[${prefix}]`, "新增文件", parents.map((f) => f.name).join("/"), name);
         // 避免添加后，还没有索引云盘，本地数据库没有，导致重复转存文件到云盘
-        const existing_res = await store.find_tmp_file({
-          name,
-          parent_paths,
-          user_id,
-          drive_id,
+        const existing = await store.prisma.tmp_file.findFirst({
+          where: {
+            name,
+            parent_paths,
+            user_id,
+            drive_id,
+          },
         });
-        if (existing_res.error) {
-          //   log(`[${prefix}]`, "查找临时文件失败", existing_res.error.message);
-          // errors.push(new Error(`${prefix} find_tmp_file failed ${existing_res.error.message}`));
-          continue;
-        }
-        if (existing_res.data) {
+        if (existing) {
           this.emit(
             Events.Print,
             new ArticleLineNode({
@@ -448,31 +456,16 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           parent_paths: full_parent_paths,
           type: type === "file" ? FileType.File : FileType.Folder,
         });
-        const r4 = await store.add_tmp_file({
-          name,
-          parent_paths: full_parent_paths,
-          type: type === "file" ? FileType.File : FileType.Folder,
-          user_id,
-          drive_id,
+        await store.prisma.tmp_file.create({
+          data: {
+            id: r_id(),
+            name,
+            parent_paths: full_parent_paths,
+            type: type === "file" ? FileType.File : FileType.Folder,
+            user_id,
+            drive_id,
+          },
         });
-        if (r4.error) {
-          this.emit(
-            Events.Print,
-            new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: `添加临时文件夹 ${prefix} 到云盘失败`,
-                }),
-                new ArticleTextNode({
-                  text: r4.error.message,
-                }),
-              ],
-            })
-          );
-          // errors.push(new Error(`${prefix} add tmp folder failed, because ${r4.error.message}`));
-          //   log(`[${prefix}]`, "添加临时文件失败", r4.error.message);
-          continue;
-        }
       }
     }
     // if (errors.length !== 0) {
@@ -537,7 +530,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r1.error.message);
     }
     const { share_id } = r1.data;
-    const files_res = await drive.client.fetch_shared_files("root", {
+    const files_res = await drive.client.fetch_resource_files("root", {
       share_id,
     });
     if (files_res.error) {

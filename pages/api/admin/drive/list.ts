@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
-import { AliyunDriveProfile } from "@/domains/aliyundrive/types";
+import { AliyunDriveProfile } from "@/domains/clients/alipan/types";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";

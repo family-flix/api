@@ -4,7 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { User } from "@/domains/user";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!backup_drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
-  const client_res = await AliyunDriveClient.Get({ drive_id: backup_drive_id, store });
+  const client_res = await AliyunDriveClient.Get({ unique_id: backup_drive_id, store });
   if (client_res.error) {
     return e(client_res);
   }

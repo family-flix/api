@@ -2,14 +2,14 @@
  * @file 将解析好的电视剧、剧集、电影等信息，保存至本地数据库
  * 主要是处理重复添加和更新
  */
-import { FileType } from "@/constants";
 import { BaseDomain, Handler } from "@/domains/base";
-import { SearchedEpisode } from "@/domains/walker";
-import { DatabaseStore } from "@/domains/store";
-import { User } from "@/domains/user";
+import { SearchedEpisode } from "@/domains/walker/index";
+import { DatabaseStore } from "@/domains/store/index";
+import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive";
-import { Article, ArticleLineNode } from "@/domains/article";
-import { Result } from "@/types";
+import { Article, ArticleLineNode } from "@/domains/article/index";
+import { FileType } from "@/constants/index";
+import { Result } from "@/types/index";
 
 import { is_episode_changed, is_tv_changed } from "./utils";
 

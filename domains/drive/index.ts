@@ -4,8 +4,8 @@
 import dayjs from "dayjs";
 import Joi from "joi";
 
-import { AliyunDriveClient } from "@/domains/aliyundrive";
-import { AliyunDrivePayload, AliyunDriveProfile } from "@/domains/aliyundrive/types";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
+import { AliyunDrivePayload, AliyunDriveProfile } from "@/domains/clients/alipan/types";
 import {
   Article,
   ArticleLineNode,
@@ -14,7 +14,7 @@ import {
   ArticleSectionNode,
   ArticleTextNode,
 } from "@/domains/article";
-import { ModelParam, ModelQuery, DriveRecord, FileRecord } from "@/domains/store/types";
+import { ModelParam, ModelQuery, DriveRecord, FileRecord, DataStore } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { User } from "@/domains/user";
 import { BaseDomain, Handler } from "@/domains/base";
@@ -63,12 +63,12 @@ type DriveProps = {
   } & AliyunDriveProfile;
   client: AliyunDriveClient;
   user?: User;
-  store: DatabaseStore;
+  store: DataStore;
 };
 
 export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** create drive */
-  static async Get(values: { id: string; user?: User; store: DatabaseStore }) {
+  static async Get(values: { id: string; user?: User; store: DataStore }) {
     const { id, user, store } = values;
     const where: ModelQuery<"drive"> = {
       id,
@@ -89,7 +89,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const { drive_id, ...rest } = r.data;
     // console.log("[DOMAIN]drive/index - Get", drive_id, type, drive_token_id);
     const client_res = await (async (): Promise<Result<AliyunDriveClient>> => {
-      const r = await AliyunDriveClient.Get({ drive_id, store });
+      const r = await AliyunDriveClient.Get({ unique_id: drive_id, store });
       if (r.error) {
         return Result.Err(r.error.message);
       }
@@ -143,7 +143,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const { drive_id, ...rest } = r.data;
     // console.log("[DOMAIN]drive/index - Get", drive_id, type, drive_token_id);
     const client_res = await (async (): Promise<Result<AliyunDriveClient>> => {
-      const r = await AliyunDriveClient.Get({ drive_id, store });
+      const r = await AliyunDriveClient.Get({ unique_id: drive_id, store });
       if (r.error) {
         return Result.Err(r.error.message);
       }
@@ -220,7 +220,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         const client = new AliyunDriveClient({
           // 这里给一个空的是为了下面能调用 ping 方法
           id: drive_record_id,
-          drive_id: String(drive_id),
+          unique_id: String(drive_id),
           resource_drive_id,
           device_id,
           access_token,
@@ -324,7 +324,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         if (!_resource_drive_id) {
           const client = new AliyunDriveClient({
             id: "",
-            drive_id: String(drive_id),
+            unique_id: String(drive_id),
             resource_drive_id: "",
             device_id,
             access_token,
@@ -352,7 +352,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         const drive_record_id = r_id();
         const client = new AliyunDriveClient({
           id: drive_record_id,
-          drive_id: _resource_drive_id,
+          unique_id: _resource_drive_id,
           device_id,
           access_token,
           refresh_token,
@@ -457,7 +457,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   user?: User;
   profile: DriveProps["profile"];
   client: AliyunDriveClient;
-  store: DatabaseStore;
+  store: DataStore;
 
   constructor(options: DriveProps) {
     super();
@@ -769,13 +769,13 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
    */
   async delete_folder(f: { file_id: string; name: string }) {
     const { name, file_id } = f;
-    const files_res = await this.store.find_files({
-      parent_file_id: file_id,
+    const child_files = await this.store.prisma.file.findMany({
+      where: {
+        parent_file_id: file_id,
+      },
     });
-    if (files_res.error) {
-      return Result.Err(files_res.error.message);
-    }
-    const child_files = files_res.data;
+    // const files_res = await this.store.find_files({
+    // });
     this.emit(
       Events.Print,
       new ArticleSectionNode({
@@ -1023,13 +1023,11 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
    * 删除云盘内的指定文件
    */
   async delete_file_in_drive(file_id: string) {
-    const file_res = await this.store.find_file({
-      file_id,
+    const file = await this.store.prisma.file.findFirst({
+      where: {
+        file_id,
+      },
     });
-    if (file_res.error) {
-      return Result.Err(file_res.error.message);
-    }
-    const file = file_res.data;
     if (!file) {
       await this.store.prisma.subtitle.deleteMany({
         where: {
@@ -1155,7 +1153,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
 export async function clear_expired_files_in_drive(values: {
   drive_id: string;
   user: User;
-  store: DatabaseStore;
+  store: DataStore;
   on_print?: (node: ArticleLineNode) => void;
 }) {
   const { user, drive_id, store, on_print } = values;

@@ -4,11 +4,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
-import { BaseApiResp, Result } from "@/types";
+import { store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Drive } from "@/domains/drive/v2";
+import { DriveTypes } from "@/domains/drive/constants";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -16,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const {
     name,
     drive_id,
-    file_id = "root",
+    file_id,
     next_marker = "",
     page_size,
   } = req.body as Partial<{
@@ -36,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
-    return e(drive_res);
+    return e(Result.Err(drive_res.error.message));
   }
   const drive = drive_res.data;
   if (name) {
@@ -51,7 +52,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     res.status(200).json({ code: 0, msg: "", data: r.data });
     return;
   }
-  const r = await drive.client.fetch_files(file_id, {
+  const id = (() => {
+    if (file_id) {
+      if (file_id === "root" && drive.profile.type === DriveTypes.Cloud189Drive) {
+        return "-11";
+      }
+      return file_id;
+    }
+    if (drive.profile.type === DriveTypes.AliyunBackupDrive) {
+      return "root";
+    }
+    if (drive.profile.type === DriveTypes.AliyunResourceDrive) {
+      return "root";
+    }
+    if (drive.profile.type === DriveTypes.Cloud189Drive) {
+      return "-11";
+    }
+    return null;
+  })();
+  if (!id) {
+    return e(Result.Err("缺少文件 id"));
+  }
+  const r = await drive.client.fetch_files(id, {
     marker: next_marker,
     page_size,
   });

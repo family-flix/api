@@ -1,10 +1,10 @@
 /*u
  * @file 封装的一些文件操作相关的函数
  */
+import { accessSync, createReadStream, createWriteStream, mkdirSync } from "fs";
 import fs from "fs/promises";
 import path from "path";
 
-import { accessSync, mkdirSync } from "fs";
 import { Result } from "@/types";
 
 /**
@@ -85,6 +85,23 @@ export async function check_path_type(file_path: string): Promise<Result<"direct
     return Result.Err(e.message);
   }
 }
+export async function copy(src: string, dest: string): Promise<Result<string>> {
+  return new Promise((resolve) => {
+    const read_stream = createReadStream(src);
+    const write_stream = createWriteStream(dest);
+
+    read_stream.on("error", (err) => {
+      resolve(Result.Err(err.message));
+    });
+    write_stream.on("error", (err) => {
+      resolve(Result.Err(err.message));
+    });
+    write_stream.on("close", () => {
+      resolve(Result.Ok(dest));
+    });
+    read_stream.pipe(write_stream);
+  });
+}
 
 export async function check_existing(filepath: string) {
   try {
@@ -112,4 +129,3 @@ export async function mkdir(filepath: string): Promise<Result<null>> {
     return Result.Err(e.message);
   }
 }
-

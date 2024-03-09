@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 
@@ -15,9 +15,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     email: string;
     password: string;
   }>;
-  const r = await User.NewWithPassword({ email, password }, store);
+  const r = await User.GetByPassword({ email, password }, store);
   if (r.error) {
-    return e(r);
+    return e(Result.Err(r.error.message));
   }
   const { id, token } = r.data;
   return res.status(200).json({

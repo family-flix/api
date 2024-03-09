@@ -6,14 +6,12 @@ import fs from "fs";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { File, IncomingForm } from "formidable";
 
-import { Drive } from "@/domains/drive";
-import { User } from "@/domains/user";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { ModelQuery } from "@/domains/store/types";
-import { FileUpload } from "@/domains/uploader";
-import { BaseApiResp, Result } from "@/types";
+import { FileManage } from "@/domains/uploader/index";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
-import { build_media_name } from "@/utils/parse_filename_for_video";
 import { r_id } from "@/utils";
 
 export const config = {
@@ -51,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!media_source) {
     return e(Result.Err("没有匹配的视频记录"));
   }
-  const $upload = new FileUpload({ root: app.assets });
+  const $upload = new FileManage({ root: app.assets });
   const files = (await new Promise((resolve, reject) => {
     const form = new IncomingForm();
     form.parse(req, (err, fields, files) => {

@@ -8,10 +8,14 @@ import path from "path";
 
 import axios from "axios";
 
+import { check_existing, copy, ensure } from "@/utils/fs";
 import { Result } from "@/types";
-import { check_existing } from "@/utils/fs";
 
-export class FileUpload {
+export class FileManage {
+  static ensure(filepath: string) {
+    return ensure(filepath);
+  }
+
   root: string;
 
   constructor(options: { root: string }) {
@@ -46,6 +50,7 @@ export class FileUpload {
       });
     });
   }
+  /** 上传字幕文件 */
   upload_subtitle(filepath: string, filename: string): Promise<Result<string>> {
     return new Promise((resolve) => {
       const subtitle_path = path.resolve(this.root, "subtitle", filename);
@@ -57,6 +62,7 @@ export class FileUpload {
       });
     });
   }
+  /** 删除字幕文件 */
   delete_subtitle(filename: string): Promise<Result<string>> {
     return new Promise((resolve) => {
       const subtitle_path = path.resolve(this.root, "subtitle", filename);
@@ -68,10 +74,20 @@ export class FileUpload {
       });
     });
   }
-  /** 下载网络图片到本地 */
-  async download(url: string, key: string): Promise<Result<string>> {
+  async copy_local_file(file: string, filename: string, parent_dir: string): Promise<Result<string>> {
+    const filepath = path.resolve(this.root, parent_dir, filename);
+    const r = await copy(file, filepath);
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    const result = "/" + path.relative(path.resolve(this.root), filepath);
+    // console.log("copy_local_file success", result);
+    return Result.Ok(result);
+  }
+  /** 下载网络文件到本地 */
+  async download(url: string, key: string, options: Partial<{ is_fullpath: boolean }> = {}): Promise<Result<string>> {
     try {
-      const filepath = path.join(this.root, key);
+      const filepath = options.is_fullpath ? key : path.join(this.root, key);
       const r = await check_existing(filepath);
       if (r.error) {
         return Result.Err(r.error.message);
@@ -105,7 +121,7 @@ export class FileUpload {
       return Promise.resolve(Result.Err(e.message));
     }
   }
-  /** 删除本地图片 */
+  /** 删除本地文件 */
   async delete_file(key: string) {
     const filepath = path.join(this.root, key);
     return new Promise((resolve) => {

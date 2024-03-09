@@ -2,9 +2,11 @@
  * @file 豆瓣
  */
 import axios from "axios";
+import uniq from "lodash/uniq";
 
 import { Result, Unpacked, UnpackedResult } from "@/types";
 import { DOUBAN_GENRE_TEXT_TO_VALUE, MediaTypes } from "@/constants";
+import { num_to_chinese } from "@/utils";
 
 import {
   fetch_episode_profile,
@@ -13,8 +15,8 @@ import {
   search_tv_in_douban,
   search_movie_in_tmdb,
 } from "./services";
-import { decrypt } from "./utils";
-import { num_to_chinese } from "@/utils";
+import { decrypt } from "./decrypt";
+import { split_name_and_original_name } from "./utils";
 
 export class DoubanClient {
   options: {
@@ -47,6 +49,9 @@ export class DoubanClient {
     for (let i = 0; i < items.length; i += 1) {
       (() => {
         const { id, title, cover_url, abstract, abstract_2, rating, labels } = items[i];
+        if (!abstract) {
+          return;
+        }
         // const { count, value, star_count } = rating;
         const fields = abstract.split("/").map((t) => t.trim());
         const genres = fields
@@ -82,16 +87,7 @@ export class DoubanClient {
         if (air_date) {
           name = name.replace(air_date[0], "").trim();
         }
-        const { name: n, origin_name } = (() => {
-          const [n, origin_n] = name.split(" ");
-          if (origin_n) {
-            return { name: n, origin_name: origin_n };
-          }
-          return {
-            name,
-            origin_name: null,
-          };
-        })();
+        const { name: n, origin_name } = split_name_and_original_name(name);
         const payload = {
           id,
           name: n.trim().replace(/ {2,}/g, " "),
@@ -116,13 +112,17 @@ export class DoubanClient {
     list: UnpackedResult<Unpacked<ReturnType<typeof this.search>>>["list"]
   ) {
     const { type, name, original_name, order, air_date } = season;
+    if (list.length === 0) {
+      return Result.Err("没有列表数据");
+    }
     const matched = (() => {
+      const names_processed = [name, name.replace("：", "·")];
       if (type === MediaTypes.Movie) {
         const matched = list.find((media) => {
           if (air_date) {
-            return name === media.name && air_date === media.air_date;
+            return names_processed.includes(media.name) && air_date === media.air_date;
           }
-          return name === media.name;
+          return names_processed.includes(media.name);
         });
         if (matched) {
           return matched;
@@ -130,20 +130,32 @@ export class DoubanClient {
         return null;
       }
       if (type === MediaTypes.Season) {
-        const maybe_season_num = [order, ` 第${order}季`, ` 第${num_to_chinese(order)}季`, ` Season ${order}`];
-        const maybe_chinese_names = maybe_season_num.map((n) => {
-          return [name, n].filter(Boolean).join("");
-        });
+        const maybe_season_num = [
+          order === 1 ? "" : order,
+          order,
+          ` 第${order}季`,
+          ` 第${num_to_chinese(order)}季`,
+          ` Season ${order}`,
+        ];
+        const maybe_chinese_names = maybe_season_num
+          .map((n) => {
+            return names_processed.map((nn) => {
+              return [nn, n].filter(Boolean).join("");
+            });
+          })
+          .reduce((prev, name) => {
+            return [...prev, ...name];
+          }, [] as string[]);
         const maybe_original_names = original_name
           ? maybe_season_num.map((n) => {
               return [original_name, n].filter(Boolean).join("");
             })
           : [];
-        const maybe_names = [
+        const maybe_names = uniq([
           ...maybe_chinese_names,
           ...maybe_original_names,
           ...maybe_chinese_names.flatMap((item1) => maybe_original_names.map((item2) => [item1, item2].join(" "))),
-        ];
+        ]);
         console.log(maybe_names);
         for (let i = 0; i < maybe_names.length; i += 1) {
           const maybe_name = maybe_names[i];

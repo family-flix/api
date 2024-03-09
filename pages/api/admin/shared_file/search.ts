@@ -4,9 +4,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { User } from "@/domains/user";
-import { AliyunDriveProfile } from "@/domains/aliyundrive/types";
+import { AliyunDriveProfile } from "@/domains/clients/alipan/types";
 import { store } from "@/store";
 import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types";
@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return Result.Err(p_res.error.message);
     }
     const { drive_id } = p_res.data;
-    const client_res = await AliyunDriveClient.Get({ drive_id: String(drive_id), store });
+    const client_res = await AliyunDriveClient.Get({ unique_id: String(drive_id), store });
     if (client_res.error) {
       return Result.Err(client_res.error.message);
     }

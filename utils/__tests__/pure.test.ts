@@ -480,4 +480,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("超前35-40", () => {
+    const name = "超前35-40";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

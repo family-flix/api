@@ -4,13 +4,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { ParsedMovieRecord } from "@/domains/store/types";
-import { archive_movie_files } from "@/domains/aliyundrive/utils";
+import { archive_movie_files } from "@/domains/clients/alipan/utils";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 import { Drive } from "@/domains/drive";
 import { FileType } from "@/constants";
 import { DriveAnalysis } from "@/domains/analysis";
@@ -79,6 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `文件[${file.name}]归档`,
     type: TaskTypes.ArchiveSeason,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -154,7 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (existing_res.data !== null) {
         return existing_res.data;
       }
-      const r = await to_drive.client.add_folder({
+      const r = await to_drive.client.create_folder({
         parent_file_id: to_drive.profile.root_folder_id!,
         name: folder_in_from_drive.file_name,
       });

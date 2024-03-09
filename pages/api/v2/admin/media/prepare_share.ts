@@ -1,23 +1,24 @@
 /**
  * @file 管理后台/将指定季移动到资源盘
- * 1、资源盘的文件才能分享
+ * 1、阿里云资源盘的文件才能分享
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { Job, TaskTypes } from "@/domains/job";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Job, TaskTypes } from "@/domains/job/index";
 import { Drive } from "@/domains/drive/v2";
 import { DriveTypes } from "@/domains/drive/constants";
-import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/aliyundrive/utilsV2";
+import { AliyunDriveClient } from "@/domains/clients/alipan/index";
+import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/clients/alipan/utilsV2";
 import { MediaSourceProfileRecord, MediaSourceRecord, ParsedMediaSourceRecord } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DriveAnalysis } from "@/domains/analysis/v2";
-import { BaseApiResp, Result } from "@/types";
-import { FileType, MediaTypes } from "@/constants";
-import { app, store } from "@/store";
+import { BaseApiResp, Result } from "@/types/index";
+import { FileType, MediaTypes } from "@/constants/index";
 import { response_error_factory } from "@/utils/server";
-import { padding_zero } from "@/utils";
+import { padding_zero } from "@/utils/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -63,6 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `移动「${season_payload.name}」到资源盘`,
     type: TaskTypes.MoveToResourceDrive,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -121,6 +123,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const from_drive = from_drive_res.data;
+        if (!(from_drive.client instanceof AliyunDriveClient)) {
+          job.output.write_line([`暂时只有 阿里云盘 可以分享`]);
+          return;
+        }
         const prefix = `[${from_drive.name}]`;
         if (![DriveTypes.AliyunBackupDrive].includes(from_drive.type)) {
           job.output.write_line([prefix, `不是阿里云备份盘，无法移动到资源盘`]);
@@ -154,7 +160,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           job.output.write_line([prefix, "该备份盘未初始化资源盘"]);
           return;
         }
-        const to_drive_res = await Drive.GetByUniqueId({ id: from_drive.client.resource_drive_id, user, store });
+        const to_drive_res = await Drive.Get({ unique_id: from_drive.client.resource_drive_id, user, store });
         if (to_drive_res.error) {
           job.output.write_line([prefix, "初始化失败，因为", to_drive_res.error.message]);
           return;
@@ -167,7 +173,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const folder_in_from_drive = archive_res.data;
-        if (from_drive.client.resource_drive_id !== to_drive.client.drive_id) {
+        if (from_drive.client.resource_drive_id !== to_drive.client.unique_id) {
           job.output.write_line([prefix, "资源盘不属于备份盘"]);
           return;
         }

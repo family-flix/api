@@ -44,7 +44,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("Thinking")) {
+    if (!filename.includes("盗钥匙")) {
       return;
     }
     // console.log(...args);
@@ -280,7 +280,7 @@ export function parse_filename_for_video(
     },
     // 奇怪的冗余信息
     {
-      regexp: /超前点映|超前[0-9]{0,}集{0,1}完结|点映礼|[bB]站logo/,
+      regexp: /超前点映|超前[0-9]{1,}-[0-9]{1,}|超前[0-9]{0,}集{0,1}完结|点映礼|[bB]站logo|Remux/,
     },
     {
       regexp: /（[^）]{1,}）$/,
@@ -1702,9 +1702,9 @@ function format_episode_number2(n: string) {
  * @param prefix
  * @returns
  */
-export function format_episode_number(n: string, options: { log: (...args: unknown[]) => void }): string {
-  const { log } = options;
-  log("[]format_episode_number", n);
+export function format_episode_number(n: string, options: Partial<{ log: (...args: unknown[]) => void }> = {}): string {
+  const { log = () => {} } = options;
+  // log("[]format_episode_number", n);
   const prefix = "E";
   const number = n.replace(/\.{1,}$/, "").replace(/^\.{1,}/, "");
   if (number.match(/[上下]/)) {

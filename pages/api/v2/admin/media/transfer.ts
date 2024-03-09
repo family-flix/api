@@ -8,18 +8,19 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { Job, TaskTypes } from "@/domains/job";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { Job, TaskTypes } from "@/domains/job/index";
 import { Drive } from "@/domains/drive/v2";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { MediaSourceProfileRecord, MediaSourceRecord, ParsedMediaSourceRecord } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DriveAnalysis } from "@/domains/analysis/v2";
-import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/aliyundrive/utilsV2";
-import { BaseApiResp, Result } from "@/types";
-import { FileType, MediaTypes } from "@/constants";
-import { app, store } from "@/store";
+import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/clients/alipan/utilsV2";
+import { BaseApiResp, Result } from "@/types/index";
+import { FileType, MediaTypes } from "@/constants/index";
 import { response_error_factory } from "@/utils/server";
-import { padding_zero, sleep } from "@/utils";
+import { padding_zero, sleep } from "@/utils/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -81,6 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `移动「${media_payload.name}」到云盘「${to_drive.name}]`,
     type: TaskTypes.MoveTV,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -137,6 +139,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // 这里遍历云盘，将每个云盘内、该 电视剧季 需要归档的文件进行整理
     for (let i = 0; i < drive_ids_of_parsed_episodes.length; i += 1) {
       await (async () => {
+        if (!(to_drive.client instanceof AliyunDriveClient)) {
+          job.output.write_line(["暂时仅 阿里云盘 支持归档"]);
+          return;
+        }
         const from_drive_id = drive_ids_of_parsed_episodes[i];
         const the_files_prepare_transfer = parsed_media_source_groups_by_drive_id[from_drive_id];
         if (the_files_prepare_transfer.length === 0) {
@@ -150,6 +156,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           return;
         }
         const from_drive = from_drive_res.data;
+        if (!(from_drive.client instanceof AliyunDriveClient)) {
+          job.output.write_line(["暂时仅 阿里云盘 支持归档"]);
+          return;
+        }
         const prefix = `[${from_drive.name}]`;
         const archive_res = await archive_media_files({
           files: the_files_prepare_transfer,

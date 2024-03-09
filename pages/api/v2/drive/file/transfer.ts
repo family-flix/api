@@ -5,16 +5,17 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { ParsedMediaSourceRecord } from "@/domains/store/types";
 import { Drive } from "@/domains/drive/v2";
 import { DriveAnalysis } from "@/domains/analysis/v2";
-import { archive_media_files } from "@/domains/aliyundrive/utilsV2";
+import { archive_media_files } from "@/domains/clients/alipan/utilsV2";
 import { BaseApiResp, Result } from "@/types";
 import { FileType, MediaTypes } from "@/constants";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 import { sleep } from "@/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -100,6 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `文件「${file.name}」归档`,
     type: TaskTypes.ArchiveSeason,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -114,11 +116,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     source: ParsedMediaSourceRecord;
   }) {
     const { source } = payload;
+    if (!(from_drive.client instanceof AliyunDriveClient)) {
+      job.output.write_line([`暂时仅 阿里云盘 支持移动到资源盘`]);
+      return;
+    }
+    if (!(to_drive.client instanceof AliyunDriveClient)) {
+      job.output.write_line([`暂时仅 阿里云盘 支持移动到资源盘`]);
+      return;
+    }
     const { id, file_id, name, file_name, episode_text, season_text, parent_file_id, parent_paths } = source;
     const to_drive_root_folder_id = to_drive.profile.root_folder_id;
     if (!to_drive_root_folder_id) {
       job.output.write_line(["目标云盘没有设置索引根目录"]);
-      job.finish();
       return;
     }
     const created_folder_res = await archive_media_files({
@@ -141,7 +150,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     if (created_folder_res.error) {
       job.output.write_line(["归档失败，因为", created_folder_res.error.message]);
-      job.finish();
       return;
     }
     const folder_in_from_drive = created_folder_res.data;
@@ -153,7 +161,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (existing_res.data !== null) {
         return existing_res.data;
       }
-      const r = await to_drive.client.add_folder({
+      const r = await to_drive.client.create_folder({
         parent_file_id: to_drive.profile.root_folder_id!,
         name: folder_in_from_drive.file_name,
       });
@@ -164,7 +172,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     })();
     if (folder_in_to_drive === null) {
       job.output.write_line(["目标云盘没有文件夹存放资源文件"]);
-      job.finish();
       return;
     }
     const transfer_res = await from_drive.client.move_files_to_drive({
@@ -174,7 +181,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     if (transfer_res.error) {
       job.output.write_line(["转存分享资源失败，因为", transfer_res.error.message]);
-      job.finish();
       return;
     }
     await sleep(3000);
@@ -202,7 +208,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
     if (analysis_res.error) {
       job.output.write_line(["初始化索引，因为", analysis_res.error.message]);
-      job.finish();
       return;
     }
     const analysis = analysis_res.data;
@@ -284,8 +289,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
     }
     job.output.write_line(["完成归档"]);
-    job.finish();
   }
-  run(payload);
+  (async () => {
+    await run(payload);
+    job.finish();
+  })();
   res.status(200).json({ code: 0, msg: "移动剧集文件", data: { job_id: job.id } });
 }

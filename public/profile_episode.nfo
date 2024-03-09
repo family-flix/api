@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<episodedetails>
+  <plot><![CDATA[善宇和宝拉恋爱的事情传开了，使得胡同里一片翻天覆地。再见双门洞，进入到胡同内的一辆搬家车，最先离开双门洞的家族是？那个时节 家族的爱，邻居间的温暖，青春的灿烂，初恋的心疼，悸动，幸福。带着这一切，时间回到现实之中，只祈愿这时光是温暖的。]]></plot>
+  <outline />
+  <lockdata>false</lockdata>
+  <dateadded>2021-10-03 05:43:20</dateadded>
+  <title>再见我的青春&amp;双门洞</title>
+  <director>Shin Won-ho</director>
+  <rating>9.2</rating>
+  <year>2016</year>
+  <imdbid>tt5445452</imdbid>
+  <tvdbid>5471511</tvdbid>
+  <runtime>121</runtime>
+  <genre>Comedy</genre>
+  <genre>Drama</genre>
+  <genre>Family</genre>
+  <uniqueid type="Tvdb">5471511</uniqueid>
+  <uniqueid type="Imdb">tt5445452</uniqueid>
+  <episode>20</episode>
+  <season>1</season>
+  <aired>2016-01-16</aired>
+  <fileinfo>
+    <streamdetails>
+      <video>
+        <codec>h264</codec>
+        <micodec>h264</micodec>
+        <bitrate>15944449</bitrate>
+        <width>1920</width>
+        <height>1080</height>
+        <aspect>16:9</aspect>
+        <aspectratio>16:9</aspectratio>
+        <framerate>23.976025</framerate>
+        <scantype>progressive</scantype>
+        <default>True</default>
+        <forced>False</forced>
+        <duration>121</duration>
+        <durationinseconds>7272</durationinseconds>
+      </video>
+      <audio>
+        <codec>dts</codec>
+        <micodec>dts</micodec>
+        <bitrate>1536000</bitrate>
+        <language>kor</language>
+        <scantype>progressive</scantype>
+        <channels>2</channels>
+        <samplingrate>48000</samplingrate>
+        <default>True</default>
+        <forced>False</forced>
+      </audio>
+      <subtitle>
+        <codec>PGSSUB</codec>
+        <micodec>PGSSUB</micodec>
+        <language>chi</language>
+        <scantype>progressive</scantype>
+        <default>True</default>
+        <forced>False</forced>
+      </subtitle>
+      <subtitle>
+        <codec>PGSSUB</codec>
+        <micodec>PGSSUB</micodec>
+        <language>chi</language>
+        <scantype>progressive</scantype>
+        <default>False</default>
+        <forced>False</forced>
+      </subtitle>
+    </streamdetails>
+  </fileinfo>
+</episodedetails>

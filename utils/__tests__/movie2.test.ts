@@ -116,6 +116,16 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("D-盗钥匙的方法.Remux", () => {
+    const name = "D-盗钥匙的方法.Remux";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "盗钥匙的方法",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
   //
   // test("up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv", () => {
   //   const name = "up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv";

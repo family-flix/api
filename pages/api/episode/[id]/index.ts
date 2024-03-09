@@ -3,11 +3,11 @@
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { store } from "@/store/index";
 import { Member } from "@/domains/user/member";
-import { Drive } from "@/domains/drive";
-import { BaseApiResp, Result } from "@/types";
+import { Drive } from "@/domains/drive/v2";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -102,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     season_number: string;
     episode_number: string;
     file_id: string;
-    thumbnail: string;
+    thumbnail: string | null;
     url: string;
     type: string;
     width: number;

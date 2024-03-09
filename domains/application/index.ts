@@ -68,7 +68,6 @@ export class Application {
         return;
       }
       this.timer = setInterval(() => {
-        // console.log("[DOMAIN]Application - tick");
         this.listeners.forEach((event) => {
           event.elapsed += 1000;
           if (event.elapsed >= event.delay) {

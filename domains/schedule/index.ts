@@ -212,6 +212,7 @@ export class ScheduleTask {
       desc: "[定时任务]同步资源文件夹新增影片",
       type: TaskTypes.FilesSync,
       user_id: user.id,
+      app: this.app,
       store: this.store,
     });
     if (job_res.error) {
@@ -336,6 +337,7 @@ export class ScheduleTask {
       type: TaskTypes.DriveAnalysis,
       unique_id: drive.id,
       user_id: user.id,
+      app: this.app,
       store: this.store,
     });
     if (job_res.error) {
@@ -391,6 +393,7 @@ export class ScheduleTask {
       unique_id: "update_movie_and_season",
       type: TaskTypes.RefreshMedia,
       user_id: user.id,
+      app: this.app,
       store: this.store,
     });
     if (job_res.error) {

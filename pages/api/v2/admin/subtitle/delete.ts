@@ -4,13 +4,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp, Result } from "@/types";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { FileManage } from "@/domains/uploader/index";
+import { BaseApiResp, Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
-import { SubtitleFileTypes } from "@/constants";
-import { FileUpload } from "@/domains/uploader";
+import { SubtitleFileTypes } from "@/constants/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -41,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     },
   });
   if (subtitle.type === SubtitleFileTypes.LocalFile) {
-    const $upload = new FileUpload({ root: app.assets });
+    const $upload = new FileManage({ root: app.assets });
     const r = await $upload.delete_subtitle(subtitle.name);
     if (r.error) {
       return e(Result.Err(r.error.message));

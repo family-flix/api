@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = drive_res.data;
   const client = drive.client;
-  const r = await client.add_folder({
+  const r = await client.create_folder({
     parent_file_id,
     name,
   });

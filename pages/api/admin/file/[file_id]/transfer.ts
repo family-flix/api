@@ -5,14 +5,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job, TaskTypes } from "@/domains/job";
 import { FileRecord, ParsedEpisodeRecord, ParsedTVRecord } from "@/domains/store/types";
-import { archive_season_files } from "@/domains/aliyundrive/utils";
+import { archive_season_files } from "@/domains/clients/alipan/utils";
 import { MediaSearcher } from "@/domains/searcher";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 import { Folder } from "@/domains/folder";
 import { Drive } from "@/domains/drive";
 import { FileType } from "@/constants";
@@ -98,6 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `文件[${file.name}]归档`,
     type: TaskTypes.ArchiveSeason,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {
@@ -164,7 +165,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (existing_res.data !== null) {
         return existing_res.data;
       }
-      const r = await to_drive.client.add_folder({
+      const r = await to_drive.client.create_folder({
         parent_file_id: to_drive.profile.root_folder_id!,
         name: folder_in_from_drive.file_name,
       });

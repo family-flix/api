@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { thumbnail } = file_profile_res.data;
   type MediaFile = Partial<{
     file_id: string;
-    thumbnail: string;
+    thumbnail: string | null;
     url: string;
     type: string;
     width: number;

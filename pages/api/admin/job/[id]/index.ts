@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Job } from "@/domains/job";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("缺少任务 id"));
   }
   const user = t_res.data;
-  const job_res = await Job.Get({ id, user_id: user.id, store });
+  const job_res = await Job.Get({ id, user_id: user.id, app, store });
   if (job_res.error) {
     return e(Result.Err(job_res.error.message));
   }

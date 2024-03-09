@@ -1,6 +1,4 @@
-import { PartialAliyunDriveFile } from "@/domains/aliyundrive/types";
-import { SearchedEpisode } from "@/domains/walker";
-import { AliyunDriveClient } from "@/domains/aliyundrive";
+import { GenreDriveFile } from "@/domains/clients/types";
 import { DatabaseStore } from "@/domains/store";
 import { ParsedTVRecord, ParsedEpisodeRecord, RecordCommonPart, ParsedSeasonRecord } from "@/domains/store/types";
 import { is_video_file } from "@/utils";
@@ -188,6 +186,6 @@ export function build_folder_tree(records: ParsedEpisodeRecord[]) {
 }
 
 /** 遍历完云盘后的整个文件树 */
-export type RequestedAliyunDriveFiles = PartialAliyunDriveFile & {
+export type RequestedAliyunDriveFiles = GenreDriveFile & {
   items?: RequestedAliyunDriveFiles[];
 };

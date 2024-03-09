@@ -36,12 +36,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive_res = await Drive.Get({ id: file.drive_id, user, store });
   if (drive_res.error) {
-    return Result.Err(drive_res.error.message);
+    return e(Result.Err(drive_res.error.message));
   }
   const drive = drive_res.data;
   const file_profile_res = await drive.client.fetch_file(file_id);
   if (file_profile_res.error) {
-    return e(file_profile_res.error.message);
+    return e(Result.Err(file_profile_res.error.message));
   }
   const { type, content_hash, thumbnail, name, size, mime_type } = file_profile_res.data;
   const is_file = type === "file";

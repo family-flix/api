@@ -4,10 +4,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 import { Job, TaskTypes } from "@/domains/job";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { Drive } from "@/domains/drive";
@@ -29,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type: TaskTypes.Other,
     desc: "重置应用到初始状态",
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

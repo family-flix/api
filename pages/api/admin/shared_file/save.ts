@@ -4,6 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
 import { Job } from "@/domains/job";
@@ -12,7 +13,6 @@ import { ArticleLineNode, ArticleTextNode } from "@/domains/article";
 import { BaseApiResp, Result } from "@/types";
 import { FileType } from "@/constants";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -76,6 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     desc: `转存资源「${file_name}」到云盘「${drive.name}」`,
     type: TaskTypes.Transfer,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

@@ -4,6 +4,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
 import { DriveAnalysis } from "@/domains/analysis";
@@ -12,7 +13,6 @@ import { TaskTypes } from "@/domains/job/constants";
 import { FileType } from "@/constants";
 import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types";
-import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -51,6 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type: TaskTypes.DriveAnalysis,
     unique_id: drive.id,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

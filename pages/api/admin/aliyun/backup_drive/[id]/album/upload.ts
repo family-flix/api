@@ -33,13 +33,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(album_drive_res);
   }
   const { drive_id: album_drive_id } = album_drive_res.data;
-  //   const buffer = fs.readFileSync("/Users/litao/Downloads/for-buffer.png");
-  // 保存 PNG 图片到文件
-  //   const data_res = await drive.client.upload(buffer, {
-  //     parent_file_id: "root",
-  //     name: `${dayjs().unix()}.png`,
-  //     drive_id: album_drive_id,
-  //   });
   const images_res = await drive.client.fetch_images_in_folders();
   if (images_res.error) {
     return e(images_res);

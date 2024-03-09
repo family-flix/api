@@ -5,6 +5,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { app, store } from "@/store";
 import { User } from "@/domains/user";
 import { ProfileRefresh } from "@/domains/profile_refresh";
 import { TaskTypes } from "@/domains/job/constants";
@@ -13,7 +14,6 @@ import { TVProfileRecord, TVRecord } from "@/domains/store/types";
 import { MediaSearcher } from "@/domains/searcher";
 import { BaseApiResp, Result } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -48,6 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     unique_id: "update_tv_and_season",
     type: TaskTypes.RefreshMedia,
     user_id: user.id,
+    app,
     store,
   });
   if (job_res.error) {

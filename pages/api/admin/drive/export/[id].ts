@@ -10,7 +10,7 @@ import { BaseApiResp, Result } from "@/types";
 import { parseJSONStr } from "@/utils";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
-import { AliyunDrivePayload } from "@/domains/aliyundrive/types";
+import { AliyunDrivePayload } from "@/domains/clients/alipan/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

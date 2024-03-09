@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return e(r1);
     }
     const { share_id } = r1.data;
-    const files_res = await drive.client.fetch_shared_files("root", {
+    const files_res = await drive.client.fetch_resource_files("root", {
       share_id,
     });
     if (files_res.error) {
@@ -185,7 +185,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(r1);
   }
   const { share_id } = r1.data;
-  const files_res = await drive.client.fetch_shared_files("root", {
+  const files_res = await drive.client.fetch_resource_files("root", {
     share_id,
   });
   if (files_res.error) {
