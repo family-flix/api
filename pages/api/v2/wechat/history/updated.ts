@@ -56,20 +56,21 @@ WHERE m1.member_id = '${member.id}' AND m1.updated < latest_media_source.max_med
 ORDER BY m1.updated DESC
 LIMIT 10;
 `;
+  const data = {
+    list: r.map((media) => {
+      const { media_id, profile_name, profile_poster_path, latest_episode_order } = media;
+      return {
+        id: media_id,
+        name: profile_name,
+        poster_path: profile_poster_path,
+        text: `第${latest_episode_order}集`,
+      };
+    }),
+    next_marker: "",
+  };
   res.status(200).json({
     code: 0,
     msg: "",
-    data: {
-      list: r.map((media) => {
-        const { media_id, profile_name, profile_poster_path, latest_episode_order } = media;
-        return {
-          id: media_id,
-          name: profile_name,
-          poster_path: profile_poster_path,
-          text: `第${latest_episode_order}集`,
-        };
-      }),
-      next_marker: "",
-    },
+    data,
   });
 }

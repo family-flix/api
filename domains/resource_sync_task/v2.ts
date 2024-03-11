@@ -222,10 +222,10 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
    * 执行 FolderDiffer 生成的 effect
    */
   async consume_effects_for_shared_file(effects: DifferEffect[]) {
-    const { profile, store, resource_client: client } = this;
+    const { profile, store, drive_client } = this;
     const { url } = profile;
     const user_id = this.user.id;
-    const drive_id = this.resource_client.id;
+    const drive_id = this.drive_client.id;
     //     log("应用 diff 的结果，共", effects.length, "个");
     // const errors: Error[] = [];
     for (let i = 0; i < effects.length; i += 1) {
@@ -293,7 +293,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           this.emit(Events.Print, Article.build_line([`「${prefix}」已经在云盘中`]));
           continue;
         }
-        const r1 = await client.save_shared_files({
+        const r1 = await drive_client.save_shared_files({
           url,
           file_id: shared_file_id,
           target_file_id: prev_folder.id,

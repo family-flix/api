@@ -1512,7 +1512,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       return Result.Err("请先调用 fetch_share_profile 方法");
     }
     const { share_id, share_title, share_name } = r1.data;
-    // console.log("target folder id", target_file_id, this.root_folder_id);
+    console.log("target folder id", target_file_id, this.unique_id, share_id, file_id);
     const r2 = await this.request.post(
       API_HOST + "/v2/file/copy",
       {
