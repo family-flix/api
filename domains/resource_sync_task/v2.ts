@@ -337,7 +337,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
             id: r_id(),
             name: prev_folder.name,
             file_id: prev_folder.id,
-            parent_paths: this.resource_client.root_folder?.name!,
+            parent_paths: this.drive_client.root_folder?.name!,
             type: type === "file" ? FileType.File : FileType.Folder,
             user_id,
             drive_id,
