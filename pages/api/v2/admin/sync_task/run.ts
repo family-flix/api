@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err(task_res.error.message));
   }
   const task = task_res.data;
-  const drive_res = await Drive.Get({ id: task.resource_client.id, user, store });
+  const drive_res = await Drive.Get({ id: task.drive_client.id, user, store });
   if (drive_res.error) {
     return e(Result.Err(drive_res.error.message));
   }
