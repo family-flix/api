@@ -27,19 +27,20 @@ import { notice_push_deer } from "../notice";
   const store = app.store;
   const schedule = new ScheduleTask({ app, store });
 
-  const start = dayjs("2024/02/01");
-  const end = dayjs("2024/03/08");
+  // const start = dayjs("2024/02/01");
+  // const end = dayjs("2024/03/08");
 
-  let cur = start.clone();
-  const dates = [];
-  while (cur.isBefore(end)) {
-    dates.push(cur.format("YYYY-MM-DD"));
-    cur = cur.add(1, "day");
-  }
-  for (let i = 0; i < dates.length; i += 1) {
-    const date = dates[i];
-    await schedule.fetch_added_files_daily(date);
-  }
+  // let cur = start.clone();
+  // const dates = [];
+  // while (cur.isBefore(end)) {
+  //   dates.push(cur.format("YYYY-MM-DD"));
+  //   cur = cur.add(1, "day");
+  // }
+  // for (let i = 0; i < dates.length; i += 1) {
+  //   const date = dates[i];
+  //   await schedule.fetch_added_files_daily(date);
+  // }
+
   //   new CronJob.CronJob(
   //     "0 */5 * * * *",
   //     async () => {
@@ -82,10 +83,10 @@ import { notice_push_deer } from "../notice";
       // await schedule.update_sync_task_resources(
       //   "https://docs.qq.com/dop-api/opendoc?u=&id=DQmx1WEdTRXpGeEZ6&normal=1&outformat=1&noEscape=1&commandsFormat=1&preview_token=&doc_chunk_flag=1"
       // );
-      await schedule.run_sync_task_list();
+      // await schedule.run_sync_task_list();
       // await schedule.update_daily_updated();
-      await schedule.find_media_and_media_source_errors();
-      await schedule.update_stats();
+      // await schedule.find_media_and_media_source_errors();
+      // await schedule.update_stats();
     },
     null,
     true,
