@@ -121,6 +121,13 @@ describe("计算缺少的剧集", () => {
     });
     expect(range).toStrictEqual([1, 2, 3]);
   });
+  test("3", () => {
+    const range = find_missing_episodes({
+      count: 49,
+      episode_orders: [1, 2, 3, 4, 5, 6],
+    });
+    expect(range).toStrictEqual([]);
+  });
 });
 
 describe("根据缺少的剧集，修复剧集分组", () => {

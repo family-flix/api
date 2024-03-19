@@ -238,7 +238,7 @@ export class Media {
     });
     const cur_episode_orders = episode_orders.map((e) => e.profile.order);
     const missing_episodes = find_missing_episodes({
-      count: source_count,
+      count: latest_source.profile.order,
       episode_orders: cur_episode_orders,
     });
     const episode_ranges = fix_episode_group_by_missing_episodes({
