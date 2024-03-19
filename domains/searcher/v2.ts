@@ -399,6 +399,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
         const r = await this.store.prisma.media_profile.findFirst({
           where: {
             id: parsed_media.media_profile_id,
+            type: MediaTypes.Season,
           },
           include: {
             source_profiles: true,

@@ -139,4 +139,14 @@ describe("电视剧4", () => {
       episode: "E01",
     });
   });
+  test("第一神拳.E67.[1080P].mp4", () => {
+    const name = "第一神拳.E67.[1080P].mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "第一神拳",
+      original_name: "",
+      season: "",
+      episode: "E67",
+    });
+  });
 });

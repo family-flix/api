@@ -1,9 +1,10 @@
 import { BaseDomain } from "@/domains/base";
-import { DatabaseStore } from "@/domains/store";
+import { DatabaseStore } from "@/domains/store/index";
+import { Result } from "@/types/index";
 
 import { pushdeer_send } from "./clients/push_deer";
+import { PushClientTypes } from "./constants";
 import { SendPayload } from "./types";
-import { Result } from "@/types";
 
 enum Events {}
 type TheTypesOfEvents = {};
@@ -42,7 +43,7 @@ export class Notify extends BaseDomain<TheTypesOfEvents> {
   constructor(props: { _name?: string } & NotifyProps) {
     super(props);
 
-    const { store, type = 1, token } = props;
+    const { store, type = PushClientTypes.PushDeer, token } = props;
     this.store = store;
     this.type = type;
     this.token = token;
@@ -50,7 +51,7 @@ export class Notify extends BaseDomain<TheTypesOfEvents> {
 
   send(msg: SendPayload) {
     // console.log("[DOMAIN]notify - send", msg);
-    if (this.type === 1) {
+    if (this.type === PushClientTypes.PushDeer) {
       return pushdeer_send(msg, this.token);
     }
     return Promise.resolve(Result.Err("推送异常"));

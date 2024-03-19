@@ -3604,10 +3604,10 @@ pretty-format@^27.5.1:
     ansi-styles "^5.0.0"
     react-is "^17.0.1"
 
-prisma-online@0.2.0:
-  version "0.2.0"
-  resolved "https://registry.npmjs.org/prisma-online/-/prisma-online-0.2.0.tgz#dd174d2f23e784e1a5d9cc964fabedddc6f78e7c"
-  integrity sha512-IypBIjPJziaoXpGsG+uhhZoMmrRVlxBa1Vs8EJLptVyRRWeobC1QeB7gUhJW4IYf88Gws0NZXD2SRF8WEUfapw==
+prisma-online@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.npmmirror.com/prisma-online/-/prisma-online-0.2.1.tgz#4b1cfc6d2489c0797483baaa67c0ff95463ef012"
+  integrity sha512-sKNfwgq8u0W9t6Fk4atukI45xm25u5IcnASg4SZCAdr8sLU7dGJ0GZKZAHOazGcR5Md5M5A4xaqbMtKyC3+qnA==
 
 prisma@^4.14.0:
   version "4.14.0"

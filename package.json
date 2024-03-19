@@ -46,7 +46,7 @@
     "mitt": "^3.0.0",
     "next": "^13.1.6",
     "node-jsencrypt": "^1.0.0",
-    "prisma-online": "0.2.0",
+    "prisma-online": "^0.2.1",
     "qiniu": "^7.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
