@@ -83,10 +83,10 @@ import { notice_push_deer } from "../notice";
       // await schedule.update_sync_task_resources(
       //   "https://docs.qq.com/dop-api/opendoc?u=&id=DQmx1WEdTRXpGeEZ6&normal=1&outformat=1&noEscape=1&commandsFormat=1&preview_token=&doc_chunk_flag=1"
       // );
-      // await schedule.run_sync_task_list();
-      // await schedule.update_daily_updated();
-      // await schedule.find_media_and_media_source_errors();
-      // await schedule.update_stats();
+      await schedule.run_sync_task_list();
+      await schedule.update_daily_updated();
+      await schedule.find_media_and_media_source_errors();
+      await schedule.update_stats();
     },
     null,
     true,

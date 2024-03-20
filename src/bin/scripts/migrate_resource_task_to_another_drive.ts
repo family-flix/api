@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 import { ResourceSyncTaskStatus } from "@/constants";
 import { Application } from "@/domains/application";
 import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
@@ -75,6 +77,23 @@ async function main() {
             },
           });
           if (existing) {
+            if (!existing.media_id) {
+              await store.prisma.resource_sync_task.update({
+                where: {
+                  id: existing.id,
+                },
+                data: {
+                  updated: dayjs().toISOString(),
+                  status: ResourceSyncTaskStatus.WorkInProgress,
+                  media_id: data.media_id,
+                },
+              });
+            }
+            await store.prisma.resource_sync_task.delete({
+              where: {
+                id: data.id,
+              },
+            });
             return;
           }
           const r = await ResourceSyncTask.Transfer(
