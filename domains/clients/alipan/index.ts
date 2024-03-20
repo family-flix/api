@@ -1539,7 +1539,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     /** 分享链接 */
     url: string;
     /** 提取码 */
-    code?: string;
+    code?: string | null;
     /** 需要转存的文件 */
     file_ids?: {
       file_id: string;

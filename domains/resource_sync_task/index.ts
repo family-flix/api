@@ -235,7 +235,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     }
     const r1 = await client.fetch_share_profile(url, { force: true });
     if (r1.error) {
-      if (["share_link is cancelled by the creator"].includes(r1.error.message)) {
+      if (["share_link is cancelled by the creator", "share_link is forbidden"].includes(r1.error.message)) {
         await store.prisma.bind_for_parsed_tv.update({
           where: {
             id,

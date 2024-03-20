@@ -10,12 +10,15 @@ import { Folder } from "@/domains/folder/index";
 import { Article, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article/index";
 import { User } from "@/domains/user/index";
 import { DatabaseStore } from "@/domains/store/index";
+import { Drive } from "@/domains/drive/index";
 import { DriveClient } from "@/domains/clients/types";
+import { Job, TaskTypes } from "@/domains/job";
+import { Application } from "@/domains/application";
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource/index";
 import { DataStore, ResourceSyncTaskRecord } from "@/domains/store/types";
 import { Result } from "@/types/index";
 import { is_video_file, r_id, sleep } from "@/utils/index";
-import { FileType } from "@/constants/index";
+import { FileType, ResourceSyncTaskStatus } from "@/constants/index";
 
 enum Events {
   /** 新增文件 */
@@ -105,7 +108,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       store,
     });
     if (r2.error) {
-      if (["share_link is cancelled by the creator"].includes(r2.error.message)) {
+      if (["share_link is cancelled by the creator", "share_link is forbidden"].includes(r2.error.message)) {
         await store.prisma.resource_sync_task.update({
           where: {
             id,
@@ -134,6 +137,168 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         on_error,
       })
     );
+  }
+  /** 转存资源/创建资源同步任务 */
+  static async Transfer(
+    body: { url: string; pwd?: string | null; file_id: string; file_name: string; drive_id: string },
+    extra: {
+      user: User;
+      app: Application;
+      store: DataStore;
+    }
+  ) {
+    const { url, pwd, file_id, file_name, drive_id } = body;
+    const { user, app, store } = extra;
+    if (!url) {
+      return Result.Err("缺少分享资源链接");
+    }
+    if (!file_id) {
+      return Result.Err("请指定要转存的文件");
+    }
+    if (!file_name) {
+      return Result.Err("请传入转存文件名称");
+    }
+    if (!drive_id) {
+      return Result.Err("请指定转存到哪个网盘");
+    }
+    const drive_res = await Drive.Get({ id: drive_id, user, store });
+    if (drive_res.error) {
+      return Result.Err(drive_res.error.message);
+    }
+    const drive = drive_res.data;
+    if (!drive.has_root_folder()) {
+      return Result.Err("请先为云盘设置索引根目录");
+    }
+    const exiting_tmp_file = await store.prisma.tmp_file.findFirst({
+      where: {
+        name: file_name,
+        drive_id,
+        user_id: user.id,
+      },
+    });
+    if (exiting_tmp_file) {
+      return Result.Err("最近转存过同名文件");
+    }
+    const existing_file = await store.prisma.file.findFirst({
+      where: {
+        name: file_name,
+        parent_paths: drive.profile.root_folder_name!,
+        drive_id,
+        user_id: user.id,
+      },
+    });
+    if (existing_file) {
+      return Result.Err("云盘内已有同名文件");
+    }
+    const job_res = await Job.New({
+      unique_id: file_id,
+      desc: `转存资源「${file_name}」到云盘「${drive.name}」`,
+      type: TaskTypes.Transfer,
+      user_id: user.id,
+      app,
+      store,
+    });
+    if (job_res.error) {
+      return Result.Err(job_res.error.message);
+    }
+    const job = job_res.data;
+    job.output.write_line(["开始转存"]);
+    async function run(resource: { name: string; file_id: string; url: string; code?: string | null }) {
+      const { url, code, file_id, name } = resource;
+      drive.client.on_transfer_failed((error) => {
+        job.output.write_line(["转存发生错误", error.message]);
+      });
+      drive.client.on_transfer_finish(async () => {
+        job.output.write_line(["添加到待索引文件"]);
+        await sleep(5000);
+        const r = await drive.client.existing(drive.profile.root_folder_id!, name);
+        if (r.error) {
+          job.output.write_line(["搜索已转存文件失败", r.error.message]);
+          return;
+        }
+        if (!r.data) {
+          job.output.write_line(["转存后没有搜索到转存文件"]);
+          return;
+        }
+        await store.prisma.tmp_file.create({
+          data: {
+            id: r_id(),
+            name,
+            file_id: r.data.file_id,
+            parent_paths: drive.profile.root_folder_name ?? "",
+            drive_id: drive.id,
+            user_id: user.id,
+          },
+        });
+        job.output.write_line(["创建同步任务"]);
+        await store.prisma.resource_sync_task.create({
+          data: {
+            id: r_id(),
+            url,
+            pwd: code,
+            file_id,
+            name,
+            status: ResourceSyncTaskStatus.WaitSetProfile,
+            file_name_link_resource: name,
+            file_id_link_resource: r.data.file_id,
+            drive_id: drive.id,
+            user_id: user.id,
+          },
+        });
+      });
+      (async () => {
+        const e = await store.prisma.shared_file_in_progress.findFirst({
+          where: {
+            id: r_id(),
+            url,
+            user_id: user.id,
+          },
+        });
+        if (e) {
+          return;
+        }
+        await store.prisma.shared_file_in_progress.create({
+          data: {
+            id: r_id(),
+            url,
+            pwd: code,
+            file_id,
+            name,
+            drive_id: drive.id,
+            user_id: user.id,
+          },
+        });
+      })();
+      const r = await drive.client.save_multiple_shared_files({
+        url,
+        code,
+        file_ids: [{ file_id }],
+      });
+      if (r.error) {
+        job.output.write(
+          new ArticleLineNode({
+            children: ["转存失败", r.error.message].map((text) => new ArticleTextNode({ text })),
+          })
+        );
+        job.finish();
+        return;
+      }
+      job.output.write(
+        new ArticleLineNode({
+          children: ["转存成功"].map((text) => new ArticleTextNode({ text })),
+        })
+      );
+      job.finish();
+    }
+    run({
+      url,
+      code: pwd,
+      file_id,
+      name: file_name,
+    });
+    return Result.Ok({
+      job_id: job.id,
+    });
   }
 
   /** 任务信息 */

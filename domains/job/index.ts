@@ -7,8 +7,7 @@ import dayjs from "dayjs";
 import { BaseDomain, Handler } from "@/domains/base";
 import { Article, ArticleLineNode, ArticleTextNode } from "@/domains/article/index";
 import { Application } from "@/domains/application/index";
-import { DatabaseStore } from "@/domains/store/index";
-import { AsyncTaskRecord } from "@/domains/store/types";
+import { AsyncTaskRecord, DataStore } from "@/domains/store/types";
 import { Result } from "@/types/index";
 import { r_id } from "@/utils/index";
 
@@ -27,7 +26,7 @@ type JobNewProps = {
   type: TaskTypes;
   desc: string;
   user_id: string;
-  store: DatabaseStore;
+  store: DataStore;
   app: Application;
   on_print?: () => void;
 };
@@ -39,12 +38,12 @@ type JobProps = {
   >;
   output: Article;
   app: Application;
-  store: DatabaseStore;
+  store: DataStore;
 };
 const cached_jobs: Record<string, Job> = {};
 
 export class Job extends BaseDomain<TheTypesOfEvents> {
-  static async Get(body: { id: string; user_id: string; app: Application; store: DatabaseStore }) {
+  static async Get(body: { id: string; user_id: string; app: Application; store: DataStore }) {
     const { id, user_id, app, store } = body;
     if (cached_jobs[id]) {
       return Result.Ok(cached_jobs[id]);
@@ -145,7 +144,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   prev_write_time: number;
   timer: null | NodeJS.Timer = null;
 
-  store: DatabaseStore;
+  store: DataStore;
   app: Application;
 
   constructor(props: JobProps) {
@@ -205,14 +204,15 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
     });
   }, 5000);
   check_need_pause = throttle(async () => {
-    const r = await this.store.find_task({ id: this.id });
-    if (r.error) {
+    const r = await this.store.prisma.async_task.findFirst({
+      where: {
+        id: this.id,
+      },
+    });
+    if (!r) {
       return Result.Ok(false);
     }
-    if (!r.data) {
-      return Result.Ok(false);
-    }
-    const { need_stop } = r.data;
+    const { need_stop } = r;
     if (need_stop) {
       return Result.Ok(true);
     }
@@ -407,13 +407,16 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       })
     );
     this.update_content_force();
-    const r = await this.store.update_task(this.id, {
-      status: TaskStatus.Finished,
-      error: error.message,
+    await this.store.prisma.async_task.update({
+      where: {
+        id: this.id,
+      },
+      data: {
+        updated: dayjs().toISOString(),
+        status: TaskStatus.Finished,
+        error: error.message,
+      },
     });
-    if (r.error) {
-      return Result.Err(r.error);
-    }
     return Result.Ok(null);
   }
   update(body: Partial<{ percent: number; desc: string }>) {
