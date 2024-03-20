@@ -97,24 +97,25 @@ async function main() {
             });
             return;
           }
-          //   const r = await ResourceSyncTask.Transfer(
-          //     {
-          //       url,
-          //       pwd,
-          //       file_id,
-          //       file_name: name,
-          //       drive_id: drive2.id,
-          //     },
-          //     {
-          //       user,
-          //       app,
-          //       store,
-          //     }
-          //   );
-          //   if (r.error) {
-          //     return;
-          //   }
-          //   await sleep(10 * 1000);
+          const r = await ResourceSyncTask.Transfer(
+            {
+              url,
+              pwd,
+              file_id,
+              file_name: name,
+              drive_id: drive2.id,
+            },
+            {
+              user,
+              app,
+              store,
+            }
+          );
+          if (r.error) {
+            console.log(r.error.message);
+            return;
+          }
+          await sleep(10 * 1000);
         },
       });
     },
