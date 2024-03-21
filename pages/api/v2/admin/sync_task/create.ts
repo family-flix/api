@@ -74,6 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const the_file_in_drive = await store.prisma.file.findFirst({
       where: {
         name: resource_file_name,
+        drive_id,
         user_id: user.id,
       },
     });
@@ -105,6 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         id: r_id(),
         status: ResourceSyncTaskStatus.WaitSetProfile,
         url,
+        pwd,
         file_id: resource_file_id,
         name: resource_file_name,
         file_id_link_resource: the_file_in_drive.file_id,
@@ -127,6 +129,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       data: {
         id: r_id(),
         url,
+        pwd,
         file_id: resource_file_id,
         name: resource_file_name,
         file_id_link_resource: drive_file_id,
@@ -245,6 +248,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       id: r_id(),
       status: ResourceSyncTaskStatus.WaitSetProfile,
       url,
+      pwd,
       file_id: payload.resource.file_id,
       name: payload.resource.name,
       file_id_link_resource: payload.file.file_id,
