@@ -56,11 +56,9 @@ JOIN (
   JOIN MediaSourceProfile ON MediaSource.profile_id = MediaSourceProfile.id
   JOIN PlayHistoryV2 ON PlayHistoryV2.media_source_id = MediaSource.id
 ) CurEpisode ON PlayHistoryV2.id = CurEpisode.history_id
-WHERE Media.id = PlayHistoryV2.media_id AND Media.type = ${
-    MediaTypes.Season
-  } AND MediaSource.created > PlayHistoryV2.updated AND PlayHistoryV2.member_id = ${member.id}
+WHERE Media.id = PlayHistoryV2.media_id AND Media.type = ${MediaTypes.Season} AND MediaSource.created > PlayHistoryV2.updated AND PlayHistoryV2.member_id = ${member.id}
 GROUP BY MediaSource.media_id
-ORDER BY PlayHistoryV2.updated DESC, MediaSourceProfile.\'order\' DESC
+ORDER BY MediaSource.created DESC
 LIMIT ${page_size} OFFSET ${(page - 1) * page_size}
 `;
   const data = {
