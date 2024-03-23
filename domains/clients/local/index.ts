@@ -114,7 +114,7 @@ export class LocalFileDriveClient implements DriveClient {
     }> = {}
   ) {
     const filepath = (() => {
-      const homedir = path.resolve(os.homedir(), "Documents");
+      const homedir = path.resolve(this.unique_id);
       if (!file_id || file_id === "root") {
         return homedir;
       }

@@ -155,13 +155,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           const { order } = media_source.profile;
           return `${name}/${order}`;
         })(),
-        media_id,
-        media_source_id,
         current_time,
         duration,
+        thumbnail_path: null,
         member_id: member.id,
         file_id: source_id || null,
-        thumbnail_path: null,
+        media_id,
+        media_source_id,
       },
     });
     delete pending_unique[k];
@@ -175,12 +175,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // console.log("[PAGE]history/update - thumbnail", thumbnail_res.data);
   create_thumbnail(existing_history.id);
   const data: Parameters<typeof store.prisma.play_history_v2.update>[0]["data"] = {
-    media_id,
-    media_source_id,
+    text: (() => {
+      const { name } = media.profile;
+      const { order } = media_source.profile;
+      return `${name}/${order}`;
+    })(),
     current_time,
-    file_id: source_id || null,
     thumbnail_path: null,
     updated: dayjs().toISOString(),
+    media_id,
+    media_source_id,
+    file_id: source_id || null,
   };
   if (duration) {
     data.duration = duration;

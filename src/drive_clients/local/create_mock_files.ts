@@ -64,7 +64,7 @@ const template_subtitle = path.resolve(process.cwd(), "public/template_subtitle.
     console.log("请先添加一个云盘");
     return;
   }
-  const url = "https://www.aliyundrive.com/s/NamVipF3sG7";
+  const url = "https://www.aliyundrive.com/s/ACC1V8t18jg";
   const r2 = await AliyunShareResourceClient.Get({ id: drive.id, url, store });
   if (r2.error) {
     console.log(r2.error.message);
