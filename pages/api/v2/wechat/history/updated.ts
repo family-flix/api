@@ -71,6 +71,7 @@ SELECT
     MediaProfile.poster_path AS poster_path,
     PlayHistoryV2.updated AS updated,
     MAX(MediaSourceProfile.\'order\') AS latest_episode_order,
+    MediaSource.created AS latest_episode_created,
     MediaSourceProfile.name AS latest_episode_name
 FROM MediaSource
 JOIN Media ON Media.id = MediaSource.media_id
