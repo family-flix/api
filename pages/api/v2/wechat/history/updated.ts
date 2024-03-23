@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     poster_path: string;
     updated: string;
     latest_episode_order: number;
-    latest_episode_name: string;
+    latest_episode_name: number;
   }[] = await store.prisma.$queryRaw`
 SELECT
     Media.id AS id,
@@ -71,13 +71,15 @@ SELECT
     MediaProfile.poster_path AS poster_path,
     PlayHistoryV2.updated AS updated,
     MAX(MediaSourceProfile.\'order\') AS latest_episode_order,
-    MAX(MediaSourceProfile.\'name\') AS latest_episode_name
+    MediaSourceProfile.name AS latest_episode_name
 FROM MediaSource
 JOIN Media ON Media.id = MediaSource.media_id
 JOIN MediaSourceProfile ON MediaSource.profile_id = MediaSourceProfile.id
 JOIN MediaProfile ON Media.profile_id = MediaProfile.id
 JOIN PlayHistoryV2 ON PlayHistoryV2.media_id = Media.id
-WHERE Media.id = PlayHistoryV2.media_id AND MediaSource.created > PlayHistoryV2.updated AND PlayHistoryV2.member_id = ${member.id} AND PlayHistoryV2.updated > ((strftime('%s', 'now') * 1000) - (60 * 60 * 24 * 60 * 1000))
+WHERE Media.id = PlayHistoryV2.media_id AND MediaSource.created > PlayHistoryV2.updated AND PlayHistoryV2.member_id = ${
+    member.id
+  } AND PlayHistoryV2.updated > ((strftime('%s', 'now') * 1000) - (60 * 60 * 24 * 60 * 1000))
 GROUP BY MediaSource.media_id
 ORDER BY PlayHistoryV2.updated DESC, MediaSourceProfile.\'order\' DESC
 LIMIT ${page_size + 1}
@@ -120,7 +122,8 @@ LIMIT ${page_size + 1}
         id,
         name,
         poster_path,
-        text: `${latest_episode_order}、${latest_episode_name}`,
+        latest_episode_order: Number(latest_episode_order),
+        latest_episode_name,
         updated,
       };
     }),

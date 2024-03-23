@@ -408,11 +408,15 @@ export class ScheduleTask {
     await walk_model_with_cursor({
       fn: (extra) => {
         return this.store.prisma.media_profile.findMany({
+          include: {
+            series: true,
+          },
           ...extra,
         });
       },
       handler: async (data) => {
         await profile_client.refresh_media_profile_with_tmdb(data);
+        return profile_client.refresh_profile_with_douban(data);
       },
     });
     job.output.write_line(["全部影视剧详情刷新完成"]);
