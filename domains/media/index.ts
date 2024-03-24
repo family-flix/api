@@ -170,7 +170,10 @@ export class Media {
         };
       }
       const { current_time, thumbnail_path, file_id, media_source } = history;
-      const range = groups[0];
+      const group_index = groups.findIndex((range) => {
+        return range[0] <= media_source.profile.order && media_source.profile.order <= range[1];
+      });
+      const range = groups[group_index === -1 ? 0 : group_index];
       const sources = await this.store.prisma.media_source.findMany({
         where: {
           files: {
