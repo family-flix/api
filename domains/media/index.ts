@@ -6,8 +6,8 @@ import {
   MediaRecord,
 } from "@/domains/store/types";
 import { Member } from "@/domains/user/member";
-import { MediaTypes, SubtitleFileTypes, SubtitleLanguageMap } from "@/constants";
-import { Result } from "@/types";
+import { MediaTypes, SubtitleFileTypes, SubtitleLanguageMap } from "@/constants/index";
+import { Result } from "@/types/index";
 
 import {
   find_missing_episodes,
@@ -163,7 +163,14 @@ export class Media {
                     url: unique_id,
                   };
                 }),
-                files: sources[0].files,
+                files: sources[0].files.map((f) => {
+                  const { id, name, file_name } = f;
+                  return {
+                    id,
+                    name,
+                    file_name,
+                  };
+                }),
                 order: sources[0].profile.order,
               }
             : null,
@@ -210,7 +217,14 @@ export class Media {
           current_time,
           thumbnail_path,
           index: sources.findIndex((s) => s.id === media_source.id),
-          files: media_source.files,
+          files: media_source.files.map((f) => {
+            const { id, name, file_name } = f;
+            return {
+              id,
+              name,
+              file_name,
+            };
+          }),
           subtitles: media_source.subtitles.map((subtitle) => {
             const { id, name, language, unique_id } = subtitle;
             return {

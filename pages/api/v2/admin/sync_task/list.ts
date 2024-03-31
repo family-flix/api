@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const {
     name,
     status,
-    invalid = 0,
+    invalid,
     next_marker = "",
     page_size = 20,
   } = req.body as Partial<{
@@ -42,9 +42,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           status: ResourceSyncTaskStatus.WorkInProgress,
         },
       ],
-      invalid,
     },
   ];
+  if (invalid !== undefined) {
+    queries.push({
+      invalid,
+    });
+  }
   if (name) {
     queries.push({
       OR: [
