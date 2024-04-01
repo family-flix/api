@@ -379,7 +379,11 @@ export class ScheduleTask {
   }
   async refresh_media_profile_list() {
     await this.walk_user(async (user) => {
-      await this.refresh_media_profile_list_of_user({ user });
+      const r = await this.refresh_media_profile_list_of_user({ user });
+      if (r.error) {
+        console.log(r.error.message);
+        return;
+      }
     });
   }
   async refresh_media_profile_list_of_user(values: { user: User }) {
@@ -415,8 +419,16 @@ export class ScheduleTask {
         });
       },
       handler: async (data) => {
-        await profile_client.refresh_media_profile_with_tmdb(data);
-        return profile_client.refresh_profile_with_douban(data);
+        // console.log(data);
+        console.log(data.name);
+        const r = await profile_client.refresh_media_profile_with_tmdb(data);
+        if (r.error) {
+          console.log(r.error.message);
+        }
+        const r2 = await profile_client.refresh_profile_with_douban(data);
+        if (r2.error) {
+          console.log(r2.error.message);
+        }
       },
     });
     job.output.write_line(["全部影视剧详情刷新完成"]);

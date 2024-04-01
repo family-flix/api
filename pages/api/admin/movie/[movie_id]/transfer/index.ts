@@ -77,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   };
   const job_res = await Job.New({
     unique_id: to_drive.id,
-    desc: `移动电影「${movie_name}」到云盘「${to_drive.name}]`,
+    desc: `移动电影「${movie_name}」到云盘「${to_drive.name}」`,
     type: TaskTypes.MoveMovie,
     user_id: user.id,
     app,
