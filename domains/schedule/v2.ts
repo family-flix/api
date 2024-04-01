@@ -415,6 +415,9 @@ export class ScheduleTask {
           include: {
             series: true,
           },
+          orderBy: {
+            created: "desc",
+          },
           ...extra,
         });
       },
