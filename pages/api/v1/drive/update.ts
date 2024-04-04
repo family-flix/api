@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { store } from "@/store";
+import { store } from "@/store/index";
 import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/server";
 import { ModelQuery } from "@/domains/store/types";
+import { BaseApiResp, Result } from "@/types/index";
+import { response_error_factory } from "@/utils/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -18,11 +18,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (t_res.error) {
     return e(t_res);
   }
-  const user = t_res.data;
+  if (!where || !where.id) {
+    return e(Result.Err("缺少 id 参数"));
+  }
   const args = {
     where: {
-      ...where,
-      user_id: user.id,
+      id: where.id,
     },
     data,
   };

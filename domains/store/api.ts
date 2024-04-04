@@ -125,7 +125,7 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
         const { where, include = {} } = params;
         const { unique_id, id } = where;
         const { drive_token } = include;
-        const r = await this.client.post("https://media-t.funzm.com/api/v1/drive/find_first", {
+        const r = await this.client.post("https://media.funzm.com/api/v1/drive/find_first", {
           where: { id, unique_id },
           include: { drive_token },
         });
@@ -142,7 +142,7 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
         const { where, data = {} } = params;
         const { unique_id, id } = where;
         const { drive_token } = data;
-        const r = await this.client.post("https://media-t.funzm.com/api/v1/drive/update", {
+        const r = await this.client.post("https://media.funzm.com/api/v1/drive/update", {
           where: { id, unique_id },
           data: { drive_token },
         });

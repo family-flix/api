@@ -98,7 +98,12 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
   /** 获取云盘 */
   static async Get(payload: { drive_id: number | string; store: DataStore }) {
     const { drive_id, store } = payload;
-    const existing = await store.prisma.drive.findFirst({ where: { unique_id: String(drive_id) } });
+    const existing = await store.prisma.drive.findFirst({
+      where: { unique_id: String(drive_id) },
+      include: {
+        drive_token: true,
+      },
+    });
     if (!existing) {
       return Result.Err("没有匹配的记录");
     }
