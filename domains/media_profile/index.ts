@@ -315,7 +315,7 @@ export class MediaProfileClient {
       if (existing) {
         return existing;
       }
-      const created = await this.$store.prisma.media_series_profile.create({
+      const created_series = await this.$store.prisma.media_series_profile.create({
         data: {
           id: String(id),
           type: MediaTypes.Season,
@@ -366,7 +366,7 @@ export class MediaProfileClient {
           genres: true,
         },
       });
-      return created;
+      return created_series;
     })();
     for (let i = 0; i < seasons.length; i += 1) {
       await (async () => {
@@ -976,7 +976,7 @@ export class MediaProfileClient {
           tips.push(tip);
           return;
         }
-        if (!series) {
+        if (data.type === MediaTypes.Season && !series) {
           const tip = `没有关联 series`;
           tips.push(tip);
           return;
@@ -984,7 +984,7 @@ export class MediaProfileClient {
         const match_r = this.$douban.match_exact_media(
           {
             type: data.type,
-            name: series.name,
+            name: series ? series.name : data.name,
             original_name: data.original_name,
             order: data.order,
             air_date: data.air_date,

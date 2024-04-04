@@ -1,11 +1,8 @@
 /**
  * @file 调用 api 获取数据
  */
-import fs from "fs";
-
+import axios from "axios";
 import { PrismaClient } from "@prisma/client";
-import debounce from "lodash/debounce";
-import omit from "lodash/omit";
 
 import { BaseDomain, Handler } from "@/domains/base";
 import { HttpClientCore } from "@/domains/http_client";
@@ -32,6 +29,7 @@ type TheTypesOfEvents = {
 };
 type APIStoreState = {};
 type APIStoreProps = {
+  hostname: string;
   token: string;
 };
 
@@ -47,16 +45,43 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
   constructor(props: Partial<{ _name: string }> & APIStoreProps) {
     super(props);
 
-    const { token } = props;
+    const { hostname = "https://media.funzm.com", token } = props;
 
     this.token = token;
-    this.client = new HttpClientCore({
-      hostname: "https://media.funzm.com",
+    const _client = new HttpClientCore({
+      hostname,
       headers: {
         Authorization: `${token}`,
       },
     });
-    connect(this.client);
+    connect(_client);
+    // this.client = _client;
+    // @ts-ignore
+    this.client = {
+      // ..._client,
+      async post<T>(...args: Parameters<typeof _client.post>) {
+        const r = await _client.post<{ code: number; msg: string; data: T }>(...args);
+        if (r.error) {
+          return Result.Err(r.error.message);
+        }
+        const { code, msg, data } = r.data;
+        if (code !== 0) {
+          return Result.Err(msg, code);
+        }
+        return Result.Ok(data as T);
+      },
+      async get<T>(...args: Parameters<typeof _client.get>) {
+        const r = await _client.get<{ code: number; msg: string; data: T }>(...args);
+        if (r.error) {
+          return Result.Err(r.error.message);
+        }
+        const { code, msg, data } = r.data;
+        if (code !== 0) {
+          return Result.Err(msg, code);
+        }
+        return Result.Ok(data as T);
+      },
+    };
   }
   // @ts-ignore
   prisma: PrismaClient = {
@@ -91,29 +116,42 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
     //     return {} as any;
     //   },
     // },
-    //     drive: {
-    //       // @ts-ignore
-    //       findFirst: (params: {
-    //         where: { unique_id: string; id: string | number };
-    //         include?: { drive_token?: boolean };
-    //       }) => {
-    //         const { where, include = {} } = params;
-    //         const { unique_id } = where;
-    //         const { drive_token } = include;
-    //         const matched = this.drives.find((d) => String(d.unique_id) === String(unique_id));
-    //         if (!matched) {
-    //           return null;
-    //         }
-    //         if (drive_token) {
-    //           const matched_token = this.tokens.find((d) => String(d.id) === String(matched.drive_token_id));
-    //           if (matched_token) {
-    //             // @ts-ignore
-    //             matched.drive_token = matched_token;
-    //           }
-    //         }
-    //         return matched;
-    //       },
-    //     },
+    drive: {
+      // @ts-ignore
+      findFirst: async (params: {
+        where: { unique_id: string; id: string | number };
+        include?: { drive_token?: boolean };
+      }) => {
+        const { where, include = {} } = params;
+        const { unique_id, id } = where;
+        const { drive_token } = include;
+        const r = await this.client.post("https://media-t.funzm.com/api/v1/drive/find_first", {
+          where: { id, unique_id },
+          include: { drive_token },
+        });
+        if (r.error) {
+          throw new Error(r.error.message);
+        }
+        return r.data;
+      },
+      // @ts-ignore
+      update: async (params: {
+        where: { unique_id: string; id: string | number };
+        data?: { drive_token?: { data: string; expired_at: string } };
+      }) => {
+        const { where, data = {} } = params;
+        const { unique_id, id } = where;
+        const { drive_token } = data;
+        const r = await this.client.post("https://media-t.funzm.com/api/v1/drive/update", {
+          where: { id, unique_id },
+          data: { drive_token },
+        });
+        if (r.error) {
+          throw new Error(r.error.message);
+        }
+        return r.data;
+      },
+    },
   };
   //   find_drive(where: Partial<{ unique_id: string; id: string | number }>) {
   //     const { id, unique_id } = where;

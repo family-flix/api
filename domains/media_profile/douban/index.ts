@@ -2,11 +2,12 @@
  * @file 豆瓣
  */
 import axios from "axios";
+import dayjs from "dayjs";
 import uniq from "lodash/uniq";
 
-import { Result, Unpacked, UnpackedResult } from "@/types";
-import { DOUBAN_GENRE_TEXT_TO_VALUE, MediaTypes } from "@/constants";
-import { num_to_chinese } from "@/utils";
+import { Result, Unpacked, UnpackedResult } from "@/types/index";
+import { DOUBAN_GENRE_TEXT_TO_VALUE, MediaTypes } from "@/constants/index";
+import { num_to_chinese } from "@/utils/index";
 
 import {
   fetch_episode_profile,
@@ -156,13 +157,18 @@ export class DoubanClient {
           ...maybe_original_names,
           ...maybe_chinese_names.flatMap((item1) => maybe_original_names.map((item2) => [item1, item2].join(" "))),
         ]);
-        console.log(maybe_names);
         for (let i = 0; i < maybe_names.length; i += 1) {
           const maybe_name = maybe_names[i];
           const matched = list.find((media) => {
             return maybe_name === media.name;
           });
           if (matched) {
+            if (air_date) {
+              if (String(dayjs(air_date).year()) === String(dayjs(matched.air_date).year())) {
+                return matched;
+              }
+              return null;
+            }
             return matched;
           }
         }

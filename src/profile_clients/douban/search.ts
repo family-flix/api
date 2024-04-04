@@ -16,14 +16,14 @@ async function main() {
   console.log("Start");
   const $douban = new DoubanClient({});
   const client = $douban;
-  const r = await client.search("十六岁的花季1");
+  const r = await client.search("阳光普照");
   if (r.error) {
     console.log(r.error.message);
     return;
   }
   console.log(r.data.list);
   const rr = await client.match_exact_media(
-    { type: MediaTypes.Season, name: "十六岁的花季", original_name: null, order: 1, air_date: null },
+    { type: MediaTypes.Movie, name: "阳光普照", original_name: null, order: 1, air_date: null },
     r.data.list
   );
   if (rr.error) {

@@ -1166,6 +1166,7 @@ model member {
         user           user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
         setting            member_setting?
+        // credential         member_credential?
         tokens             member_token[]
         authentications    member_authentication[]
         notifications      member_notification[]
@@ -1219,6 +1220,19 @@ model member_authentication {
 
         @@map("MemberAuthentication")
 }
+
+// model member_credential {
+//         id       String  @id
+//         password String
+//         salt     String
+//         verified Boolean @default(false)
+//         email    String  @unique
+
+//         member_id String @unique
+//         member    member @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+//         @@map("MemberCredential")
+// }
 
 model member_token {
         id      String   @id
@@ -1501,6 +1515,7 @@ model settings {
         @@map("Settings")
 }
 
+// 管理员
 model user {
         id      String   @id
         created DateTime @default(now())

@@ -11,9 +11,10 @@ import { AliyunDriveClient } from "@/domains/clients/alipan/index";
 import { file_info } from "@/domains/clients/alipan/utils";
 import { DataStore } from "@/domains/store/types";
 import { DriveClient } from "@/domains/clients/types";
+import { DriveTypes } from "@/domains/drive/constants";
 import { parse_argv } from "@/utils/server";
 import { Result } from "@/types/index";
-import { r_id } from "@/utils";
+import { r_id } from "@/utils/index";
 
 enum Events {
   Change,
@@ -79,13 +80,44 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
       store,
     });
     if (r.error) {
-      return Result.Err(`获取 drive 失败，因为, ${r.error.message}`);
+      return Result.Err(`获取 drive 失败，因为 ${r.error.message}`);
     }
     const client = r.data;
     client.debug = true;
     const r2 = await client.ensure_initialized();
     if (r2.error) {
-      return Result.Err(`initialize drive failed, because , ${r2.error.message}`);
+      return Result.Err(`initialize drive failed, because ${r2.error.message}`);
+    }
+    const u = new MediaUpload({
+      drive_id,
+      client,
+      store,
+    });
+    return Result.Ok(u);
+  }
+  /** 获取云盘 */
+  static async Get(payload: { drive_id: number | string; store: DataStore }) {
+    const { drive_id, store } = payload;
+    const existing = await store.prisma.drive.findFirst({ where: { unique_id: String(drive_id) } });
+    if (!existing) {
+      return Result.Err("没有匹配的记录");
+    }
+    const { type } = existing;
+    if (type !== DriveTypes.AliyunResourceDrive) {
+      return Result.Err("暂不支持");
+    }
+    const r = await AliyunDriveClient.Get({
+      unique_id: String(drive_id),
+      store,
+    });
+    if (r.error) {
+      return Result.Err(`获取 drive 失败，因为 ${r.error.message}`);
+    }
+    const client = r.data;
+    client.debug = true;
+    const r2 = await client.ensure_initialized();
+    if (r2.error) {
+      return Result.Err(`initialize drive failed, because ${r2.error.message}`);
     }
     const u = new MediaUpload({
       drive_id,

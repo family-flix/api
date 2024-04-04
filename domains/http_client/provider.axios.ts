@@ -1,68 +1,54 @@
-/**
- * @file 具体的请求方法实现
- * @example
- * ```js
- * const client = new HttpClientCore({
- *   hostname: 'https://api.example.com',
- * });
- * connect(client);
- *
- * client.get('/api/ping');
- * ```
- */
-import axios, { AxiosError } from "axios";
+import axios, { CancelTokenSource } from "axios";
 
 import { Result } from "@/types/index";
 
 import { HttpClientCore } from "./index";
 
 export function connect(store: HttpClientCore) {
+  let requests: { id: string; source: CancelTokenSource }[] = [];
   store.fetch = async (options) => {
-    const { url, method, data, headers } = options;
+    const { url, method, id = String(store.uid()), data, headers } = options;
+    const source = axios.CancelToken.source();
+    requests.push({
+      id,
+      source,
+    });
     if (method === "GET") {
       try {
-        const response = await axios.get(url, {
-          headers: {
-            ...headers,
-          },
+        const r = await axios.get(url, {
+          params: data,
+          headers,
+          cancelToken: source.token,
         });
-        const profile = {
-          status: response.status,
-          data: response.data,
-        };
-        return Result.Ok(response.data, 200, profile);
+        requests = requests.filter((r) => r.id !== id);
+        return r;
       } catch (err) {
-        const error = err as AxiosError<{ code: string; message: string }>;
-        const { response, message } = error;
-        const profile = {
-          status: response?.status,
-          data: response?.data,
-        };
-        return Result.Err(response?.data?.message || message, response?.data?.code, profile);
+        requests = requests.filter((r) => r.id !== id);
+        throw err;
       }
     }
     if (method === "POST") {
       try {
-        const response = await axios.post(url, data, {
-          headers: {
-            ...headers,
-          },
+        const r = await axios.post(url, data, {
+          headers,
+          cancelToken: source.token,
         });
-        const profile = {
-          status: response.status,
-          data: response.data,
-        };
-        return Result.Ok(response.data, 200, profile);
+        requests = requests.filter((r) => r.id !== id);
+        return r;
       } catch (err) {
-        const error = err as AxiosError<{ code: string; message: string }>;
-        const { response, message } = error;
-        const profile = {
-          status: response?.status,
-          data: response?.data,
-        };
-        return Result.Err(response?.data?.message || message, response?.data?.code, profile);
+        requests = requests.filter((r) => r.id !== id);
+        throw err;
       }
     }
     return Promise.reject("unknown method");
+  };
+  store.cancel = (id: string) => {
+    const matched = requests.find((r) => r.id === id);
+    if (!matched) {
+      return Result.Err("没有找到对应请求");
+    }
+    requests = requests.filter((r) => r.id !== id);
+    matched.source.cancel("主动取消");
+    return Result.Ok(null);
   };
 }
