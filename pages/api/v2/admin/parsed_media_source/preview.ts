@@ -28,13 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: user.id,
     },
   });
-  if (source) {
-    return {
-      id: source.id,
-      file_id: source.file_id,
-      drive_id: source.drive_id,
-    };
-  }
   if (!source) {
     return e(Result.Err("没有匹配的影片记录"));
   }

@@ -1,6 +1,6 @@
 import { Statistics } from "@/domains/store/types";
 
-export const __VERSION__ = "2.2.0";
+export const __VERSION__ = "2.2.1";
 
 export enum FileType {
   File = 1,
@@ -473,3 +473,10 @@ export const DEFAULT_STATS: Statistics = {
   file_size_count_today: 0,
   updated_at: null,
 };
+
+export enum AuthenticationProviders {
+  /** 微信小程序 */
+  Weapp = "weapp",
+  /** 邮箱、密码 凭证 */
+  Credential = "credential",
+}

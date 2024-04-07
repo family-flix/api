@@ -5,15 +5,12 @@ import axios from "axios";
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
+import { app, store } from "@/store/index";
+import { User } from "@/domains/user/index";
+import { BaseApiResp, Result } from "@/types/index";
+import { AuthenticationProviders } from "@/constants/index";
 import { response_error_factory } from "@/utils/server";
-import { app, store } from "@/store";
-import { r_id } from "@/utils";
-
-enum AuthenticationProviders {
-  Weapp = "weapp",
-}
+import { r_id } from "@/utils/index";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -57,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (!token_record) {
       const token_res = await User.Token({ id: authentication.member_id });
       if (token_res.error) {
-        return e(token_res);
+        return e(Result.Err(token_res.error.message));
       }
       await store.prisma.member_token.create({
         data: {
@@ -77,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const id = r_id();
   const token_res = await User.Token({ id });
   if (token_res.error) {
-    return e(token_res);
+    return e(Result.Err(token_res.error.message));
   }
   const token = token_res.data;
   await store.prisma.member.create({

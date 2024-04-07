@@ -132,6 +132,10 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
         if (r.error) {
           throw new Error(r.error.message);
         }
+        if (unique_id) {
+          // @ts-ignore
+          r.data.unique_id = unique_id;
+        }
         return r.data;
       },
       // @ts-ignore

@@ -3440,6 +3440,7 @@ function format_M3U8_manifest(videos: PartialVideo[]) {
     height: number;
     type: MediaResolutionTypes;
     url: string;
+    invalid: number;
   }[] = [];
   for (let i = 0; i < videos.length; i += 1) {
     const { url, status, template_id, template_name, template_width, template_height } = videos[i];
@@ -3450,6 +3451,7 @@ function format_M3U8_manifest(videos: PartialVideo[]) {
         height: template_height,
         type: template_id as MediaResolutionTypes,
         url,
+        invalid: url ? 0 : 1,
       });
     }
   }

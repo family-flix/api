@@ -113,7 +113,7 @@ export class User {
     const user = new User({ id: user_id, settings, token, store });
     return Result.Ok(user);
   }
-  static async Get(body: { id: string }, store: DatabaseStore) {
+  static async Get(body: { id: string }, store: DataStore) {
     const { id } = body;
     const user = await store.prisma.user.findUnique({
       where: { id },

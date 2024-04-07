@@ -126,6 +126,26 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("可怜的东西.4K内嵌官方中英字幕.Poor.Things.2023.HD2160P×265.AAC.English.CHS-ENG.星球放映室4K小组.mp4", () => {
+    const name = "可怜的东西.4K内嵌官方中英字幕.Poor.Things.2023.HD2160P×265.AAC.English.CHS-ENG.星球放映室4K小组.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "可怜的东西",
+      original_name: "Poor.Things",
+      season: "",
+      episode: "",
+    });
+  });
+  test("迷失东京.2003.1080p.BluRay.VC-1.DTS-HD.MA.5.1.mkv", () => {
+    const name = "迷失东京.2003.1080p.BluRay.VC-1.DTS-HD.MA.5.1.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "迷失东京",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
   //
   // test("up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv", () => {
   //   const name = "up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv";

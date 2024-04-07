@@ -1168,6 +1168,7 @@ model member {
         setting            member_setting?
         // credential         member_credential?
         tokens             member_token[]
+        // 这个等同于 accounts 含义
         authentications    member_authentication[]
         notifications      member_notification[]
         invitees           member[]                @relation("InviterToInvitees")

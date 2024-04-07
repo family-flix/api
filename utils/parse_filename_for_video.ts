@@ -215,6 +215,7 @@ export function parse_filename_for_video(
     "-SiGMA",
     "-CMCTV{0,1}",
     "-AIU",
+    "-7SINS",
     "ATV",
     "HQC",
     "Mp4Ba",
@@ -280,7 +281,8 @@ export function parse_filename_for_video(
     },
     // 奇怪的冗余信息
     {
-      regexp: /超前点映|超前[0-9]{1,}-[0-9]{1,}|超前[0-9]{0,}集{0,1}完结|点映礼|[bB]站logo|Remux/,
+      regexp:
+        /超前点[映播]|超前[0-9]{1,}-[0-9]{1,}|超前[0-9]{0,}集{0,1}完结|点映礼|[bB]站logo|Remux|^备份$|[\u4e00-\u9fa5]{1,}节限定/,
     },
     {
       regexp: /（[^）]{1,}）$/,
@@ -361,6 +363,9 @@ export function parse_filename_for_video(
       regexp: /含[\u4e00-\u9fa5]{1,}[0-9]{1,}部全系列/,
     },
     {
+      regexp: /含[\u4e00-\u9fa5]{1,}篇/,
+    },
+    {
       // 多少集，包含「更新中」信息
       // key: k("episode_count"),
       regexp: /([0-9]{1,}集){0,1}((持续){0,1}更新中|[已全]\.{0,1}完结)/,
@@ -384,7 +389,7 @@ export function parse_filename_for_video(
       regexp: /中字|双字/,
     },
     {
-      regexp: /[简官繁]中/,
+      regexp: /([韩][语語]){0,1}[简官繁]中/,
     },
     {
       regexp: /[简繁]体/,
@@ -426,7 +431,7 @@ export function parse_filename_for_video(
       regexp: /版本[1-9]{1,}/,
     },
     {
-      regexp: /(压缩|会员|宝藏)版本{0,1}/,
+      regexp: /(压缩|会员|宝藏|等)版本{0,1}/,
     },
     {
       regexp: /会员plus版|高内存版/,
@@ -555,12 +560,15 @@ export function parse_filename_for_video(
       regexp: /[hH][qQ]/,
     },
     {
+      regexp: /[vV][cC]-1\b/,
+    },
+    {
       key: k("resolution"),
       regexp: /([hHbB][dD]){0,1}\.{0,1}[0-9]{3,4}\.{0,1}[xX×]\.{0,1}[0-9]{3,4}/,
     },
     {
       key: k("resolution"),
-      regexp: /HD(360|720|1080|2160)[pP]{0,1}/,
+      regexp: /HD(360|720|1080|2160)[pP]{0,1}(×265){0,1}/,
     },
     {
       key: k("resolution"),

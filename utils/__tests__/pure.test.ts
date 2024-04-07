@@ -490,4 +490,44 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("超前点播", () => {
+    const name = "超前点播";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("备份", () => {
+    const name = "备份";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("春节限定", () => {
+    const name = "春节限定";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
+  test("4K 高码等版本", () => {
+    const name = "4K 高码等版本";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

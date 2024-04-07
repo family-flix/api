@@ -722,41 +722,39 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
   }
   async fetch_video_preview_info(file_id: string) {
     const e = await this.ensure_initialized();
-    //     if (e.error) {
-    //       return Result.Err(e.error.message);
-    //     }
-    const r = await this.request.get<{
-      normal: {
-        code: number;
-        message: string;
-        url: string;
-        videoKbps: number;
-      };
-    }>(API_HOST + "/api/portal/getNewVlcVideoPlayUrl.action", {
-      fileId: file_id,
-      type: 2,
-    });
-    if (r.error) {
-      return Result.Err(r.error);
-    }
-    const { normal } = r.data;
-    return Result.Ok({
-      sources: [
-        {
-          name: "",
-          width: 0,
-          height: 0,
-          type: MediaResolutionTypes.FHD,
-          url: normal.url,
-        },
-      ],
-      subtitles: [] as {
-        id: string;
-        name: string;
-        url: string;
-        language: "chi" | "eng" | "jpn";
-      }[],
-    });
+    // const r = await this.request.get<{
+    //   normal: {
+    //     code: number;
+    //     message: string;
+    //     url: string;
+    //     videoKbps: number;
+    //   };
+    // }>(API_HOST + "/api/portal/getNewVlcVideoPlayUrl.action", {
+    //   fileId: file_id,
+    //   type: 2,
+    // });
+    // if (r.error) {
+    //   return Result.Err(r.error);
+    // }
+    // const { normal } = r.data;
+    // return Result.Ok({
+    //   sources: [
+    //     {
+    //       name: "",
+    //       width: 0,
+    //       height: 0,
+    //       type: MediaResolutionTypes.FHD,
+    //       url: normal.url,
+    //     },
+    //   ],
+    //   subtitles: [] as {
+    //     id: string;
+    //     name: string;
+    //     url: string;
+    //     language: "chi" | "eng" | "jpn";
+    //   }[],
+    // });
+    return Result.Err("请实现 fetch_video_preview_info 方法");
   }
   /** 获取一个文件夹的完整路径（包括自身） */
   async fetch_parent_paths(file_id: string) {

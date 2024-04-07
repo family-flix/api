@@ -33,9 +33,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!r) {
     return e(Result.Err("没有匹配的记录"));
   }
-  const { id, type, name, profile, used_size, total_size, root_folder_id, root_folder_name, drive_token_id } = r;
+  const {
+    id,
+    type,
+    name,
+    profile,
+    unique_id,
+    used_size,
+    total_size,
+    root_folder_id,
+    root_folder_name,
+    drive_token_id,
+  } = r;
   const data = {
     id,
+    unique_id,
     type,
     name,
     profile,

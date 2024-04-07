@@ -96,6 +96,7 @@ export interface DriveClient {
         height: number;
         type: MediaResolutionTypes;
         url: string;
+        invalid: number;
       }[];
       subtitles: {
         id: string;

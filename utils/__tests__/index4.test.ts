@@ -149,4 +149,24 @@ describe("电视剧4", () => {
       episode: "E67",
     });
   });
+  test("Modern.Family.S02E20.1080p.BluRay.x264-7SINS.mkv", () => {
+    const name = "Modern.Family.S02E20.1080p.BluRay.x264-7SINS.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Modern.Family",
+      season: "S02",
+      episode: "E20",
+    });
+  });
+  test("第二季.全20集.韩语官中.含特别篇", () => {
+    const name = "第二季.全20集.韩语官中.含特别篇";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "S02",
+      episode: "",
+    });
+  });
 });

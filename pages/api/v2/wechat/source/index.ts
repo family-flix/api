@@ -58,12 +58,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     episode_number: string;
     file_id: string;
     thumbnail_path: string;
+    invalid: number;
     url: string;
     type: string;
     width: number;
     height: number;
   }>;
-  const recommend_resolution = (() => {
+  let recommend_resolution = (() => {
     // 只有一种分辨率，直接返回该分辨率视频
     if (info.sources.length === 1) {
       return info.sources[0];
@@ -82,12 +83,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
     return info.sources[0];
   })();
-  if (recommend_resolution.url.includes("x-oss-additional-headers=referer")) {
-    return e(Result.Err("视频文件无法播放，请修改 refresh_token"));
+  if (!recommend_resolution.url) {
+    const matched = info.sources.find((s) => s.url);
+    if (matched) {
+      recommend_resolution = matched;
+    }
   }
   const { url, width, height } = recommend_resolution;
-  if (!url) {
-    return e(Result.Err("源地址失效"));
+  if (url.includes("x-oss-additional-headers=referer")) {
+    return e(Result.Err("视频文件无法播放，请修改 refresh_token"));
   }
   const result: MediaFile & { other: MediaFile[]; subtitles: { language: MediaOriginCountries[]; url: string }[] } = {
     id,
@@ -96,15 +100,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     type: recommend_resolution.type,
     width,
     height,
+    invalid: 0,
     other: info.sources
       .map((res) => {
-        const { url, type, width, height } = res;
+        const { url, type, width, height, invalid } = res;
         return {
           cur: recommend_resolution.type === type,
           url,
           type,
           width,
           height,
+          invalid,
         };
       })
       .filter((source) => {

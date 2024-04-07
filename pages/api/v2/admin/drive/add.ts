@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res.error);
   }
   const user = t_res.data;
-  if (!type) {
+  if (type === undefined) {
     return e(Result.Err("请指定云盘类型"));
   }
   if (!payload) {
