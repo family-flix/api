@@ -9,13 +9,13 @@ import {
   ArticleListNode,
   ArticleSectionNode,
   ArticleTextNode,
-} from "@/domains/article";
+} from "@/domains/article/index";
 import { Drive } from "@/domains/drive/v2";
-import { Job } from "@/domains/job";
-import { User } from "@/domains/user";
-import { DatabaseStore } from "@/domains/store";
-import { FileType, MediaTypes } from "@/constants";
-import { Result } from "@/types";
+import { Job } from "@/domains/job/index";
+import { User } from "@/domains/user/index";
+import { DatabaseStore } from "@/domains/store/index";
+import { FileType, MediaTypes } from "@/constants/index";
+import { Result } from "@/types/index";
 import { build_media_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
 
 export type TheFilePrepareTransferV2 = {

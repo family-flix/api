@@ -60,12 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   // @ts-ignore
   if (r.drive_token) {
     // @ts-ignore
-    data.drive_token = {
-      // @ts-ignore
-      id: r.drive_token.id,
-      // @ts-ignore
-      data: r.drive_token.data,
-    };
+    data.drive_token = r.drive_token;
   }
   res.status(200).json({ code: 0, msg: "", data });
 }

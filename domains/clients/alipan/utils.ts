@@ -36,7 +36,6 @@ export async function prepare_upload_file(
   }
 ) {
   const { size, token, upload_chunk_size = 10 * 1024 * 1024 } = options;
-
   async function get_proof_code(filepath: string, size: number): Promise<Result<string>> {
     return new Promise((resolve) => {
       const md5_val = crypto.createHash("md5").update(Buffer.from(token, "utf8")).digest("hex");
@@ -82,13 +81,6 @@ export async function prepare_upload_file(
       });
     });
   }
-  // if (size > 1024) {
-
-  // }
-  const rr = await (() => {
-    if (size > 1024) {
-    }
-  })();
   const r1 = await get_content_hash(filepath);
   if (r1.error) {
     return Result.Err(r1.error.message);

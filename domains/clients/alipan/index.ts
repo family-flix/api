@@ -11,16 +11,16 @@ import type { AxiosError, AxiosRequestConfig } from "axios";
 import dayjs, { Dayjs } from "dayjs";
 
 import { DataStore, DriveRecord } from "@/domains/store/types";
-import { User } from "@/domains/user";
+import { User } from "@/domains/user/index";
 import { DriveTypes } from "@/domains/drive/constants";
 import { Article, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article";
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource";
 import { build_drive_file, run } from "@/domains/clients/utils";
 import { DriveClient, GenreDriveFile } from "@/domains/clients/types";
 import { BaseDomain, Handler } from "@/domains/base";
-import { parseJSONStr, query_stringify, r_id, sleep } from "@/utils";
-import { MediaResolutionTypes } from "@/constants";
-import { Result, resultify, Unpacked } from "@/types";
+import { parseJSONStr, query_stringify, r_id, sleep } from "@/utils/index";
+import { MediaResolutionTypes } from "@/constants/index";
+import { Result, resultify, Unpacked } from "@/types/index";
 
 import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo, AliyunDriveProfile, AliyunDrivePayload } from "./types";
 import { get_part_info_list, prepare_upload_file, read_part_file, file_info } from "./utils";
@@ -466,6 +466,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     });
     this.request = {
       get: async (endpoint, query, extra: Partial<AxiosRequestConfig> = {}) => {
+        // console.log("get request", this.access_token.slice(-10), endpoint);
         const url = `${endpoint}${query ? "?" + query_stringify(query) : ""}`;
         const headers = {
           ...COMMENT_HEADERS,
@@ -492,6 +493,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
         }
       },
       post: async (url, body, extra_headers = {}) => {
+        // console.log("post request", this.access_token.slice(-10), url);
         const headers = {
           ...COMMENT_HEADERS,
           ...extra_headers,
@@ -511,12 +513,11 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
           console.error("\n");
           console.error(url);
           // console.error(body, headers);
-          console.error("POST request failed, because", response?.data);
+          console.error("POST request failed, because", response?.data, response?.data?.code);
           // console.log(response, message);
           if (response?.status === 401) {
             if (response?.data?.code === "UserDeviceOffline") {
               await this.create_session();
-              return Result.Err(response?.data?.code);
             }
             if (response?.data?.code === "AccessTokenInvalid") {
               // ...
@@ -545,7 +546,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       if (!drive) {
         return Result.Err("没有匹配的云盘凭证记录");
       }
-      const { id: token_id, data, expired_at } = drive.drive_token;
+      const { id, data, expired_at } = drive.drive_token;
       const r = parseJSONStr<{
         refresh_token: string;
         access_token: string;
@@ -561,17 +562,23 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       this.access_token = access_token;
       // 这里赋值是为了下面 refresh_aliyun_access_token 中使用
       this.refresh_token = refresh_token;
+      // console.log(
+      //   "check has authoried",
+      //   drive,
+      //   expired_at,
+      //   dayjs(expired_at).format("YYYY MM DD HH:mm:ss")
+      // );
       if (!expired_at || dayjs(expired_at * 1000).isBefore(dayjs())) {
         // console.log("access token is expired, refresh it");
-        const refresh_token_res = await this.refresh_aliyun_access_token();
-        if (refresh_token_res.error) {
-          return Result.Err(refresh_token_res.error);
+        const r1 = await this.refresh_aliyun_access_token();
+        if (r1.error) {
+          return Result.Err(r1.error);
         }
-        const create_session_res = await this.create_session();
-        if (create_session_res.error) {
-          return Result.Err(create_session_res.error);
+        const r2 = await this.create_session();
+        if (r2.error) {
+          return Result.Err(r2.error);
         }
-        return Result.Ok(refresh_token_res.data);
+        return Result.Ok(r1.data);
       }
       return Result.Ok({
         access_token,
@@ -975,6 +982,9 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     });
     if (r.error) {
       return Result.Err(r.error);
+    }
+    if (!r.data.video_preview_play_info) {
+      return Result.Err("no video_preview_play_info");
     }
     const {
       video_preview_play_info: { live_transcoding_task_list, live_transcoding_subtitle_task_list = [] },
@@ -1904,6 +1914,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       code?: string;
     }>(API_HOST + url, b);
     if (r.error) {
+      // 不要 Result.Err(r.err.message)
       return r;
     }
     return Result.Ok(r.data);
@@ -1940,7 +1951,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
         }
         const a = crypto.createHash("sha1");
         const pre_hash = a.update(c.data).digest("hex");
-        this.debug && console.log("pre_hash", pre_hash);
+        // this.debug && console.log("pre_hash", pre_hash);
         const r = await this.create_with_folder(
           {
             part_info_list: get_part_info_list(file_size, UPLOAD_CHUNK_SIZE).slice(0, 20),
@@ -1953,6 +1964,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
           { drive_id: drive_id || String(this.unique_id) }
         );
         if (r.code === "PreHashMatched") {
+          // console.log("before token is", token);
           const r1 = await prepare_upload_file(filepath, {
             token,
             size: r2.data.size,
@@ -1961,6 +1973,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
             return Result.Err(r1.error.message);
           }
           const { content_hash, proof_code, size, part_info_list } = r1.data;
+          // console.log(content_hash, proof_code, r2.data.size);
           return this.create_with_folder(
             {
               content_hash,
@@ -1977,7 +1990,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
           );
         }
         if (r.error) {
-          console.log("r.error", r.code);
+          console.log("r.error", r);
           return Result.Err(r.error.message);
         }
         return r;
@@ -2484,29 +2497,29 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
    */
   async refresh_aliyun_access_token() {
     // console.log("refresh_aliyun_access_token", this.refresh_token);
-    const refresh_token_res = await this.request.post<{
+    const r = await this.request.post<{
       access_token: string;
       refresh_token: string;
     }>(API_HOST + "/v2/account/token", {
       refresh_token: this.refresh_token,
       grant_type: "refresh_token",
     });
-    if (refresh_token_res.error) {
-      console.log("refresh token failed, because", refresh_token_res.error.message);
-      return Result.Err(refresh_token_res.error);
+    if (r.error) {
+      // console.log("refresh token failed, because", r.error.message);
+      return Result.Err(r.error);
     }
-    const { access_token } = refresh_token_res.data;
-    // console.log("refresh token success", access_token);
+    const { access_token, refresh_token } = r.data;
+    // console.log("before refresh access_token", access_token.slice(-10));
     this.access_token = access_token;
     const patch_aliyun_drive_token_res = await this.patch_aliyun_drive_token({
-      refresh_token: refresh_token_res.data.refresh_token,
-      access_token: refresh_token_res.data.access_token,
+      refresh_token,
+      access_token,
       expired_at: dayjs().add(5, "minute").unix(),
     });
     if (patch_aliyun_drive_token_res.error) {
       return Result.Err(patch_aliyun_drive_token_res.error);
     }
-    return Result.Ok(refresh_token_res.data);
+    return Result.Ok(r.data);
   }
   async create_session() {
     const resp = await this.request.post(API_HOST + "/users/v1/users/device/create_session", {
@@ -2537,20 +2550,25 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       return Result.Err("请先调用 client.init 方法获取云盘信息");
     }
     const { refresh_token, access_token, expired_at } = data;
-    await this.store.prisma.drive.update({
+    const drive = await this.store.prisma.drive.findFirst({
       where: {
         id: this.id,
       },
+    });
+    if (!drive) {
+      return Result.Err("没有匹配的记录");
+    }
+    await this.store.prisma.drive_token.update({
+      where: {
+        id: drive.drive_token_id,
+      },
       data: {
-        drive_token: {
-          update: {
-            data: JSON.stringify({
-              refresh_token,
-              access_token,
-            }),
-            expired_at,
-          },
-        },
+        updated: dayjs().toISOString(),
+        data: JSON.stringify({
+          refresh_token,
+          access_token,
+        }),
+        expired_at,
       },
     });
     return Result.Ok(null);

@@ -68,6 +68,7 @@ model drive_token {
         // json
         data       String
         expired_at Float
+
         drives     drive[]
 
         @@map("DriveToken")
