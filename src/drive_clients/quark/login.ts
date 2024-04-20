@@ -2,7 +2,6 @@ import os from "os";
 import path from "path";
 
 import { Application } from "@/domains/application";
-import { Cloud189DriveClient } from "@/domains/clients/cloud189";
 import { QuarkDriveClient } from "@/domains/clients/quark";
 
 const data = {};

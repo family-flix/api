@@ -4,17 +4,17 @@
  */
 import { ReadStream } from "fs";
 
-import { Application } from "@/domains/application";
-import { DatabaseStore } from "@/domains/store";
-import { SpeechToText } from "@/domains/speech";
-import { Result } from "@/types";
+import { Application } from "@/domains/application/index";
+import { DataStore } from "@/domains/store/types";
+import { SpeechToText } from "@/domains/speech/index";
+import { Result } from "@/types/index";
 
 type FlixWechatBotProps = {
   app: Application;
 };
 export class FlixWechatBot {
   $app: Application;
-  $store: DatabaseStore;
+  $store: DataStore;
 
   constructor(props: FlixWechatBotProps) {
     const { app } = props;

@@ -52,8 +52,10 @@ export function ensure_sync(filepath: string, next: string[] = []) {
 export async function file_info(file_path: string) {
   try {
     const stats = await fs.stat(file_path);
+    const { base } = path.parse(file_path);
     return Result.Ok({
       size: stats.size,
+      name: base,
       file_type: (() => {
         if (stats.isDirectory()) {
           return "directory";

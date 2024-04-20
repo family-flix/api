@@ -108,7 +108,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("没有匹配的记录");
     }
     const { type } = existing;
-    if (type && [DriveTypes.AliyunBackupDrive, DriveTypes.AliyunResourceDrive].includes(type)) {
+    if (type !== null && ![DriveTypes.AliyunBackupDrive, DriveTypes.AliyunResourceDrive].includes(type)) {
       return Result.Err(`暂不支持 '${type}' 类型的云盘`);
     }
     const r = await AliyunDriveClient.Get({

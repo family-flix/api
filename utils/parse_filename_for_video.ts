@@ -65,6 +65,7 @@ export function parse_filename_for_video(
   log("filename is", filename);
   let original_filename = filename
     .trim()
+    .replace(/(第 ){0,1}([2][0-3][0-9]{2})-{0,1}([0-2][0-9])-{0,1}([0-3][0-9]) 期/, "$2$3$4期")
     .replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
     .replace(/^\[[^\]]{1,}\](?=\[)/, "")
     .replace(/^【[^】0-9]{1,}】/, "")

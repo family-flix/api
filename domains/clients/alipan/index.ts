@@ -562,12 +562,12 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       this.access_token = access_token;
       // 这里赋值是为了下面 refresh_aliyun_access_token 中使用
       this.refresh_token = refresh_token;
-      console.log(
-        "check has authoried",
-        drive,
-        expired_at,
-        dayjs(expired_at * 1000).format("YYYY MM DD HH:mm:ss")
-      );
+      // console.log(
+      //   "check has authoried",
+      //   drive,
+      //   expired_at,
+      //   dayjs(expired_at * 1000).format("YYYY MM DD HH:mm:ss")
+      // );
       if (!expired_at || dayjs(expired_at * 1000).isBefore(dayjs())) {
         // console.log("access token is expired, refresh it");
         const r1 = await this.refresh_aliyun_access_token();
@@ -2554,6 +2554,9 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       where: {
         id: this.id,
       },
+      include: {
+        drive_token: true,
+      }
     });
     if (!drive) {
       return Result.Err("没有匹配的记录");

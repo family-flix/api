@@ -1,10 +1,10 @@
 import Joi from "joi";
 
-import { DatabaseStore } from "@/domains/store";
+import { DatabaseStore } from "@/domains/store/index";
 import { DataStore } from "@/domains/store/types";
-import { Result, resultify } from "@/types";
-import { parseJSONStr, r_id } from "@/utils";
-import { DEFAULT_STATS } from "@/constants";
+import { Result, resultify } from "@/types/index";
+import { parseJSONStr, r_id } from "@/utils/index";
+import { DEFAULT_STATS } from "@/constants/index";
 
 import { Credentials } from "./services";
 import { compare, prepare, parse_token } from "./utils";
@@ -125,8 +125,8 @@ export class User {
     if (!user) {
       return Result.Err("不存在");
     }
-    const { settings: settings_str } = user;
-    const settings = await User.ParseSettings(settings_str);
+    const { settings: settings_record } = user;
+    const settings = await User.ParseSettings(settings_record);
     return Result.Ok(
       new User({
         id,
@@ -352,7 +352,7 @@ export class User {
     if (!ignore_files_when_sync) {
       return [];
     }
-    console.log(ignore_files_when_sync);
+    // console.log(ignore_files_when_sync);
     const rules = ignore_files_when_sync.split("\n\n").filter(Boolean);
     return rules;
   }

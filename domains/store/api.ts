@@ -35,6 +35,7 @@ type APIStoreProps = {
 
 export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore {
   token: string;
+  hostname: string;
 
   client: HttpClientCore;
 
@@ -48,8 +49,9 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
     const { hostname = "https://media.funzm.com", token } = props;
 
     this.token = token;
+    this.hostname = hostname;
     const _client = new HttpClientCore({
-      hostname,
+      hostname: "",
       headers: {
         Authorization: `${token}`,
       },
@@ -116,6 +118,24 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
     //     return {} as any;
     //   },
     // },
+    user: {
+      // @ts-ignore
+      findFirst: async (params: { where: { id: string | number }; include?: { settings?: boolean } }) => {
+        const { where, include = {} } = params;
+        const { id } = where;
+        const args = {
+          where: { id },
+        };
+        if (include) {
+          params.include = include;
+        }
+        const r = await this.client.post(`${this.hostname}/api/v1/user/find_first`, args);
+        if (r.error) {
+          throw new Error(r.error.message);
+        }
+        return r.data;
+      },
+    },
     drive: {
       // @ts-ignore
       findFirst: async (params: {
@@ -125,7 +145,7 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
         const { where, include = {} } = params;
         const { unique_id, id } = where;
         const { drive_token } = include;
-        const r = await this.client.post("https://media.funzm.com/api/v1/drive/find_first", {
+        const r = await this.client.post(`${this.hostname}/api/v1/drive/find_first`, {
           where: { id, unique_id },
           include: { drive_token },
         });
@@ -146,9 +166,36 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
         const { where, data = {} } = params;
         const { unique_id, id } = where;
         const { drive_token } = data;
-        const r = await this.client.post("https://media.funzm.com/api/v1/drive/update", {
+        const r = await this.client.post(`${this.hostname}/api/v1/drive/update`, {
           where: { id, unique_id },
           data: { drive_token },
+        });
+        if (r.error) {
+          throw new Error(r.error.message);
+        }
+        return r.data;
+      },
+    },
+    drive_token: {
+      // @ts-ignore
+      findFirst: async (params: { where: { id: string | number }; include?: { drive_token?: boolean } }) => {
+        const { where, include = {} } = params;
+        const { id } = where;
+        const r = await this.client.post(`${this.hostname}/api/v1/drive_token/find_first`, {
+          where: { id },
+        });
+        if (r.error) {
+          throw new Error(r.error.message);
+        }
+        return r.data;
+      },
+      // @ts-ignore
+      update: async (params: { where: { id: string | number }; data?: { data: string; expired_at: string } }) => {
+        const { where, data = {} } = params;
+        const { id } = where;
+        const r = await this.client.post(`${this.hostname}/api/v1/drive_token/update`, {
+          where: { id },
+          data,
         });
         if (r.error) {
           throw new Error(r.error.message);

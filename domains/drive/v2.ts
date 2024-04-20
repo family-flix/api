@@ -9,7 +9,7 @@ import { AliyunDriveProfile } from "@/domains/clients/alipan/types";
 import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article/index";
 import { Folder } from "@/domains/folder/index";
 import { ModelQuery, DriveRecord, DataStore } from "@/domains/store/types";
-import { Cloud189DriveClient } from "@/domains/clients/cloud189/index";
+// import { Cloud189DriveClient } from "@/domains/clients/cloud189/index";
 import { QuarkDriveClient } from "@/domains/clients/quark/index";
 import { LocalFileDriveClient } from "@/domains/clients/local/index";
 import { DriveClient } from "@/domains/clients/types";
@@ -37,13 +37,13 @@ type DriveProps = {
     token_id: string;
   } & AliyunDriveProfile;
   client: DriveClient;
-  user: User;
+  user: { id: string };
   store: DataStore;
 };
 
 export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** create drive */
-  static async Get(values: { id?: string; unique_id?: string; user: User; store: DataStore }) {
+  static async Get(values: { id?: string; unique_id?: string; user: { id: string }; store: DataStore }) {
     const { id, unique_id, user, store } = values;
     if (!id && !unique_id) {
       return Result.Err("缺少 id 参数");
@@ -77,14 +77,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         const client = r.data;
         return Result.Ok(client);
       }
-      if (type === DriveTypes.Cloud189Drive) {
-        const r = await Cloud189DriveClient.Get({ id, store });
-        if (r.error) {
-          return Result.Err(r.error.message);
-        }
-        const client = r.data;
-        return Result.Ok(client);
-      }
+      // if (type === DriveTypes.Cloud189Drive) {
+      //   const r = await Cloud189DriveClient.Get({ id, store });
+      //   if (r.error) {
+      //     return Result.Err(r.error.message);
+      //   }
+      //   const client = r.data;
+      //   return Result.Ok(client);
+      // }
       if (type === DriveTypes.LocalFolder) {
         const r = await LocalFileDriveClient.Get({ unique_id: drive_record.unique_id, store });
         if (r.error) {
@@ -128,9 +128,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       if (type === DriveTypes.AliyunResourceDrive) {
         return AliyunDriveClient.CreateResourceDrive({ payload, skip_ping, store, user });
       }
-      if (type === DriveTypes.Cloud189Drive) {
-        return Cloud189DriveClient.Create({ payload, skip_ping, store, user });
-      }
+      // if (type === DriveTypes.Cloud189Drive) {
+      //   return Cloud189DriveClient.Create({ payload, skip_ping, store, user });
+      // }
       if (type === DriveTypes.QuarkDrive) {
         return QuarkDriveClient.Create({ payload, skip_ping, store, user });
       }
@@ -192,7 +192,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /** 云盘名称 */
   name: string;
   /** 云盘所属用户 id */
-  user: User;
+  user: { id: string };
   profile: DriveProps["profile"];
   client: DriveClient;
   store: DataStore;
