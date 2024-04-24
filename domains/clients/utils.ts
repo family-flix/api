@@ -1,6 +1,5 @@
-import { GenreDriveFile } from "@/domains/clients/types";
-import { RequestedAliyunDriveFiles } from "@/domains/walker/utils";
-import { Result, Unpacked } from "@/types";
+import { GenreDriveFile, RequestedAliyunDriveFiles } from "@/domains/clients/types";
+import { Result, Unpacked } from "@/types/index";
 
 const DefaultDriveFile = {
   size: 0,

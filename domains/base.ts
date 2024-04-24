@@ -63,7 +63,7 @@ export class BaseDomain<Events extends Record<EventType, unknown>> {
     console.log(...texts);
     return texts;
   }
-  error(...args: unknown[]) {
+  setError(...args: unknown[]) {
     if (!this.debug) {
       return;
     }

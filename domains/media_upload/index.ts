@@ -25,7 +25,12 @@ type TheTypesOfEvents = {
   [Events.Print]: string;
 };
 type MediaUploadProps = {
-  drive_id: number | string;
+  // drive_id: number | string;
+  drive: {
+    id: string;
+    unique_id: string;
+    root_folder_id: null | string;
+  };
   store: DataStore;
   client: DriveClient;
 };
@@ -46,9 +51,9 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     store: DataStore
   ) {
     const { device_id, drive_id, name, access_token, refresh_token } = payload;
-    const existing = await store.prisma.drive.findFirst({ where: { unique_id: String(drive_id) } });
+    let existing = await store.prisma.drive.findFirst({ where: { unique_id: String(drive_id) } });
     if (!existing) {
-      await store.prisma.drive.create({
+      existing = await store.prisma.drive.create({
         data: {
           id: r_id(),
           avatar: "",
@@ -88,8 +93,13 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     if (r2.error) {
       return Result.Err(`initialize drive failed, because ${r2.error.message}`);
     }
+    const { id, root_folder_id } = existing;
     const u = new MediaUpload({
-      drive_id,
+      drive: {
+        id,
+        unique_id: String(drive_id),
+        root_folder_id,
+      },
       client,
       store,
     });
@@ -107,7 +117,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     if (!existing) {
       return Result.Err("没有匹配的记录");
     }
-    const { type } = existing;
+    const { id, type, root_folder_id } = existing;
     if (type !== null && ![DriveTypes.AliyunBackupDrive, DriveTypes.AliyunResourceDrive].includes(type)) {
       return Result.Err(`暂不支持 '${type}' 类型的云盘`);
     }
@@ -125,7 +135,11 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(`initialize drive failed, because ${r2.error.message}`);
     }
     const u = new MediaUpload({
-      drive_id,
+      drive: {
+        id,
+        unique_id: String(drive_id),
+        root_folder_id,
+      },
       client,
       store,
     });
@@ -135,7 +149,11 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     return parse_argv(args);
   }
 
-  drive_id: number | string;
+  drive: {
+    id: string;
+    unique_id: string;
+    root_folder_id: null | string;
+  };
 
   store: DataStore;
   client: DriveClient;
@@ -143,9 +161,9 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
   constructor(props: Partial<{ _name: string }> & MediaUploadProps) {
     super(props);
 
-    const { drive_id, store, client } = props;
+    const { drive, store, client } = props;
 
-    this.drive_id = drive_id;
+    this.drive = drive;
     this.store = store;
     this.client = client;
   }
@@ -159,7 +177,9 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     parent_file_id: string;
   }) {
     const { parent_file_id, filename, filepath } = body;
+    // console.log("1. check file existing before upload", parent_file_id, filename);
     const file_existing_r = await this.client.existing(parent_file_id, filename);
+    // console.log("2. check file existing before upload", file_existing_r.error);
     if (file_existing_r.error) {
       return Result.Err(`check existing failed, because ${file_existing_r.error.message}`);
     }
@@ -188,8 +208,8 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
     }
     const type = type_r.data.file_type;
     if (type === "file") {
-      this.emit(Events.Print, "共1个文件");
-      this.emit(Events.Print, `第1个、${filename}`);
+      this.emit(Events.Print, `就1个、${filename}`);
+      // this.emit(Events.Print, `第1个、${filename}`);
       const r = await this.upload_file({
         filename,
         filepath: filepath,
@@ -255,6 +275,7 @@ export class MediaUpload extends BaseDomain<TheTypesOfEvents> {
           filename,
           filepath: file_path,
         });
+        this.emit(Events.Print, `第${i + 1}个、${filename} 上传完成。${r.error ? r.error.message : ""}`);
         if (r.error) {
           result.push({
             filepath: file_path,

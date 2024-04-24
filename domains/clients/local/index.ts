@@ -1,8 +1,8 @@
 /**
  * @file 将本机视为 云盘
  */
-import fs from "fs/promises";
-import { readFileSync } from "fs";
+// import fs from "fs/promises";
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, statSync } from "fs";
 import os from "os";
 import path from "path";
 
@@ -120,12 +120,12 @@ export class LocalFileDriveClient implements DriveClient {
       }
       return file_id;
     })();
-    const r = await fs.readdir(filepath);
+    const r = await readdirSync(filepath);
     const files: GenreDriveFile[] = [];
     for (let i = 0; i < r.length; i += 1) {
       const full_path = path.resolve(filepath, r[i]);
       try {
-        const stats = await fs.stat(full_path);
+        const stats = await statSync(full_path);
         const file = build_drive_file({
           file_id: full_path,
           name: r[i],
@@ -145,7 +145,7 @@ export class LocalFileDriveClient implements DriveClient {
   }
   async fetch_file(file_id: string) {
     try {
-      const stats = await fs.stat(file_id);
+      const stats = await statSync(file_id);
       const { dir, name } = path.parse(file_id);
       const data = build_drive_file({
         file_id,
@@ -169,7 +169,7 @@ export class LocalFileDriveClient implements DriveClient {
       if (r.data) {
         return Result.Err("The folder has existing");
       }
-      await fs.mkdir(file_id);
+      await mkdirSync(file_id);
       const folder = build_drive_file({
         type: "folder",
         file_id,
@@ -194,7 +194,7 @@ export class LocalFileDriveClient implements DriveClient {
       if (r.data) {
         return Result.Err("The file has existing");
       }
-      await fs.copyFile(filepath, file_id);
+      await copyFileSync(filepath, file_id);
       return Result.Ok({
         file_id,
         file_name: name,

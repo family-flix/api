@@ -85,15 +85,21 @@ export class FileManage {
     return Result.Ok(result);
   }
   /** 下载网络文件到本地 */
-  async download(url: string, key: string, options: Partial<{ is_fullpath: boolean }> = {}): Promise<Result<string>> {
+  async download(
+    url: string,
+    key: string,
+    options: Partial<{ skip_existing: boolean; is_fullpath: boolean }> = {}
+  ): Promise<Result<string>> {
     try {
       const filepath = options.is_fullpath ? key : path.join(this.root, key);
-      const r = await check_existing(filepath);
-      if (r.error) {
-        return Result.Err(r.error.message);
-      }
-      if (r.data) {
-        return Result.Ok(key);
+      if (!options.skip_existing) {
+        const r = await check_existing(filepath);
+        if (r.error) {
+          return Result.Err(r.error.message);
+        }
+        if (r.data) {
+          return Result.Ok(key);
+        }
       }
       // console.log("[DOMAIN]Uploader - before request");
       const response = await axios({

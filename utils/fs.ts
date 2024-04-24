@@ -1,11 +1,10 @@
 /*u
  * @file 封装的一些文件操作相关的函数
  */
-import { accessSync, createReadStream, createWriteStream, mkdirSync } from "fs";
-import fs from "fs/promises";
+import { accessSync, createReadStream, createWriteStream, mkdirSync, statSync } from "fs";
 import path from "path";
 
-import { Result } from "@/types";
+import { Result } from "@/types/index";
 
 /**
  * 确保某个路径必然存在
@@ -18,10 +17,10 @@ export async function ensure(filepath: string, next: string[] = []) {
     filepath = dir;
   }
   try {
-    await fs.access(filepath);
+    await accessSync(filepath);
     if (next.length !== 0) {
       const the_dir_prepare_create = next.pop();
-      await fs.mkdir(the_dir_prepare_create!);
+      await mkdirSync(the_dir_prepare_create!);
       await ensure(filepath, next);
     }
   } catch {
@@ -51,7 +50,7 @@ export function ensure_sync(filepath: string, next: string[] = []) {
 
 export async function file_info(file_path: string) {
   try {
-    const stats = await fs.stat(file_path);
+    const stats = await statSync(file_path);
     const { base } = path.parse(file_path);
     return Result.Ok({
       size: stats.size,
@@ -74,7 +73,7 @@ export async function file_info(file_path: string) {
 
 export async function check_path_type(file_path: string): Promise<Result<"directory" | "file">> {
   try {
-    const stats = await fs.stat(file_path);
+    const stats = await statSync(file_path);
     if (stats.isDirectory()) {
       return Result.Ok("directory");
     }
@@ -107,7 +106,7 @@ export async function copy(src: string, dest: string): Promise<Result<string>> {
 
 export async function check_existing(filepath: string) {
   try {
-    await fs.stat(filepath);
+    await statSync(filepath);
     return Result.Ok(true);
   } catch (err) {
     return Result.Ok(false);
@@ -115,7 +114,7 @@ export async function check_existing(filepath: string) {
 }
 export async function access(filepath: string): Promise<Result<null>> {
   try {
-    await fs.access(filepath);
+    await accessSync(filepath);
     return Result.Ok(null);
   } catch (err) {
     const e = err as Error;
@@ -124,7 +123,7 @@ export async function access(filepath: string): Promise<Result<null>> {
 }
 export async function mkdir(filepath: string): Promise<Result<null>> {
   try {
-    await fs.mkdir(filepath);
+    await mkdirSync(filepath);
     return Result.Ok(null);
   } catch (err) {
     const e = err as Error;

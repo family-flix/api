@@ -1,12 +1,10 @@
 /**
  * @file 本地 mock json 数据 client
  */
-import { RequestedAliyunDriveFiles } from "@/domains/walker/utils";
-import { GenreDriveFile } from "@/domains/clients/types";
-import { DatabaseStore } from "@/domains/store";
-import { DriveClient } from "@/domains/clients/types";
+import { DriveClient, GenreDriveFile, RequestedAliyunDriveFiles } from "@/domains/clients/types";
 import { build_drive_file } from "@/domains/clients/utils";
-import { Result } from "@/types";
+import { DatabaseStore } from "@/domains/store/index";
+import { Result } from "@/types/index";
 
 export class MockFileClient implements DriveClient {
   id: string = "";

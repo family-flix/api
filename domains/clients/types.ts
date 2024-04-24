@@ -199,3 +199,9 @@ export type GenreDriveFile = {
   thumbnail: string | null;
   // items?: PartialAliyunDriveFile[];
 };
+
+
+/** 遍历完云盘后的整个文件树 */
+export type RequestedAliyunDriveFiles = GenreDriveFile & {
+  items?: RequestedAliyunDriveFiles[];
+};

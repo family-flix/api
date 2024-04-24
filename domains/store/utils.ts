@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { PrismaClient } from "@prisma/client";
 
 import { FileType } from "@/constants";
-import { List } from "@/domains/list";
+import { List } from "@/domains/pagination";
 import { Folder } from "@/domains/folder";
 import { Result, resultify, Unpacked } from "@/types";
 import { sleep } from "@/utils";
