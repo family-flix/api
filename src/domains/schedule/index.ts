@@ -117,9 +117,9 @@ type MovieError = {
 
 export class ScheduleTask {
   store: DatabaseStore;
-  app: Application;
+  app: Application<any>;
 
-  constructor(props: { app: Application; store: DatabaseStore }) {
+  constructor(props: { app: Application<any>; store: DatabaseStore }) {
     const { app, store } = props;
     this.app = app;
     this.store = store;

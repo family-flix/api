@@ -5,23 +5,18 @@ import { config } from "dotenv";
 
 import { Application } from "@/domains/application/index";
 import { parse_argv } from "@/utils/server";
+import { ApplicationState } from "./types";
 
 config();
-let initialized: null | Application<{
-  root_path: string;
-  env: {};
-  args: {
-    port: number;
-  };
-}> = null;
+let initialized: null | Application<ApplicationState> = null;
 
 export const app = (() => {
   if (initialized) {
     return initialized;
   }
-  const r = new Application({
+  const r = new Application<ApplicationState>({
     root_path: process.env.OUTPUT_PATH || process.cwd(),
-    env: process.env as Record<string, string>,
+    env: process.env as any,
     args: parse_argv<{ port: number }>(process.argv.slice(2)),
   });
   initialized = r;

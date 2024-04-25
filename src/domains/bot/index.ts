@@ -10,10 +10,10 @@ import { SpeechToText } from "@/domains/speech/index";
 import { Result } from "@/types/index";
 
 type FlixWechatBotProps = {
-  app: Application;
+  app: Application<any>;
 };
 export class FlixWechatBot {
-  $app: Application;
+  $app: Application<any>;
   $store: DataStore;
 
   constructor(props: FlixWechatBotProps) {

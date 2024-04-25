@@ -143,7 +143,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     body: { url: string; pwd?: string | null; file_id: string; file_name: string; drive_id: string },
     extra: {
       user: User;
-      app: Application;
+      app: Application<any>;
       store: DataStore;
     }
   ) {

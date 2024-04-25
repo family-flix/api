@@ -645,7 +645,7 @@ async function main() {
       Object.keys(app.env)
         .filter((key) => env_keys.includes(key))
         .forEach((key) => {
-          console.log(`${key}    ${app.env[key]}`);
+          console.log(`${key}    ${app.env[key as keyof typeof app.env]}`);
         });
       console.log("Args");
       console.log("----------");

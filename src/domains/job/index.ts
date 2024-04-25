@@ -27,7 +27,7 @@ type JobNewProps = {
   desc: string;
   user_id: string;
   store: DataStore;
-  app: Application;
+  app: Application<any>;
   on_print?: () => void;
 };
 type JobProps = {
@@ -37,13 +37,13 @@ type JobProps = {
     "unique_id" | "type" | "status" | "desc" | "user_id" | "output_id" | "error" | "created" | "updated"
   >;
   output: Article;
-  app: Application;
+  app: Application<any>;
   store: DataStore;
 };
 const cached_jobs: Record<string, Job> = {};
 
 export class Job extends BaseDomain<TheTypesOfEvents> {
-  static async Get(body: { id: string; user_id: string; app: Application; store: DataStore }) {
+  static async Get(body: { id: string; user_id: string; app: Application<any>; store: DataStore }) {
     const { id, user_id, app, store } = body;
     if (cached_jobs[id]) {
       return Result.Ok(cached_jobs[id]);
@@ -145,7 +145,7 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
   timer: null | NodeJS.Timer = null;
 
   store: DataStore;
-  app: Application;
+  app: Application<any>;
 
   constructor(props: JobProps) {
     super();
