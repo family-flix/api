@@ -9,7 +9,6 @@ COPY package*.json ./
 RUN yarn config set registry https://registry.npm.taobao.org/
 RUN yarn
 COPY . .
-RUN node scripts/ncc.js
 RUN yarn prisma generate
 RUN yarn build
 EXPOSE 8000

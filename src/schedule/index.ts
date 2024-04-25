@@ -3,8 +3,9 @@ import dayjs from "dayjs";
 
 import { Application } from "@/domains/application";
 import { ScheduleTask } from "@/domains/schedule/v2";
+import { Notify } from "@/domains/notify";
 
-import { notice_push_deer } from "../notice";
+// import { notice_push_deer } from "../../examples/notice";
 
 /**
  * 理解方式就是，每秒，都会检查是否要执行对应任务
@@ -20,12 +21,24 @@ import { notice_push_deer } from "../notice";
     console.error("缺少数据库文件路径");
     return;
   }
+  const token = process.env.PUSH_DEER_TOKEN;
+  if (!token) {
+    console.error("缺少 PushDeer token");
+    return;
+  }
 
   const app = new Application({
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
   const schedule = new ScheduleTask({ app, store });
+
+  const notify_res = await Notify.New({ type: 1, store, token });
+  if (notify_res.error) {
+    console.log(`实例化推送失败`, notify_res.error.message);
+    return;
+  }
+  const notify = notify_res.data;
 
   // const start = dayjs("2024/02/01");
   // const end = dayjs("2024/03/08");
@@ -101,12 +114,15 @@ import { notice_push_deer } from "../notice";
   //   true,
   //   "Asia/Shanghai"
   // );
+  // const r = await notify.send({
+  //   text,
+  // });
   new CronJob.CronJob(
     "0 0 8 * * *",
     async () => {
       console.log("执行任务 at 0 0 8 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
       const r = await schedule.check_in();
-      notice_push_deer({
+      notify.send({
         title: "云盘签到",
         markdown: r
           .map((tip) => {
@@ -126,7 +142,7 @@ import { notice_push_deer } from "../notice";
     async () => {
       console.log("执行任务 at 0 0 20 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
       const r = await schedule.check_in();
-      notice_push_deer({
+      notify.send({
         title: "云盘签到",
         markdown: r
           .map((tip) => {
@@ -159,7 +175,7 @@ import { notice_push_deer } from "../notice";
     async () => {
       console.log("执行任务 at 0 0 2 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
       await schedule.update_media_profile_with_douban();
-      notice_push_deer({
+      notify.send({
         title: "影视剧刷新",
         markdown: "执行了一次影视剧刷新任务",
       });

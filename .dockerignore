@@ -1,4 +1,5 @@
-src
-assets
 .husky
 .vscode
+assets
+examples
+src
