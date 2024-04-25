@@ -3,10 +3,17 @@
  */
 import { config } from "dotenv";
 
-import { Application } from "@/domains/application";
+import { Application } from "@/domains/application/index";
+import { parse_argv } from "@/utils/server";
 
 config();
-let initialized: null | Application = null;
+let initialized: null | Application<{
+  root_path: string;
+  env: {};
+  args: {
+    port: number;
+  };
+}> = null;
 
 export const app = (() => {
   if (initialized) {
@@ -15,6 +22,7 @@ export const app = (() => {
   const r = new Application({
     root_path: process.env.OUTPUT_PATH || process.cwd(),
     env: process.env as Record<string, string>,
+    args: parse_argv<{ port: number }>(process.argv.slice(2)),
   });
   initialized = r;
   return r;

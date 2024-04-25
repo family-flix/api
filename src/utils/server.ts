@@ -1,4 +1,4 @@
-// import { NextApiResponse } from "next";
+import os from "os";
 
 import { decode_token } from "@/domains/user/jwt";
 import { BaseApiResp } from "@/store/index";
@@ -160,8 +160,9 @@ export function simple_resp<T>(c: T) {
  * const args = process.argv.slice(2);
  * const options = parse_argv(args);
  */
-export function parse_argv(args: string[]) {
-  const options: Record<string, string | boolean> = {};
+export function parse_argv<T extends Record<string, any>>(args: string[]) {
+  // @ts-ignore
+  const options: T = {};
   for (let i = 0; i < args.length; i += 2) {
     const key = args[i];
     const value = args[i + 1];
@@ -179,8 +180,25 @@ export function parse_argv(args: string[]) {
         }
         return value;
       })();
+      // @ts-ignore
       options[k] = v;
     }
   }
   return options;
+}
+
+export function get_ip_address() {
+  const interfaces = os.networkInterfaces();
+  for (const interface_name in interfaces) {
+    const networkInterface = interfaces[interface_name];
+    if (networkInterface) {
+      for (const network of networkInterface) {
+        // 过滤掉 IPv6 地址和回环地址
+        if (network.family === "IPv4" && !network.internal) {
+          return network.address;
+        }
+      }
+    }
+  }
+  return "0.0.0.0";
 }

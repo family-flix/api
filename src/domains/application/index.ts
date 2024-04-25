@@ -7,13 +7,14 @@ import { ensure } from "@/utils/fs";
 
 let cached: null | DatabaseStore = null;
 
-export class Application {
+export class Application<T extends { root_path: string; env?: Record<string, string>; args?: Record<string, any> }> {
   root_path: string;
   database_path: string;
   database_dir: string;
   database_name: string;
   assets: string;
-  env: Record<string, string> = {};
+  env: T["env"] = {};
+  args: T["args"] = {};
   timer: null | NodeJS.Timer = null;
   listeners: {
     handler: Function;
@@ -23,10 +24,11 @@ export class Application {
 
   store: DatabaseStore;
 
-  constructor(options: { root_path: string; env?: Record<string, string> }) {
-    const { root_path, env = {} } = options;
+  constructor(options: T) {
+    const { root_path, env = {}, args = {} } = options;
     this.root_path = root_path;
     this.env = env;
+    this.args = args;
 
     const database_dir = path.join(root_path, "data");
     const database_name = "family-flix.db?connection_limit=1";
@@ -35,7 +37,6 @@ export class Application {
     this.database_dir = database_dir;
     this.database_name = database_name;
     this.assets = storage_path;
-    // ensure(this.DATABASE_PATH);
     ensure(this.assets);
     ensure(path.join(this.assets, "default"));
     ensure(path.join(this.assets, "poster"));
@@ -48,7 +49,7 @@ export class Application {
         this.store = cached;
         return;
       }
-      console.log("__new prisma client");
+      // console.log("__new prisma client");
       this.store = new DatabaseStore(
         new PrismaClient({
           datasources: {

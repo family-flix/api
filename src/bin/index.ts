@@ -1,18 +1,9 @@
+import { brand } from "@/utils/text";
+import { parse_argv } from "@/utils/server";
+
 import { start } from "./commands/start";
 import { setup } from "./commands/setup";
 import { Application } from "./application";
-
-function parse_argv(args: string[]) {
-  // const args = process.argv.slice(2);
-  const options: Record<string, string | boolean> = {};
-  args.forEach((arg) => {
-    if (arg.startsWith("--")) {
-      const [key, value] = arg.slice(2).split("=");
-      options[key] = value || true;
-    }
-  });
-  return options;
-}
 
 async function main() {
   const app = new Application({ root_path: process.env.OUTPUT_PATH || process.cwd() });
@@ -51,19 +42,6 @@ async function main() {
   console.log("静态资源目录", app.assets);
   console.log("数据库文件 ", app.database_path);
   console.log(`> Ready on http://${host}:${port}${pathname}`);
-}
-function brand() {
-  console.log();
-  [
-    "    ______                _ __      _________     ",
-    "   / ____/___ _____ ___  (_) /_  __/ ____/ (_)_  _",
-    "  / /_  / __ `/ __ `__ \\/ / / / / / /_  / / / |_/",
-    " / __/ / /_/ / / / / / / / / /_/ / __/ / / />  <  ",
-    "/_/    \\__,_/_/ /_/ /_/_/_/\\__, /_/   /_/_/_/|_|  ",
-    "                          /____/                   ",
-  ].map((text) => {
-    console.log(text);
-  });
 }
 
 main();

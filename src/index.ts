@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
@@ -134,6 +131,7 @@ import v2_admin_member_delete from "./pages/api/v2/admin/member/delete";
 import v2_admin_member_profile from "./pages/api/v2/admin/member/profile";
 import v2_admin_member_update_permission from "./pages/api/v2/admin/member/update_permission";
 import v2_admin_subtitle_parse from "./pages/api/v2/admin/subtitle/parse";
+import { brand } from "./utils/text";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -146,6 +144,7 @@ async function main() {
   //     root_path: ROOT_DIR,
   //   });
   const server = new Hono<{ Bindings: {}; Variables: {} }>();
+  // const args = parse_argv<{ port: number }>(process.argv.slice(2));
 
   // server.use(logger());
   // server.use(async (c, next) => {
@@ -626,14 +625,43 @@ async function main() {
   serve(
     {
       fetch: server.fetch,
-      port: 3200,
+      port: (() => {
+        if (app.env.PORT) {
+          return Number(app.env.PORT);
+        }
+        if (app.args.port) {
+          return app.args.port;
+        }
+        return 3200;
+      })(),
     },
     (info) => {
       const { address, port } = info;
-      console.log(`Server is listening at ${address}:${port}`);
-      console.log();
+      brand();
       console.log("Env");
-      console.log("ROOT_DIR");
+      console.log("----------");
+      console.log();
+      const env_keys = ["ROOT_DIR", "PORT"];
+      Object.keys(app.env)
+        .filter((key) => env_keys.includes(key))
+        .forEach((key) => {
+          console.log(`${key}    ${app.env[key]}`);
+        });
+      console.log("Args");
+      console.log("----------");
+      Object.keys(app.args).forEach((key) => {
+        console.log(`${key.toUpperCase()}    ${app.args[key as keyof typeof app.args]}`);
+      });
+      console.log();
+      console.log("Paths");
+      console.log("----------");
+      console.log("Assets", app.assets);
+      console.log("Database ", app.database_path);
+      console.log();
+      console.log();
+      console.log();
+      const pathname = "/admin/home/index";
+      console.log(`> Ready on http://${address}:${port}${pathname}`);
     }
   );
 }
