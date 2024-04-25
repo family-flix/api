@@ -1,8 +1,8 @@
 /**
  * 修改密码
  */
-import { Application } from "@/domains/application";
-import { User } from "@/domains/user";
+import { Application } from "@/domains/application/index";
+import { User } from "@/domains/user/index";
 
 async function main() {
   const OUTPUT_PATH = process.env.OUTPUT_PATH;
