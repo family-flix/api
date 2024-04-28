@@ -50,7 +50,7 @@ export const static_serve = (options: ServeStaticOptions = { root: "" }): Middle
       root: options.root,
       defaultDocument: options.index ?? "index.html",
     });
-    console.log(path);
+    // console.log(path);
     if (!path) {
       return next();
     }

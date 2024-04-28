@@ -40,6 +40,7 @@
     "form-data": "^4.0.0",
     "formidable": "^3.5.1",
     "fuse.js": "^7.0.0",
+    "hono": "^4.2.8",
     "joi": "^17.9.1",
     "jose": "^4.14.1",
     "jsonwebtoken": "^9.0.0",

@@ -4,6 +4,7 @@ import { serve } from "@hono/node-server";
 // import { serveStatic as static_serve } from "@hono/node-server/serve-static";
 
 import { compat_next } from "./utils/server";
+import { brand } from "./utils/text";
 import { app, store } from "./store/index";
 import { static_serve } from "./middlewares/static";
 import v2_wechat_collection_list from "./pages/api/v2/wechat/collection/list";
@@ -131,7 +132,7 @@ import v2_admin_member_delete from "./pages/api/v2/admin/member/delete";
 import v2_admin_member_profile from "./pages/api/v2/admin/member/profile";
 import v2_admin_member_update_permission from "./pages/api/v2/admin/member/update_permission";
 import v2_admin_subtitle_parse from "./pages/api/v2/admin/subtitle/parse";
-import { brand } from "./utils/text";
+import v2_admin_clear_thumbnails from "./pages/api/v2/admin/clear_thumbnails";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -416,6 +417,9 @@ async function main() {
   });
   server.post("/api/v2/admin/member/add_token", async (c) => {
     return v2_admin_member_add_token(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/clear_thumbnails", async (c) => {
+    return v2_admin_clear_thumbnails(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/collection/list", async (c) => {
     return v2_admin_collection_list(...(await compat_next(c)));
