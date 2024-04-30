@@ -4,13 +4,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { store } from "@/store";
-import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/server";
+import { store, BaseApiResp } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { ModelQuery } from "@/domains/store/types";
+import { Result } from "@/types/index";
+import { response_error_factory } from "@/utils/server";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v1_user_find_first(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { where, include } = req.body as Partial<{ where: ModelQuery<"user">; include: any }>;
@@ -43,5 +43,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // @ts-ignore
     data.settings = r.settings;
   }
-  res.status(200).json({ code: 0, msg: "", data });
+  return res.status(200).json({ code: 0, msg: "", data });
 }

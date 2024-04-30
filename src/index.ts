@@ -133,6 +133,10 @@ import v2_admin_member_profile from "./pages/api/v2/admin/member/profile";
 import v2_admin_member_update_permission from "./pages/api/v2/admin/member/update_permission";
 import v2_admin_subtitle_parse from "./pages/api/v2/admin/subtitle/parse";
 import v2_admin_clear_thumbnails from "./pages/api/v2/admin/clear_thumbnails";
+import v1_drive_find_first from "./pages/api/v1/drive/find_first";
+import v1_drive_update from "./pages/api/v1/drive/update";
+import v1_drive_token_update from "./pages/api/v1/drive_token/update";
+import v1_user_find_first from "./pages/api/v1/user/find_first";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -276,6 +280,18 @@ async function main() {
   });
   server.post("/api/admin/settings", async (c) => {
     return v0_admin_settings_index(...(await compat_next(c)));
+  });
+  server.post("/api/v1/drive/find_first", async (c) => {
+    return v1_drive_find_first(...(await compat_next(c)));
+  });
+  server.post("/api/v1/drive/update", async (c) => {
+    return v1_drive_update(...(await compat_next(c)));
+  });
+  server.post("/api/v1/drive_token/update", async (c) => {
+    return v1_drive_token_update(...(await compat_next(c)));
+  });
+  server.post("/api/v1/user/find_first", async (c) => {
+    return v1_user_find_first(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/dashboard", async (c) => {
     return v2_admin_dashboard(...(await compat_next(c)));

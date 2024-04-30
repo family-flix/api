@@ -4,13 +4,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { store } from "@/store/index";
-import { User } from "@/domains/user";
+import { store, BaseApiResp } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { ModelQuery } from "@/domains/store/types";
-import { BaseApiResp, Result } from "@/types/index";
+import { Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v1_drive_update(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { where, data } = req.body as Partial<{ where: ModelQuery<"drive">; data: any }>;
@@ -29,5 +29,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   };
   // @ts-ignore
   const r = await store.prisma.drive.update(args);
-  res.status(200).json({ code: 0, msg: "", data: null });
+  return res.status(200).json({ code: 0, msg: "", data: null });
 }
