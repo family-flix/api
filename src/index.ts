@@ -137,6 +137,7 @@ import v1_drive_find_first from "./pages/api/v1/drive/find_first";
 import v1_drive_update from "./pages/api/v1/drive/update";
 import v1_drive_token_update from "./pages/api/v1/drive_token/update";
 import v1_user_find_first from "./pages/api/v1/user/find_first";
+import v0_admin_user_existing from "./pages/api/admin/user/existing";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -152,10 +153,10 @@ async function main() {
   // const args = parse_argv<{ port: number }>(process.argv.slice(2));
 
   // server.use(logger());
-  // server.use(async (c, next) => {
-  //   console.log(`[${c.req.method}] ${c.req.url}`);
-  //   await next();
-  // });
+  server.use(async (c, next) => {
+    console.log(`[${c.req.method}] ${c.req.url}`);
+    await next();
+  });
   server.use(
     "/mobile/*",
     static_serve({
@@ -244,6 +245,9 @@ async function main() {
   });
   server.post("/api/admin/user/validate", async (c) => {
     return v0_admin_user_validate(...(await compat_next(c)));
+  });
+  server.get("/api/admin/user/existing", async (c) => {
+    return v0_admin_user_existing(...(await compat_next(c)));
   });
   server.post("/api/admin/parse", async (c) => {
     return v0_admin_parse(...(await compat_next(c)));
@@ -385,12 +389,6 @@ async function main() {
   });
   server.post("/api/v2/admin/subtitle/batch_create", async (c) => {
     return v2_admin_subtitle_batch_create(...(await compat_next(c)));
-    // const body = await c.req.parseBody({ all: true });
-    // return c.json({
-    //   code: 0,
-    //   msg: "",
-    //   data: null,
-    // });
   });
   server.post("/api/v2/admin/subtitle/delete", async (c) => {
     return v2_admin_subtitle_delete(...(await compat_next(c)));

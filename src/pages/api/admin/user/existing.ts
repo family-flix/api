@@ -4,12 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp } from "@/types";
-import { store } from "@/store";
+import { store, BaseApiResp } from "@/store/index";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v0_admin_user_existing(req: NextApiRequest, res: NextApiResponse<any>) {
   const user = await store.prisma.user.findFirst({});
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "获取成功",
     data: {

@@ -107,10 +107,12 @@ export default async function v2_admin_subtitle_batch_create(
   }
   const task = task_res.data;
   async function run(files: File[]) {
+    task.output.write_line(["共", files.length, "个字幕文件"]);
     for (let i = 0; i < files.length; i += 1) {
       await (async () => {
         const file = files[i];
         const { name } = file;
+        task.output.write_line(["第", i + 1, "个 ", name]);
         const prefix = [name].join(".");
         const payload = payloads.find((p) => {
           return p.filename === name;
