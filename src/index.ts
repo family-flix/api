@@ -153,10 +153,10 @@ async function main() {
   // const args = parse_argv<{ port: number }>(process.argv.slice(2));
 
   // server.use(logger());
-  server.use(async (c, next) => {
-    console.log(`[${c.req.method}] ${c.req.url}`);
-    await next();
-  });
+  // server.use(async (c, next) => {
+  //   console.log(`[${c.req.method}] ${c.req.url}`);
+  //   await next();
+  // });
   server.use(
     "/mobile/*",
     static_serve({

@@ -39,11 +39,10 @@ export default async function v2_admin_subtitle_batch_create(
   if (!media_id) {
     return e(Result.Err("缺少影视剧 id"));
   }
-  console.log('files', body_files);
   if (!body_files) {
     return e(Result.Err("缺少上传的文件"));
   }
-  if (body_files.length === 0) {
+  if (Array.isArray(body_files) && body_files.length === 0) {
     return e(Result.Err("没有文件"));
   }
   if (!type) {
@@ -182,7 +181,7 @@ export default async function v2_admin_subtitle_batch_create(
     }
     task.finish();
   }
-  run(body_files);
+  run(Array.isArray(body_files) ? body_files : [body_files]);
   return res.status(200).json({
     code: 0,
     msg: "开始上传",
