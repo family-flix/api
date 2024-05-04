@@ -1,9 +1,9 @@
 import CronJob from "cron";
 import dayjs from "dayjs";
 
-import { Application } from "@/domains/application";
+import { Application } from "@/domains/application/index";
 import { ScheduleTask } from "@/domains/schedule/v2";
-import { Notify } from "@/domains/notify";
+import { Notify } from "@/domains/notify/index";
 
 // import { notice_push_deer } from "../../examples/notice";
 

@@ -5,11 +5,10 @@
   "scripts": {
     "dev": "tsx watch ./src/index.ts --port 3200",
     "start": "node dist/server.js",
-    "build": "yarn esbuild ./src/index.ts --platform=node --target=node12 --legal-comments=none --bundle --minify --outfile=dist/server.js",
-    "db": "npx prisma studio",
+    "build": "esbuild ./src/index.ts --platform=node --target=node12 --legal-comments=none --bundle --minify --outfile=dist/server.js",
+    "db": "prisma studio",
     "check": "tsc --noEmit",
     "schedule": "vite-node ./src/schedule/index.ts",
-    "lint": "next lint",
     "test": "vitest run",
     "pkg": "node scripts/build && node scripts/pkg",
     "zip": "node scripts/zip"
