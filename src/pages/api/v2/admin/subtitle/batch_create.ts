@@ -64,17 +64,24 @@ export default async function v2_admin_subtitle_batch_create(
     },
   });
   if (!media) {
-    return e(Result.Err("没有匹配的电视剧记录"));
+    return e(Result.Err("没有匹配的影视剧记录"));
   }
-  const payloads = body_payloads
-    ? (body_payloads.map((p) => {
-        return JSON.parse(p);
-      }) as {
-        filename: string;
-        episode_id?: string;
-        language: string;
-      }[])
-    : [];
+  const payloads = (() => {
+    if (!body_payloads) {
+      return [];
+    }
+    const p = Array.isArray(body_payloads) ? body_payloads : [body_payloads];
+    return p.map((p) => {
+      return JSON.parse(p);
+    }) as {
+      filename: string;
+      episode_id?: string;
+      language: string;
+    }[];
+  })();
+  if (payloads.length === 0) {
+    return e(Result.Err("缺少 payloads 参数"));
+  }
   // const files = (() => {
   //   if (Number(type) === MediaTypes.Season) {
   //     return payloads.map((p) => {
