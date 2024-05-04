@@ -39,6 +39,7 @@ export default async function v2_admin_subtitle_batch_create(
   if (!media_id) {
     return e(Result.Err("缺少影视剧 id"));
   }
+  console.log('files', body_files);
   if (!body_files) {
     return e(Result.Err("缺少上传的文件"));
   }
@@ -107,7 +108,7 @@ export default async function v2_admin_subtitle_batch_create(
   }
   const task = task_res.data;
   async function run(files: File[]) {
-    task.output.write_line(["共", files.length, "个字幕文件"]);
+    task.output.write_line(["共", String(files.length), "个字幕文件"]);
     for (let i = 0; i < files.length; i += 1) {
       await (async () => {
         const file = files[i];
