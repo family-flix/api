@@ -8,6 +8,7 @@ import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { ModelQuery } from "@/domains/store/types";
 import { response_error_factory } from "@/utils/server";
+import { AuthenticationProviders } from "@/constants/index";
 
 export default async function v2_admin_member_list(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -41,8 +42,13 @@ export default async function v2_admin_member_list(req: NextApiRequest, res: Nex
       return store.prisma.member.findMany({
         where,
         include: {
+          authentications: {
+            where: {
+              provider: AuthenticationProviders.Credential,
+            },
+          },
           tokens: {
-            take: 5,
+            take: 1,
           },
           inviter: true,
         },
@@ -61,7 +67,7 @@ export default async function v2_admin_member_list(req: NextApiRequest, res: Nex
     data: {
       next_marker: result.next_marker,
       list: result.list.map((member) => {
-        const { id, inviter, remark, tokens } = member;
+        const { id, inviter, remark, authentications, tokens } = member;
         return {
           id,
           remark,
@@ -71,6 +77,14 @@ export default async function v2_admin_member_list(req: NextApiRequest, res: Nex
                 remark: inviter.remark,
               }
             : null,
+          accounts: authentications.map((account) => {
+            const { provider, provider_id, provider_arg1 } = account;
+            return {
+              provider,
+              provider_id,
+              provider_arg1,
+            };
+          }),
           tokens: tokens.map((token) => {
             const { id, token: value } = token;
             return {

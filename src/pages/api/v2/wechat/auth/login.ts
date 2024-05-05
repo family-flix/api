@@ -12,9 +12,9 @@ import { AuthenticationProviders } from "@/constants/index";
 
 export default async function v2_wechat_auth_login(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
-  const { email, password } = req.body as Partial<{
+  const { email, pwd: password } = req.body as Partial<{
     email: string;
-    password: string;
+    pwd: string;
   }>;
   const administrator = await store.prisma.user.findFirst({});
   if (!administrator) {
@@ -37,6 +37,7 @@ export default async function v2_wechat_auth_login(req: NextApiRequest, res: Nex
     msg: "登录成功",
     data: {
       id,
+      email,
       token,
     },
   });

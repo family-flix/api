@@ -138,6 +138,7 @@ import v1_drive_update from "./pages/api/v1/drive/update";
 import v1_drive_token_update from "./pages/api/v1/drive_token/update";
 import v1_user_find_first from "./pages/api/v1/user/find_first";
 import v0_admin_user_existing from "./pages/api/admin/user/existing";
+import v2_wechat_mine_update_account from "./pages/api/v2/wechat/mine/update_account";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -584,6 +585,9 @@ async function main() {
   });
   server.post("/api/v2/wechat/auth/register", async (c) => {
     return v2_wechat_auth_register(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/mine/update_account", async (c) => {
+    return v2_wechat_mine_update_account(...(await compat_next(c)));
   });
   server.post("/api/v2/wechat/collection/list", async (c) => {
     return v2_wechat_collection_list(...(await compat_next(c)));

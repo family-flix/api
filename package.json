@@ -1,6 +1,6 @@
 {
   "name": "@family-flix/api",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "private": true,
   "scripts": {
     "dev": "tsx watch ./src/index.ts --port 3200",

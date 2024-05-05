@@ -11,13 +11,16 @@ import { prepare, parse_token, compare } from "./utils";
 import { encode_token } from "./jwt";
 import { AuthenticationProviders } from "@/constants";
 
-const credentialsSchema = Joi.object({
-  email: Joi.string().email().message("邮箱错误").required(),
-  password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{8,30}$")).message("密码错误").required(),
-});
-
 type UserUniqueID = string;
-type MemberProps = { id: string; remark: string; permissions: string[]; token: string; user: User; store: DataStore };
+type MemberProps = {
+  id: string;
+  remark: string;
+  email: string | null;
+  permissions: string[];
+  token: string;
+  user: User;
+  store: DataStore;
+};
 
 export class Member {
   /** token 秘钥 */
@@ -64,7 +67,7 @@ export class Member {
     if (json_res.data) {
       permissions = json_res.data as unknown as string[];
     }
-    return Result.Ok(new Member({ id, remark: member.remark, permissions, token, user, store }));
+    return Result.Ok(new Member({ id, remark: member.remark, email: member.email, permissions, token, user, store }));
   }
   static async Get(body: { id: string }, store: DatabaseStore) {
     const { id } = body;
@@ -97,6 +100,7 @@ export class Member {
       new Member({
         id,
         remark: member.remark,
+        email: member.email,
         token: "",
         permissions,
         user,
@@ -149,6 +153,7 @@ export class Member {
       new Member({
         id: member_id,
         remark: member_token.member.remark,
+        email: member_token.member.email,
         permissions: [],
         token,
         user,
@@ -156,9 +161,29 @@ export class Member {
       })
     );
   }
-  static async Create(values: { email?: string; password?: string; user_id: string }, store: DatabaseStore) {
+  static async Create(
+    values: {
+      email?: string;
+      password?: string;
+      /** 内部创建，没有邮箱，需要成员登录后补全邮箱 */
+      no_email?: boolean;
+      remark?: string;
+      user_id: string;
+    },
+    store: DatabaseStore
+  ) {
     const { email, password: pw } = values as Credentials;
-    const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
+    const schema = Joi.object({
+      email: Joi.string().email().message("邮箱错误").required(),
+      password: Joi.string()
+        .pattern(new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^ws]).{8,24}$"))
+        .message("密码格式错误，必须包含大写字母和数字")
+        .required(),
+    });
+    const r = await resultify(schema.validateAsync.bind(schema))({
+      email,
+      password: pw,
+    });
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -178,8 +203,8 @@ export class Member {
       data: {
         id: r_id(),
         name: nickname,
-        remark: nickname,
-        email,
+        remark: values.remark || nickname,
+        email: values.no_email ? null : email,
         user_id: values.user_id,
         setting: {
           create: {
@@ -206,6 +231,7 @@ export class Member {
     const token = res.data;
     return Result.Ok({
       id: member_id,
+      email: created_member.email,
       token,
     });
   }
@@ -216,7 +242,11 @@ export class Member {
     const { provider } = values;
     if (provider === AuthenticationProviders.Credential) {
       const { provider_id, provider_arg1 } = values;
-      const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))({
+      const schema = Joi.object({
+        email: Joi.string().email().message("邮箱错误").required(),
+        password: Joi.string().pattern(new RegExp("^.{8,24}$")).message("请输入密码").required(),
+      });
+      const r = await resultify(schema.validateAsync.bind(schema))({
         email: provider_id,
         password: provider_arg1,
       });
@@ -264,6 +294,7 @@ export class Member {
       const member = new Member({
         id: member_id,
         remark: credential.member.remark,
+        email: credential.member.email,
         permissions: [],
         token,
         user,
@@ -293,6 +324,7 @@ export class Member {
   id: UserUniqueID;
   nickname: string = "unknown";
   remark: string = "unknown";
+  email: string | null = null;
   permissions: string[] = [];
   avatar: string | null = null;
   /** JWT token */
@@ -301,18 +333,32 @@ export class Member {
   store: DataStore;
 
   constructor(options: MemberProps) {
-    const { id, remark, permissions, token, user, store } = options;
+    const { id, remark, email, permissions, token, user, store } = options;
     this.id = id;
     this.remark = remark;
+    this.email = email;
     this.permissions = permissions;
     this.token = token;
     this.user = user;
     this.store = store;
   }
-  /** 补全邮箱和密码 */
+  /**
+   * 没有设置过邮箱密码
+   * 补全邮箱和密码
+   */
   async patch_credential(values: { email?: string; password?: string }) {
     const { email, password: pw } = values as Credentials;
-    const r = await resultify(credentialsSchema.validateAsync.bind(credentialsSchema))(values);
+    const schema = Joi.object({
+      email: Joi.string().email().message("邮箱错误").required(),
+      password: Joi.string()
+        .pattern(new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^ws]).{8,24}$"))
+        .message("密码格式错误，必须包含大写字母和数字")
+        .required(),
+    });
+    const r = await resultify(schema.validateAsync.bind(schema))({
+      email,
+      password: pw,
+    });
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -323,7 +369,7 @@ export class Member {
       },
     });
     if (existing_member_account) {
-      return Result.Err("已经有邮箱与密码了");
+      return Result.Err("该邮箱已被使用");
     }
     const { password, salt } = await prepare(pw);
     const created = await this.store.prisma.member_authentication.create({
@@ -334,6 +380,83 @@ export class Member {
         provider_arg1: password,
         provider_arg2: salt,
         member_id: this.id,
+      },
+    });
+    await this.store.prisma.member.update({
+      where: {
+        id: this.id,
+      },
+      data: {
+        email,
+      },
+    });
+    return Result.Ok(created);
+  }
+  /**
+   * 已经有邮箱和密码了，只是进行更新
+   * 更新邮箱和密码
+   */
+  async update_credential(values: { email?: string; password?: string }) {
+    const { email, password: pw } = values as Credentials;
+    const schema = Joi.object({
+      email: Joi.string().email().message("邮箱错误").required(),
+      password: Joi.string()
+        .pattern(new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^ws]).{8,24}$"))
+        .message("密码必须包含大写字母和数字")
+        .required(),
+    });
+    const r = await resultify(schema.validateAsync.bind(schema))({
+      email,
+      password: pw,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const account = await this.store.prisma.member_authentication.findFirst({
+      where: { provider: AuthenticationProviders.Credential, provider_id: email, member_id: this.id },
+      include: {
+        member: true,
+      },
+    });
+    if (account) {
+      return Result.Err("该邮箱已被使用");
+    }
+    const { password, salt } = await prepare(pw);
+    const member = await this.store.prisma.member.findFirst({
+      where: { id: this.id },
+      include: {
+        authentications: {
+          where: {
+            provider: AuthenticationProviders.Credential,
+          },
+        },
+      },
+    });
+    if (!member) {
+      return Result.Err("不存在该成员");
+    }
+    const e = member.authentications[0];
+    if (!e) {
+      return Result.Err("成员没有该凭证");
+    }
+    const created = await this.store.prisma.member_authentication.update({
+      where: {
+        id: e.id,
+      },
+      data: {
+        provider: AuthenticationProviders.Credential,
+        provider_id: email,
+        provider_arg1: password,
+        provider_arg2: salt,
+        member_id: this.id,
+      },
+    });
+    await this.store.prisma.member.update({
+      where: {
+        id: this.id,
+      },
+      data: {
+        email,
       },
     });
     return Result.Ok(created);

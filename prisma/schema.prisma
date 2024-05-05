@@ -69,7 +69,7 @@ model drive_token {
         data       String
         expired_at Float
 
-        drives     drive[]
+        drives drive[]
 
         @@map("DriveToken")
 }
@@ -1157,11 +1157,11 @@ model member {
         // 软删除
         delete     Int      @default(0)
 
-        inviter_id     String?
         // 邀请人
+        inviter_id     String?
         inviter        member?        @relation("InviterToInvitees", fields: [inviter_id], references: [id])
-        from_invite_id String?
         // 被谁邀请
+        from_invite_id String?
         from_invite    member_invite? @relation("FromWhiceMemberInvite", fields: [from_invite_id], references: [id])
         user_id        String
         user           user           @relation(fields: [user_id], references: [id], onDelete: Cascade)
