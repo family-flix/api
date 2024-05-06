@@ -15,7 +15,11 @@ export default async function v2_media_profile_refresh(
 ) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { media_id, douban_id } = req.body as Partial<{ media_id: string; douban_id: string }>;
+  const { media_id, douban_id, override } = req.body as Partial<{
+    media_id: string;
+    douban_id: string;
+    override: number;
+  }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);

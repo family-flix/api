@@ -1021,9 +1021,9 @@ export class MediaProfileClient {
   }
   async refresh_profile_with_douban_id(
     media: MediaProfileRecord & { series: MediaSeriesProfileRecord | null },
-    values: { douban_id: number }
+    opt: { douban_id: number; override?: number }
   ) {
-    const { douban_id } = values;
+    const { douban_id } = opt;
     const client = this.$douban;
     const store = this.$store;
     const tips: string[] = [];
@@ -1086,6 +1086,13 @@ export class MediaProfileClient {
           },
         });
       }
+    }
+    if (opt.override) {
+      await store.prisma.person_in_media.deleteMany({
+        where: {
+          media_id: media.id,
+        },
+      });
     }
     for (let i = 0; i < persons.length; i += 1) {
       const person = persons[i];

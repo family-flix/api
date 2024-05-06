@@ -139,6 +139,7 @@ import v1_drive_token_update from "./pages/api/v1/drive_token/update";
 import v1_user_find_first from "./pages/api/v1/user/find_first";
 import v0_admin_user_existing from "./pages/api/admin/user/existing";
 import v2_wechat_mine_update_account from "./pages/api/v2/wechat/mine/update_account";
+import v2_admin_drive_refresh from "./pages/api/v2/admin/drive/refresh";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -322,8 +323,8 @@ async function main() {
   server.post("/api/v2/admin/drive/delete", async (c) => {
     return v2_admin_drive_add(...(await compat_next(c)));
   });
-  server.post("/api/v2/admin/drive/analysis", async (c) => {
-    return v2_admin_drive_add(...(await compat_next(c)));
+  server.post("/api/v2/admin/drive/refresh", async (c) => {
+    return v2_admin_drive_refresh(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/resource/files", async (c) => {
     return v2_admin_resource_files(...(await compat_next(c)));
@@ -564,7 +565,7 @@ async function main() {
   server.post("/api/invitee/add", async (c) => {
     return v0_wechat_invitee_add(...(await compat_next(c)));
   });
-  server.post("/api/invitee/list", async (c) => {
+  server.get("/api/invitee/list", async (c) => {
     return v0_wechat_invitee_list(...(await compat_next(c)));
   });
   server.get("/api/info", async (c) => {
