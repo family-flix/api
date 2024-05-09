@@ -40,13 +40,10 @@ export default async function v2_admin_member_add(req: NextApiRequest, res: Next
   if (existing_member) {
     return e(Result.Err("已存在相同备注的成员了"));
   }
-  const unique_id = random_string(6);
-  const pwd = random_string(8);
-  console.log("create member", remark, unique_id, pwd);
-  const r2 = await Member.Create(
-    { email: `${unique_id}@funzm.com`, password: pwd, no_email: true, remark, user_id: user.id },
-    store
-  );
+  // const unique_id = random_string(6);
+  // const pwd = random_string(8);
+  // console.log("create member", remark, unique_id, pwd);
+  const r2 = await Member.CreateWithoutAccount({ remark, user_id: user.id }, store);
   if (r2.error) {
     return e(r2);
   }
@@ -94,10 +91,11 @@ export default async function v2_admin_member_add(req: NextApiRequest, res: Next
   // };
   const member = {
     id: r2.data.id,
-    account: {
-      id: `${unique_id}@funzm.com`,
-      pwd,
-    },
+    token: r2.data.token,
+    // account: {
+    //   id: `${unique_id}@funzm.com`,
+    //   pwd,
+    // },
   };
   return res.status(200).json({ code: 0, msg: "添加成员成功", data: member });
 }

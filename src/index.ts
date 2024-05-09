@@ -1,3 +1,5 @@
+import { IncomingMessage } from "http";
+
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
@@ -140,6 +142,9 @@ import v1_user_find_first from "./pages/api/v1/user/find_first";
 import v0_admin_user_existing from "./pages/api/admin/user/existing";
 import v2_wechat_mine_update_account from "./pages/api/v2/wechat/mine/update_account";
 import v2_admin_drive_refresh from "./pages/api/v2/admin/drive/refresh";
+import v2_wechat_auth_code_create from "./pages/api/v2/wechat/auth/code/create";
+import v2_wechat_auth_code_check from "./pages/api/v2/wechat/auth/code/check";
+import v2_wechat_auth_code_confirm from "./pages/api/v2/wechat/auth/code/confirm";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -151,7 +156,12 @@ async function main() {
   //   const application = new Application({
   //     root_path: ROOT_DIR,
   //   });
-  const server = new Hono<{ Bindings: {}; Variables: {} }>();
+  const server = new Hono<{
+    Bindings: {
+      incoming: IncomingMessage;
+    };
+    Variables: {};
+  }>();
   // const args = parse_argv<{ port: number }>(process.argv.slice(2));
 
   // server.use(logger());
@@ -587,6 +597,15 @@ async function main() {
   server.post("/api/v2/wechat/auth/register", async (c) => {
     return v2_wechat_auth_register(...(await compat_next(c)));
   });
+  server.post("/api/v2/wechat/auth/code/create", async (c) => {
+    return v2_wechat_auth_code_create(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/auth/code/check", async (c) => {
+    return v2_wechat_auth_code_check(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/auth/code/confirm", async (c) => {
+    return v2_wechat_auth_code_confirm(...(await compat_next(c)));
+  });
   server.post("/api/v2/wechat/mine/update_account", async (c) => {
     return v2_wechat_mine_update_account(...(await compat_next(c)));
   });
@@ -619,6 +638,12 @@ async function main() {
   });
   server.post("/api/v2/wechat/member/token", async (c) => {
     return v2_wechat_member_token(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/invitation_code/list", async (c) => {
+    return v2_wechat_collection_list(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/invitation_code/create", async (c) => {
+    return v2_wechat_collection_list(...(await compat_next(c)));
   });
   server.post("/api/v2/wechat/notification/list", async (c) => {
     return v2_wechat_notification_list(...(await compat_next(c)));

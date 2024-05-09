@@ -929,6 +929,7 @@ model play_history_v2 {
         @@map("PlayHistoryV2")
 }
 
+// 废弃
 model tv_profile_quick {
         id      String   @id
         created DateTime @default(now())
@@ -1124,19 +1125,49 @@ model log {
         id      String   @id
         created DateTime @default(now())
         updated DateTime @default(now())
-        title   String
+
+        title String
 
         @@map("Log")
 }
 
-// model qrcode {
-//         id      String   @id
-//         created DateTime @default(now())
-//         updated DateTime @default(now())
-//         title   String
+// 邀请码
+model invitation_code {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
 
-//         @@map("Qrcode")
-// }
+        text       String
+        used       Int       @default(0)
+        used_at    DateTime?
+        expired_at DateTime?
+
+        // 创建邀请码的人
+        inviter_id String
+        inviter    member  @relation("InviterCodes", fields: [inviter_id], references: [id], onDelete: Cascade)
+        // 通过邀请码创建的人
+        invitee_id String? @unique
+        invitee    member? @relation("RegisterByCodes", fields: [invitee_id], references: [id], onDelete: Cascade)
+
+        @@map("InvitationCode")
+}
+
+// 临时登录码，用于二维码扫码登录
+model auth_code {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        step    Int
+        expires DateTime
+
+        member_id String?
+        member    member? @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        user_id   String
+        user      user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("AuthCode")
+}
 
 // 后台添加的成员
 model member {
@@ -1184,6 +1215,9 @@ model member {
         reports_v2         report_v2[]
         favorites          member_favorite[]
         diaries            member_diary[]
+        invitation_codes   invitation_code[]       @relation("InviterCodes")
+        from_code          invitation_code?        @relation("RegisterByCodes")
+        auth_codes         auth_code[]
 
         @@unique([user_id, inviter_id, remark])
         @@map("Member")
@@ -1563,6 +1597,7 @@ model user {
         invalid_medias          invalid_media[]
         invalid_media_sources   invalid_media_source[]
         drive_statistics        drive_statistics[]
+        auth_codes              auth_code[]
 
         @@map("User")
 }

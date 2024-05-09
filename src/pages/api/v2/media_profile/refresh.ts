@@ -54,7 +54,7 @@ export default async function v2_media_profile_refresh(
   }
   const r2 = await (async () => {
     if (douban_id) {
-      return client.refresh_profile_with_douban_id(media, { douban_id: Number(douban_id) });
+      return client.refresh_profile_with_douban_id(media, { douban_id: Number(douban_id), override });
     }
     return client.refresh_profile_with_douban(media);
   })();

@@ -480,3 +480,10 @@ export enum AuthenticationProviders {
   /** 邮箱、密码 凭证 */
   Credential = "credential",
 }
+
+export enum AuthCodeStep {
+  Pending = 1,
+  Scanned = 2,
+  Confirmed = 3,
+  Expired = 4,
+}

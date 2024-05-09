@@ -161,31 +161,51 @@ export class Member {
       })
     );
   }
+  /** 创建一个「用户」，以及可以用于登录的「邮箱」账号 */
   static async Create(
     values: {
       email?: string;
       password?: string;
-      /** 内部创建，没有邮箱，需要成员登录后补全邮箱 */
-      no_email?: boolean;
-      remark?: string;
+      /** 邀请码 */
+      code?: string;
       user_id: string;
     },
     store: DatabaseStore
   ) {
-    const { email, password: pw } = values as Credentials;
+    const { email, password: pw, code } = values;
     const schema = Joi.object({
       email: Joi.string().email().message("邮箱错误").required(),
       password: Joi.string()
         .pattern(new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^ws]).{8,24}$"))
         .message("密码格式错误，必须包含大写字母和数字")
         .required(),
+      code: Joi.string().required(),
     });
     const r = await resultify(schema.validateAsync.bind(schema))({
       email,
       password: pw,
+      code,
     });
     if (r.error) {
       return Result.Err(r.error);
+    }
+    const inviter_code = await store.prisma.invitation_code.findFirst({
+      where: {
+        id: code,
+      },
+      include: {
+        inviter: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+    if (!inviter_code) {
+      return Result.Err("没有匹配的记录");
+    }
+    if (inviter_code.invitee_id) {
+      return Result.Err("邀请码已失效");
     }
     const existing_member_account = await store.prisma.member_authentication.findFirst({
       where: { provider: AuthenticationProviders.Credential, provider_id: email },
@@ -197,14 +217,14 @@ export class Member {
     if (existing_member_account !== null) {
       return Result.Err("该邮箱已注册");
     }
-    const { password, salt } = await prepare(pw);
-    const nickname = email.split("@").shift()!;
+    const { password, salt } = await prepare(pw!);
+    const nickname = email!.split("@").shift()!;
     const created_member = await store.prisma.member.create({
       data: {
         id: r_id(),
         name: nickname,
-        remark: values.remark || nickname,
-        email: values.no_email ? null : email,
+        remark: nickname,
+        email,
         user_id: values.user_id,
         setting: {
           create: {
@@ -216,11 +236,19 @@ export class Member {
           create: {
             id: r_id(),
             provider: AuthenticationProviders.Credential,
-            provider_id: email,
+            provider_id: email!,
             provider_arg1: password,
             provider_arg2: salt,
           },
         },
+      },
+    });
+    await store.prisma.invitation_code.update({
+      where: {
+        id: inviter_code.id,
+      },
+      data: {
+        invitee_id: created_member.id,
       },
     });
     const { id: member_id } = created_member;
@@ -233,6 +261,49 @@ export class Member {
       id: member_id,
       email: created_member.email,
       token,
+    });
+  }
+  /** 后台直接创建一个「用户」，没有账号 */
+  static async CreateWithoutAccount(
+    values: {
+      remark: string;
+      user_id: string;
+    },
+    store: DatabaseStore
+  ) {
+    const created_member = await store.prisma.member.create({
+      data: {
+        id: r_id(),
+        remark: values.remark,
+        email: null,
+        user_id: values.user_id,
+        setting: {
+          create: {
+            id: r_id(),
+            data: "{}",
+          },
+        },
+      },
+    });
+    const { id: member_id } = created_member;
+    const res = await User.Token({ id: member_id });
+    if (res.error) {
+      return Result.Err(res.error);
+    }
+    const token = res.data;
+    const created_token = await store.prisma.member_token.create({
+      data: {
+        id: r_id(),
+        token,
+        member_id,
+      },
+    });
+    return Result.Ok({
+      id: member_id,
+      token: {
+        id: created_token.id,
+        code: token,
+      },
     });
   }
   static async ValidateWithAuthentication(
