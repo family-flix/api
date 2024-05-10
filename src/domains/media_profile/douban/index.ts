@@ -134,7 +134,7 @@ export class DoubanClient {
     media: { type: MediaTypes; name: string; original_name: string | null; order: number; air_date: string | null },
     list: UnpackedResult<Unpacked<ReturnType<typeof this.search>>>["list"]
   ) {
-    if (this.options) {
+    if (this.debug) {
       console.log("match exact media");
       console.log(media);
     }
@@ -145,14 +145,30 @@ export class DoubanClient {
     const matched = (() => {
       const names_processed = [name, name.replace("：", "·")];
       if (type === MediaTypes.Movie) {
-        const matched = list.find((media) => {
-          if (air_date) {
-            return names_processed.includes(media.name) && air_date === media.air_date;
+        const maybe_chinese_names = names_processed;
+        const maybe_original_names = [original_name];
+        const maybe_names = uniq([
+          ...maybe_chinese_names,
+          ...maybe_original_names,
+          ...maybe_chinese_names.flatMap((item1) => maybe_original_names.map((item2) => [item1, item2].join(" "))),
+        ]);
+        for (let i = 0; i < maybe_names.length; i += 1) {
+          const maybe_name = maybe_names[i];
+          const matched = list.find((media) => {
+            return maybe_name === media.name;
+          });
+          if (this.debug) {
+            console.log(`${i + 1}、`, maybe_name, matched);
           }
-          return names_processed.includes(media.name);
-        });
-        if (matched) {
-          return matched;
+          if (matched) {
+            if (air_date) {
+              if (String(dayjs(air_date).year()) === String(dayjs(matched.air_date).year())) {
+                return matched;
+              }
+              return null;
+            }
+            return matched;
+          }
         }
         return null;
       }
