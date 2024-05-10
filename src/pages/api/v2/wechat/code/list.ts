@@ -41,6 +41,23 @@ export default async function v2_wechat_code_list(req: NextApiRequest, res: Next
   return res.status(200).json({
     code: 0,
     msg: "",
-    data: result,
+    data: {
+      ...result,
+      list: result.list.map((item) => {
+        const { id, invitee } = item;
+        return {
+          id,
+          code: id,
+          invitee: invitee
+            ? {
+                id: invitee.id,
+                nickname: invitee.name,
+                email: invitee.email,
+                avatar: invitee.avatar,
+              }
+            : null,
+        };
+      }),
+    },
   });
 }

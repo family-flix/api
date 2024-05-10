@@ -1438,27 +1438,27 @@ function n_n(r) {
   const c = Ut.crypto.decrypt(value, key);
   return kt(Bt(c));
 }
-
+export type DoubanSearchItem = {
+  id: number;
+  topics: unknown[];
+  title: string;
+  abstract: string;
+  abstract_2: string;
+  cover_url: string;
+  label_actions: unknown[];
+  tlp_name: string;
+  url: string;
+  extra_actions: unknown[];
+  // text是剧集/电影
+  labels: { color: string; text: string }[];
+  rating: {
+    count: number;
+    value: number;
+    star_count: number;
+  };
+};
 export function decrypt(r: string): {
-  items: {
-    id: number;
-    topics: unknown[];
-    title: string;
-    abstract: string;
-    abstract_2: string;
-    cover_url: string;
-    label_actions: unknown[];
-    tlp_name: string;
-    url: string;
-    extra_actions: unknown[];
-    // text是剧集/电影
-    labels: { color: string; text: string }[];
-    rating: {
-      count: number;
-      value: number;
-      star_count: number;
-    };
-  }[];
+  items: DoubanSearchItem[];
 } {
   var a = Buffer.from(r, "base64");
   var s = Math.max(Math.floor((a.length - 2 * 16) / 3), 0);

@@ -19,6 +19,7 @@ export default async function v0_wechat_info(req: NextApiRequest, res: NextApiRe
   const data = {
     id: member.id,
     nickname: member.nickname,
+    email: member.email,
     avatar: member.avatar,
     permissions: member.permissions,
   };

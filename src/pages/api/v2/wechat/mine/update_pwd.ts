@@ -8,19 +8,19 @@ import { store, BaseApiResp } from "@/store";
 import { Member } from "@/domains/user/member";
 import { response_error_factory } from "@/utils/server";
 
-export default async function v2_wechat_mine_update_email(
+export default async function v2_wechat_mine_update_pwd(
   req: NextApiRequest,
   res: NextApiResponse<BaseApiResp<unknown>>
 ) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { email } = req.body as Partial<{ email: string }>;
+  const { pwd } = req.body as Partial<{ pwd: string }>;
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
-  const r = await user.update_credential_email({ email });
+  const r = await user.update_credential_pwd({ password: pwd });
   if (r.error) {
     return e(r);
   }

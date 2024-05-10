@@ -113,6 +113,9 @@ export default async function v2_wechat_media_list(req: NextApiRequest, res: Nex
               origin_country: true,
               persons: {
                 take: 5,
+                where: {
+                  known_for_department: "star",
+                },
                 include: {
                   profile: true,
                 },

@@ -123,10 +123,17 @@ export class Media {
     const groups = split_count_into_ranges(20, latest_source.profile.order);
     const { sources: media_sources, cur_source } = await (async () => {
       if (!history) {
+        const range = groups[0];
         const sources = await this.store.prisma.media_source.findMany({
           where: {
             files: {
               some: {},
+            },
+            profile: {
+              order: {
+                gte: range[0],
+                lte: range[1],
+              },
             },
             media_id,
           },

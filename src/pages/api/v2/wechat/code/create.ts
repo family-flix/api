@@ -25,14 +25,17 @@ export default async function v2_wechat_code_create(req: NextApiRequest, res: Ne
   const codes = [];
   for (let i = 0; i < count; i += 1) {
     const code = r_id();
-    codes.push(code);
-    await store.prisma.invitation_code.create({
+    const created = await store.prisma.invitation_code.create({
       data: {
         id: code,
         text: code,
         used: 0,
         inviter_id: member.id,
       },
+    });
+    codes.push({
+      code,
+      created_at: created.created,
     });
   }
   return res.status(200).json({

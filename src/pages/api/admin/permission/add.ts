@@ -4,13 +4,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
+import { Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { add_zeros, padding_zero, r_id } from "@/utils";
+import { add_zeros, r_id } from "@/utils/index";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v0_admin_permission_add(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { desc } = req.body as Partial<{ desc: string }>;
@@ -51,5 +51,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: user.id,
     },
   });
-  res.status(200).json({ code: 0, msg: "", data: null });
+  return res.status(200).json({ code: 0, msg: "", data: null });
 }

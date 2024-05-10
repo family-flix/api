@@ -67,10 +67,11 @@ export default async function v2_admin_member_list(req: NextApiRequest, res: Nex
     data: {
       next_marker: result.next_marker,
       list: result.list.map((member) => {
-        const { id, inviter, remark, authentications, tokens } = member;
+        const { id, inviter, remark, email, authentications, tokens } = member;
         return {
           id,
           remark,
+          email,
           inviter: inviter
             ? {
                 id: inviter.id,

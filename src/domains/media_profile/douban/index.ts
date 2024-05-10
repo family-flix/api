@@ -16,36 +16,58 @@ import {
   search_tv_in_douban,
   search_movie_in_tmdb,
 } from "./services";
-import { decrypt } from "./decrypt";
+import { decrypt, DoubanSearchItem } from "./decrypt";
 import { split_name_and_original_name } from "./utils";
 
 export class DoubanClient {
   options: {
     token?: string;
   };
+  debug = false;
   constructor(
     options: Partial<{
+      debug?: boolean;
       /** tmdb api key */
       token: string;
     }>
   ) {
-    const { token } = options;
+    const { debug, token } = options;
     this.options = {
       token,
     };
+    if (debug !== undefined) {
+      this.debug = debug;
+    }
   }
   async search(keyword: string) {
     const text = keyword;
     console.log("[SERVICE]media_profile/douban/index - search", text);
     const resp = await axios.get<string>(`https://search.douban.com/movie/subject_search?search_text=${text}`);
     const html = resp.data;
-    const r = /__DATA__ {0,1}= {0,1}"([^"]{1,})"/;
-    const m = html.match(r);
-    if (!m) {
-      return Result.Err("没有 __DATA__");
+    if (this.debug) {
+      console.log(html);
     }
-    const content = m[1];
-    const { items } = decrypt(content);
+    const rr = (() => {
+      const re1 = /__DATA__ {0,1}= {0,1}"([^"]{1,})"/;
+      const result1 = html.match(re1);
+      if (result1) {
+        const content = result1[1];
+        const { items } = decrypt(content);
+        return Result.Ok(items);
+      }
+      const re2 = /__DATA__ {0,1}= {0,1}(\{[^;]{1,});/;
+      const result2 = html.match(re2);
+      if (result2) {
+        const content = result2[1];
+        const { items } = JSON.parse(content) as { items: DoubanSearchItem[] };
+        return Result.Ok(items);
+      }
+      return Result.Err("没有 __DATA__");
+    })();
+    if (rr.error) {
+      return Result.Err(rr.error.message);
+    }
+    const items = rr.data;
     const result = [];
     for (let i = 0; i < items.length; i += 1) {
       (() => {

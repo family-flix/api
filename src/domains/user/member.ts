@@ -175,10 +175,7 @@ export class Member {
     const { email, password: pw, code } = values;
     const schema = Joi.object({
       email: Joi.string().email().message("邮箱错误").required(),
-      password: Joi.string()
-        .pattern(new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^ws]).{8,24}$"))
-        .message("密码格式错误，必须包含大写字母和数字")
-        .required(),
+      password: Joi.string().pattern(new RegExp(".{6,12}")).message("密码长度必须大于6位").required(),
       code: Joi.string().required(),
     });
     const r = await resultify(schema.validateAsync.bind(schema))({
@@ -232,6 +229,7 @@ export class Member {
             data: "{}",
           },
         },
+        inviter_id: inviter_code.inviter_id,
         authentications: {
           create: {
             id: r_id(),
@@ -315,7 +313,7 @@ export class Member {
       const { provider_id, provider_arg1 } = values;
       const schema = Joi.object({
         email: Joi.string().email().message("邮箱错误").required(),
-        password: Joi.string().pattern(new RegExp("^.{8,24}$")).message("请输入密码").required(),
+        password: Joi.string().pattern(new RegExp(".{6,12}")).message("请输入密码").required(),
       });
       const r = await resultify(schema.validateAsync.bind(schema))({
         email: provider_id,
@@ -389,6 +387,27 @@ export class Member {
       const e = err as Error;
       return Result.Err(e);
     }
+  }
+  /** 修改指定邮箱密码 */
+  static async ChangePassword(values: Partial<{ email: string; password: string }>, store: DatabaseStore) {
+    const { email, password: pw } = values as Credentials;
+    const existing = await store.prisma.member_authentication.findFirst({
+      where: { provider: AuthenticationProviders.Credential, provider_id: email },
+    });
+    if (!existing) {
+      return Result.Err("该邮箱未注册");
+    }
+    const { password, salt } = await prepare(pw);
+    const update_res = await store.prisma.member_authentication.update({
+      where: {
+        id: existing.id,
+      },
+      data: {
+        provider_arg1: password,
+        provider_arg2: salt,
+      },
+    });
+    return Result.Ok({});
   }
 
   /** 用户 id */
@@ -471,10 +490,7 @@ export class Member {
     const { email, password: pw } = values as Credentials;
     const schema = Joi.object({
       email: Joi.string().email().message("邮箱错误").required(),
-      password: Joi.string()
-        .pattern(new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^ws]).{8,24}$"))
-        .message("密码必须包含大写字母和数字")
-        .required(),
+      password: Joi.string().min(6).max(12).required(),
     });
     const r = await resultify(schema.validateAsync.bind(schema))({
       email,
@@ -531,5 +547,119 @@ export class Member {
       },
     });
     return Result.Ok(created);
+  }
+  /**
+   * 更新邮箱
+   */
+  async update_credential_email(values: { email?: string }) {
+    const { email } = values as Credentials;
+    const schema = Joi.object({
+      email: Joi.string().email().message("邮箱错误").required(),
+    });
+    const r = await resultify(schema.validateAsync.bind(schema))({
+      email,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const account = await this.store.prisma.member_authentication.findFirst({
+      where: { provider: AuthenticationProviders.Credential, provider_id: email, member_id: this.id },
+      include: {
+        member: true,
+      },
+    });
+    if (account) {
+      return Result.Err("该邮箱已被使用");
+    }
+    const member = await this.store.prisma.member.findFirst({
+      where: { id: this.id },
+      include: {
+        authentications: {
+          where: {
+            provider: AuthenticationProviders.Credential,
+          },
+        },
+      },
+    });
+    if (!member) {
+      return Result.Err("不存在该成员");
+    }
+    await (async () => {
+      const e = member.authentications[0];
+      if (!e) {
+        await this.store.prisma.member_authentication.create({
+          data: {
+            id: r_id(),
+            provider: AuthenticationProviders.Credential,
+            provider_id: email,
+            member_id: this.id,
+          },
+        });
+        return;
+      }
+      const created = await this.store.prisma.member_authentication.update({
+        where: {
+          id: e.id,
+        },
+        data: {
+          provider: AuthenticationProviders.Credential,
+          provider_id: email,
+          member_id: this.id,
+        },
+      });
+    })();
+    await this.store.prisma.member.update({
+      where: {
+        id: this.id,
+      },
+      data: {
+        email,
+      },
+    });
+    return Result.Ok({});
+  }
+  /**
+   * 更新密码
+   */
+  async update_credential_pwd(values: { password?: string }) {
+    const { password: pw } = values as Credentials;
+    const schema = Joi.object({
+      password: Joi.string().min(6).max(12).required(),
+    });
+    const r = await resultify(schema.validateAsync.bind(schema))({
+      password: pw,
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { password, salt } = await prepare(pw);
+    const member = await this.store.prisma.member.findFirst({
+      where: { id: this.id },
+      include: {
+        authentications: {
+          where: {
+            provider: AuthenticationProviders.Credential,
+          },
+        },
+      },
+    });
+    if (!member) {
+      return Result.Err("不存在该成员");
+    }
+    const e = member.authentications[0];
+    if (!e) {
+      return Result.Err("请先设置邮箱");
+    }
+    console.log(e);
+    await this.store.prisma.member_authentication.update({
+      where: {
+        id: e.id,
+      },
+      data: {
+        provider_arg1: password,
+        provider_arg2: salt,
+      },
+    });
+    return Result.Ok({});
   }
 }

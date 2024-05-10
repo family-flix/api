@@ -34,6 +34,7 @@ export default async function v2_wechat_auth_register(req: NextApiRequest, res: 
     msg: "注册成功",
     data: {
       id,
+      email,
       token,
     },
   });

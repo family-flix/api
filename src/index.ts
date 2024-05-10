@@ -140,11 +140,17 @@ import v1_drive_update from "./pages/api/v1/drive/update";
 import v1_drive_token_update from "./pages/api/v1/drive_token/update";
 import v1_user_find_first from "./pages/api/v1/user/find_first";
 import v0_admin_user_existing from "./pages/api/admin/user/existing";
-import v2_wechat_mine_update_account from "./pages/api/v2/wechat/mine/update_account";
+import v2_wechat_mine_update_email from "./pages/api/v2/wechat/mine/update_account";
 import v2_admin_drive_refresh from "./pages/api/v2/admin/drive/refresh";
 import v2_wechat_auth_code_create from "./pages/api/v2/wechat/auth/code/create";
 import v2_wechat_auth_code_check from "./pages/api/v2/wechat/auth/code/check";
 import v2_wechat_auth_code_confirm from "./pages/api/v2/wechat/auth/code/confirm";
+import v0_admin_permission_list from "./pages/api/admin/permission/list";
+import v0_admin_permission_add from "./pages/api/admin/permission/add";
+import v2_wechat_code_list from "./pages/api/v2/wechat/code/list";
+import v2_wechat_code_create from "./pages/api/v2/wechat/code/create";
+import v2_wechat_mine_update_pwd from "./pages/api/v2/wechat/mine/update_pwd";
+import dayjs from "dayjs";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -241,7 +247,6 @@ async function main() {
       data: null,
     });
   });
-
   /** 管理后台 */
   server.post("/api/admin/user/login", async (c) => {
     return v0_admin_user_login(...(await compat_next(c)));
@@ -293,6 +298,12 @@ async function main() {
   });
   server.post("/api/admin/member/token/add", async (c) => {
     return v0_admin_member_add(...(await compat_next(c)));
+  });
+  server.post("/api/admin/permission/list", async (c) => {
+    return v0_admin_permission_list(...(await compat_next(c)));
+  });
+  server.post("/api/admin/permission/add", async (c) => {
+    return v0_admin_permission_add(...(await compat_next(c)));
   });
   server.post("/api/admin/settings", async (c) => {
     return v0_admin_settings_index(...(await compat_next(c)));
@@ -606,8 +617,11 @@ async function main() {
   server.post("/api/v2/wechat/auth/code/confirm", async (c) => {
     return v2_wechat_auth_code_confirm(...(await compat_next(c)));
   });
-  server.post("/api/v2/wechat/mine/update_account", async (c) => {
-    return v2_wechat_mine_update_account(...(await compat_next(c)));
+  server.post("/api/v2/wechat/mine/update_email", async (c) => {
+    return v2_wechat_mine_update_email(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/mine/update_pwd", async (c) => {
+    return v2_wechat_mine_update_pwd(...(await compat_next(c)));
   });
   server.post("/api/v2/wechat/collection/list", async (c) => {
     return v2_wechat_collection_list(...(await compat_next(c)));
@@ -640,10 +654,10 @@ async function main() {
     return v2_wechat_member_token(...(await compat_next(c)));
   });
   server.post("/api/v2/wechat/invitation_code/list", async (c) => {
-    return v2_wechat_collection_list(...(await compat_next(c)));
+    return v2_wechat_code_list(...(await compat_next(c)));
   });
   server.post("/api/v2/wechat/invitation_code/create", async (c) => {
-    return v2_wechat_collection_list(...(await compat_next(c)));
+    return v2_wechat_code_create(...(await compat_next(c)));
   });
   server.post("/api/v2/wechat/notification/list", async (c) => {
     return v2_wechat_notification_list(...(await compat_next(c)));
@@ -668,6 +682,45 @@ async function main() {
   });
   server.post("/api/v2/wechat/source", async (c) => {
     return v2_wechat_source_index(...(await compat_next(c)));
+  });
+  server.get("/api/v1/qrcode", async (c) => {
+    const escape = (v: string) => {
+      const needsEscape = ['"', ";", ",", ":", "\\"];
+      let escaped = "";
+      for (const c of v) {
+        if (needsEscape.includes(c)) {
+          escaped += `\\${c}`;
+        } else {
+          escaped += c;
+        }
+      }
+      return escaped;
+    };
+    const ssid = "wpt-guest";
+    const password = `wpt${dayjs().format("YYYYMMDD")}`;
+    const props = {
+      settings: {
+        encryptionMode: "WPA",
+        eapMethod: "",
+        eapIdentity: "",
+        ssid,
+        password,
+        hiddenSSID: false,
+      },
+    };
+    const opts: Partial<{ T: string; E: string; I: string; S: string; P: string; H: boolean }> = {};
+    opts.T = props.settings.encryptionMode || "nopass";
+    if (props.settings.encryptionMode === "WPA2-EAP") {
+      opts.E = props.settings.eapMethod;
+      opts.I = props.settings.eapIdentity;
+    }
+    opts.S = escape(props.settings.ssid);
+    opts.P = escape(props.settings.password);
+    opts.H = props.settings.hiddenSSID;
+    let data = "";
+    Object.entries(opts).forEach(([k, v]) => (data += `${k}:${v};`));
+    const qrval = `WIFI:${data};`;
+    return c.text(qrval);
   });
 
   serve(
