@@ -131,10 +131,14 @@ export class DoubanClient {
   }
   /** 在搜索结果列表中，找到最匹配的结果 */
   match_exact_media(
-    season: { type: MediaTypes; name: string; original_name: string | null; order: number; air_date: string | null },
+    media: { type: MediaTypes; name: string; original_name: string | null; order: number; air_date: string | null },
     list: UnpackedResult<Unpacked<ReturnType<typeof this.search>>>["list"]
   ) {
-    const { type, name, original_name, order, air_date } = season;
+    if (this.options) {
+      console.log("match exact media");
+      console.log(media);
+    }
+    const { type, name, original_name, order, air_date } = media;
     if (list.length === 0) {
       return Result.Err("没有列表数据");
     }
@@ -184,6 +188,9 @@ export class DoubanClient {
           const matched = list.find((media) => {
             return maybe_name === media.name;
           });
+          if (this.debug) {
+            console.log(`${i + 1}、`, maybe_name, matched);
+          }
           if (matched) {
             if (air_date) {
               if (String(dayjs(air_date).year()) === String(dayjs(matched.air_date).year())) {
