@@ -545,7 +545,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       url,
       code: pwd,
       user: this.user,
-      ignore_invalid: true,
       store,
     });
     if (r2.error) {
