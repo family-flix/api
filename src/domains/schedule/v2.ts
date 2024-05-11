@@ -1074,10 +1074,9 @@ export class ScheduleTask {
             }
           },
         ]);
-        console.log("更新成功");
-        console.log();
       },
     });
+    return Result.Ok({});
   }
   /** 清理不存在云盘，但没有删除的文件记录 */
   async clear_expired_parsed_source() {
