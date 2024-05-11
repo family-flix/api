@@ -1044,7 +1044,7 @@ export class ScheduleTask {
       fn(extra) {
         return store.prisma.media_profile.findMany({
           where: {
-            douban_id: null,
+            // douban_id: null,
             order: {
               not: 0,
             },
