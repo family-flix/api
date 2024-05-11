@@ -104,6 +104,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       id: drive_id,
       url,
       code: pwd,
+      ignore_invalid,
       user,
       store,
     });
