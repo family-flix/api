@@ -549,6 +549,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       store,
     });
     if (r2.error) {
+      console.log('get resource client failed', r2.error.message, this.profile.drive_id);
       return Result.Err(r2.error.message);
     }
     const resource_client = r2.data;
