@@ -541,7 +541,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     }
     await sleep(1000);
     const r2 = await AliyunShareResourceClient.Get({
-      unique_id: this.profile.drive_id,
+      id: this.profile.drive_id,
       url,
       code: pwd,
       user: this.user,
@@ -549,7 +549,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       store,
     });
     if (r2.error) {
-      console.log('get resource client failed', r2.error.message, this.profile.drive_id);
+      // console.log('get resource client failed', r2.error.message, this.profile.drive_id);
       return Result.Err(r2.error.message);
     }
     const resource_client = r2.data;
