@@ -105,7 +105,8 @@ export class DoubanClient {
         let name = title
           .replace(/\u200E/g, "")
           .replace(/&lrm;/g, "")
-          .replace(/&#x200e;/g, "");
+          .replace(/&#x200e;/g, "")
+          .replace(/ {2,}/g, " ");
         const air_date = name.match(/\(([0-9]{4})\)/);
         if (air_date) {
           name = name.replace(air_date[0], "").trim();
