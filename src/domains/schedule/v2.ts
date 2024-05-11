@@ -1059,20 +1059,20 @@ export class ScheduleTask {
         const { id, type, name, order, air_date, series } = data;
         console.log(`${index + 1}、`, name);
         await Promise.all([
-          async function tmdb() {
+          (async () => {
             const r1 = await client.refresh_media_profile_with_tmdb(data);
             if (r1.error) {
               console.log(r1.error.message);
               return;
             }
-          },
-          async function douban() {
+          })(),
+          (async () => {
             const r1 = await client.refresh_profile_with_douban(data);
             if (r1.error) {
               console.log(r1.error.message);
               return;
             }
-          },
+          })(),
         ]);
       },
     });
