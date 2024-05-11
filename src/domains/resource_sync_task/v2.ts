@@ -520,9 +520,9 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
   /**
    * 使用新的资源链接覆盖旧的
    */
-  async override(values: { url: string; resource_file_id?: string; resource_file_name?: string }) {
+  async override(values: { url: string; pwd?: string; resource_file_id?: string; resource_file_name?: string }) {
     const store = this.store;
-    const { url, resource_file_id, resource_file_name } = values;
+    const { url, pwd, resource_file_id, resource_file_name } = values;
     // 手动指定了要分享资源文件夹是哪个
     if (resource_file_id && resource_file_name) {
       await store.prisma.resource_sync_task.update({
@@ -540,7 +540,18 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       return Result.Ok(null);
     }
     await sleep(1000);
-    const files_res = await this.resource_client.fetch_files("root", {});
+    const r2 = await AliyunShareResourceClient.Get({
+      url,
+      code: pwd,
+      user: this.user,
+      ignore_invalid: true,
+      store,
+    });
+    if (r2.error) {
+      return Result.Err(r2.error.message);
+    }
+    const resource_client = r2.data;
+    const files_res = await resource_client.fetch_files("root", {});
     if (files_res.error) {
       return Result.Err(files_res.error.message);
     }
