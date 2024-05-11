@@ -7,6 +7,7 @@ export type ApplicationState = {
   env: {
     OUTPUT_PATH: string;
     PORT: string;
+    TMDB_TOKEN: string;
     WEAPP_SECRET: string;
     WEAPP_ID: string;
     VOICE_RECOGNIZE_SECRET_ID: string;

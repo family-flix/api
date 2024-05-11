@@ -41,7 +41,7 @@ export class DoubanClient {
   }
   async search(keyword: string) {
     const text = keyword;
-    console.log("[SERVICE]media_profile/douban/index - search", text);
+    // console.log("[SERVICE]media_profile/douban/index - search", text);
     const resp = await axios.get<string>(`https://search.douban.com/movie/subject_search?search_text=${text}`);
     const html = resp.data;
     if (this.debug) {

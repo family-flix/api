@@ -1026,11 +1026,17 @@ export class MediaProfileClient {
     const { douban_id } = opt;
     const client = this.$douban;
     const store = this.$store;
-    const tips: string[] = [];
     const profile_r = await client.fetch_media_profile(douban_id);
     if (profile_r.error) {
       const tip = `获取详情失败，因为 ${profile_r.error.message}`;
-      // tips.push(tip);
+      await store.prisma.media_profile.update({
+        where: {
+          id: media.id,
+        },
+        data: {
+          tips: tip,
+        },
+      });
       return Result.Err(tip);
     }
     const profile = profile_r.data;
@@ -1123,6 +1129,7 @@ export class MediaProfileClient {
     }
     const payload: Partial<MediaProfileRecord> = {
       douban_id: String(profile.id),
+      tips: null,
     };
     if (profile.alias && media.alias !== profile.alias) {
       payload.alias = profile.alias;

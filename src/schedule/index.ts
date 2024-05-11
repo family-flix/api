@@ -29,6 +29,7 @@ import { Notify } from "@/domains/notify/index";
 
   const app = new Application({
     root_path: OUTPUT_PATH,
+    env: process.env,
   });
   const store = app.store;
   const schedule = new ScheduleTask({ app, store });
@@ -174,7 +175,7 @@ import { Notify } from "@/domains/notify/index";
     "0 0 2 * * *",
     async () => {
       console.log("执行任务 at 0 0 2 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      await schedule.update_media_profile_with_douban();
+      await schedule.update_media_profile({ tmdb_token: app.env.TMDB_TOKEN });
       notify.send({
         title: "影视剧刷新",
         markdown: "执行了一次影视剧刷新任务",
