@@ -47,7 +47,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
     user?: User;
     store: DataStore;
   }) {
-    const { id, unique_id, url, code = null, ignore_invalid, user, store } = options;
+    const { id, unique_id, url, code = null, user, store } = options;
     const r = await AliyunDriveClient.Get({
       id,
       unique_id,
@@ -69,11 +69,10 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       client,
       store,
     });
-    if (!ignore_invalid) {
-      const r2 = await client2.fetch_share_profile(url, { code });
-      if (r2.error) {
-        return Result.Err(r2.error.message);
-      }
+    // 这里才会设置正确的 this.id
+    const r2 = await client2.fetch_share_profile(url, { code });
+    if (r2.error) {
+      return Result.Err(r2.error.message);
     }
     return Result.Ok(client2);
   }

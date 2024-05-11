@@ -16,9 +16,10 @@ export default async function v2_admin_sync_task_override(
 ) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id, url, resource_file_id, resource_file_name } = req.body as Partial<{
+  const { id, url, pwd, resource_file_id, resource_file_name } = req.body as Partial<{
     id: string;
     url: string;
+    pwd: string;
     resource_file_id: string;
     resource_file_name: string;
   }>;
@@ -40,6 +41,7 @@ export default async function v2_admin_sync_task_override(
   const task = t_r1.data;
   const r = await task.override({
     url,
+    pwd,
     resource_file_id,
     resource_file_name,
   });

@@ -14,31 +14,41 @@ async function main() {
   });
   const store = app.store;
   console.log("Start");
-  //   const r1 = await client.search("曾少年");
-  //   if (r1.error) {
-  //     console.log(r1.error.message);
-  //     return;
-  //   }
-  //   const results = r1.data.list;
   await walk_model_with_cursor({
     fn(extra) {
       return store.prisma.media_profile.findMany({
+        include: {
+          series: true,
+        },
         ...extra,
       });
     },
     async batch_handler(list, index) {
       for (let i = 0; i < list.length; i += 1) {
-        const { id, tips, douban_id } = list[i];
-        if (douban_id && tips) {
+        const { id, original_name, tips, series, douban_id } = list[i];
+        if (!series) {
+          return;
+        }
+        if (original_name && series.original_name) {
           await store.prisma.media_profile.update({
             where: {
               id,
             },
             data: {
-              tips: null,
+              original_name: series.original_name,
             },
           });
         }
+        // if (douban_id && tips) {
+        //   await store.prisma.media_profile.update({
+        //     where: {
+        //       id,
+        //     },
+        //     data: {
+        //       tips: null,
+        //     },
+        //   });
+        // }
       }
     },
   });

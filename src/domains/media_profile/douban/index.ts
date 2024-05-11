@@ -142,6 +142,9 @@ export class DoubanClient {
     if (list.length === 0) {
       return Result.Err("没有列表数据");
     }
+    if (this.debug) {
+      console.log(list);
+    }
     const matched = (() => {
       const names_processed = [name, name.replace("：", "·")];
       if (type === MediaTypes.Movie) {

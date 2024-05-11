@@ -400,6 +400,7 @@ export class MediaProfileClient {
             id: season_tmdb_id,
             type: MediaTypes.Season,
             name: format_season_name(season_name, { name }),
+            original_name: created.original_name,
             alias: "",
             overview,
             poster_path: await this.download_image(poster_path || created.poster_path, "poster"),
