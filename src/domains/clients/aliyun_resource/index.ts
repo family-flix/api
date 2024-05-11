@@ -58,8 +58,12 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       return Result.Err(r.error.message);
     }
     const client = r.data;
+    const r1 = AliyunShareResourceClient.GetShareId(url);
+    if (r1.error) {
+      return Result.Err(r1.error.message);
+    }
     const client2 = new AliyunShareResourceClient({
-      id: r.data.id,
+      id: r1.data,
       unique_id: url,
       code,
       client,
