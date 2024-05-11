@@ -110,7 +110,10 @@ export class DoubanClient {
         if (air_date) {
           name = name.replace(air_date[0], "").trim();
         }
-        const { name: n, origin_name } = split_name_and_original_name(name);
+        if (this.debug) {
+          console.log("name", name);
+        }
+        const { name: n, origin_name } = split_name_and_original_name(name, { debug: this.debug });
         const payload = {
           id,
           name: n.trim().replace(/ {2,}/g, " "),

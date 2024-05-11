@@ -3,7 +3,7 @@
  */
 import { describe, expect, test } from "vitest";
 
-import { split_name_and_original_name } from "../utils";
+import { clean_name, split_name_and_original_name } from "../utils";
 
 describe("豆瓣搜索到的名称进行处理", () => {
   test("周游记 第二季", () => {
@@ -37,5 +37,21 @@ describe("豆瓣搜索到的名称进行处理", () => {
       name: "最游记",
       origin_name: "RELOAD 最遊記RELOAD",
     });
+  });
+  test("老友记 第六季 Friends Season 6", () => {
+    const name = "老友记 第六季 Friends Season 6";
+    const result = split_name_and_original_name(name);
+    expect(result).toStrictEqual({
+      name: "老友记 第六季",
+      origin_name: "Friends Season 6",
+    });
+  });
+});
+
+describe("clean name", () => {
+  test("老友记 第六季 Friends Season 6‎ (1999)", () => {
+    const name = "老友记 第六季 Friends Season 6‎ (1999)";
+    const result = clean_name(name);
+    expect(result).toStrictEqual("老友记 第六季 Friends Season 6 (1999)");
   });
 });
