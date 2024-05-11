@@ -541,6 +541,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     }
     await sleep(1000);
     const r2 = await AliyunShareResourceClient.Get({
+      unique_id: this.drive_client.id,
       url,
       code: pwd,
       user: this.user,
