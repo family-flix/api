@@ -1160,6 +1160,7 @@ model auth_code {
 
         step    Int
         expires DateTime
+        text    String?
 
         member_id String?
         member    member? @relation(fields: [member_id], references: [id], onDelete: Cascade)
