@@ -22,7 +22,7 @@ export default async function v2_wechat_auth_code_check(
   if (!code) {
     return e(Result.Err("缺少 code 参数"));
   }
-  const auth_code = await store.prisma.auth_code.findFirst({
+  const auth_code = await store.prisma.auth_qrcode.findFirst({
     where: {
       id: code,
     },

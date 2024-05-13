@@ -31,7 +31,7 @@ export default async function v2_wechat_auth_code_confirm(
   if (!step) {
     return e(Result.Err("缺少 status"));
   }
-  const auth_code = await store.prisma.auth_code.findFirst({
+  const auth_code = await store.prisma.auth_qrcode.findFirst({
     where: {
       id: code,
     },
@@ -46,7 +46,7 @@ export default async function v2_wechat_auth_code_confirm(
     return e(Result.Err("异常操作"));
   }
   if (step === AuthCodeStep.Scanned) {
-    await store.prisma.auth_code.update({
+    await store.prisma.auth_qrcode.update({
       where: {
         id: auth_code.id,
       },
@@ -61,7 +61,7 @@ export default async function v2_wechat_auth_code_confirm(
     });
   }
   if (step === AuthCodeStep.Confirmed) {
-    await store.prisma.auth_code.update({
+    await store.prisma.auth_qrcode.update({
       where: {
         id: auth_code.id,
       },

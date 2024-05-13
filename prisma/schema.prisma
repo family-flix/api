@@ -1170,6 +1170,23 @@ model auth_code {
         @@map("AuthCode")
 }
 
+model auth_qrcode {
+        id      String   @id
+        created DateTime @default(now())
+        updated DateTime @default(now())
+
+        step    Int
+        expires DateTime
+        text    String?
+
+        member_id String?
+        member    member? @relation(fields: [member_id], references: [id], onDelete: Cascade)
+        user_id   String
+        user      user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+        @@map("AuthQRCode")
+}
+
 // 后台添加的成员
 model member {
         id         String   @id
@@ -1219,6 +1236,7 @@ model member {
         invitation_codes   invitation_code[]       @relation("InviterCodes")
         from_code          invitation_code?        @relation("RegisterByCodes")
         auth_codes         auth_code[]
+        auth_qrcodes       auth_qrcode[]
 
         @@unique([user_id, inviter_id, remark])
         @@map("Member")
@@ -1599,6 +1617,7 @@ model user {
         invalid_media_sources   invalid_media_source[]
         drive_statistics        drive_statistics[]
         auth_codes              auth_code[]
+        auth_qrcodes            auth_qrcode[]
 
         @@map("User")
 }

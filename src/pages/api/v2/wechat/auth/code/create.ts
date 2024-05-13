@@ -21,7 +21,7 @@ export default async function v2_wechat_auth_code_create(
   if (!administrator) {
     return e(Result.Err("系统异常"));
   }
-  const created = await store.prisma.auth_code.create({
+  const created = await store.prisma.auth_qrcode.create({
     data: {
       id: r_id(),
       step: 1,
