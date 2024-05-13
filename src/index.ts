@@ -151,6 +151,8 @@ import v2_wechat_code_list from "./pages/api/v2/wechat/code/list";
 import v2_wechat_code_create from "./pages/api/v2/wechat/code/create";
 import v2_wechat_mine_update_pwd from "./pages/api/v2/wechat/mine/update_pwd";
 import dayjs from "dayjs";
+import v2_admin_settings_index from "./pages/api/v2/admin/settings/profile";
+import v2_admin_settings_update from "./pages/api/v2/admin/settings/update";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -505,6 +507,12 @@ async function main() {
   });
   server.post("/api/v2/admin/report/reply", async (c) => {
     return v2_admin_report_reply(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/settings/profile", async (c) => {
+    return v2_admin_settings_index(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/settings/update", async (c) => {
+    return v2_admin_settings_update(...(await compat_next(c)));
   });
   server.post("/api/v2/parsed_media/match_profile", async (c) => {
     return v2_admin_parsed_media_match_profile(...(await compat_next(c)));

@@ -28,6 +28,8 @@ export type UserSettings = {
   extra_filename_rules?: string;
   ignore_files_when_sync?: string;
   max_size_when_sync?: number;
+  can_register?: boolean;
+  no_need_invitation_code?: boolean;
 };
 type UserProps = {
   id: string;
@@ -321,6 +323,8 @@ export class User {
         extra_filename_rules,
         ignore_files_when_sync,
         max_size_when_sync,
+        can_register,
+        no_need_invitation_code,
       } = settings;
       return {
         qiniu_access_token: qiniu_access_token ?? undefined,
@@ -331,6 +335,8 @@ export class User {
         extra_filename_rules: extra_filename_rules ?? "",
         ignore_files_when_sync,
         max_size_when_sync,
+        can_register: can_register ?? false,
+        no_need_invitation_code: no_need_invitation_code ?? false,
       };
     })();
     this.store = store;

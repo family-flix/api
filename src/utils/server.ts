@@ -97,7 +97,7 @@ export async function compat_next<
     if (c.req.method !== "POST") {
       return {};
     }
-    if (headers["content-type"].includes("multipart/form-data")) {
+    if (headers["content-type"] && headers["content-type"].includes("multipart/form-data")) {
       return c.req.parseBody({ all: true });
     }
     return c.req.json();

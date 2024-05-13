@@ -1,6 +1,6 @@
 import { Statistics } from "@/domains/store/types";
 
-export const __VERSION__ = "2.2.1";
+export const __VERSION__ = "2.3.0";
 
 export enum FileType {
   File = 1,

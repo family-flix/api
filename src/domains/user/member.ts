@@ -175,8 +175,8 @@ export class Member {
     const { email, password: pw, code } = values;
     const schema = Joi.object({
       email: Joi.string().email().message("邮箱错误").required(),
-      password: Joi.string().pattern(new RegExp(".{6,12}")).message("密码长度必须大于6位").required(),
-      code: Joi.string().required(),
+      password: Joi.string().pattern(new RegExp(".{6,12}")).message("密码长度必须大于6位小于12位").required(),
+      code: Joi.string().allow(""),
     });
     const r = await resultify(schema.validateAsync.bind(schema))({
       email,
@@ -186,24 +186,34 @@ export class Member {
     if (r.error) {
       return Result.Err(r.error);
     }
-    const inviter_code = await store.prisma.invitation_code.findFirst({
-      where: {
-        id: code,
-      },
-      include: {
-        inviter: {
-          include: {
-            user: true,
+    const inviter_code_r = await (async () => {
+      if (code) {
+        const inviter_code = await store.prisma.invitation_code.findFirst({
+          where: {
+            id: code,
           },
-        },
-      },
-    });
-    if (!inviter_code) {
-      return Result.Err("没有匹配的记录");
+          include: {
+            inviter: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        });
+        if (!inviter_code) {
+          return Result.Err("没有匹配的记录");
+        }
+        if (inviter_code.invitee_id) {
+          return Result.Err("邀请码已失效");
+        }
+        return Result.Ok(inviter_code);
+      }
+      return Result.Ok(null);
+    })();
+    if (inviter_code_r.error) {
+      return Result.Err(inviter_code_r.error.message);
     }
-    if (inviter_code.invitee_id) {
-      return Result.Err("邀请码已失效");
-    }
+    const inviter_code = inviter_code_r.data;
     const existing_member_account = await store.prisma.member_authentication.findFirst({
       where: { provider: AuthenticationProviders.Credential, provider_id: email },
       include: {
@@ -229,7 +239,7 @@ export class Member {
             data: "{}",
           },
         },
-        inviter_id: inviter_code.inviter_id,
+        inviter_id: inviter_code ? inviter_code.inviter_id : null,
         authentications: {
           create: {
             id: r_id(),
@@ -241,14 +251,16 @@ export class Member {
         },
       },
     });
-    await store.prisma.invitation_code.update({
-      where: {
-        id: inviter_code.id,
-      },
-      data: {
-        invitee_id: created_member.id,
-      },
-    });
+    if (inviter_code) {
+      await store.prisma.invitation_code.update({
+        where: {
+          id: inviter_code.id,
+        },
+        data: {
+          invitee_id: created_member.id,
+        },
+      });
+    }
     const { id: member_id } = created_member;
     const res = await User.Token({ id: member_id });
     if (res.error) {
@@ -313,7 +325,7 @@ export class Member {
       const { provider_id, provider_arg1 } = values;
       const schema = Joi.object({
         email: Joi.string().email().message("邮箱错误").required(),
-        password: Joi.string().pattern(new RegExp(".{6,12}")).message("请输入密码").required(),
+        password: Joi.string().pattern(new RegExp(".{6,12}")).message("密码长度必须大于6位小于12位").required(),
       });
       const r = await resultify(schema.validateAsync.bind(schema))({
         email: provider_id,
