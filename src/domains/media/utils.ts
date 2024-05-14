@@ -122,39 +122,38 @@ export function fix_missing_episodes(values: {
   const { missing_episodes, episodes } = values;
   const missing = [...missing_episodes];
   const sources = [...episodes];
-  const part = sources.reduce((acc, cur) => {
-    const missing_episode_order = missing[0];
-    if (missing_episode_order && missing_episode_order === cur.order - 1) {
-      acc.push({
+
+  // const first_source = sources[0];
+  // const last_source = sources[sources.length - 1];
+  const missing_order = missing;
+  const min_missing_order = Math.min(...missing_order);
+  const max_missing_order = Math.max(...missing_order);
+
+  const existing_orders = sources.map((s) => s.order);
+  const start_order = Math.min(...existing_orders, min_missing_order);
+  const end_order = Math.max(...existing_orders, max_missing_order);
+
+  // const min_order = first_source.order;
+  const result = [];
+
+  let cur_order = start_order;
+
+  while (cur_order <= end_order) {
+    const existing = sources.find((s) => s.order === cur_order);
+    result.push(
+      existing || {
         id: "",
         media_id: "",
         name: "",
         overview: "",
-        order: missing_episode_order,
+        order: cur_order,
         still_path: "",
         runtime: null,
         sources: [],
         subtitles: [],
-      });
-      missing.shift();
-    }
-    acc.push(cur);
-    return acc;
-  }, [] as ReturnType<typeof format_episode>[]);
-  let missing_episode_order = missing.shift();
-  while (missing_episode_order) {
-    part.push({
-      id: "",
-      media_id: "",
-      name: "",
-      overview: "",
-      order: missing_episode_order,
-      still_path: "",
-      runtime: null,
-      sources: [],
-      subtitles: [],
-    });
-    missing_episode_order = missing.shift();
+      }
+    );
+    cur_order += 1;
   }
-  return part;
+  return result;
 }

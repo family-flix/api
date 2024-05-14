@@ -17,6 +17,8 @@ import {
   split_count_into_ranges,
 } from "./utils";
 
+const TheEpisodeCountPerGroup = 20;
+
 export class Media {
   static async Get(values: { id?: string; type: MediaTypes; member: Member; store: DataStore }) {
     const { id, type, member, store } = values;
@@ -26,7 +28,6 @@ export class Media {
     const media = await store.prisma.media.findFirst({
       where: {
         id,
-        type,
         user_id: member.user.id,
       },
       include: {
@@ -88,7 +89,6 @@ export class Media {
   async fetch_playing_info() {
     const media_id = this.id;
     const member = this.member;
-    const TheEpisodeCountPerGroup = 20;
     const history = await this.store.prisma.play_history_v2.findFirst({
       where: {
         media_id: media_id,
@@ -304,5 +304,76 @@ export class Media {
       }),
     };
     return Result.Ok(data);
+  }
+  async fetch_episodes_by_range(opt: { start: number; end: number }) {
+    const { start, end } = opt;
+    const latest_source = await this.store.prisma.media_source.findFirst({
+      where: {
+        media_id: this.id,
+      },
+      include: {
+        profile: true,
+      },
+      orderBy: {
+        profile: {
+          order: "desc",
+        },
+      },
+    });
+    if (!latest_source) {
+      return Result.Err("没有找到剧集");
+    }
+    const media_sources = await this.store.prisma.media_source.findMany({
+      where: {
+        files: {
+          some: {},
+        },
+        profile: {
+          order: {
+            gte: start,
+            lte: end,
+          },
+        },
+        media_id: this.id,
+      },
+      include: {
+        profile: true,
+        subtitles: true,
+        files: {
+          include: { drive: true },
+        },
+      },
+      orderBy: {
+        profile: {
+          order: "asc",
+        },
+      },
+    });
+    const episode_orders = await this.store.prisma.media_source.findMany({
+      select: {
+        profile: {
+          select: {
+            order: true,
+          },
+        },
+      },
+      where: {
+        media_id: this.id,
+      },
+    });
+    const sources = media_sources.map((episode) => format_episode(episode, this.id));
+    const cur_episode_orders = episode_orders.map((e) => e.profile.order);
+    const missing_episodes = find_missing_episodes({
+      count: latest_source.profile.order,
+      episode_orders: cur_episode_orders,
+    });
+    const episodes =
+      sources.length === TheEpisodeCountPerGroup
+        ? sources
+        : fix_missing_episodes({
+            missing_episodes,
+            episodes: sources,
+          });
+    return Result.Ok(episodes);
   }
 }

@@ -40,25 +40,27 @@ describe("获取指定影视剧播放信息", () => {
           },
           // @ts-ignore
           findMany(args) {
-            return [
-              ...Array(
-                (() => {
-                  if (args && args.select) {
-                    return 28;
-                  }
-                  return 20;
-                })()
-              ),
-            ]
+            if (args && args.select) {
+              return [...Array(28)].map((_, i) => {
+                return {
+                  profile: {
+                    order: i + 1,
+                  },
+                };
+              });
+            }
+            return [...Array(20)]
               .map((_, i) => {
-                if ([23, 24].includes(i)) {
+                const base = 0;
+                const order = base + i + 1;
+                if ([24, 25].includes(order)) {
                   return null;
                 }
                 return {
-                  id: String(i + 1),
+                  id: String(order),
                   profile: {
-                    name: `第${i + 1}集`,
-                    order: i + 1,
+                    name: `第${order}集`,
+                    order,
                   },
                   subtitles: [],
                   files: [
@@ -160,6 +162,178 @@ describe("获取指定影视剧播放信息", () => {
     });
   });
 
+  test("28集、缺少 9,10、首次播放", async () => {
+    const store: DataStore = {
+      prisma: {
+        media: {
+          // @ts-ignore
+          findFirst(args) {
+            return {
+              id: "media_id",
+              profile: {
+                name: "微暗之火",
+                source_count: 28,
+                origin_country: [],
+                genres: [],
+              },
+            };
+          },
+        },
+        media_source: {
+          // @ts-ignore
+          findFirst(args) {
+            return {
+              id: "media_source",
+              profile: {
+                order: 28,
+              },
+            };
+          },
+          // @ts-ignore
+          findMany(args) {
+            if (args && args.select) {
+              return [...Array(28)]
+                .map((_, i) => {
+                  const base = 0;
+                  const order = base + i + 1;
+                  if ([9, 10].includes(order)) {
+                    return null;
+                  }
+                  return {
+                    profile: {
+                      order,
+                    },
+                  };
+                })
+                .filter(Boolean);
+            }
+            return [...Array(20)]
+              .map((_, i) => {
+                const base = 0;
+                const order = base + i + 1;
+                if ([9, 10].includes(order)) {
+                  return null;
+                }
+                return {
+                  id: String(order),
+                  profile: {
+                    name: `第${order}集`,
+                    order,
+                  },
+                  subtitles: [],
+                  files: [
+                    {
+                      id: "1",
+                      name: "file",
+                      file_name: "file_1",
+                      file_id: "",
+                      drive: {
+                        name: "drive",
+                      },
+                    },
+                  ],
+                };
+              })
+              .filter(Boolean);
+          },
+        },
+        play_history_v2: {
+          // @ts-ignore
+          findFirst(args) {
+            return null;
+          },
+        },
+      },
+    };
+    const user = new User({ id: "", token: "", store });
+    const member = new Member({ id: "", remark: "", email: "", token: "", permissions: [], user, store });
+    const media_id = "xxx";
+    const type = MediaTypes.Season;
+    const r = await Media.Get({ id: media_id, type, member, store });
+    expect(r.error).toBe(null);
+    if (r.error) {
+      console.log(r.error.message);
+      return;
+    }
+    const media = r.data;
+    const r2 = await media.fetch_playing_info();
+    expect(r2.error).toBe(null);
+    if (r2.error) {
+      console.log(r2.error.message);
+      return;
+    }
+    expect(r2.data).toStrictEqual({
+      id: media_id,
+      name: "微暗之火",
+      overview: undefined,
+      poster_path: undefined,
+      air_date: undefined,
+      source_count: 28,
+      vote_average: undefined,
+      cur_source: {
+        id: "1",
+        order: 1,
+        index: 0,
+        current_time: 0,
+        cur_source_file_id: "1",
+        thumbnail_path: undefined,
+        subtitles: [],
+        files: [
+          {
+            id: "1",
+            name: "file",
+            file_name: "file_1",
+          },
+        ],
+      },
+      genres: [],
+      origin_country: [],
+      sources: [...Array(20)].map((_, i) => {
+        const order = i + 1;
+        if ([9, 10].includes(order)) {
+          return {
+            id: "",
+            name: "",
+            overview: "",
+            order,
+            runtime: null,
+            media_id: "",
+            still_path: "",
+            sources: [],
+            subtitles: [],
+          };
+        }
+        return {
+          id: String(order),
+          name: `第${order}集`,
+          overview: undefined,
+          order,
+          runtime: undefined,
+          media_id,
+          still_path: undefined,
+          sources: [
+            {
+              id: "1",
+              file_name: "file_1",
+              parent_paths: undefined,
+            },
+          ],
+          subtitles: [],
+        };
+      }),
+      source_groups: [
+        {
+          start: 1,
+          end: 20,
+        },
+        {
+          start: 21,
+          end: 28,
+        },
+      ],
+    });
+  });
+
   test("21集、首次播放", async () => {
     const store: DataStore = {
       prisma: {
@@ -189,22 +363,27 @@ describe("获取指定影视剧播放信息", () => {
           },
           // @ts-ignore
           findMany(args) {
-            return [
-              ...Array(
-                (() => {
-                  if (args && args.select) {
-                    return 21;
-                  }
-                  return 20;
-                })()
-              ),
-            ]
-              .map((_, i) => {
+            if (args && args.select) {
+              return [...Array(21)].map((_, i) => {
                 return {
-                  id: String(i + 1),
                   profile: {
-                    name: `第${i + 1}集`,
                     order: i + 1,
+                  },
+                };
+              });
+            }
+            return [...Array(20)]
+              .map((_, i) => {
+                const base = 0;
+                const order = base + i + 1;
+                // if ([24, 25].includes(order)) {
+                //   return null;
+                // }
+                return {
+                  id: String(order),
+                  profile: {
+                    name: `第${order}集`,
+                    order,
                   },
                   subtitles: [],
                   files: [
@@ -274,25 +453,31 @@ describe("获取指定影视剧播放信息", () => {
       },
       genres: [],
       origin_country: [],
-      sources: [...Array(20)].map((_, i) => {
-        return {
-          id: String(i + 1),
-          name: `第${i + 1}集`,
-          overview: undefined,
-          order: i + 1,
-          runtime: undefined,
-          media_id,
-          still_path: undefined,
-          sources: [
-            {
-              id: "1",
-              file_name: "file_1",
-              parent_paths: undefined,
-            },
-          ],
-          subtitles: [],
-        };
-      }),
+      sources: [...Array(20)]
+        .map((_, i) => {
+          const order = i + 1;
+          // if ([9, 10].includes(order)) {
+          //   return null;
+          // }
+          return {
+            id: String(order),
+            name: `第${order}集`,
+            overview: undefined,
+            order,
+            runtime: undefined,
+            media_id,
+            still_path: undefined,
+            sources: [
+              {
+                id: "1",
+                file_name: "file_1",
+                parent_paths: undefined,
+              },
+            ],
+            subtitles: [],
+          };
+        })
+        .filter(Boolean),
       source_groups: [
         {
           start: 1,
@@ -300,5 +485,134 @@ describe("获取指定影视剧播放信息", () => {
         },
       ],
     });
+  });
+});
+
+describe("获取指定范围内的剧集", () => {
+  test("共28集、缺 24,25、获取21-28", async () => {
+    const store: DataStore = {
+      prisma: {
+        media: {
+          // @ts-ignore
+          findFirst(args) {
+            return {
+              id: "media_id",
+              profile: {
+                name: "微暗之火",
+                source_count: 28,
+                origin_country: [],
+                genres: [],
+              },
+            };
+          },
+        },
+        media_source: {
+          // @ts-ignore
+          findFirst(args) {
+            return {
+              id: "media_source",
+              profile: {
+                order: 28,
+              },
+            };
+          },
+          // @ts-ignore
+          findMany(args) {
+            if (args && args.select) {
+              return [...Array(28)].map((_, i) => {
+                return {
+                  profile: {
+                    order: i + 1,
+                  },
+                };
+              });
+            }
+            return [...Array(8)]
+              .map((_, i) => {
+                const base = 20;
+                const order = base + i + 1;
+                if ([24, 25].includes(order)) {
+                  return null;
+                }
+                return {
+                  id: String(order),
+                  profile: {
+                    name: `第${order}集`,
+                    order,
+                  },
+                  subtitles: [],
+                  files: [
+                    {
+                      id: "1",
+                      name: "file",
+                      file_name: "file_1",
+                      file_id: "",
+                      drive: {
+                        name: "drive",
+                      },
+                    },
+                  ],
+                };
+              })
+              .filter(Boolean);
+          },
+        },
+      },
+    };
+    const user = new User({ id: "", token: "", store });
+    const member = new Member({ id: "", remark: "", email: "", token: "", permissions: [], user, store });
+    const media_id = "xxx";
+    const type = MediaTypes.Season;
+    const r = await Media.Get({ id: media_id, type, member, store });
+    expect(r.error).toBe(null);
+    if (r.error) {
+      console.log(r.error.message);
+      return;
+    }
+    const media = r.data;
+    const r2 = await media.fetch_episodes_by_range({ start: 21, end: 28 });
+    expect(r2.error).toBe(null);
+    if (r2.error) {
+      console.log(r2.error.message);
+      return;
+    }
+    expect(r2.data).toStrictEqual(
+      [...Array(8)]
+        .map((_, i) => {
+          const base = 20;
+          const order = base + i + 1;
+          if ([24, 25].includes(order)) {
+            return {
+              id: "",
+              name: "",
+              overview: "",
+              order,
+              runtime: null,
+              media_id: "",
+              still_path: "",
+              sources: [],
+              subtitles: [],
+            };
+          }
+          return {
+            id: String(order),
+            name: `第${order}集`,
+            overview: undefined,
+            order,
+            runtime: undefined,
+            media_id,
+            still_path: undefined,
+            sources: [
+              {
+                id: "1",
+                file_name: "file_1",
+                parent_paths: undefined,
+              },
+            ],
+            subtitles: [],
+          };
+        })
+        .filter(Boolean)
+    );
   });
 });

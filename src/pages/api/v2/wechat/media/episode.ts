@@ -5,6 +5,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { store, BaseApiResp } from "@/store/index";
 import { Member } from "@/domains/user/member";
+import { Media } from "@/domains/media/index";
 import { response_error_factory } from "@/utils/server";
 import { MediaTypes } from "@/constants/index";
 import { Result } from "@/types/index";
@@ -30,76 +31,22 @@ export default async function v2_wechat_media_episode(req: NextApiRequest, res: 
     return e(t_res);
   }
   const member = t_res.data;
-  if (!media_id) {
-    return e(Result.Err("缺少电视剧季 id"));
+  const r = await Media.Get({ id: media_id, type: MediaTypes.Season, member, store });
+  if (r.error) {
+    return e(Result.Err(r.error.message));
   }
-  const season = await store.prisma.media.findFirst({
-    where: {
-      id: media_id,
-      type: MediaTypes.Season,
-      user_id: member.user.id,
-    },
-    include: {
-      profile: true,
-    },
-  });
-  if (season === null) {
-    return e(Result.Err("没有匹配的电视剧记录"));
-  }
+  const media = r.data;
   if (start !== undefined && end !== undefined) {
-    const episodes = await store.prisma.media_source.findMany({
-      where: {
-        files: {
-          some: {},
-        },
-        profile: {
-          order: {
-            gte: start,
-            lte: end,
-          },
-        },
-        media_id: season.id,
-      },
-      include: {
-        profile: true,
-        subtitles: true,
-        files: {
-          include: { drive: true },
-        },
-      },
-      // skip: start - 1,
-      // take: end - start + 1,
-      orderBy: {
-        profile: {
-          order: "asc",
-        },
-      },
-    });
+    const r2 = await media.fetch_episodes_by_range({ start, end });
+    if (r2.error) {
+      return e(Result.Err(r2.error.message));
+    }
     const data = {
-      list: episodes.map((episode) => {
-        const { id, profile, files, subtitles } = episode;
-        const { name, overview, order, runtime } = profile;
-        return {
-          id,
-          name,
-          overview,
-          order,
-          runtime,
-          season_id: media_id,
-          sources: files.map((parsed_episode) => {
-            const { id, file_id, file_name, parent_paths } = parsed_episode;
-            return {
-              id,
-              file_id,
-              file_name,
-              parent_paths,
-            };
-          }),
-        };
-      }),
+      list: r2.data,
     };
     return res.status(200).json({ code: 0, msg: "", data });
   }
+  const season = media.profile;
   if (next_marker) {
     const where = {
       files: {
