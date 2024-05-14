@@ -1,4 +1,5 @@
 import { HttpClientCore } from "@/domains/http_client";
+import { connect } from "@/domains/http_client/provider.axios";
 import { RequestCoreV2 } from "@/domains/request";
 import { request, TmpRequestResp } from "@/domains/request/utils";
 import { DataStore } from "@/domains/store/types";
@@ -20,6 +21,7 @@ export function MediaRankClient(props: { store: DataStore }) {
   const { store } = props;
 
   const $client = new HttpClientCore({});
+  connect($client);
   function fetch_douban_rank(values: { type: "movie" | "tv" }) {
     return request.get<{
       list: {

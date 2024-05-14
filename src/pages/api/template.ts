@@ -1,15 +1,14 @@
 /**
- * @file
+ * @file 获取影视剧排行榜
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { store } from "@/store";
-import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { store, BaseApiResp } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { response_error_factory } from "@/utils/server";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v2(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id } = req.body as Partial<{ id: string }>;
@@ -20,5 +19,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const user = t_res.data;
 
-  res.status(200).json({ code: 0, msg: "", data: null });
+  return res.status(200).json({ code: 0, msg: "", data: null });
 }

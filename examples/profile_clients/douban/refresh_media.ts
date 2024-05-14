@@ -7,7 +7,7 @@ async function main() {
   console.log("Start");
   const $douban = new DoubanClient({});
   const client = $douban;
-  const name = "天行健";
+  const name = "银河写手";
   const r = await client.search(name);
   if (r.error) {
     console.log("search failed, because", r.error.message);

@@ -91,10 +91,11 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
     headers?: Record<string, string>;
   }) {
     console.log("请在 connect 中实现 fetch 方法");
-    return {} as { data: T };
+    return { data: null } as { data: T };
   }
   cancel(id: string) {
     console.log("请在 connect 中实现 cancel 方法");
+    return Result.Err("请在 connect 中实现 cancel 方法");
   }
   setHeaders(headers: Record<string, string>) {
     this.headers = headers;
