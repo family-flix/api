@@ -168,7 +168,6 @@ export default async function v2_wechat_media_list(req: NextApiRequest, res: Nex
         name,
         original_name,
         overview,
-        // season_number: order,
         episode_count: source_count,
         cur_episode_count: _count.media_sources,
         extra_text: (() => {
