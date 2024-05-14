@@ -22,7 +22,8 @@ export function MediaRankClient(props: { store: DataStore }) {
 
   const $client = new HttpClientCore({});
   connect($client);
-  const _client = {
+  // @ts-ignore
+  const _client: HttpClientCore = {
     async get<T>(...args: Parameters<typeof $client.get>) {
       const r = await $client.get<{ code: number; msg: string; data: T }>(...args);
       if (r.error) {
@@ -54,7 +55,7 @@ export function MediaRankClient(props: { store: DataStore }) {
   }
   const $douban_rank = new RequestCoreV2({
     fetch: fetch_douban_rank,
-    client: $client,
+    client: _client,
   });
   async function link_media_with_rank_media(
     rank_media: NonNullable<TmpRequestResp<typeof fetch_douban_rank>["data"]>["list"][number],
@@ -132,7 +133,7 @@ export function MediaRankClient(props: { store: DataStore }) {
       if (r.error) {
         return Result.Err(r.error.message);
       }
-      console.log('before const { list } = r.data', r.data);
+      console.log("before const { list } = r.data", r.data);
       const { list } = r.data;
       const medias: {
         id: string | null;
