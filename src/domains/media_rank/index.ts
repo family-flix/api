@@ -22,6 +22,19 @@ export function MediaRankClient(props: { store: DataStore }) {
 
   const $client = new HttpClientCore({});
   connect($client);
+  const _client = {
+    async get<T>(...args: Parameters<typeof $client.get>) {
+      const r = await $client.get<{ code: number; msg: string; data: T }>(...args);
+      if (r.error) {
+        return Result.Err(r.error.message);
+      }
+      const { code, msg, data } = r.data;
+      if (code !== 0) {
+        return Result.Err(msg);
+      }
+      return Result.Ok(data as T);
+    },
+  };
   function fetch_douban_rank(values: { type: "movie" | "tv" }) {
     return request.get<{
       list: {
