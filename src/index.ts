@@ -153,6 +153,7 @@ import v2_wechat_mine_update_pwd from "./pages/api/v2/wechat/mine/update_pwd";
 import dayjs from "dayjs";
 import v2_admin_settings_index from "./pages/api/v2/admin/settings/profile";
 import v2_admin_settings_update from "./pages/api/v2/admin/settings/update";
+import v2_wechat_rank from "./pages/api/v2/wechat/rank";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -690,6 +691,9 @@ async function main() {
   });
   server.post("/api/v2/wechat/source", async (c) => {
     return v2_wechat_source_index(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/rank", async (c) => {
+    return v2_wechat_rank(...(await compat_next(c)));
   });
   server.get("/api/v1/qrcode", async (c) => {
     const escape = (v: string) => {

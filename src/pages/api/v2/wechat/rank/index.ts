@@ -10,10 +10,9 @@ import { response_error_factory } from "@/utils/server";
 import { CollectionTypes } from "@/constants/index";
 import { parseJSONStr } from "@/utils/index";
 
-export default async function v2(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v2_wechat_rank(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.body as Partial<{ id: string }>;
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
