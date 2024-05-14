@@ -106,15 +106,16 @@ import { Notify } from "@/domains/notify/index";
     true,
     "Asia/Shanghai"
   );
-  // new CronJob.CronJob(
-  //   "0 50 8-23 * * *",
-  //   async () => {
-  //     console.log("执行任务 at 0 50 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-  //   },
-  //   null,
-  //   true,
-  //   "Asia/Shanghai"
-  // );
+  new CronJob.CronJob(
+    "0 50 8-23 * * *",
+    async () => {
+      console.log("执行任务 at 0 50 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+      await schedule.update_media_rank();
+    },
+    null,
+    true,
+    "Asia/Shanghai"
+  );
   // const r = await notify.send({
   //   text,
   // });
