@@ -15,6 +15,7 @@ import { MediaProfileClient } from "@/domains/media_profile";
 import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
 import { Administrator } from "@/domains/administrator";
 import { TencentDoc } from "@/domains/tencent_doc";
+import { MediaRankClient } from "@/domains/media_rank";
 import { DoubanClient } from "@/domains/media_profile/douban";
 import { Result } from "@/types";
 import {
@@ -1121,6 +1122,8 @@ export class ScheduleTask {
       });
       return true;
     });
+    console.log("finish update_media_profile");
+    return Result.Ok(null);
   }
   /**
    * 列出指定时间内新增的文件
@@ -1233,5 +1236,94 @@ export class ScheduleTask {
         files: records,
       });
     });
+    console.log("finish fetch_added_files_daily");
+    return Result.Ok(null);
+  }
+  async update_media_rank() {
+    const store = this.store;
+    const client = MediaRankClient({ store });
+    await this.walk_user(async (user) => {
+      console.log("更新 豆瓣电视剧排行");
+      await (async () => {
+        const douban_season = await (async () => {
+          const r = await store.prisma.collection_v2.findFirst({
+            where: {
+              type: CollectionTypes.DoubanSeasonRank,
+              user_id: user.id,
+            },
+          });
+          if (!r) {
+            return store.prisma.collection_v2.create({
+              data: {
+                id: r_id(),
+                title: "豆瓣热播电视剧",
+                type: CollectionTypes.DoubanSeasonRank,
+                user_id: user.id,
+              },
+            });
+          }
+          return r;
+        })();
+        const r = await client.fetch_douban_rank({ type: "tv" });
+        if (r.error) {
+          console.log(r.error.message);
+          return;
+        }
+        await store.prisma.collection_v2.update({
+          where: {
+            id: douban_season.id,
+          },
+          data: {
+            updated: dayjs().toISOString(),
+            desc: `${dayjs().format("HH:mm")} 更新`,
+            extra: JSON.stringify({
+              list: r.data,
+            }),
+          },
+        });
+      })();
+      /**  */
+      console.log("更新 豆瓣电影排行");
+      await (async () => {
+        const douban_season = await (async () => {
+          const r = await store.prisma.collection_v2.findFirst({
+            where: {
+              type: CollectionTypes.DoubanMovieRank,
+              user_id: user.id,
+            },
+          });
+          if (!r) {
+            return store.prisma.collection_v2.create({
+              data: {
+                id: r_id(),
+                title: "豆瓣热门电影",
+                type: CollectionTypes.DoubanMovieRank,
+                user_id: user.id,
+              },
+            });
+          }
+          return r;
+        })();
+        const r = await client.fetch_douban_rank({ type: "movie" });
+        if (r.error) {
+          console.log(r.error.message);
+          return;
+        }
+        await store.prisma.collection_v2.update({
+          where: {
+            id: douban_season.id,
+          },
+          data: {
+            updated: dayjs().toISOString(),
+            desc: `${dayjs().format("HH:mm")} 更新`,
+            extra: JSON.stringify({
+              list: r.data,
+            }),
+          },
+        });
+      })();
+    });
+    console.log("finish update_media_rank");
+    return Result.Ok(null);
   }
 }

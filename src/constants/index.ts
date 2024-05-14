@@ -89,6 +89,16 @@ export enum CollectionTypes {
   DailyUpdateArchive = 4,
   /** 手动创建的排行榜 */
   ManuallyRank = 5,
+  /** 影视剧排行榜 */
+  ThirdPlatformRank = 6,
+  /** 豆瓣电视剧排行 */
+  DoubanSeasonRank = 7,
+  /** 豆瓣电影排行 */
+  DoubanMovieRank = 8,
+  /** 猫眼电视剧排行 */
+  MaoyaoSeasonRank = 9,
+  /** 猫眼电影排行 */
+  MaoyaoMovieRank = 10,
 }
 
 export enum MediaErrorTypes {

@@ -88,6 +88,7 @@ export class Media {
   async fetch_playing_info() {
     const media_id = this.id;
     const member = this.member;
+    const TheEpisodeCountPerGroup = 20;
     const history = await this.store.prisma.play_history_v2.findFirst({
       where: {
         media_id: media_id,
@@ -107,7 +108,6 @@ export class Media {
       where: {
         media_id: media_id,
       },
-      take: 1,
       include: {
         profile: true,
       },
@@ -120,7 +120,7 @@ export class Media {
     if (!latest_source) {
       return Result.Err("没有找到剧集");
     }
-    const groups = split_count_into_ranges(20, latest_source.profile.order);
+    const groups = split_count_into_ranges(TheEpisodeCountPerGroup, latest_source.profile.order);
     const { sources: media_sources, cur_source } = await (async () => {
       if (!history) {
         const range = groups[0];
@@ -144,7 +144,7 @@ export class Media {
               include: { drive: true },
             },
           },
-          take: 20,
+          take: TheEpisodeCountPerGroup,
           orderBy: {
             profile: {
               order: "asc",
@@ -208,8 +208,6 @@ export class Media {
             include: { drive: true },
           },
         },
-        // skip: range[0],
-        // take: 20,
         orderBy: {
           profile: {
             order: "asc",
@@ -270,10 +268,13 @@ export class Media {
       missing_episodes,
     });
     const sources = media_sources.map((episode) => format_episode(episode, media_id));
-    const episodes = fix_missing_episodes({
-      missing_episodes,
-      episodes: sources,
-    });
+    const episodes =
+      sources.length === TheEpisodeCountPerGroup
+        ? sources
+        : fix_missing_episodes({
+            missing_episodes,
+            episodes: sources,
+          });
     const data = {
       id: media_id,
       name: name || original_name,

@@ -6,7 +6,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import dayjs from "dayjs";
 
 import { store, BaseApiResp } from "@/store/index";
-import { Member } from "@/domains/user/member";
 import { Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
 import { r_id } from "@/utils/index";
@@ -24,7 +23,7 @@ export default async function v2_wechat_auth_code_create(
   const created = await store.prisma.auth_qrcode.create({
     data: {
       id: r_id(),
-      step: 1,
+      step: AuthCodeStep.Pending,
       expires: dayjs().add(3, "minute").toISOString(),
       user_id: administrator.id,
     },
@@ -33,7 +32,7 @@ export default async function v2_wechat_auth_code_create(
     code: 0,
     msg: "",
     data: {
-      step: AuthCodeStep.Pending,
+      step: created.step,
       code: created.id,
     },
   });

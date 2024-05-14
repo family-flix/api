@@ -21,5 +21,5 @@
     }
   },
   "include": ["./globals.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "./src/domains/**/__tests__"]
+  "exclude": ["node_modules", "./src/domains/__tests__"]
 }
