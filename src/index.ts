@@ -155,6 +155,7 @@ import v2_admin_settings_index from "./pages/api/v2/admin/settings/profile";
 import v2_admin_settings_update from "./pages/api/v2/admin/settings/update";
 import v2_wechat_rank from "./pages/api/v2/wechat/rank";
 import v2_wechat_media_profile from "./pages/api/v2/wechat/media/profile";
+import v2_admin_member_histories from "./pages/api/v2/admin/member/histories";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -458,6 +459,9 @@ async function main() {
   });
   server.post("/api/v2/admin/member/add_token", async (c) => {
     return v2_admin_member_add_token(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/member/histories", async (c) => {
+    return v2_admin_member_histories(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/clear_thumbnails", async (c) => {
     return v2_admin_clear_thumbnails(...(await compat_next(c)));
