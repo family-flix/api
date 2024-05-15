@@ -219,9 +219,10 @@ export class DoubanClient {
               if (String(dayjs(air_date).year()) === String(dayjs(matched.air_date).year())) {
                 return matched;
               }
-              return null;
             }
-            return matched;
+            if (this.debug) {
+              console.log(`${i + 1}、`, maybe_name, "匹配了名称但不匹配发布时间");
+            }
           }
         }
         return null;

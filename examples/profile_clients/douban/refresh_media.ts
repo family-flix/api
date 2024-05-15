@@ -1,28 +1,61 @@
-import { MediaTypes } from "@/constants";
 import { Application } from "@/domains/application";
+import { User } from "@/domains/user";
 import { MediaProfileClient } from "@/domains/media_profile";
 import { DoubanClient } from "@/domains/media_profile/douban";
+import { MediaTypes } from "@/constants";
 
 async function main() {
   console.log("Start");
-  const $douban = new DoubanClient({});
-  const client = $douban;
-  const name = "银河写手";
-  const r = await client.search(name);
+  const OUTPUT_PATH = process.env.OUTPUT_PATH;
+  if (!OUTPUT_PATH) {
+    console.error("缺少数据库文件路径");
+    return;
+  }
+  const app = new Application({
+    root_path: OUTPUT_PATH,
+    env: process.env,
+  });
+  const store = app.store;
+  const a = await store.prisma.user.findFirst({});
+  if (!a) {
+    console.log("no user");
+    return;
+  }
+  const t_r = await User.Get({ id: a.id }, store);
+  if (t_r.error) {
+    return;
+  }
+  const user = t_r.data;
+  const name = "无所畏惧";
+  const media = await store.prisma.media_profile.findFirst({
+    where: {
+      name,
+    },
+    include: {
+      series: true,
+    },
+  });
+  if (media === null) {
+    console.log("没有匹配的记录");
+    return;
+  }
+  const client_res = await MediaProfileClient.New({
+    token: user.settings.tmdb_token,
+    assets: app.assets,
+    store,
+  });
+  if (client_res.error) {
+    console.log(client_res.error.message);
+    return;
+  }
+  const client = client_res.data;
+  client.$douban.debug = true;
+  const r = await client.refresh_profile_with_douban(media);
   if (r.error) {
-    console.log("search failed, because", r.error.message);
+    console.log(r.error.message);
     return;
   }
-  console.log(r.data.list);
-  const rr = await client.match_exact_media(
-    { type: MediaTypes.Movie, name, original_name: null, order: 1, air_date: null },
-    r.data.list
-  );
-  if (rr.error) {
-    console.log("fetch profile failed, because", rr.error.message);
-    return;
-  }
-  console.log(rr.data);
+  console.log(r.data);
   console.log("Success");
 }
 
