@@ -4,10 +4,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { store } from "@/store/index";
+import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { ModelQuery } from "@/domains/store/types";
-import { BaseApiResp } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -38,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     next_marker,
   });
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "",
     data: result,

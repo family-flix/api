@@ -90,6 +90,7 @@ export function MediaRankClient(props: { store: DataStore }) {
       name,
       order,
       poster_path: r1 ? r1.profile.poster_path : null,
+      type: opt.type,
       vote_average: (() => {
         if (rate) {
           return rate;
@@ -133,7 +134,7 @@ export function MediaRankClient(props: { store: DataStore }) {
       if (r.error) {
         return Result.Err(r.error.message);
       }
-      console.log("before const { list } = r.data", r.data);
+      // console.log("before const { list } = r.data", r.data);
       const { list } = r.data;
       const medias: {
         id: string | null;

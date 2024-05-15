@@ -107,9 +107,9 @@ import { Notify } from "@/domains/notify/index";
     "Asia/Shanghai"
   );
   new CronJob.CronJob(
-    "0 50 8-23 * * *",
+    "0 */10 8-23 * * *",
     async () => {
-      console.log("执行任务 at 0 50 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
+      console.log("执行任务 at 0 */10 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
       await schedule.update_media_rank();
     },
     null,
@@ -138,7 +138,7 @@ import { Notify } from "@/domains/notify/index";
     true,
     "Asia/Shanghai"
   );
-  // 0秒0分8时（每天8点时）执行一次
+  // 0秒0分20时（每天20点时）执行一次
   new CronJob.CronJob(
     "0 0 20 * * *",
     async () => {
