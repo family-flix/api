@@ -1,17 +1,15 @@
 /**
- * @file 使用游标而非分页的列表接口
+ * @file 获取每天看视频的记录
  */
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { store, BaseApiResp } from "@/store/index";
 import { Member } from "@/domains/user/member";
 import { ModelQuery } from "@/domains/store/types";
-import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
-import { MediaTypes } from "@/constants";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v2_wechat_diary_list(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { next_marker = "", page_size } = req.body as Partial<{
@@ -50,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     page_size,
     next_marker,
   });
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "",
     data: {

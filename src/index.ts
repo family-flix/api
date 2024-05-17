@@ -157,6 +157,8 @@ import v2_wechat_rank from "./pages/api/v2/wechat/rank";
 import v2_wechat_media_profile from "./pages/api/v2/wechat/media/profile";
 import v2_admin_member_histories from "./pages/api/v2/admin/member/histories";
 import v2_wechat_mine_profile from "./pages/api/v2/wechat/mine/profile";
+import v2_wechat_auth_weapp from "./pages/api/v2/wechat/auth/weapp";
+import v2_wechat_diary_list from "./pages/api/v2/wechat/diary/list";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -632,6 +634,9 @@ async function main() {
   server.post("/api/v2/wechat/auth/code/confirm", async (c) => {
     return v2_wechat_auth_code_confirm(...(await compat_next(c)));
   });
+  server.post("/api/v2/wechat/auth/weapp", async (c) => {
+    return v2_wechat_auth_weapp(...(await compat_next(c)));
+  });
   server.post("/api/v2/wechat/mine/update_email", async (c) => {
     return v2_wechat_mine_update_email(...(await compat_next(c)));
   });
@@ -706,6 +711,9 @@ async function main() {
   });
   server.post("/api/v2/wechat/rank", async (c) => {
     return v2_wechat_rank(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/diary/list", async (c) => {
+    return v2_wechat_diary_list(...(await compat_next(c)));
   });
   server.get("/api/v1/qrcode", async (c) => {
     const escape = (v: string) => {

@@ -18,20 +18,23 @@ type TheTypesOfEvents = {
 type HttpClientCoreProps = {
   hostname?: string;
   headers?: Record<string, string>;
+  process?: (v: any) => Result<unknown>;
 };
 type HttpClientCoreState = {};
 
 export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
   hostname: string;
   headers: Record<string, string> = {};
+  process?: (v: any) => Result<unknown>;
 
   constructor(props: Partial<{ _name: string }> & HttpClientCoreProps) {
     super(props);
 
-    const { hostname = "", headers = {} } = props;
+    const { hostname = "", headers = {}, process } = props;
 
     this.hostname = hostname;
     this.headers = headers;
+    this.process = process;
   }
 
   async get<T>(
@@ -51,7 +54,12 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
           ...(extra.headers || {}),
         },
       });
-      return Result.Ok(resp.data as T);
+      if (this.process) {
+        const r = this.process(resp.data);
+        return r as Result<T>;
+      }
+      const r = resp.data;
+      return Result.Ok(r as T);
     } catch (err) {
       const error = err as Error;
       const { message } = error;
@@ -76,7 +84,12 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
           ...(extra.headers || {}),
         },
       });
-      return Result.Ok(resp.data as T);
+      if (this.process) {
+        const r = this.process(resp.data);
+        return r as Result<T>;
+      }
+      const r = resp.data;
+      return Result.Ok(r as T);
     } catch (err) {
       const error = err as Error;
       const { message } = error;

@@ -109,7 +109,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       store,
     });
     if (r2.error) {
-      if (["share_link is cancelled by the creator", "share_link is forbidden"].includes(r2.error.message)) {
+      if (["share_link is cancelled by the creator", "share_link is forbidden"].includes(r2.error.message) && !ignore_invalid) {
         await store.prisma.resource_sync_task.update({
           where: {
             id,

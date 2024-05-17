@@ -1,5 +1,7 @@
 import Joi from "joi";
 
+// @todo Domain 不能引入状态
+import { app } from "@/store/index";
 import { User } from "@/domains/user";
 import { DatabaseStore } from "@/domains/store";
 import { DataStore } from "@/domains/store/types";
@@ -10,6 +12,7 @@ import { Credentials } from "./services";
 import { prepare, parse_token, compare } from "./utils";
 import { encode_token } from "./jwt";
 import { AuthenticationProviders } from "@/constants";
+import { WeappClient } from "./weapp";
 
 type UserUniqueID = string;
 type MemberProps = {
@@ -317,7 +320,7 @@ export class Member {
     });
   }
   static async ValidateWithAuthentication(
-    values: { provider: AuthenticationProviders; provider_id?: string; provider_arg1?: string },
+    values: { provider: AuthenticationProviders; provider_id?: string; provider_arg1?: string; user_id: string },
     store: DataStore
   ) {
     const { provider } = values;
@@ -382,6 +385,85 @@ export class Member {
         store,
       });
       return Result.Ok(member);
+    }
+    if (provider === AuthenticationProviders.Weapp) {
+      const { provider_id } = values;
+      if (!provider_id) {
+        return Result.Err("缺少 code 参数");
+      }
+      const $weapp = WeappClient({ app });
+      const r1 = await $weapp.code2session(provider_id);
+      if (r1.error) {
+        return Result.Err(r1.error.message);
+      }
+      const { openid, unionid, session_key } = r1.data;
+      console.log('111', openid, unionid, r1);
+      if (!openid && !unionid) {
+        return Result.Err("服务器异常", 3001);
+      }
+      const member = await (async () => {
+        const existing = await store.prisma.member_authentication.findFirst({
+          where: { provider: AuthenticationProviders.Weapp, provider_id: unionid || openid },
+          include: {
+            member: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        });
+        if (existing) {
+          return existing.member;
+        }
+        const random_name = r_id();
+        const created_member = await store.prisma.member.create({
+          data: {
+            id: r_id(),
+            name: random_name,
+            remark: random_name,
+            email: null,
+            user_id: values.user_id,
+            setting: {
+              create: {
+                id: r_id(),
+                data: "{}",
+              },
+            },
+            authentications: {
+              create: {
+                id: r_id(),
+                provider: AuthenticationProviders.Weapp,
+                provider_id: unionid || openid,
+                provider_arg1: openid,
+                provider_arg2: session_key,
+              },
+            },
+          },
+        });
+        return created_member;
+      })();
+      console.log(member);
+      const member_id = member.id;
+      const res = await User.Token({ id: member_id });
+      if (res.error) {
+        return Result.Err(res.error);
+      }
+      const token = res.data;
+      const r2 = await User.Get({ id: member.user_id }, store);
+      if (r2.error) {
+        return Result.Err(r2.error.message);
+      }
+      const user = r2.data;
+      const ins = new Member({
+        id: member_id,
+        remark: member.remark,
+        email: member.email,
+        permissions: [],
+        token,
+        user,
+        store,
+      });
+      return Result.Ok(ins);
     }
     return Result.Err("未知的 provider 值");
   }
