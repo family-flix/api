@@ -159,6 +159,7 @@ import v2_admin_member_histories from "./pages/api/v2/admin/member/histories";
 import v2_wechat_mine_profile from "./pages/api/v2/wechat/mine/profile";
 import v2_wechat_auth_weapp from "./pages/api/v2/wechat/auth/weapp";
 import v2_wechat_diary_list from "./pages/api/v2/wechat/diary/list";
+import v2_wechat_mine_bind_weapp from "./pages/api/v2/wechat/mine/bind_weapp";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -645,6 +646,9 @@ async function main() {
   });
   server.post("/api/v2/wechat/mine/profile", async (c) => {
     return v2_wechat_mine_profile(...(await compat_next(c)));
+  });
+  server.post("/api/v2/wechat/mine/bind_weapp", async (c) => {
+    return v2_wechat_mine_bind_weapp(...(await compat_next(c)));
   });
   server.post("/api/v2/wechat/collection/list", async (c) => {
     return v2_wechat_collection_list(...(await compat_next(c)));

@@ -67,5 +67,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
     })();
   } while (folder.next_marker);
-  res.status(200).json({ code: 0, msg: "格式化成功", data: null });
+  return res.status(200).json({ code: 0, msg: "格式化成功", data: null });
 }

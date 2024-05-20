@@ -12,5 +12,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const { authorization } = req.headers;
   const { id } = req.body as Partial<{ id: string }>;
 
-  res.status(200).json({ code: 0, msg: "", data: name });
+  return res.status(200).json({ code: 0, msg: "", data: name });
 }

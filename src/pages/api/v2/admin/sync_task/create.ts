@@ -119,7 +119,7 @@ export default async function v2_admin_sync_task_create(
         drive_id: the_file_in_drive.drive_id,
       },
     });
-    res.status(200).json({
+    return res.status(200).json({
       code: 0,
       msg: "新增同步任务成功",
       data: null,
@@ -150,7 +150,7 @@ export default async function v2_admin_sync_task_create(
         },
       },
     });
-    res.status(200).json({
+    return res.status(200).json({
       code: 0,
       msg: "新增同步任务成功",
       data: {},

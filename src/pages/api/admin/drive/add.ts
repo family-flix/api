@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     drive_total_size_count: user.statistics.drive_total_size_count + r.data.profile.total_size,
     drive_used_size_count: user.statistics.drive_used_size_count + r.data.profile.used_size,
   });
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "新增云盘成功",
     data: null,

@@ -65,11 +65,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         },
       });
       const token = token_res.data;
-      res.status(200).json({ code: 0, msg: "", data: { id: authentication.member_id, token } });
-      return;
+      return res.status(200).json({ code: 0, msg: "", data: { id: authentication.member_id, token } });
     }
-    res.status(200).json({ code: 0, msg: "", data: { id: authentication.member_id, token: token_record.token } });
-    return;
+    return res
+      .status(200)
+      .json({ code: 0, msg: "", data: { id: authentication.member_id, token: token_record.token } });
   }
   const id = r_id();
   const token_res = await User.Token({ id });
@@ -98,5 +98,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: user.id,
     },
   });
-  res.status(200).json({ code: 0, msg: "", data: { id, token: token } });
+  return res.status(200).json({ code: 0, msg: "", data: { id, token: token } });
 }

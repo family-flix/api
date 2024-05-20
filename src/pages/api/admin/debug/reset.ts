@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     job.finish();
   }
   run();
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "开始重置",
     data: {

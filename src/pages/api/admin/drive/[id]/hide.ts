@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       hidden,
     },
   });
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "操作成功",
     data: null,

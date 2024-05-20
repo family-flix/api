@@ -113,5 +113,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     } while (f.next_marker);
   }
   await walk_folder(folder, tree);
-  res.status(200).json(tree);
+  return res.status(200).json(tree);
 }

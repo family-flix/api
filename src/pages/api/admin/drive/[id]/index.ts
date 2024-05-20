@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   } = drive;
   await client.refresh_profile();
   const { used_size, total_size } = client;
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "",
     data: {

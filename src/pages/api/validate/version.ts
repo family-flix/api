@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (need_update === -1) {
     return e(Result.Err("版本过旧请更新", 800));
   }
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "",
     data: null,

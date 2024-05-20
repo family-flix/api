@@ -397,7 +397,7 @@ export class Member {
         return Result.Err(r1.error.message);
       }
       const { openid, unionid, session_key } = r1.data;
-      console.log('111', openid, unionid, r1);
+      // console.log('111', openid, unionid, r1);
       if (!openid && !unionid) {
         return Result.Err("服务器异常", 3001);
       }
@@ -442,7 +442,7 @@ export class Member {
         });
         return created_member;
       })();
-      console.log(member);
+      // console.log(member);
       const member_id = member.id;
       const res = await User.Token({ id: member_id });
       if (res.error) {
@@ -744,7 +744,7 @@ export class Member {
     if (!e) {
       return Result.Err("请先设置邮箱");
     }
-    console.log(e);
+    // console.log(e);
     await this.store.prisma.member_authentication.update({
       where: {
         id: e.id,

@@ -93,7 +93,7 @@ export default async function v2_wechat_report_create(req: NextApiRequest, res: 
         user_id: member.user.id,
       },
     });
-    res.status(200).json({
+    return res.status(200).json({
       code: 0,
       msg: "新增反馈成功",
       data: null,
@@ -124,7 +124,7 @@ export default async function v2_wechat_report_create(req: NextApiRequest, res: 
         user_id: member.user.id,
       },
     });
-    res.status(200).json({
+    return res.status(200).json({
       code: 0,
       msg: "新增反馈成功",
       data: null,

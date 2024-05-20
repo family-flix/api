@@ -49,8 +49,7 @@ export default async function v2_drive_file_list(req: NextApiRequest, res: NextA
     if (r.error) {
       return e(Result.Err(r.error.message));
     }
-    res.status(200).json({ code: 0, msg: "", data: r.data });
-    return;
+    return res.status(200).json({ code: 0, msg: "", data: r.data });
   }
   const id = (() => {
     if (file_id) {

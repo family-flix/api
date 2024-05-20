@@ -109,5 +109,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     job.finish();
   }
   run();
-  res.status(200).json({ code: 0, msg: "开始", data: { job_id: job.id } });
+  return res.status(200).json({ code: 0, msg: "开始", data: { job_id: job.id } });
 }

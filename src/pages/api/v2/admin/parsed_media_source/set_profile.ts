@@ -115,8 +115,7 @@ export default async function v2_admin_parsed_media_source_set_profile(
         media_source_id: media_source.id,
       },
     });
-    res.status(200).json({ code: 0, msg: "设置成功", data: null });
-    return;
+    return res.status(200).json({ code: 0, msg: "设置成功", data: null });
   }
   if (media_profile.type === MediaTypes.Season) {
     if (!media_source_profile) {

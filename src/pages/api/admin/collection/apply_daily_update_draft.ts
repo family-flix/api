@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         user_id: user.id,
       },
     });
-    res.status(200).json({ code: 0, msg: "", data: null });
+    return res.status(200).json({ code: 0, msg: "", data: null });
   }
   await store.prisma.collection.update({
     where: {
@@ -91,5 +91,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       user_id: user.id,
     },
   });
-  res.status(200).json({ code: 0, msg: "", data: null });
+  return res.status(200).json({ code: 0, msg: "", data: null });
 }
