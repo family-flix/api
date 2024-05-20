@@ -8,7 +8,7 @@ import { ensure } from "@/utils/fs";
 let cached: null | DatabaseStore = null;
 
 export class Application<
-  T extends { root_path: string; env: Record<string, string | undefined>; args: Record<string, any> }
+  T extends { root_path: string; env?: Record<string, string | undefined>; args?: Record<string, any> }
 > {
   root_path: string;
   database_path: string;

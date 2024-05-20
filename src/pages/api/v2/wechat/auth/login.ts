@@ -25,6 +25,7 @@ export default async function v2_wechat_auth_login(req: NextApiRequest, res: Nex
       provider: AuthenticationProviders.Credential,
       provider_id: email,
       provider_arg1: password,
+      user_id: administrator.id,
     },
     store
   );
