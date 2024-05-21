@@ -37,6 +37,8 @@ import {
   tmp_file,
 } from "@prisma/client";
 
+import { Unpacked } from "@/types/index";
+
 export type DriveRecord = drive;
 export type DriveTokenRecord = drive_token;
 export type FileRecord = file;
@@ -129,6 +131,14 @@ export type MemberWhereInput = NonNullable<ModelQuery<"member">>;
 
 export interface DataStore {
   prisma: PrismaClient;
+  list_with_cursor<F extends (extra: { take: number }) => any>(options: {
+    fetch: F;
+    next_marker?: string;
+    page_size?: number;
+  }): Promise<{
+    next_marker: string | null;
+    list: Unpacked<ReturnType<F>>[number][];
+  }>;
   // prisma: {
   //   user: {
   //     findFirst: PrismaClient["user"]["findFirst"];

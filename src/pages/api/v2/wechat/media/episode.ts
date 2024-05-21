@@ -19,12 +19,16 @@ export default async function v2_wechat_media_episode(req: NextApiRequest, res: 
     page_size = 20,
     start,
     end,
+    with_subtitle,
+    with_file,
   } = req.body as Partial<{
     media_id: string;
     next_marker: string;
     page_size: number;
     start: number;
     end: number;
+    with_subtitle: boolean;
+    with_file: boolean;
   }>;
   const t_res = await Member.New(authorization, store);
   if (t_res.error) {
@@ -46,63 +50,9 @@ export default async function v2_wechat_media_episode(req: NextApiRequest, res: 
     };
     return res.status(200).json({ code: 0, msg: "", data });
   }
-  const season = media.profile;
-  if (next_marker) {
-    const where = {
-      files: {
-        some: {},
-      },
-      media_id: season.id,
-    };
-    const count = await store.prisma.media_source.count({ where });
-    const result = await store.list_with_cursor({
-      fetch(extra) {
-        return store.prisma.media_source.findMany({
-          where,
-          include: {
-            profile: true,
-            subtitles: true,
-            files: {
-              include: { drive: true },
-            },
-          },
-          orderBy: {
-            profile: {
-              order: "asc",
-            },
-          },
-          ...extra,
-        });
-      },
-      page_size,
-      next_marker,
-    });
-    const data = {
-      total: count,
-      next_marker: result.next_marker,
-      list: result.list.map((episode) => {
-        const { id, profile, files, subtitles } = episode;
-        const { name, overview, order, runtime } = profile;
-        return {
-          id,
-          name,
-          overview,
-          order,
-          runtime,
-          season_id: media_id,
-          sources: files.map((parsed_episode) => {
-            const { id, file_id, file_name, parent_paths } = parsed_episode;
-            return {
-              id,
-              file_id,
-              file_name,
-              parent_paths,
-            };
-          }),
-        };
-      }),
-    };
-    return res.status(200).json({ code: 0, msg: "", data });
+  const r2 = await media.fetch_episodes_by_next_marker({ next_marker, page_size, with_file, with_subtitle });
+  if (r2.error) {
+    return e(Result.Err(r2.error.message));
   }
-  return e(Result.Err("缺少参数"));
+  return res.status(200).json({ code: 0, msg: "", data: r2.data });
 }

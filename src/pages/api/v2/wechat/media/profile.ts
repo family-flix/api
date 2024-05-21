@@ -68,13 +68,24 @@ export default async function v2_wechat_media_profile(req: NextApiRequest, res: 
     return e(Result.Err("没有匹配的记录"));
   }
   const { id, type, profile, media_sources, _count } = media;
-  const { name, original_name, overview, poster_path, air_date, source_count, vote_average, genres, origin_country } =
-    profile;
+  const {
+    name,
+    original_name,
+    alias,
+    overview,
+    poster_path,
+    air_date,
+    source_count,
+    vote_average,
+    genres,
+    origin_country,
+  } = profile;
   const data = {
     id,
     type,
     name,
     original_name,
+    alias,
     overview,
     episode_count: source_count,
     cur_episode_count: _count.media_sources,

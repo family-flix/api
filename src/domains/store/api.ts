@@ -277,6 +277,13 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
   //     return Result.Ok(this.tokens[matched_index]);
   //   }
 
+  list_with_cursor() {
+    return Promise.resolve({
+      next_marker: null,
+      list: [],
+    });
+  }
+
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
     return this.on(Events.StateChange, handler);
   }

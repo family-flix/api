@@ -653,6 +653,13 @@ export class MemoryStore extends BaseDomain<TheTypesOfEvents> implements DataSto
     return Result.Ok(this.drive_tokens[matched_index]);
   }
 
+  list_with_cursor() {
+    return Promise.resolve({
+      next_marker: null,
+      list: [],
+    });
+  }
+
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
     return this.on(Events.StateChange, handler);
   }

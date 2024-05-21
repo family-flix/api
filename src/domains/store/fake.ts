@@ -226,6 +226,13 @@ export class FakeDatabaseStore extends BaseDomain<TheTypesOfEvents> implements D
     );
   }, 800);
 
+  list_with_cursor() {
+    return Promise.resolve({
+      next_marker: null,
+      list: [],
+    });
+  }
+
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
     return this.on(Events.StateChange, handler);
   }

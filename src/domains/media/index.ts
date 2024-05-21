@@ -376,4 +376,90 @@ export class Media {
           });
     return Result.Ok(episodes);
   }
+  async fetch_episodes_by_next_marker(opt: {
+    next_marker: string;
+    page_size: number;
+    with_subtitle?: boolean;
+    with_file?: boolean;
+  }) {
+    const { next_marker, page_size, with_file, with_subtitle } = opt;
+    const latest_source = await this.store.prisma.media_source.findFirst({
+      where: {
+        media_id: this.id,
+      },
+      include: {
+        profile: true,
+      },
+      orderBy: {
+        profile: {
+          order: "desc",
+        },
+      },
+    });
+    if (!latest_source) {
+      return Result.Err("没有找到剧集");
+    }
+    const where = {
+      files: {
+        some: {},
+      },
+      media_id: this.id,
+    };
+    const count = await this.store.prisma.media_source.count({ where });
+    const result = await this.store.list_with_cursor({
+      fetch: (extra) => {
+        return this.store.prisma.media_source.findMany({
+          where,
+          include: {
+            profile: true,
+            subtitles: with_subtitle,
+            files: with_file
+              ? {
+                  include: { drive: true },
+                }
+              : false,
+          },
+          orderBy: {
+            profile: {
+              order: "asc",
+            },
+          },
+          ...extra,
+        });
+      },
+      page_size,
+      next_marker,
+    });
+    const episode_orders = await this.store.prisma.media_source.findMany({
+      select: {
+        profile: {
+          select: {
+            order: true,
+          },
+        },
+      },
+      where: {
+        media_id: this.id,
+      },
+    });
+    const media_sources = result.list;
+    const sources = media_sources.map((episode) => format_episode(episode, this.id));
+    const cur_episode_orders = episode_orders.map((e) => e.profile.order);
+    const missing_episodes = find_missing_episodes({
+      count: latest_source.profile.order,
+      episode_orders: cur_episode_orders,
+    });
+    const episodes =
+      sources.length === TheEpisodeCountPerGroup
+        ? sources
+        : fix_missing_episodes({
+            missing_episodes,
+            episodes: sources,
+          });
+    return Result.Ok({
+      list: episodes,
+      count,
+      next_marker: result.next_marker,
+    });
+  }
 }

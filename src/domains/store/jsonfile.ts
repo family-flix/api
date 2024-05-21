@@ -97,6 +97,13 @@ export class JSONFileStore extends BaseDomain<TheTypesOfEvents> implements DataS
     this.update_json_file_force();
   }, 800);
 
+  list_with_cursor() {
+    return Promise.resolve({
+      next_marker: null,
+      list: [],
+    });
+  }
+
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
     return this.on(Events.StateChange, handler);
   }

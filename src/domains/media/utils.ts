@@ -47,7 +47,7 @@ export function format_episode(
   // if (episode === null) {
   //   return null;
   // }
-  const { id, profile, files, subtitles } = episode;
+  const { id, profile, files = [], subtitles = [] } = episode;
   const { name, overview, order, runtime, still_path } = profile;
   return {
     id,
