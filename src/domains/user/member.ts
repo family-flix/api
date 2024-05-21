@@ -460,11 +460,16 @@ export class Member {
         return Result.Err(r2.error.message);
       }
       const user = r2.data;
+      let permissions: string[] = [];
+      const json_res = parseJSONStr(member.permission);
+      if (json_res.data) {
+        permissions = json_res.data as unknown as string[];
+      }
       const ins = new Member({
         id: member_id,
         remark: member.remark,
         email: member.email,
-        permissions: [],
+        permissions,
         token,
         user,
         store,
