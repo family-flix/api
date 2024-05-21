@@ -40,14 +40,15 @@ export default async function v2_wechat_auth_register(req: NextApiRequest, res: 
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
-  const { id, token } = r.data;
+  const { id, token, permissions } = r.data;
   return res.status(200).json({
     code: 0,
     msg: "注册成功",
     data: {
       id,
-      email,
+      email: r.data.email,
       token,
+      permissions,
     },
   });
 }

@@ -274,6 +274,7 @@ export class Member {
       id: member_id,
       email: created_member.email,
       token,
+      permissions: [],
     });
   }
   /** 后台直接创建一个「用户」，没有账号 */

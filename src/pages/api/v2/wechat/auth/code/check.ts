@@ -49,6 +49,8 @@ export default async function v2_wechat_auth_code_check(
         step: auth_code.step,
         id: auth_code.member.id,
         email: auth_code.member.email,
+        // permissions: auth_code.member.permission,
+        permissions: [],
         token,
       },
     });

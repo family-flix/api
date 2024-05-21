@@ -30,7 +30,7 @@ export default async function v2_wechat_auth_weapp(req: NextApiRequest, res: Nex
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
-  const { id, email, token } = r.data;
+  const { id, email, token, permissions } = r.data;
   return res.status(200).json({
     code: 0,
     msg: "登录成功",
@@ -38,6 +38,7 @@ export default async function v2_wechat_auth_weapp(req: NextApiRequest, res: Nex
       id,
       email,
       token,
+      permissions,
     },
   });
 }

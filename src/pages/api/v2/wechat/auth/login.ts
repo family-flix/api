@@ -32,14 +32,15 @@ export default async function v2_wechat_auth_login(req: NextApiRequest, res: Nex
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
-  const { id, token } = r.data;
+  const { id, token, permissions } = r.data;
   return res.status(200).json({
     code: 0,
     msg: "登录成功",
     data: {
       id,
-      email,
+      email: r.data.email,
       token,
+      permissions,
     },
   });
 }
