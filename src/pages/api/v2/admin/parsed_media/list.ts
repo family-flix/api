@@ -51,6 +51,11 @@ export default async function v2_admin_parsed_media_list(
         },
       },
       {
+        original_name: {
+          contains: name,
+        },
+      },
+      {
         media_profile: {
           OR: [
             {

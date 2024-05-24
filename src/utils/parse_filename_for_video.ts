@@ -229,6 +229,7 @@ export function parse_filename_for_video(
     "GM-Team",
     "-52KHD",
     "-SXG",
+    "-BestWEB",
     "BDE4",
     "DBD制作组&离谱Sub.",
     "艺声译影",

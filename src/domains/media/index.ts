@@ -99,7 +99,11 @@ export class Media {
           include: {
             profile: true,
             subtitles: true,
-            files: true,
+            files: {
+              orderBy: {
+                created: "desc",
+              },
+            },
           },
         },
       },
@@ -142,6 +146,9 @@ export class Media {
             subtitles: true,
             files: {
               include: { drive: true },
+              orderBy: {
+                created: "desc",
+              },
             },
           },
           take: TheEpisodeCountPerGroup,
@@ -206,6 +213,9 @@ export class Media {
           subtitles: true,
           files: {
             include: { drive: true },
+            orderBy: {
+              created: "desc",
+            },
           },
         },
         orderBy: {

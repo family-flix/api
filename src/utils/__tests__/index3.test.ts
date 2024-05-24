@@ -317,6 +317,16 @@ describe("影视剧3", () => {
       episode: "E34",
     });
   });
+  test("S01E01.2024.2160p.WEB-DL.H265.EDR.DDP5.1.Atmos-BestWEB", () => {
+    const name = "S01E01.2024.2160p.WEB-DL.H265.EDR.DDP5.1.Atmos-BestWEB";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "S01",
+      episode: "E01",
+    });
+  });
   test("SPY×FAMILY.S02E25 简中.mp4", () => {
     const name = "SPY×FAMILY.S02E25 简中.mp4";
     const result = parse_filename_for_video(name);
