@@ -1,5 +1,6 @@
 import { IncomingMessage } from "http";
 
+import dayjs from "dayjs";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
@@ -150,7 +151,6 @@ import v0_admin_permission_add from "./pages/api/admin/permission/add";
 import v2_wechat_code_list from "./pages/api/v2/wechat/code/list";
 import v2_wechat_code_create from "./pages/api/v2/wechat/code/create";
 import v2_wechat_mine_update_pwd from "./pages/api/v2/wechat/mine/update_pwd";
-import dayjs from "dayjs";
 import v2_admin_settings_index from "./pages/api/v2/admin/settings/profile";
 import v2_admin_settings_update from "./pages/api/v2/admin/settings/update";
 import v2_wechat_rank from "./pages/api/v2/wechat/rank";
@@ -160,6 +160,7 @@ import v2_wechat_mine_profile from "./pages/api/v2/wechat/mine/profile";
 import v2_wechat_auth_weapp from "./pages/api/v2/wechat/auth/weapp";
 import v2_wechat_diary_list from "./pages/api/v2/wechat/diary/list";
 import v2_wechat_mine_bind_weapp from "./pages/api/v2/wechat/mine/bind_weapp";
+import v2_admin_drive_file_change_hash from "./pages/api/v2/drive/file/change_hash";
 
 // const ROOT_DIR = process.env.ROOT_DIR;
 
@@ -538,6 +539,9 @@ async function main() {
   });
   server.post("/api/v2/drive/file/delete", async (c) => {
     return v2_drive_file_delete(...(await compat_next(c)));
+  });
+  server.post("/api/v2/drive/file/change_hash", async (c) => {
+    return v2_admin_drive_file_change_hash(...(await compat_next(c)));
   });
   server.post("/api/v2/drive/file/download", async (c) => {
     return v2_drive_file_download(...(await compat_next(c)));

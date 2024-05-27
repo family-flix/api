@@ -1,6 +1,5 @@
 /**
  * @file 本地文件上传至阿里云盘
- * 打包成 js 放在 nas 上用
  * yarn esbuild domains/media_upload/index.ts --platform=node --target=node12 --define:DEBUG=true --bundle --outfile=dist/client.js
  */
 import fs from "fs";

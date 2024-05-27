@@ -449,7 +449,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     for (let i = 0; i < files.length; i += 1) {
       await (async () => {
         const file = files[i];
-        // 如果文件不存在，直接死循环了
+        // @todo 如果文件不存在，直接死循环了
         // console.log('before client.fetch_parent_paths', client.root_folder, file.file_id);
         const parent_paths_r = await client.fetch_parent_paths(file.file_id, file.type);
         if (parent_paths_r.error) {
