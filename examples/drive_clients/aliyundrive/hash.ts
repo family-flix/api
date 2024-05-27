@@ -34,7 +34,7 @@ async function main() {
     return;
   }
   const drive = r.data;
-  const r2 = await drive.client.download(file.file_id);
+  const r2 = await drive.client.fetch_file(file.file_id);
   if (r2.error) {
     console.log(r2.error.message);
     return;
@@ -86,3 +86,5 @@ async function main() {
     });
   })();
 }
+
+main();

@@ -704,13 +704,14 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       return Result.Err(r.error);
     }
     const result = r.data.items.map((file) => {
-      const { file_id, name, type, parent_file_id } = file;
+      const { file_id, name, type, parent_file_id, url } = file;
       const data: GenreDriveFile = {
         type,
         file_id,
         name,
         parent_file_id,
         size: 0,
+        url,
         md5: null,
         content_hash: null,
         mime_type: null,
@@ -744,6 +745,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       mime_type: string;
       /** 缩略图 */
       thumbnail: string | null;
+      url: string;
     }>(API_HOST + "/v2/file/get", {
       file_id,
       drive_id: String(this.unique_id),
@@ -755,7 +757,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    const { file_id: id, name, size, type, parent_file_id, content_hash = null, thumbnail = null } = r.data;
+    const { file_id: id, name, size, type, parent_file_id, url, content_hash = null, thumbnail = null } = r.data;
     const data: GenreDriveFile = {
       type,
       file_id: id,
@@ -766,6 +768,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       md5: null,
       mime_type: null,
       thumbnail,
+      url,
     };
     return Result.Ok(data);
   }
@@ -805,6 +808,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       md5: null,
       mime_type: null,
       thumbnail: null,
+      url: "",
     };
     return Result.Ok(result);
   }
@@ -926,6 +930,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       name,
       parent_file_id,
       size: 0,
+      url: "",
       md5: null,
       content_hash: null,
       mime_type: null,
@@ -1097,13 +1102,14 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       return r;
     }
     const result = r.data.items.map((file) => {
-      const { file_id, name, type, parent_file_id } = file;
+      const { file_id, name, type, parent_file_id, url } = file;
       const data: GenreDriveFile = {
         type,
         file_id,
         name,
         parent_file_id,
         size: 0,
+        url,
         mime_type: null,
         md5: null,
         content_hash: null,
@@ -1155,13 +1161,14 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     if (result.data.items.length === 0) {
       return Result.Ok(null);
     }
-    const { file_id, name, type, parent_file_id: parent_folder_id } = result.data.items[0];
+    const { file_id, name, type, parent_file_id: parent_folder_id, url: file_url } = result.data.items[0];
     const data: GenreDriveFile = {
       type,
       file_id,
       name,
       parent_file_id: parent_folder_id,
       size: 0,
+      url: file_url,
       mime_type: null,
       md5: null,
       content_hash: null,
@@ -1245,13 +1252,14 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       return r;
     }
     const result = r.data.items.map((file) => {
-      const { file_id, name, type, parent_file_id } = file;
+      const { file_id, name, type, parent_file_id, url } = file;
       const data: GenreDriveFile = {
         type,
         file_id,
         name,
         parent_file_id,
         size: 0,
+        url,
         mime_type: null,
         md5: null,
         content_hash: null,

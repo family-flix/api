@@ -208,6 +208,7 @@ export type GenreDriveFile = {
   content_hash: string | null;
   mime_type: string | null;
   thumbnail: string | null;
+  url: string;
   // items?: PartialAliyunDriveFile[];
 };
 

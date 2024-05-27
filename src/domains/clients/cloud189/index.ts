@@ -20,6 +20,7 @@ import { MediaResolutionTypes } from "@/constants";
 import { Result, resultify } from "@/types";
 
 import { Cloud189DriveFileResp, Cloud189DriveProfile, Cloud189DrivePayload } from "./types";
+import { build_drive_file } from "../utils";
 
 const API_HOST = "https://cloud.189.cn";
 const COMMON_HEADERS = {
@@ -536,7 +537,7 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
       items: [
         ...fileListAO.fileList.map((file) => {
           const { id, name, size, createDate, md5, parentId } = file;
-          const data: GenreDriveFile = {
+          const data: GenreDriveFile = build_drive_file({
             // created_at: createDate,
             type: "file",
             file_id: id,
@@ -545,25 +546,19 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
             size,
             content_hash: md5,
             md5,
-            mime_type: null,
-            thumbnail: null,
-          };
+          });
           return data;
         }),
         ...fileListAO.folderList.map((file) => {
           const { id, name, createDate, parentId } = file;
-          const data: GenreDriveFile = {
+          const data: GenreDriveFile = build_drive_file({
             // created_at: createDate,
             type: "folder",
             file_id: id,
             name,
             parent_file_id: file_id,
             size: 0,
-            md5: null,
-            content_hash: null,
-            mime_type: null,
-            thumbnail: null,
-          };
+          });
           return data;
         }),
       ],
@@ -617,17 +612,14 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
     }
     const file = r.data;
     const { fileId, fileName, fileSize, isFolder, parentId, videoInfo } = file;
-    const result: GenreDriveFile = {
+    const result: GenreDriveFile = build_drive_file({
       type: isFolder ? "folder" : "file",
       file_id: fileId,
       name: fileName,
       parent_file_id: parentId,
       size: fileSize,
-      mime_type: null,
-      md5: null,
-      content_hash: null,
-      thumbnail: videoInfo ? videoInfo.icon.largeUrl : null,
-    };
+      thumbnail: videoInfo ? videoInfo.icon.largeUrl : undefined,
+    });
     return Result.Ok(result);
   }
   /**
@@ -648,17 +640,13 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
     }
     const result = r.data.items.map((file) => {
       const { id, name, parentId, size } = file;
-      const data: GenreDriveFile = {
+      const data: GenreDriveFile = build_drive_file({
         type: "file",
         file_id: id,
         name,
         parent_file_id: parentId,
         size,
-        content_hash: null,
-        md5: null,
-        mime_type: null,
-        thumbnail: null,
-      };
+      });
       return data;
     });
     return Result.Ok({
@@ -699,17 +687,13 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
       return Result.Err(r.error);
     }
     const { id, name: file_name, parentId } = r.data;
-    const data: GenreDriveFile = {
+    const data: GenreDriveFile = build_drive_file({
       type: "folder",
       file_id: id,
       name: file_name,
       parent_file_id: parentId,
       size: 0,
-      md5: null,
-      content_hash: null,
-      mime_type: null,
-      thumbnail: null,
-    };
+    });
     return Result.Ok(data);
   }
   /** 将云盘内的文件，移动到另一个云盘 */

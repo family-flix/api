@@ -2,6 +2,7 @@ import { GenreDriveFile, RequestedAliyunDriveFiles } from "@/domains/clients/typ
 import { Result, Unpacked } from "@/types/index";
 
 const DefaultDriveFile = {
+  url: "",
   size: 0,
   mime_type: null,
   md5: null,
@@ -18,6 +19,7 @@ export function build_drive_file(partial: {
   md5?: string;
   content_hash?: string;
   thumbnail?: string;
+  url?: string;
 }): GenreDriveFile {
   return {
     ...DefaultDriveFile,

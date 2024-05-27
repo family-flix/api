@@ -32,6 +32,7 @@ export type AliyunDriveFileResp = {
   type: string;
   content_hash: string;
   updated_at: string;
+  url: string;
   children: AliyunDriveFileResp[];
   childrenError: string;
 };
