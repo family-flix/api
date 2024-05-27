@@ -73,7 +73,11 @@ export default async function v2_admin_drive_file_change_hash(
         include: {
           media: {
             include: {
-              profile: true,
+              profile: {
+                include: {
+                  series: true,
+                },
+              },
             },
           },
           profile: true,
@@ -87,12 +91,14 @@ export default async function v2_admin_drive_file_change_hash(
   if (!source.media_source) {
     return e(Result.Err("暂时仅支持影视剧文件洗码"));
   }
+  const media_record = source.media_source.media;
+  const media_profile_record = media_record.profile;
   const media = {
-    type: source.media_source.media.type,
-    name: source.media_source.media.profile.name,
-    original_name: source.media_source.media.profile.original_name,
-    season: source.media_source.media.profile.order,
-    air_date: source.media_source.media.profile.air_date,
+    type: media_record.type,
+    name: media_profile_record.series ? media_profile_record.series.name : media_profile_record.name,
+    original_name: media_profile_record.original_name,
+    season: media_profile_record.order,
+    air_date: media_profile_record.air_date,
     episode: source.media_source.profile.order,
   };
   const r2 = await drive.client.fetch_file(file.file_id);
