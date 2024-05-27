@@ -26,22 +26,25 @@ export default async function v2_admin_drive_file_change_hash(
 ) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id } = req.body as Partial<{ id: string }>;
+  const { drive_id, file_id } = req.body as Partial<{ drive_id: string; file_id: string }>;
   const t_res = await User.New(authorization, store);
   if (t_res.error) {
     return e(t_res);
   }
   const user = t_res.data;
+  if (!file_id) {
+    return e(Result.Err("缺少 file_id 参数"));
+  }
   const file = await store.prisma.file.findFirst({
     where: {
-      id,
+      file_id,
       user_id: user.id,
     },
   });
   if (!file) {
     return e(Result.Err("没有匹配的记录"));
   }
-  const { drive_id } = file;
+  // const { drive_id } = file;
   const r = await Drive.Get({ id: drive_id, store });
   if (r.error) {
     return e(Result.Err(r.error.message));
