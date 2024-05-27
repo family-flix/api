@@ -61,6 +61,7 @@ export default async function v2_drive_file_delete(req: NextApiRequest, res: Nex
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
+  job.finish();
   return res.status(200).json({
     code: 0,
     msg: "删除成功",

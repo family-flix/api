@@ -378,6 +378,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       return null;
     })();
     const unique_key = [name, original_name, season_text, year].filter(Boolean).join("/");
+    this.emit(Events.Print, Article.build_line([unique_key]));
     if (!episode_text) {
       await this.store.prisma.parsed_media_source.update({
         where: {
