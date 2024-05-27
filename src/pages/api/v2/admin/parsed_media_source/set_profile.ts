@@ -9,9 +9,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { app, store, BaseApiResp } from "@/store/index";
-import { User } from "@/domains/user";
+import { User } from "@/domains/user/index";
 import { MediaSearcher } from "@/domains/searcher/v2";
-import { MediaProfileClient } from "@/domains/media_profile";
+import { MediaProfileClient } from "@/domains/media_profile/index";
 import { Result } from "@/types/index";
 import { MediaTypes } from "@/constants/index";
 import { response_error_factory } from "@/utils/server";

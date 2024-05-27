@@ -291,6 +291,9 @@ export class LocalFileDriveClient implements DriveClient {
   async fetch_video_preview_info() {
     return Result.Err("请实现 fetch_video_preview_info 方法");
   }
+  async fetch_video_preview_info_for_download() {
+    return Result.Err("请实现 fetch_video_preview_info_for_download 方法");
+  }
   async move_files_to_folder() {
     return Result.Err("请实现 move_files_to_folder 方法");
   }

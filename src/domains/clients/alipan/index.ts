@@ -1007,6 +1007,69 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
         }),
     });
   }
+  async fetch_video_preview_info_for_download(file_id: string) {
+    const e = await this.ensure_initialized();
+    if (e.error) {
+      return Result.Err(e.error.message);
+    }
+    // console.log("[DOMAIN]aliyundrive/fetch_video_preview_info", file_id, this.drive_id);
+    const r = await this.request.post<{
+      domain_id: string;
+      drive_id: string;
+      file_id: string;
+      category: string;
+      video_preview_play_info: {
+        category: string;
+        meta: {
+          duration: number;
+          width: number;
+          height: number;
+        };
+        live_transcoding_task_list: {
+          template_id: string;
+          template_name: string;
+          template_width: number;
+          template_height: number;
+          status: string;
+          stage: string;
+          /** 下载地址 */
+          url: string;
+        }[];
+      };
+      punish_flag: number;
+      meta_name_punish_flag: number;
+      meta_name_investigation_status: number;
+    }>(API_HOST + "/v2/file/get_video_preview_play_info_for_download", {
+      file_id,
+      drive_id: String(this.unique_id),
+      category: "live_transcoding",
+      template_id: "",
+      // 60s * 6min * 2h
+      url_expire_sec: 60 * 60 * 2,
+      get_subtitle_info: false,
+      mode: "high_res",
+    });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    if (!r.data.video_preview_play_info) {
+      return Result.Err("no video_preview_play_info");
+    }
+    const {
+      video_preview_play_info: { live_transcoding_task_list },
+    } = r.data;
+    return Result.Ok({
+      sources: live_transcoding_task_list.map((source) => {
+        const { template_id, template_width, template_height, template_name, url } = source;
+        return {
+          type: template_id as MediaResolutionTypes,
+          url,
+          width: template_width,
+          height: template_height,
+        };
+      }),
+    });
+  }
   /**
    * 按名字模糊搜索文件/文件夹
    */

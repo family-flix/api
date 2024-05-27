@@ -1054,6 +1054,9 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
   async refresh_profile() {
     return Result.Err("请实现该方法");
   }
+  async fetch_video_preview_info_for_download() {
+    return Result.Err("请实现 fetch_video_preview_info_for_download 方法");
+  }
   async generate_thumbnail() {
     return Result.Err("请实现 generate_thumbnail 方法");
   }

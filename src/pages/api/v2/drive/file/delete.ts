@@ -7,16 +7,18 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { store, BaseApiResp } from "@/store/index";
+import { app, store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive/v2";
+import { Job, TaskTypes } from "@/domains/job/index";
 import { Result } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
 
 export default async function v2_drive_file_delete(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { file_id, drive_id } = req.body as Partial<{
+  const { file_name, file_id, drive_id } = req.body as Partial<{
+    file_name: string;
     file_id: string;
     drive_id: string;
   }>;
@@ -36,7 +38,26 @@ export default async function v2_drive_file_delete(req: NextApiRequest, res: Nex
     return e(drive_res);
   }
   const drive = drive_res.data;
-  const r = await drive.delete_file_or_folder_in_drive(file_id);
+  const job_res = await Job.New({
+    desc: ["删除云盘文件", file_name].filter(Boolean).join(" "),
+    type: TaskTypes.DeleteDriveFile,
+    unique_id: drive.id,
+    user_id: user.id,
+    app,
+    store,
+  });
+  if (job_res.error) {
+    return e(Result.Err(job_res.error.message));
+  }
+  const job = job_res.data;
+  drive.on_print((v) => {
+    job.output.write(v);
+  });
+  const r = await drive.delete_file_or_folder_in_drive(file_id, {
+    callback(file) {
+      job.update_title(`删除云盘文件「${file.name}」`);
+    },
+  });
   if (r.error) {
     return e(Result.Err(r.error.message));
   }

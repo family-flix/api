@@ -81,10 +81,10 @@ export default async function v2_admin_parsed_media_source_list(
         },
         orderBy: [
           {
-            episode_text: "asc",
+            created: "desc",
           },
           {
-            created: "desc",
+            episode_text: "asc",
           },
         ],
         ...args,

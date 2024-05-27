@@ -107,6 +107,16 @@ export interface DriveClient {
       }[];
     }>
   >;
+  fetch_video_preview_info_for_download(file_id: string): Promise<
+    Result<{
+      sources: {
+        width: number;
+        height: number;
+        type: MediaResolutionTypes;
+        url: string;
+      }[];
+    }>
+  >;
   /**
    * --------- 分享资源相关 --------------
    */

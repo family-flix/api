@@ -617,6 +617,9 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     //   }[],
     // });
   }
+  async fetch_video_preview_info_for_download() {
+    return Result.Err("请实现 fetch_video_preview_info_for_download 方法");
+  }
   /** 获取一个文件夹的完整路径（包括自身） */
   async fetch_parent_paths(file_id: string) {
     await this.ensure_initialized();

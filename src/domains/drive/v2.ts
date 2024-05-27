@@ -474,10 +474,13 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   /**
    * 删除云盘内的指定文件
    */
-  async delete_file_or_folder_in_drive(file_id: string) {
+  async delete_file_or_folder_in_drive(
+    file_id: string,
+    opt: Partial<{ callback: (file: { name: string }) => void }> = {}
+  ) {
     const r = await this.client.delete_file(file_id);
     if (r.error) {
-      this.emit(Events.Print, Article.build_line(["删除失败，因为", r.error.message]));
+      this.emit(Events.Print, Article.build_line(["从云盘删除失败，因为", r.error.message]));
       return Result.Err(r.error.message);
     }
     const file = await this.store.prisma.file.findFirst({
@@ -487,13 +490,19 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       },
     });
     if (!file) {
+      this.emit(Events.Print, Article.build_line(["不存在记录，直接成功"]));
       return Result.Ok(null);
     }
+    if (opt.callback) {
+      opt.callback(file);
+    }
     if (file.type === FileType.File) {
+      this.emit(Events.Print, Article.build_line(["删除文件", file.name]));
       await this.delete_file_record_and_relative_record(file.file_id);
       return Result.Ok(null);
     }
     if (file.type === FileType.Folder) {
+      this.emit(Events.Print, Article.build_line(["删除文件夹", file.name]));
       await this.delete_folder(file);
       return Result.Ok(null);
     }

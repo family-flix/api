@@ -190,6 +190,16 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
       ].join("\n")
     );
   };
+  update_title(desc: string) {
+    return this.store.prisma.async_task.update({
+      where: {
+        id: this.id,
+      },
+      data: {
+        desc,
+      },
+    });
+  }
   update_content = throttle(this.update_content_force, 5000);
   update_percent = throttle(async (percent: number) => {
     console.log("[DOMAIN]job/index - update_percent", `${(percent * 100).toFixed(2)}%`);

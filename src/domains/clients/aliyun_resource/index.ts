@@ -697,6 +697,9 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
   async fetch_video_preview_info() {
     return Result.Err("请实现 fetch_video_preview_info 方法");
   }
+  async fetch_video_preview_info_for_download() {
+    return Result.Err("请实现 fetch_video_preview_info_for_download 方法");
+  }
   async create_folder() {
     return Result.Err("请实现 create_folder 方法");
   }

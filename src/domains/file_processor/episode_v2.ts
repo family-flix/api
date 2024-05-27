@@ -291,6 +291,7 @@ export class EpisodeFileProcessor extends BaseDomain<TheTypesOfEvents> {
         },
         {
           AND: [
+            // @todo 这里有问题，如果都解析到错误的 original_name，且都是同年发布相同季，就会误关联两个不相关的电视剧
             {
               original_name: original_name || null,
             },
