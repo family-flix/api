@@ -9,6 +9,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import axios from "axios";
 import progress from "progress-stream";
 import { execa } from "execa";
+import dayjs from "dayjs";
 
 import { app, store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
@@ -17,8 +18,9 @@ import { DriveAnalysis } from "@/domains/analysis/v2";
 import { Job, TaskTypes } from "@/domains/job/index";
 import { response_error_factory } from "@/utils/server";
 import { Result } from "@/types/index";
-import { FileType, MediaResolutionTypes } from "@/constants/index";
+import { FileType, MediaResolutionTypes, MediaTypes } from "@/constants/index";
 import { bytes_to_size } from "@/utils/index";
+import { build_media_name } from "@/utils/parse_filename_for_video";
 
 export default async function v2_admin_drive_file_change_hash(
   req: NextApiRequest,
@@ -82,6 +84,17 @@ export default async function v2_admin_drive_file_change_hash(
   if (!source) {
     return e(Result.Err("该文件非影视剧文件，不支持洗码"));
   }
+  if (!source.media_source) {
+    return e(Result.Err("暂时仅支持影视剧文件洗码"));
+  }
+  const media = {
+    type: source.media_source.media.type,
+    name: source.media_source.media.profile.name,
+    original_name: source.media_source.media.profile.original_name,
+    season: source.media_source.media.profile.order,
+    air_date: source.media_source.media.profile.air_date,
+    episode: source.media_source.profile.order,
+  };
   const r2 = await drive.client.fetch_file(file.file_id);
   if (r2.error) {
     return e(r2);
@@ -138,8 +151,21 @@ export default async function v2_admin_drive_file_change_hash(
       await execa`echo 0 >> ${file_output_path}`;
       job.output.write_line(["开始上传洗码后文件"]);
       const original_filename = path.parse(file_output_path);
+      const tv_name_with_pinyin = build_media_name({ name: media.name, original_name: media.original_name });
+      const air_date_of_year = (() => {
+        return dayjs(media.air_date).year();
+      })();
+      let new_file_name =
+        [
+          tv_name_with_pinyin,
+          media.type === MediaTypes.Season ? `S${media.season}E${media.episode}` : null,
+          air_date_of_year,
+          "洗码",
+        ]
+          .filter(Boolean)
+          .join(".") + original_filename.ext;
       const result = await drive.client.upload(file_output_path, {
-        name: [original_filename.name, ".洗码", original_filename.ext].join(""),
+        name: new_file_name,
         parent_file_id: file.parent_file_id,
         on_progress(v) {
           console.log(v);
@@ -149,6 +175,7 @@ export default async function v2_admin_drive_file_change_hash(
         job.throw(new Error(`上传失败 ${result.error.message}`));
         return;
       }
+      fs.unlinkSync(file_output_path);
       const uploaded_file = result.data;
       const r2 = await DriveAnalysis.New({
         drive,
