@@ -718,4 +718,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
   async generate_thumbnail() {
     return Result.Err("请实现 generate_thumbnail 方法");
   }
+  on_print() {
+    return () => {};
+  }
 }

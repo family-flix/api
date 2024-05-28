@@ -934,4 +934,7 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
   async refresh_profile() {
     return Result.Err("请实现该方法");
   }
+  on_print() {
+    return () => {};
+  }
 }

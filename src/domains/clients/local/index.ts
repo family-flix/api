@@ -321,4 +321,7 @@ export class LocalFileDriveClient implements DriveClient {
   async checked_in() {
     return Result.Err("请实现 checked_in 方法");
   }
+  on_print() {
+    return () => {};
+  }
 }

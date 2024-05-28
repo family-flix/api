@@ -145,6 +145,9 @@ export default async function v2_admin_drive_file_change_hash(
     return e(job_res);
   }
   const job = job_res.data;
+  drive.client.on_print((v) => {
+    job.output.write(v);
+  });
   const matched = r0.data;
   const file_output_path = path.resolve(app.assets, file.name);
   (async () => {

@@ -403,7 +403,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
             file_id: id,
             name,
             parent_file_id: file_id,
-            url: '',
+            url: "",
             size,
             content_hash: md5,
             md5,
@@ -420,7 +420,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
             file_id: id,
             name,
             parent_file_id: file_id,
-            url: '',
+            url: "",
             size: 0,
             md5: null,
             content_hash: null,
@@ -486,7 +486,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       name: fileName,
       parent_file_id: parentId,
       size: fileSize,
-      url: '',
+      url: "",
       mime_type: null,
       md5: null,
       content_hash: null,
@@ -518,7 +518,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
         name,
         parent_file_id: parentId,
         size,
-        url: '',
+        url: "",
         content_hash: null,
         md5: null,
         mime_type: null,
@@ -570,7 +570,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       name: file_name,
       parent_file_id: parentId,
       size: 0,
-      url: '',
+      url: "",
       md5: null,
       content_hash: null,
       mime_type: null,
@@ -865,5 +865,8 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
   }
   async generate_thumbnail() {
     return Result.Err("请实现 generate_thumbnail 方法");
+  }
+  on_print() {
+    return () => {};
   }
 }

@@ -2005,6 +2005,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       return Result.Err(existing_res.error.message);
     }
     if (existing_res.data) {
+      this.emit(Events.Print, Article.build_line(["文件已存在"]));
       return Result.Err("文件已存在");
     }
     // 10 MB  10485760
@@ -2016,6 +2017,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     const { size: file_size } = r2.data;
     const r = await (async () => {
       if (file_size > 1024) {
+        this.emit(Events.Print, Article.build_line(["文件小于 1024kb"]));
         const c = await read_part_file(filepath, 1024);
         if (c.error) {
           return Result.Err(c.error.message);
@@ -2036,6 +2038,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
         );
         if (r.code === "PreHashMatched") {
           // console.log("before token is", token);
+          this.emit(Events.Print, Article.build_line(["PreHashMatched"]));
           const r1 = await prepare_upload_file(filepath, {
             token,
             size: r2.data.size,
@@ -2061,7 +2064,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
           );
         }
         if (r.error) {
-          console.log("r.error", r);
+          this.emit(Events.Print, Article.build_line(["create_with_folder 失败", r.error.message]));
           return Result.Err(r.error.message);
         }
         return r;
@@ -2071,6 +2074,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
         size: r2.data.size,
       });
       if (r1.error) {
+        this.emit(Events.Print, Article.build_line(["prepare_upload_file 失败", r1.error.message]));
         return Result.Err(r1.error.message);
       }
       const { content_hash, proof_code, size, part_info_list } = r1.data;
@@ -2090,11 +2094,13 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       );
     })();
     if (r.error) {
+      this.emit(Events.Print, Article.build_line(["上传失败", r.error.message]));
       return Result.Err(r.error);
     }
     const chunk_count = Math.ceil(file_size / UPLOAD_CHUNK_SIZE);
     const { upload_id, file_id, file_name } = r.data;
     if (r.data.rapid_upload) {
+      this.emit(Events.Print, Article.build_line(["文件 hash 匹配，无需上传"]));
       // 秒传，即官方已经有该文件，无需上传
       return Result.Ok({
         file_id,
@@ -2103,6 +2109,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     }
     if (!r.data.part_info_list?.[0]) {
       // 秒传，即官方已经有该文件，无需上传
+      this.emit(Events.Print, Article.build_line(["文件 hash 匹配2，无需上传"]));
       return Result.Ok({
         file_id,
         file_name,
@@ -2112,11 +2119,8 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     let last_part = part_list[part_list.length - 1];
     let i = 0;
     this.debug && console.log("start upload");
+    this.emit(Events.Print, Article.build_line(["开始分片上传，共计", part_list.length, "个切片"]));
     const stream = fs.createReadStream(filepath, { highWaterMark: UPLOAD_CHUNK_SIZE });
-    // return Result.Err("未知错误");
-    if (on_progress) {
-      on_progress(`chunk ${i}/${chunk_count - 1}`);
-    }
     const r10: Result<{ file_id: string; file_name: string }> = await new Promise(async (resolve1) => {
       stream.on("data", async (chunk) => {
         stream.pause();
@@ -2125,6 +2129,10 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
           try {
             const upload_url = part_list[i].upload_url;
             this.debug && console.log(`chunk ${cur_part_number}/${chunk_count - 1}`);
+            if (on_progress) {
+              on_progress(`chunk ${cur_part_number}/${chunk_count - 1}`);
+            }
+            this.emit(Events.Print, Article.build_line([`chunk ${cur_part_number}/${chunk_count - 1}`]));
             const rr = await axios.put(upload_url, chunk, {
               headers: {
                 authority: "cn-beijing-data.aliyundrive.net",
@@ -2143,30 +2151,39 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
                   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
               },
             });
-            this.debug && console.log(rr.data);
+            // this.debug && console.log(rr.data);
+            this.emit(Events.Print, Article.build_line([`chunk ${cur_part_number}/${chunk_count - 1}`, "上传成功"]));
             resolve(Result.Ok(null));
           } catch (err) {
             const error = err as AxiosError<{ code: string; message: string }>;
             const { response, message } = error;
-            console.log("[]upload failed", message, response?.data);
+            // console.log("[]upload failed", message, response?.data);
+            this.emit(
+              Events.Print,
+              Article.build_line([`chunk ${cur_part_number}/${chunk_count - 1}`, "上传失败，因为", message])
+            );
             resolve(Result.Err(message || response?.data.message || "unknown", response?.data?.code, 1563));
           }
         });
         if (r.error) {
           this.debug && console.log("upload failed, because ", r.error.message);
+          this.emit(Events.Print, Article.build_line(["上传失败，因为", r.error.message]));
           return resolve1(Result.Err(r.error.message));
         }
         i += 1;
         if (cur_part_number >= chunk_count - 1) {
+          this.emit(Events.Print, Article.build_line(["上传完所有切片，获取文件信息"]));
           const r2 = await this.fetch_uploaded_file({
             upload_id,
             file_id,
           });
           if (r2.error) {
             this.debug && console.log("upload complete, but fetch result failed, because ", r2.error.message);
+            this.emit(Events.Print, Article.build_line(["获取文件信息失败，因为", r2.error.message]));
             return Result.Err(r2.error.message, 1562);
           }
           this.debug && console.log("fetch result and return");
+          this.emit(Events.Print, Article.build_line(["获取文件信息成功", r2.data.name, r2.data.file_id]));
           return resolve1(
             Result.Ok({
               file_id: r2.data.file_id,
@@ -2176,6 +2193,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
         }
         if (cur_part_number >= last_part.part_number) {
           this.debug && console.log("fetch next part list");
+          this.emit(Events.Print, Article.build_line(["获取下一批切片上传地址"]));
           const r2 = await this.fetch_upload_url({
             upload_id,
             file_id,
@@ -2187,6 +2205,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
           });
           if (r2.error) {
             this.debug && console.log("fetch next upload failed, because ", r2.error.message);
+            this.emit(Events.Print, Article.build_line(["获取下一批切片上传地址失败，因为", r2.error.message]));
             return Result.Err(r2.error.message, 1561);
           }
           // console.log(r2.data.part_info_list.map((p) => p.part_number));

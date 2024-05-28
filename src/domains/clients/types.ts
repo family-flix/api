@@ -1,9 +1,11 @@
 /**
  * @file 云盘客户端
  */
-import { FileType, MediaResolutionTypes } from "@/constants";
 import { DataStore } from "@/domains/store/types";
-import { Result } from "@/types";
+import { Handler } from "@/domains/base";
+import { ArticleLineNode, ArticleSectionNode } from "@/domains/article/index";
+import { FileType, MediaResolutionTypes } from "@/constants/index";
+import { Result } from "@/types/index";
 
 export interface DriveClient {
   /** 数据库记录 id */
@@ -193,6 +195,7 @@ export interface DriveClient {
    * ------------------- 分享相关逻辑 end -------------------
    */
   checked_in(): Promise<Result<unknown>>;
+  on_print(handler: (v: ArticleLineNode | ArticleSectionNode) => void): () => void;
 }
 
 /**

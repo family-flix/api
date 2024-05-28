@@ -1044,4 +1044,7 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
   async generate_thumbnail() {
     return Result.Err("请实现 generate_thumbnail 方法");
   }
+  on_print() {
+    return () => {};
+  }
 }
