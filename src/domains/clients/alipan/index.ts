@@ -2119,7 +2119,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     let last_part = part_list[part_list.length - 1];
     let i = 0;
     this.debug && console.log("start upload");
-    this.emit(Events.Print, Article.build_line(["开始分片上传，共计", part_list.length, "个切片"]));
+    this.emit(Events.Print, Article.build_line(["开始分片上传，共计", chunk_count, "个切片"]));
     const stream = fs.createReadStream(filepath, { highWaterMark: UPLOAD_CHUNK_SIZE });
     const r10: Result<{ file_id: string; file_name: string }> = await new Promise(async (resolve1) => {
       stream.on("data", async (chunk) => {
@@ -2129,9 +2129,6 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
           try {
             const upload_url = part_list[i].upload_url;
             this.debug && console.log(`chunk ${cur_part_number}/${chunk_count - 1}`);
-            if (on_progress) {
-              on_progress(`chunk ${cur_part_number}/${chunk_count - 1}`);
-            }
             this.emit(Events.Print, Article.build_line([`chunk ${cur_part_number}/${chunk_count - 1}`]));
             const rr = await axios.put(upload_url, chunk, {
               headers: {

@@ -175,20 +175,17 @@ export default async function v2_admin_drive_file_change_hash(
     await execa("echo", ["0", ">>", file_output_path], { shell: true });
     job.output.write_line(["开始上传洗码文件"]);
     const original_filename = path.parse(file_output_path);
-    const new_file_name = [original_filename, "洗码"].filter(Boolean).join(".") + original_filename.ext;
+    const new_file_name = [original_filename.name, "洗码"].filter(Boolean).join(".") + original_filename.ext;
     const result = await drive.client.upload(file_output_path, {
       name: new_file_name,
       parent_file_id: file.parent_file_id,
-      on_progress(v) {
-        job.output.write_line([v]);
-      },
     });
     if (result.error) {
       job.throw(new Error(`上传失败 ${result.error.message}`));
       return;
     }
     job.output.write_line(["完成上传，开始索引"]);
-    // fs.unlinkSync(file_output_path);
+    fs.unlinkSync(file_output_path);
     const uploaded_file = result.data;
     const r2 = await DriveAnalysis.New({
       drive,
