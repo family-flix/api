@@ -101,14 +101,29 @@ export default async function v2_admin_drive_file_change_hash(
     air_date: media_profile_record.air_date,
     episode: source.media_source.profile.order,
   };
-  const r2 = await drive.client.fetch_file(file.file_id);
-  if (r2.error) {
-    return e(r2);
+
+  const r0 = await (async () => {
+    const r3 = await drive.client.download(file.file_id);
+    if (r3.error) {
+      return r3;
+    }
+    if (r3.data.url) {
+      return Result.Ok(r3.data);
+    }
+    const r2 = await drive.client.fetch_file(file.file_id);
+    if (r2.error) {
+      return r2;
+    }
+    const matched = r2.data;
+    if (matched.url) {
+      return Result.Ok(matched);
+    }
+    return Result.Err("没有下载地址");
+  })();
+  if (r0.error) {
+    return e(r0);
   }
-  const matched = r2.data;
-  if (!matched.url) {
-    return e(Result.Err("没有下载地址"));
-  }
+  const matched = r0.data;
   const file_output_path = path.resolve(app.assets, file.name);
   (async () => {
     const rrr = await download({
