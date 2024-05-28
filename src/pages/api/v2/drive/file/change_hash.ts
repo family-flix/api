@@ -21,6 +21,7 @@ import { Result } from "@/types/index";
 import { FileType, MediaResolutionTypes, MediaTypes } from "@/constants/index";
 import { bytes_to_size } from "@/utils/index";
 import { build_media_name } from "@/utils/parse_filename_for_video";
+import { check_existing } from "@/utils/fs";
 
 export default async function v2_admin_drive_file_change_hash(
   req: NextApiRequest,
@@ -118,106 +119,117 @@ export default async function v2_admin_drive_file_change_hash(
   let timer: NodeJS.Timer | null = null;
   let completed = false;
   const file_output_path = path.resolve(app.assets, file.name);
+  const rr = await check_existing(file_output_path);
+  if (rr.error) {
+    return e(rr);
+  }
   (async () => {
-    const writer = fs.createWriteStream(file_output_path);
-    const response = await axios.get(matched.url, {
-      responseType: "stream",
-      headers: {
-        Referer: "https://www.alipan.com/",
+    function download(output: string): Promise<Result<{ filepath: string }>> {
+      return new Promise(async (resolve) => {
+        const writer = fs.createWriteStream(output);
+        const response = await axios.get(matched.url, {
+          responseType: "stream",
+          headers: {
+            Referer: "https://www.alipan.com/",
+          },
+        });
+        const total_length = response.headers["content-length"];
+        console.log("Total file size:", total_length);
+        const progress_stream = progress({
+          length: total_length,
+          time: 100 /* ms */,
+        });
+        progress_stream.on("progress", (progress) => {
+          cur_progress = progress;
+        });
+        timer = setInterval(() => {
+          if (completed) {
+            if (timer) {
+              clearInterval(timer);
+            }
+          }
+          job.output.write_line([
+            `Downloaded ${cur_progress.transferred} of ${cur_progress.length} bytes (${cur_progress.percentage}%)`,
+          ]);
+          job.output.write_line([`Speed: ${bytes_to_size(cur_progress.speed)} bytes/sec`]);
+        }, 1000);
+        response.data.pipe(progress_stream).pipe(writer);
+        writer.on("finish", async () => {
+          completed = true;
+          if (timer) {
+            clearInterval(timer);
+          }
+          job.output.write_line(["完成下载"]);
+          resolve(
+            Result.Ok({
+              filepath: output,
+            })
+          );
+        });
+        writer.on("error", (err) => {
+          completed = true;
+          if (timer) {
+            clearInterval(timer);
+          }
+          resolve(Result.Err(err.message));
+        });
+      });
+    }
+    const rrr = await download(file_output_path);
+    if (rrr.error) {
+      job.throw(new Error(`下载失败 ${rrr.error.message}`));
+      return;
+    }
+    job.output.write_line(["完成下载"]);
+    job.output.write_line(["改变文件 hash"]);
+    await execa("echo", ["0", ">>", file_output_path], { shell: true });
+    job.output.write_line(["开始上传洗码后文件"]);
+    const original_filename = path.parse(file_output_path);
+    // const tv_name_with_pinyin = build_media_name({ name: media.name, original_name: media.original_name });
+    // const air_date_of_year = (() => {
+    //   return dayjs(media.air_date).year();
+    // })();
+    const new_file_name = [original_filename, "洗码"].filter(Boolean).join(".") + original_filename.ext;
+    const result = await drive.client.upload(file_output_path, {
+      name: new_file_name,
+      parent_file_id: file.parent_file_id,
+      on_progress(v) {
+        job.output.write_line([v]);
       },
     });
-    const total_length = response.headers["content-length"];
-    console.log("Total file size:", total_length);
-    const progress_stream = progress({
-      length: total_length,
-      time: 100 /* ms */,
+    if (result.error) {
+      job.throw(new Error(`上传失败 ${result.error.message}`));
+      return;
+    }
+    // fs.unlinkSync(file_output_path);
+    const uploaded_file = result.data;
+    const r2 = await DriveAnalysis.New({
+      drive,
+      store,
+      user,
+      assets: app.assets,
+      on_print(v) {
+        job.output.write(v);
+      },
+      on_error(err) {
+        job.throw(err);
+      },
     });
-    progress_stream.on("progress", (progress) => {
-      cur_progress = progress;
-    });
-    timer = setInterval(() => {
-      if (completed) {
-        if (timer) {
-          clearInterval(timer);
-        }
-      }
-      job.output.write_line([
-        `Downloaded ${cur_progress.transferred} of ${cur_progress.length} bytes (${cur_progress.percentage}%)`,
-      ]);
-      job.output.write_line([`Speed: ${bytes_to_size(cur_progress.speed)} bytes/sec`]);
-    }, 1000);
-    response.data.pipe(progress_stream).pipe(writer);
-    writer.on("finish", async () => {
-      completed = true;
-      if (timer) {
-        clearInterval(timer);
-      }
-      job.output.write_line(["完成下载"]);
-      job.output.write_line(["改变文件 hash"]);
-      await execa`echo 0 >> ${file_output_path}`;
-      job.output.write_line(["开始上传洗码后文件"]);
-      const original_filename = path.parse(file_output_path);
-      const tv_name_with_pinyin = build_media_name({ name: media.name, original_name: media.original_name });
-      const air_date_of_year = (() => {
-        return dayjs(media.air_date).year();
-      })();
-      let new_file_name =
-        [
-          tv_name_with_pinyin,
-          media.type === MediaTypes.Season ? `S${media.season}E${media.episode}` : null,
-          air_date_of_year,
-          "洗码",
-        ]
-          .filter(Boolean)
-          .join(".") + original_filename.ext;
-      const result = await drive.client.upload(file_output_path, {
-        name: new_file_name,
-        parent_file_id: file.parent_file_id,
-        on_progress(v) {
-          console.log(v);
-        },
-      });
-      if (result.error) {
-        job.throw(new Error(`上传失败 ${result.error.message}`));
-        return;
-      }
-      fs.unlinkSync(file_output_path);
-      const uploaded_file = result.data;
-      const r2 = await DriveAnalysis.New({
-        drive,
-        store,
-        user,
-        assets: app.assets,
-        on_print(v) {
-          job.output.write(v);
-        },
-        on_error(err) {
-          job.throw(err);
-        },
-      });
-      if (r2.error) {
-        job.throw(new Error(`刮削失败 ${r2.error.message}`));
-        return;
-      }
-      const analysis = r2.data;
-      const the_files_prepare_analysis = [
-        {
-          file_id: uploaded_file.file_id,
-          name: uploaded_file.file_name,
-          type: FileType.File,
-        },
-      ];
-      await analysis.run2(the_files_prepare_analysis, { force: true });
-      job.output.write_line(["索引完成"]);
-      job.finish();
-    });
-    writer.on("error", (err) => {
-      completed = true;
-      if (timer) {
-        clearInterval(timer);
-      }
-      job.throw(new Error(`下载失败 ${err.message}`));
-    });
+    if (r2.error) {
+      job.throw(new Error(`刮削失败 ${r2.error.message}`));
+      return;
+    }
+    const analysis = r2.data;
+    const the_files_prepare_analysis = [
+      {
+        file_id: uploaded_file.file_id,
+        name: uploaded_file.file_name,
+        type: FileType.File,
+      },
+    ];
+    await analysis.run2(the_files_prepare_analysis, { force: true });
+    job.output.write_line(["索引完成"]);
+    job.finish();
   })();
   return res.status(200).json({
     code: 0,
