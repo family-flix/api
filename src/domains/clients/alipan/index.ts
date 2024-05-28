@@ -1044,7 +1044,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       punish_flag: number;
       meta_name_punish_flag: number;
       meta_name_investigation_status: number;
-    }>(API_HOST + "/v2/file/get_video_preview_play_info_for_download", {
+    }>(API_HOST + "/adrive/v2/file/get_video_preview_play_info_for_download", {
       file_id,
       drive_id: String(this.unique_id),
       category: "live_transcoding",
