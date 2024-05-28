@@ -2114,9 +2114,9 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     this.debug && console.log("start upload");
     const stream = fs.createReadStream(filepath, { highWaterMark: UPLOAD_CHUNK_SIZE });
     // return Result.Err("未知错误");
-    // if (on_progress) {
-    //   on_progress(`chunk ${i}/${chunk_count - 1}`);
-    // }
+    if (on_progress) {
+      on_progress(`chunk ${i}/${chunk_count - 1}`);
+    }
     const r10: Result<{ file_id: string; file_name: string }> = await new Promise(async (resolve1) => {
       stream.on("data", async (chunk) => {
         stream.pause();
