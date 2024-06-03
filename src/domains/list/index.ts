@@ -2,7 +2,7 @@
  * @file 分页领域
  */
 import { BaseDomain, Handler } from "@/domains/base";
-import { RequestCoreV2 } from "@/domains/request/index";
+import { RequestCore } from "@/domains/request/index";
 import { debounce } from "@/utils/lodash/debounce";
 import { Result, UnpackedResult } from "@/types";
 
@@ -120,8 +120,8 @@ interface ListState<T> extends Response<T> {}
 /**
  * 分页类
  */
-export class ListCoreV2<
-  S extends RequestCoreV2<any>,
+export class ListCore<
+  S extends RequestCore<any>,
   T extends UnpackedResult<S["response"]>["list"][number]
 > extends BaseDomain<TheTypesOfEvents<T>> {
   debug: boolean = false;
@@ -152,7 +152,7 @@ export class ListCoreV2<
   constructor(fetch: S, options: ListProps<T> = {}) {
     super();
 
-    if (!(fetch instanceof RequestCoreV2)) {
+    if (!(fetch instanceof RequestCore)) {
       throw new Error("fetch must be a instance of RequestCore");
     }
 
@@ -173,7 +173,7 @@ export class ListCoreV2<
     this.processor = (originalResponse): Response<T> => {
       const nextResponse = {
         ...this.response,
-        ...ListCoreV2.commonProcessor<T>(originalResponse),
+        ...ListCore.commonProcessor<T>(originalResponse),
       } as Response<T>;
       if (processor) {
         const r = processor<T>(nextResponse, originalResponse);
@@ -230,7 +230,7 @@ export class ListCoreV2<
     }
     this.params = { ...this.initialParams };
     this.response = {
-      ...ListCoreV2.defaultResponse(),
+      ...ListCore.defaultResponse(),
       ...this.extraResponse,
     };
     const { page: p, pageSize: ps, ...restParams } = this.params;

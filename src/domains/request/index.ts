@@ -1,12 +1,11 @@
 /**
  * @file API 请求
  */
-// import axios, { CancelTokenSource } from "axios";
-
 import { BaseDomain, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error/index";
 import { HttpClientCore } from "@/domains/http_client/index";
-import { Result, UnpackedResult } from "@/types/index";
+import { UnpackedResult } from "@/types/index";
+import { Result } from "@/types/index";
 import { sleep } from "@/utils/index";
 
 import { RequestPayload, UnpackedRequestPayload } from "./utils";
@@ -33,18 +32,22 @@ type TheTypesOfEvents<T> = {
   [Events.StateChange]: RequestState<T>;
   [Events.ResponseChange]: T | null;
 };
+
 type RequestState<T> = {
   loading: boolean;
   error: BizError | null;
   response: T | null;
 };
-type RequestProps = {
-  client: HttpClientCore;
+type FetchFunction = (...args: any[]) => RequestPayload<any>;
+type ProcessFunction<V, P> = (value: V) => Result<P>;
+type RequestProps<F extends FetchFunction, P> = {
+  client?: HttpClientCore;
   delay?: null | number;
-  defaultResponse?: RequestResponse<any>;
-  fetch: (...args: any) => RequestPayload<any>;
-  process?: (v: any) => Result<any>;
-  onSuccess?: (v: RequestResponse<any>) => void;
+  // defaultResponse?: any;
+  defaultResponse?: P;
+  // fetch: F;
+  process?: ProcessFunction<Result<UnpackedRequestPayload<ReturnType<F>>>, P>;
+  onSuccess?: (v: UnpackedResult<P>) => void;
   onFailed?: (error: BizError) => void;
   onCompleted?: () => void;
   onCanceled?: () => void;
@@ -52,43 +55,49 @@ type RequestProps = {
   onLoading?: (loading: boolean) => void;
 };
 
-// type Arg = { fetch: (...args: any[]) => any; process?: (v: ReturnType<Arg["fetch"]>) => any };
-type RequestResponse<
-  A extends { fetch: (...args: any[]) => RequestPayload<any>; process?: (v: ReturnType<A["fetch"]>) => Result<any> }
-> = A extends {
-  fetch: (...args: any[]) => any;
-  // v 的类型必须是 any，否则有问题
-  process: (v: any) => any;
+let handler: null | ((v: RequestCore<any>) => void) = null;
+export function onCreate(h: (v: RequestCore<any>) => void) {
+  handler = h;
 }
-  ? UnpackedResult<ReturnType<A["process"]>>
-  : UnpackedRequestPayload<ReturnType<A["fetch"]>>;
 
 /**
  * 用于接口请求的核心类
  */
-export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOfEvents<any>> {
+export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<ReturnType<F>>> extends BaseDomain<
+  TheTypesOfEvents<any>
+> {
   debug = false;
 
-  defaultResponse: RequestResponse<T> | null = null;
+  defaultResponse: P | null = null;
 
-  /** 原始 service 函数 */
-  service: T["fetch"];
-  process: T["process"];
-  client: HttpClientCore;
+  /**
+   * 就是
+   *
+   * ```js
+   * function test() {
+   *   return request.post('/api/ping');
+   * }
+   * ```
+   *
+   * 函数返回 RequestPayload，描述该次请求的地址、参数等
+   */
+  service: F;
+  process?: ProcessFunction<Result<UnpackedRequestPayload<ReturnType<F>>>, P>;
+  client?: HttpClientCore;
   delay: null | number = 800;
   loading = false;
   /** 处于请求中的 promise */
-  pending: Promise<RequestResponse<T>> | null = null;
+  // pending: Promise<UnpackedRequestPayload<ReturnType<F>>> | null = null;
+  pending: Promise<Result<P>> | null = null;
   /** 调用 prepare 方法暂存的参数 */
   // args: Parameters<T> | null = null;
   /** 请求的响应 */
-  response: RequestResponse<T> | null = null;
+  response: P | null = null;
   /** 请求失败，保存错误信息 */
   error: BizError | null = null;
   id = String(this.uid());
-  // source: CancelTokenSource;
 
-  get state(): RequestState<RequestResponse<T>> {
+  get state(): RequestState<P> {
     return {
       loading: this.loading,
       error: this.error,
@@ -96,14 +105,14 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
     };
   }
 
-  constructor(props: T) {
+  constructor(fn: F, props: RequestProps<F, P>) {
     super();
 
     const {
       client,
       delay,
       defaultResponse,
-      fetch,
+      // fetch,
       process,
       onSuccess,
       onFailed,
@@ -112,7 +121,7 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
       onLoading,
       beforeRequest,
     } = props;
-    this.service = fetch;
+    this.service = fn;
     this.process = process;
     this.client = client;
     // this.method = method;
@@ -129,7 +138,7 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
       this.onSuccess(onSuccess);
     }
     if (onFailed) {
-      this.onFailed(onFailed);
+      this.onFailed(onFailed, { override: true });
     }
     if (onCompleted) {
       this.onCompleted(onCompleted);
@@ -143,16 +152,27 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
     if (beforeRequest) {
       this.beforeRequest(beforeRequest);
     }
+    if (handler) {
+      handler(this);
+    }
   }
-  token?: unknown;
   /** 执行 service 函数 */
-  async run(...args: Parameters<T["fetch"]>) {
+  async run(...args: Parameters<F>) {
+    if (!this.service) {
+      return Result.Err("缺少 service");
+    }
+    if (typeof this.service !== "function") {
+      return Result.Err("service 不是函数");
+    }
+    if (!this.client) {
+      return Result.Err("缺少 client");
+    }
     if (this.pending !== null) {
       const r = await this.pending;
       this.loading = false;
-      const d = r.data as RequestResponse<T>;
+      const data = r.data as P;
       this.pending = null;
-      return Result.Ok(d);
+      return Result.Ok(data);
     }
     // this.args = args;
     this.loading = true;
@@ -163,33 +183,27 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
     this.emit(Events.LoadingChange, true);
     this.emit(Events.StateChange, { ...this.state });
     this.emit(Events.BeforeRequest);
+    let payloadProcess: null | ((v: any) => any) = null;
     const r2 = (() => {
-      const { url, method, query, body, headers } = this.service(...(args as unknown as any[]));
+      const { hostname = "", url, method, query, body, process } = this.service(...(args as unknown as any[]));
+      if (process) {
+        payloadProcess = process;
+      }
       if (method === "GET") {
         // const [query, extra = {}] = args;
-        const r = this.client.get(url, query, {
+        const r = this.client.get<P>(hostname + url, query, {
           id: this.id,
-          headers,
-          // token: this.source.token,
-          // ...extra,
         });
-        // if (this.process) {
-        //   return Result.Ok(this.process(r)) as Result<Promise<RequestResponse<T>>>;
-        // }
-        return Result.Ok(r) as Result<Promise<RequestResponse<T>>>;
+        return Result.Ok(r) as Result<Promise<Result<P>>>;
+        // return Result.Ok(r);
       }
       if (method === "POST") {
         // const [body, extra = {}] = args;
-        const r = this.client.post(url, body, {
+        const r = this.client.post<P>(hostname + url, body, {
           id: this.id,
-          headers,
-          // token: this.source.token,
-          // ...extra,
         });
-        // if (this.process) {
-        //   return Result.Ok(this.process(r)) as Result<Promise<RequestResponse<T>>>;
-        // }
-        return Result.Ok(r) as Result<Promise<RequestResponse<T>>>;
+        // return Result.Ok(r);
+        return Result.Ok(r) as Result<Promise<Result<P>>>;
       }
       return Result.Err(`未知的 method '${method}'`);
     })();
@@ -199,7 +213,13 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
     this.pending = r2.data;
     const [r] = await Promise.all([this.pending, this.delay === null ? null : sleep(this.delay)]);
     this.loading = false;
-    const resp = this.process ? (this.process(r) as RequestResponse<T>) : r;
+    const rr = (() => {
+      if (payloadProcess) {
+        return payloadProcess(r);
+      }
+      return r;
+    })();
+    const resp = this.process ? this.process(rr as any) : rr;
     this.emit(Events.LoadingChange, false);
     this.emit(Events.StateChange, { ...this.state });
     this.emit(Events.Completed);
@@ -209,17 +229,17 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
         this.emit(Events.Canceled);
         return Result.Err(resp.error);
       }
-      this.setError = resp.error;
+      this.error = resp.error;
       this.emit(Events.Failed, resp.error);
       this.emit(Events.StateChange, { ...this.state });
-      return Result.Err(r.error);
+      return Result.Err(resp.error.message);
     }
-    this.response = resp.data;
-    const d = resp.data as RequestResponse<T>;
-    this.emit(Events.Success, d);
+    const data = resp.data as P;
+    this.response = data;
+    this.emit(Events.Success, data);
     this.emit(Events.StateChange, { ...this.state });
-    this.emit(Events.ResponseChange, this.response);
-    return Result.Ok(d);
+    this.emit(Events.ResponseChange, data);
+    return Result.Ok(data);
   }
   /** 使用当前参数再请求一次 */
   reload() {
@@ -229,6 +249,9 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
     // this.run(...this.args);
   }
   cancel() {
+    if (!this.client) {
+      return Result.Err("缺少 client");
+    }
     this.client.cancel(this.id);
     // this.source.cancel("主动取消");
   }
@@ -237,7 +260,7 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
     this.emit(Events.StateChange, { ...this.state });
     this.emit(Events.ResponseChange, this.response);
   }
-  modifyResponse(fn: (resp: RequestResponse<T>) => RequestResponse<T>) {
+  modifyResponse(fn: (resp: P) => P) {
     if (this.response === null) {
       return;
     }
@@ -247,68 +270,41 @@ export class RequestCoreV2<T extends RequestProps> extends BaseDomain<TheTypesOf
     this.emit(Events.ResponseChange, this.response);
   }
 
-  onLoadingChange(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.LoadingChange]>) {
+  onLoadingChange(handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.LoadingChange]>) {
     return this.on(Events.LoadingChange, handler);
   }
-  beforeRequest(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.BeforeRequest]>) {
+  beforeRequest(handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.BeforeRequest]>) {
     return this.on(Events.BeforeRequest, handler);
   }
-  onSuccess(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.Success]>) {
+  onSuccess(handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.Success]>) {
     return this.on(Events.Success, handler);
   }
-  onFailed(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.Failed]>) {
+  onFailed(
+    handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.Failed]>,
+    opt: Partial<{
+      /** 清除其他 failed 监听 */
+      override: boolean;
+    }> = {}
+  ) {
+    if (opt.override) {
+      // this.offEvent(Events.Failed);
+    }
     return this.on(Events.Failed, handler);
   }
-  onCanceled(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.Canceled]>) {
+  onCanceled(handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.Canceled]>) {
     return this.on(Events.Canceled, handler);
   }
   /** 建议使用 onFailed */
-  onError(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.Failed]>) {
+  onError(handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.Failed]>) {
     return this.on(Events.Failed, handler);
   }
-  onCompleted(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.Completed]>) {
+  onCompleted(handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.Completed]>) {
     return this.on(Events.Completed, handler);
   }
-  onStateChange(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.StateChange]>) {
+  onStateChange(handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.StateChange]>) {
     return this.on(Events.StateChange, handler);
   }
-  onResponseChange(handler: Handler<TheTypesOfEvents<RequestResponse<T>>[Events.ResponseChange]>) {
+  onResponseChange(handler: Handler<TheTypesOfEvents<UnpackedResult<P>>[Events.ResponseChange]>) {
     return this.on(Events.ResponseChange, handler);
   }
 }
-
-// type FakeResult<A extends { fetch: (...args: any[]) => any; process?: (v: ReturnType<Arg["fetch"]>) => any }> =
-//   A extends {
-//     fetch: (...args: any[]) => any;
-//     process: (v: ReturnType<Arg["fetch"]>) => any;
-//   }
-//     ? ReturnType<A["process"]>
-//     : ReturnType<A["fetch"]>;
-// type Arg = { fetch: (...args: any[]) => any; process?: (v: ReturnType<Arg["fetch"]>) => any };
-
-// function run<A extends Arg>(arg: A): FakeResult<A> {
-//   const { fetch, process } = arg;
-//   const data = fetch();
-//   return process ? process(data) : data;
-// }
-
-// // 使用示例
-// const result1 = run({
-//   fetch: () => {
-//     return { name: "Alice" };
-//   },
-// });
-// // 这里 TypeScript 应该能正确推断出 result1 的类型是 { name: string }
-
-// function f() {
-//   return { name: "Alice" };
-// }
-// const result2 = run({
-//   fetch: f,
-//   process(value: ReturnType<typeof f>) {
-//     return { username: value.name.toLowerCase() };
-//   },
-// });
-
-// // TypeScript 会正确推断出 result2 的类型是 { username: string }
-// console.log(result2.username); // "alice"

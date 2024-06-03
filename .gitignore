@@ -22,6 +22,8 @@ domains/__tests__/output
 /build
 bundle.js
 969.bundle.js
+/server.js
+/index.js
 
 # misc
 .DS_Store

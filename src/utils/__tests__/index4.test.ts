@@ -169,4 +169,14 @@ describe("电视剧4", () => {
       episode: "",
     });
   });
+  test("迪士尼版 10.mkv", () => {
+    const name = "迪士尼版 10.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E10",
+    });
+  });
 });

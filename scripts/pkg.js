@@ -10,10 +10,11 @@ async function run() {
     fs.writeFileSync("node_modules/.prisma/client/package.json", JSON.stringify(prismaClientPkg));
   }
   await pkg.exec([
-    "./index.js",
+    "./dist/t.js",
     "--config=scripts/pkg.json",
     "--debug",
     // "--targets=node16-macos-x64,node16-win-arm64,node16-linux-arm64",
+    "--targets=node16-macos-x64",
     "--compress=GZip",
     "--out-path=bin",
   ]);

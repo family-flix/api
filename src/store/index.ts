@@ -5,6 +5,7 @@ import { config } from "dotenv";
 
 import { Application } from "@/domains/application/index";
 import { parse_argv } from "@/utils/server";
+
 import { ApplicationState } from "./types";
 
 config();
@@ -23,7 +24,6 @@ export const app = (() => {
   return r;
 })();
 export const store = app.store;
-// export const notify = app.notify;
 
 export type BaseApiResp<T> = {
   code: number;

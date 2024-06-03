@@ -2,7 +2,7 @@ import os from "os";
 import path from "path";
 import { exec } from "child_process";
 
-import { Result } from "@/types";
+import { Result } from "@/types/index";
 import { ensure, check_existing } from "@/utils/fs";
 
 export function get_ip_address() {

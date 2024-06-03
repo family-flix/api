@@ -5,11 +5,10 @@ import axios from "axios";
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { BaseApiResp } from "@/types";
+import { store, BaseApiResp } from "@/store/index";
+import { User } from "@/domains/user/index";
 import { response_error_factory } from "@/utils/server";
-import { r_id } from "@/utils";
-import { store } from "@/store";
+import { r_id } from "@/utils/index";
 
 function fetchTVLiveChannels(data: string) {
   const lines = data.split("\n");
@@ -78,7 +77,7 @@ function parse_M3U_info_line(line: string) {
   return info;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v2_admin_live_update(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { url } = req.body as Partial<{
     url: string;
@@ -129,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
     })();
   }
-  res.status(200).json({
+  return res.status(200).json({
     code: 0,
     msg: "更新成功",
     data: null,

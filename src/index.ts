@@ -1,14 +1,13 @@
+import path from "path";
 import { IncomingMessage } from "http";
 
-import dayjs from "dayjs";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
-// import { serveStatic as static_serve } from "@hono/node-server/serve-static";
 
 import { compat_next } from "./utils/server";
 import { brand } from "./utils/text";
-import { app, store } from "./store/index";
+import { app } from "./store/index";
 import { static_serve } from "./middlewares/static";
 import v2_wechat_collection_list from "./pages/api/v2/wechat/collection/list";
 import v2_wechat_auth_register from "./pages/api/v2/wechat/auth/register";
@@ -67,7 +66,6 @@ import v2_admin_dashboard from "./pages/api/v2/admin/dashboard";
 import v2_admin_dashboard_added_media from "./pages/api/v2/admin/dashboard/added_media";
 import v2_admin_dashboard_refresh from "./pages/api/v2/admin/dashboard/refresh";
 import v2_drive_file_list from "./pages/api/v2/drive/file/list";
-import v2_drive_file_profile from "./pages/api/v2/drive/file/profile";
 import v2_drive_file_delete from "./pages/api/v2/drive/file/delete";
 import v2_drive_file_download from "./pages/api/v2/drive/file/download";
 import v2_drive_file_transfer from "./pages/api/v2/drive/file/transfer";
@@ -148,6 +146,7 @@ import v2_wechat_auth_code_check from "./pages/api/v2/wechat/auth/code/check";
 import v2_wechat_auth_code_confirm from "./pages/api/v2/wechat/auth/code/confirm";
 import v0_admin_permission_list from "./pages/api/admin/permission/list";
 import v0_admin_permission_add from "./pages/api/admin/permission/add";
+import v0_admin_member_token_add from "./pages/api/admin/member/token/add/[id]";
 import v2_wechat_code_list from "./pages/api/v2/wechat/code/list";
 import v2_wechat_code_create from "./pages/api/v2/wechat/code/create";
 import v2_wechat_mine_update_pwd from "./pages/api/v2/wechat/mine/update_pwd";
@@ -156,31 +155,24 @@ import v2_admin_settings_update from "./pages/api/v2/admin/settings/update";
 import v2_wechat_rank from "./pages/api/v2/wechat/rank";
 import v2_wechat_media_profile from "./pages/api/v2/wechat/media/profile";
 import v2_admin_member_histories from "./pages/api/v2/admin/member/histories";
+import v2_drive_file_profile from "./pages/api/v2/drive/file/profile";
 import v2_wechat_mine_profile from "./pages/api/v2/wechat/mine/profile";
 import v2_wechat_auth_weapp from "./pages/api/v2/wechat/auth/weapp";
 import v2_wechat_diary_list from "./pages/api/v2/wechat/diary/list";
 import v2_wechat_mine_bind_weapp from "./pages/api/v2/wechat/mine/bind_weapp";
-import v2_admin_drive_file_change_hash from "./pages/api/v2/drive/file/change_hash";
-
-// const ROOT_DIR = process.env.ROOT_DIR;
+// import v2_admin_drive_file_change_hash from "./pages/api/v2/drive/file/change_hash";
+// import v2_admin_live_update from "./pages/api/v2/admin/live/update";
+import v2_wechat_live_list from "./pages/api/v2/wechat/live/list";
 
 async function main() {
-  // if (!ROOT_DIR) {
-  //   console.log("缺少环境变量 ROOT_DIR");
-  //   return;
-  // }
-  //   const application = new Application({
-  //     root_path: ROOT_DIR,
-  //   });
   const server = new Hono<{
     Bindings: {
       incoming: IncomingMessage;
     };
     Variables: {};
   }>();
-  // const args = parse_argv<{ port: number }>(process.argv.slice(2));
 
-  // server.use(logger());
+  server.use(logger());
   // server.use(async (c, next) => {
   //   console.log(`[${c.req.method}] ${c.req.url}`);
   //   await next();
@@ -189,11 +181,11 @@ async function main() {
     "/mobile/*",
     static_serve({
       root: "./",
-      rewriteRequestPath(path) {
-        if (path.includes("assets")) {
-          return path;
+      rewriteRequestPath(filepath) {
+        if (filepath.includes("assets")) {
+          return path.join("./dist/assets", `./${filepath}`);
         }
-        return "./mobile/index.html";
+        return "./dist/assets/mobile/index.html";
       },
     })
   );
@@ -201,11 +193,11 @@ async function main() {
     "/admin/*",
     static_serve({
       root: "./",
-      rewriteRequestPath(path) {
-        if (path.includes("assets")) {
-          return path;
+      rewriteRequestPath(filepath) {
+        if (filepath.includes("assets")) {
+          return path.join("./dist/assets", `./${filepath}`);
         }
-        return "./admin/index.html";
+        return "./dist/assets/admin/index.html";
       },
     })
   );
@@ -213,11 +205,11 @@ async function main() {
     "/pc/*",
     static_serve({
       root: "./",
-      rewriteRequestPath(path) {
-        if (path.includes("assets")) {
-          return path;
+      rewriteRequestPath(filepath) {
+        if (filepath.includes("assets")) {
+          return path.join("./dist/assets", `./${filepath}`);
         }
-        return "./pc/index.html";
+        return "./dist/assets/pc/index.html";
       },
     })
   );
@@ -307,7 +299,7 @@ async function main() {
     return v0_admin_member_add(...(await compat_next(c)));
   });
   server.post("/api/admin/member/token/add", async (c) => {
-    return v0_admin_member_add(...(await compat_next(c)));
+    return v0_admin_member_token_add(...(await compat_next(c)));
   });
   server.post("/api/admin/permission/list", async (c) => {
     return v0_admin_permission_list(...(await compat_next(c)));
@@ -525,6 +517,9 @@ async function main() {
   server.post("/api/v2/admin/settings/update", async (c) => {
     return v2_admin_settings_update(...(await compat_next(c)));
   });
+  // server.post("/api/v2/admin/live/update", async (c) => {
+  //   return v2_admin_live_update(...(await compat_next(c)));
+  // });
   server.post("/api/v2/parsed_media/match_profile", async (c) => {
     return v2_admin_parsed_media_match_profile(...(await compat_next(c)));
   });
@@ -540,9 +535,9 @@ async function main() {
   server.post("/api/v2/drive/file/delete", async (c) => {
     return v2_drive_file_delete(...(await compat_next(c)));
   });
-  server.post("/api/v2/drive/file/change_hash", async (c) => {
-    return v2_admin_drive_file_change_hash(...(await compat_next(c)));
-  });
+  // server.post("/api/v2/drive/file/change_hash", async (c) => {
+  //   return v2_admin_drive_file_change_hash(...(await compat_next(c)));
+  // });
   server.post("/api/v2/drive/file/download", async (c) => {
     return v2_drive_file_download(...(await compat_next(c)));
   });
@@ -560,9 +555,6 @@ async function main() {
   });
   server.post("/api/v2/drive/rename_files", async (c) => {
     return v2_drive_rename_files(...(await compat_next(c)));
-  });
-  server.post("/api/v2/aliyundrive/file_profile", async (c) => {
-    return v2_drive_update(...(await compat_next(c)));
   });
   server.post("/api/v2/media_profile/list", async (c) => {
     return v2_media_profile_list(...(await compat_next(c)));
@@ -723,45 +715,48 @@ async function main() {
   server.post("/api/v2/wechat/diary/list", async (c) => {
     return v2_wechat_diary_list(...(await compat_next(c)));
   });
-  server.get("/api/v1/qrcode", async (c) => {
-    const escape = (v: string) => {
-      const needsEscape = ['"', ";", ",", ":", "\\"];
-      let escaped = "";
-      for (const c of v) {
-        if (needsEscape.includes(c)) {
-          escaped += `\\${c}`;
-        } else {
-          escaped += c;
-        }
-      }
-      return escaped;
-    };
-    const ssid = "wpt-guest";
-    const password = `wpt${dayjs().format("YYYYMMDD")}`;
-    const props = {
-      settings: {
-        encryptionMode: "WPA",
-        eapMethod: "",
-        eapIdentity: "",
-        ssid,
-        password,
-        hiddenSSID: false,
-      },
-    };
-    const opts: Partial<{ T: string; E: string; I: string; S: string; P: string; H: boolean }> = {};
-    opts.T = props.settings.encryptionMode || "nopass";
-    if (props.settings.encryptionMode === "WPA2-EAP") {
-      opts.E = props.settings.eapMethod;
-      opts.I = props.settings.eapIdentity;
-    }
-    opts.S = escape(props.settings.ssid);
-    opts.P = escape(props.settings.password);
-    opts.H = props.settings.hiddenSSID;
-    let data = "";
-    Object.entries(opts).forEach(([k, v]) => (data += `${k}:${v};`));
-    const qrval = `WIFI:${data};`;
-    return c.text(qrval);
+  server.post("/api/v2/wechat/live/list", async (c) => {
+    return v2_wechat_live_list(...(await compat_next(c)));
   });
+  // server.get("/api/v1/qrcode", async (c) => {
+  //   const escape = (v: string) => {
+  //     const needsEscape = ['"', ";", ",", ":", "\\"];
+  //     let escaped = "";
+  //     for (const c of v) {
+  //       if (needsEscape.includes(c)) {
+  //         escaped += `\\${c}`;
+  //       } else {
+  //         escaped += c;
+  //       }
+  //     }
+  //     return escaped;
+  //   };
+  //   const ssid = "wpt-guest";
+  //   const password = `wpt${dayjs().format("YYYYMMDD")}`;
+  //   const props = {
+  //     settings: {
+  //       encryptionMode: "WPA",
+  //       eapMethod: "",
+  //       eapIdentity: "",
+  //       ssid,
+  //       password,
+  //       hiddenSSID: false,
+  //     },
+  //   };
+  //   const opts: Partial<{ T: string; E: string; I: string; S: string; P: string; H: boolean }> = {};
+  //   opts.T = props.settings.encryptionMode || "nopass";
+  //   if (props.settings.encryptionMode === "WPA2-EAP") {
+  //     opts.E = props.settings.eapMethod;
+  //     opts.I = props.settings.eapIdentity;
+  //   }
+  //   opts.S = escape(props.settings.ssid);
+  //   opts.P = escape(props.settings.password);
+  //   opts.H = props.settings.hiddenSSID;
+  //   let data = "";
+  //   Object.entries(opts).forEach(([k, v]) => (data += `${k}:${v};`));
+  //   const qrval = `WIFI:${data};`;
+  //   return c.text(qrval);
+  // });
 
   serve(
     {
@@ -796,13 +791,17 @@ async function main() {
       console.log();
       console.log("Paths");
       console.log("----------");
-      console.log("Assets", app.assets);
-      console.log("Database ", app.database_path);
+      console.log("静态资源", app.assets);
+      console.log("数据库", app.database_path);
       console.log();
       console.log();
       console.log();
-      const pathname = "/admin/home/index";
-      console.log(`> Ready on http://${address}:${port}${pathname}`);
+      console.log("> 管理后台");
+      console.log(`http://${address}:${port}/admin/home/index`);
+      console.log("> 视频播放移动端");
+      console.log(`http://${address}:${port}/mobile/home/index`);
+      console.log("> 视频播放桌面端");
+      console.log(`http://${address}:${port}/pc/home/index`);
     }
   );
 }

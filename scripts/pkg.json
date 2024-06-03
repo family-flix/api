@@ -1,24 +1,10 @@
 {
   "name": "flix",
   "version": "1.0.0",
+  "scripts": ["package.json"],
   "pkg": {
-    "assets": [
-      "../public/**/*",
-      "../.next/**/*",
-      "../modules/**/*",
-      "../prisma/**/*",
-      "../node_modules/@prisma",
-      "../node_modules/.prisma",
-      "../node_modules/dayjs",
-      "../node_modules/lodash/**/*"
-    ]
+    "assets": ["../package.json", "../public/**/*", "../dist/assets/**/*", "../schema.prisma"],
+    "scripts": ["../package.json"]
   },
-  "dependencies": {
-    "@peculiar/webcrypto": "^1.4.3",
-    "joi": "^17.9.1",
-    "jsonwebtoken": "^9.0.0",
-    "jwt-decode": "^3.1.2",
-    "nzh": "^1.0.8",
-    "qiniu": "^7.8.0"
-  }
+  "dependencies": {}
 }

@@ -8,58 +8,71 @@ const archiver = require("archiver");
 const pkg = require("../package.json");
 
 const ROOT_PATH = process.cwd();
-const FLIX_BINS = [
-  {
-    filepath: "flix-linux",
-    platform: "linux",
-    prisma_bin_path: "prisma_v4.17.0",
-  },
-  {
-    filepath: "flix-macos",
-    platform: "macos",
-    prisma_bin_path: "prisma_v4.17.0",
-  },
-  {
-    filepath: "flix-win.exe",
-    platform: "win",
-    prisma_bin_path: "prisma_v4.17.0.exe",
-  },
-];
 function main() {
-  for (let i = 0; i < FLIX_BINS.length; i += 1) {
-    const bin = FLIX_BINS[i];
-    const { filepath, platform, prisma_bin_path } = bin;
-    const prisma_filepath = path.resolve(ROOT_PATH, "bin", platform, prisma_bin_path);
-    const flix_filepath = path.resolve(ROOT_PATH, "bin", filepath);
-    const prisma_schema_path = path.resolve(ROOT_PATH, "prisma");
-    const target_filepath = path.resolve(ROOT_PATH, "bin", `flix_${pkg.version}_${platform}_x64.zip`);
-
-    const output = fs.createWriteStream(target_filepath);
-    const archive = archiver("zip", {
-      zlib: { level: 9 },
-    });
-    output.on("close", () => {
-      console.log("压缩包生成成功！");
-    });
-    archive.on("error", (err) => {
-      throw err;
-    });
-    archive.pipe(output);
-    archive.file(prisma_filepath, { name: "prisma_v4.17.0" });
-    archive.file(flix_filepath, { name: "flix-linux" });
-    archive.directory(prisma_schema_path, "prisma");
-    archive.finalize();
-
-    //     tar.c(
-    //       {
-    //         file: target_filepath,
-    //         sync: true,
-    //         // C: ROOT_PATH,
-    //         prefix: null,
-    //       },
-    //       [prisma_filepath, prisma_schema_path, flix_filepath]
-    //     );
+  const zip_filepath = path.resolve(ROOT_PATH, `family-flix${pkg.version}.zip`);
+  const files = [
+    {
+      type: "dir",
+      filepath: path.resolve(ROOT_PATH, "prisma"),
+      target_path: "prisma",
+    },
+    {
+      type: "dir",
+      filepath: path.resolve(ROOT_PATH, "dist"),
+      target_path: "dist",
+    },
+    {
+      type: "dir",
+      filepath: path.resolve(ROOT_PATH, "public"),
+      target_path: "public",
+    },
+    {
+      type: "file",
+      filepath: path.resolve(ROOT_PATH, "server.js"),
+      target_path: "server.js",
+    },
+    {
+      type: "file",
+      filepath: path.resolve(ROOT_PATH, ".env.template"),
+      target_path: ".env.template",
+    },
+  ];
+  const pkg_content = {
+    name: "family-flix",
+    version: pkg.version,
+    scripts: {
+      start: "node server.js",
+    },
+    dependencies: {
+      "@prisma/client": "4.13.0",
+    },
+    devDependencies: {
+      prisma: "^4.16.2",
+    },
+  };
+  // 将 package.json 内容转换为字符串并写入压缩包
+  const output = fs.createWriteStream(zip_filepath);
+  const archive = archiver("zip", {
+    zlib: { level: 9 },
+  });
+  output.on("close", () => {
+    console.log("压缩包生成成功！");
+  });
+  archive.on("error", (err) => {
+    throw err;
+  });
+  archive.pipe(output);
+  for (let i = 0; i < files.length; i += 1) {
+    const { type, filepath, target_path } = files[i];
+    if (type === "dir") {
+      archive.directory(filepath, target_path);
+    }
+    if (type === "file") {
+      archive.file(filepath, { name: target_path });
+    }
   }
+  archive.append(JSON.stringify(pkg_content, null, 2), { name: "package.json" });
+  archive.finalize();
 }
 
 main();

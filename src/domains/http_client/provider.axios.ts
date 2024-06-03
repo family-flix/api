@@ -7,12 +7,14 @@ import { HttpClientCore } from "./index";
 export function connect(store: HttpClientCore) {
   let requests: { id: string; source: CancelTokenSource }[] = [];
   store.fetch = async (options) => {
-    const { url, method, id = String(store.uid()), data, headers } = options;
+    const { url, method, id, data, headers } = options;
     const source = axios.CancelToken.source();
-    requests.push({
-      id,
-      source,
-    });
+    if (id) {
+      requests.push({
+        id,
+        source,
+      });
+    }
     if (method === "GET") {
       try {
         const r = await axios.get(url, {

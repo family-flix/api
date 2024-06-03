@@ -96,39 +96,48 @@
 
 ## 🖥️ 部署
 
-### Docker 部署
-
-暂定
-
 ### 源码部署
 
-> 要求 `NodeJs` 版本大于 `16.18.0`。
+> 要求 `NodeJs` 版本大于 `18`。
 
-在 [https://github.com/family-flix/api/releases](https://github.com/family-flix/api/releases) 下载最新源码
-
-将源码解压至文件夹，修改文件夹内 `.env.template` 文件内环境变量，指定数据库、海报封面等文件的存放路径，并将文件名修改为 `.env`。
-
-```txt
-OUTPUT_PATH=/Users/your_name/Documents/workspaces/family-flix/output
-# 填入自己的 TMDB_TOKEN
-TMDB_TOKEN=xxxx
-```
-
-随后安装依赖。依赖安装成功后，初始化数据库
+下载源码包并解压至本地，随后安装依赖并初始化数据库
 
 ```bash
-yarn prisma migrate apply
+yarn
+yarn prisma migrate deploy --schema ./prisma/schema.prisma
 ```
 
-当数据库初始化完成后，执行 `yarn start` 即可启动项目。
+数据库初始化完成后执行 `yarn start` 即可启动项目。
+
+```bash
+# 运行
+yarn start
+```
 
 在控制台会打印网站访问地址，在浏览器中访问即可。共有三个应用
 
 - http://127.0.0.1:3200/admin/home/index 管理后台
 - http://127.0.0.1:3200/mobile/home/index 视频播放移动端
-- http://127.0.0.1:3200/pc/home/index 视频播放 PC 端
+- http://127.0.0.1:3200/pc/home/index 视频播放桌面端
 
 添加云盘、刮削等操作可以参考文档。<a href="https://family-flix.github.io/docs/"><strong>Explore the docs »</strong></a>
+
+### 更新
+
+只需要拉取新代码，再执行一次安装依赖、应用数据库变更、打包即可。
+
+```bash
+# 拉取新代码
+git pull origin main
+# 安装依赖
+yarn
+# 应用数据库变更
+yarn prisma migrate deploy --schema ./prisma/schema.prisma
+# 打包
+yarn build
+# 运行
+yarn start
+```
 
 ## API 文档
 

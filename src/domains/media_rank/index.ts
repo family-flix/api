@@ -1,6 +1,6 @@
 import { HttpClientCore } from "@/domains/http_client";
 import { connect } from "@/domains/http_client/provider.axios";
-import { RequestCoreV2 } from "@/domains/request";
+import { RequestCore } from "@/domains/request/index";
 import { request, TmpRequestResp } from "@/domains/request/utils";
 import { DataStore } from "@/domains/store/types";
 import { Result } from "@/types/index";
@@ -53,8 +53,7 @@ export function MediaRankClient(props: { store: DataStore }) {
       type: values.type,
     });
   }
-  const $douban_rank = new RequestCoreV2({
-    fetch: fetch_douban_rank,
+  const $douban_rank = new RequestCore(fetch_douban_rank, {
     client: _client,
   });
   async function link_media_with_rank_media(

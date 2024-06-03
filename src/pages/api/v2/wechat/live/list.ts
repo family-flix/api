@@ -4,13 +4,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { store, BaseApiResp } from "@/store/index";
 import { Member } from "@/domains/user/member";
-import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 import { ModelQuery } from "@/domains/store/types";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v2_wechat_live_list(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const {
     name,

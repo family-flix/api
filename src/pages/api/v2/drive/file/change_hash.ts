@@ -97,29 +97,6 @@ export default async function v2_admin_drive_file_change_hash(
     if (r3.data.url) {
       return Result.Ok(r3.data);
     }
-    const r4 = await drive.client.fetch_video_preview_info_for_download(file.file_id);
-    if (r4.error) {
-      return r4;
-    }
-    const files = r4.data.sources;
-    const m = (() => {
-      let a = files.find((f) => f.type === MediaResolutionTypes.FHD);
-      if (a && a.url) {
-        return a;
-      }
-      a = files.find((f) => f.type === MediaResolutionTypes.HD);
-      if (a && a.url) {
-        return a;
-      }
-      a = files[0];
-      if (a && a.url) {
-        return a;
-      }
-      return null;
-    })();
-    if (m) {
-      return Result.Ok(m);
-    }
     const r2 = await drive.client.fetch_file(file.file_id);
     if (r2.error) {
       return r2;

@@ -1,11 +1,8 @@
-/**
- * @file 请求库的壳，可以拓展它来生成多个 client
- * 该设计可以让 client 适用于不同的业务（返回值 code 逻辑不同）、不同端（实现不同 provider 即可如 provider.weapp.ts）
- * 对外暴露的接口统一，从而实现多个端、业务使用体验保持一致
- * hostname 不同，建议另外起一个 handleURL 方法来处理，传给 get、post 方法的应该是带 hostname 的 url
- */
+// import axios, { AxiosError, AxiosInstance, CancelToken } from "axios";
+
 import { BaseDomain, Handler } from "@/domains/base";
-import { JSONObject, Result } from "@/types/index";
+import { JSONObject } from "@/types/index";
+import { Result } from "@/types/index";
 import { query_stringify } from "@/utils/index";
 
 enum Events {
@@ -18,48 +15,47 @@ type TheTypesOfEvents = {
 type HttpClientCoreProps = {
   hostname?: string;
   headers?: Record<string, string>;
-  process?: (v: any) => Result<unknown>;
+  debug?: boolean;
 };
 type HttpClientCoreState = {};
 
 export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
-  hostname: string;
+  hostname: string = "";
   headers: Record<string, string> = {};
-  process?: (v: any) => Result<unknown>;
+  debug = false;
 
   constructor(props: Partial<{ _name: string }> & HttpClientCoreProps) {
     super(props);
 
-    const { hostname = "", headers = {}, process } = props;
+    const { hostname = "", headers = {}, debug = false } = props;
 
     this.hostname = hostname;
     this.headers = headers;
-    this.process = process;
+    this.debug = debug;
   }
 
   async get<T>(
     endpoint: string,
-    query?: Record<string, string | number | null | undefined>,
+    query?: Record<string, string | number>,
     extra: Partial<{ headers: Record<string, string>; id: string }> = {}
   ): Promise<Result<T>> {
     try {
       const h = this.hostname;
-      const url = `${h}${endpoint}${query ? "?" + query_stringify(query) : ""}`;
-      const resp = await this.fetch<{ code: number | string; msg: string; data: unknown | null }>({
+      const url = [h, endpoint, query ? "?" + query_stringify(query) : ""].join("");
+      const payload = {
         url,
-        method: "GET",
+        method: "GET" as const,
         id: extra.id,
         headers: {
           ...this.headers,
           ...(extra.headers || {}),
         },
-      });
-      if (this.process) {
-        const r = this.process(resp.data);
-        return r as Result<T>;
+      };
+      if (this.debug) {
+        console.log("[DOMAIN]http_client - before fetch", payload);
       }
-      const r = resp.data;
-      return Result.Ok(r as T);
+      const resp = await this.fetch<T>(payload);
+      return Result.Ok(resp.data);
     } catch (err) {
       const error = err as Error;
       const { message } = error;
@@ -72,24 +68,23 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
     extra: Partial<{ headers: Record<string, string>; id: string }> = {}
   ): Promise<Result<T>> {
     const h = this.hostname;
-    const url = `${h}${endpoint}`;
+    const url = [h, endpoint].join("");
     try {
-      const resp = await this.fetch<{ code: number | string; msg: string; data: unknown | null }>({
+      const payload = {
         url,
-        method: "POST",
+        method: "POST" as const,
         data: body,
         id: extra.id,
         headers: {
           ...this.headers,
           ...(extra.headers || {}),
         },
-      });
-      if (this.process) {
-        const r = this.process(resp.data);
-        return r as Result<T>;
+      };
+      if (this.debug) {
+        console.log("[DOMAIN]http_client - before fetch", payload);
       }
-      const r = resp.data;
-      return Result.Ok(r as T);
+      const resp = await this.fetch<T>(payload);
+      return Result.Ok(resp.data);
     } catch (err) {
       const error = err as Error;
       const { message } = error;
@@ -104,11 +99,12 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
     headers?: Record<string, string>;
   }) {
     console.log("请在 connect 中实现 fetch 方法");
-    return { data: null } as { data: T };
+    return { data: {} } as { data: T };
   }
   cancel(id: string) {
-    console.log("请在 connect 中实现 cancel 方法");
-    return Result.Err("请在 connect 中实现 cancel 方法");
+    const tip = "请在 connect 中实现 cancel 方法";
+    console.log(tip);
+    return Result.Err(tip);
   }
   setHeaders(headers: Record<string, string>) {
     this.headers = headers;
@@ -118,6 +114,9 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
       ...this.headers,
       ...headers,
     };
+  }
+  setDebug(debug: boolean) {
+    this.debug = debug;
   }
 
   onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
