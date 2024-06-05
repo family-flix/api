@@ -147,5 +147,6 @@ yarn start
 ## 相关项目
 
 - [视频播放移动端](https://github.com/family-flix/mobile1)
-- [视频播放 PC 端](https://github.com/family-flix/pc2)
+- [视频播放小程序](https://github.com/family-flix/weapp)
+- [视频播放桌面端](https://github.com/family-flix/pc2)
 - [管理后台](https://github.com/family-flix/admin1)

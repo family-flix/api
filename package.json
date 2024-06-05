@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch ./src/index.ts --port 3200",
-    "start": "node dist/server.js",
+    "start": "node server.js",
     "build": "esbuild ./src/index.ts --platform=node --target=node12 --legal-comments=none --bundle --minify --outfile=server.js",
     "db": "prisma studio",
     "check": "tsc --noEmit",

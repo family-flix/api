@@ -163,6 +163,7 @@ import v2_wechat_mine_bind_weapp from "./pages/api/v2/wechat/mine/bind_weapp";
 // import v2_admin_drive_file_change_hash from "./pages/api/v2/drive/file/change_hash";
 // import v2_admin_live_update from "./pages/api/v2/admin/live/update";
 import v2_wechat_live_list from "./pages/api/v2/wechat/live/list";
+import v2_admin_media_source_list from "./pages/api/v2/admin/media_source/list";
 
 async function main() {
   const server = new Hono<{
@@ -390,6 +391,9 @@ async function main() {
   });
   server.post("/api/v2/admin/media/set_profile", async (c) => {
     return v2_admin_media_set_profile(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/media_source/list", async (c) => {
+    return v2_admin_media_source_list(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/season/list", async (c) => {
     return v2_admin_season_list(...(await compat_next(c)));

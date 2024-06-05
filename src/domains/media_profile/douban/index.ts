@@ -24,13 +24,7 @@ export class DoubanClient {
     token?: string;
   };
   debug = false;
-  constructor(
-    options: Partial<{
-      debug?: boolean;
-      /** tmdb api key */
-      token: string;
-    }>
-  ) {
+  constructor(options: Partial<{ debug?: boolean; token: string }>) {
     const { debug, token } = options;
     this.options = {
       token,
