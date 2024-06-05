@@ -800,6 +800,9 @@ export class ScheduleTask {
           });
           return;
         }
+        if (tips.length === 0) {
+          return;
+        }
         await this.store.prisma.invalid_media.create({
           data: {
             id: r_id(),
