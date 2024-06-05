@@ -731,6 +731,7 @@ export class ScheduleTask {
         const { id, type, resource_sync_tasks, _count } = media;
         const profile = media.profile;
         const tips: string[] = [];
+        console.log(profile.name);
         if (_count.media_sources === 0) {
           tips.push("关联的剧集数为 0");
         }
@@ -758,6 +759,7 @@ export class ScheduleTask {
             tips.push(`存在${invalid_media_sources.length}个没有视频源的剧集`);
           }
         }
+        console.log(tips);
         if (tips.length === 0) {
           return;
         }
