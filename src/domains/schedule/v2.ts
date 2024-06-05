@@ -760,9 +760,9 @@ export class ScheduleTask {
           }
         }
         console.log(tips);
-        if (tips.length === 0) {
-          return;
-        }
+        // if (tips.length === 0) {
+        //   return;
+        // }
         const payload = { tips };
         const existing = await this.store.prisma.invalid_media.findFirst({
           where: {
@@ -780,6 +780,14 @@ export class ScheduleTask {
           return MediaErrorTypes.Unknown;
         })();
         if (existing) {
+          if (tips.length === 0) {
+            await this.store.prisma.invalid_media.delete({
+              where: {
+                id: existing.id,
+              },
+            });
+            return;
+          }
           await this.store.prisma.invalid_media.update({
             where: {
               id: existing.id,
