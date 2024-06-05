@@ -32,27 +32,34 @@ export default async function v2_admin_media_source_list(
     return e(t_res);
   }
   const { id: user_id } = t_res.data;
+  // store.prisma.media_source.findMany({
+  //   where: {
+  //     media_id: '',
+  //   }
+  // });
   const where: NonNullable<Parameters<typeof store.prisma.media_source.findMany>[0]>["where"] = {
     media_id,
     user_id,
   };
-  const count = await store.prisma.episode.count({
+  const count = await store.prisma.media_source.count({
     where,
   });
   const result = await store.list_with_cursor({
     fetch(extra) {
-      return store.prisma.episode.findMany({
+      return store.prisma.media_source.findMany({
         where,
         include: {
           profile: true,
-          parsed_episodes: {
+          files: {
             include: {
               drive: true,
             },
           },
         },
         orderBy: {
-          episode_number: "asc",
+          profile: {
+            order: "asc",
+          },
         },
         ...extra,
       });
@@ -63,15 +70,15 @@ export default async function v2_admin_media_source_list(
     total: count,
     next_marker: result.next_marker,
     list: result.list.map((episode) => {
-      const { id, episode_text, profile, parsed_episodes } = episode;
+      const { id, profile, files } = episode;
       return {
         id,
         name: profile.name,
         overview: profile.overview,
         first_air_date: profile.air_date,
         runtime: profile.runtime,
-        episode_number: episode_text,
-        sources: parsed_episodes.map((parsed_episode) => {
+        episode_number: profile.order,
+        sources: files.map((parsed_episode) => {
           const { id, file_id, file_name, parent_paths, size, drive } = parsed_episode;
           return {
             id,

@@ -38,7 +38,7 @@ export default async function v2_admin_media_invalid(req: NextApiRequest, res: N
   }
   const count = await store.prisma.invalid_media.count({ where });
   const result = await store.list_with_cursor({
-    fetch: (args) => {
+    fetch(args) {
       return store.prisma.invalid_media.findMany({
         where,
         include: {
@@ -48,18 +48,13 @@ export default async function v2_admin_media_invalid(req: NextApiRequest, res: N
             },
           },
         },
-        orderBy: [
-          {
-            media: {
-              profile: {
-                air_date: "asc",
-              },
+        orderBy: {
+          media: {
+            profile: {
+              air_date: "desc",
             },
           },
-          {
-            type: "asc",
-          },
-        ],
+        },
         ...args,
       });
     },
@@ -82,6 +77,7 @@ export default async function v2_admin_media_invalid(req: NextApiRequest, res: N
           id,
           type,
           name: profile.name,
+          air_date: profile.air_date,
           poster_path: profile.poster_path,
         },
         tips: (() => {
