@@ -179,4 +179,34 @@ describe("电视剧4", () => {
       episode: "E10",
     });
   });
+  // test("9-1-1.lone.star.s04e17.1080p.web.h264-cakes.chs.eng.mp4", () => {
+  //   const name = "9-1-1.lone.star.s04e17.1080p.web.h264-cakes.chs.eng.mp4";
+  //   const result = parse_filename_for_video(name);
+  //   expect(result).toStrictEqual({
+  //     name: "",
+  //     original_name: "1.lone.star",
+  //     season: "S04",
+  //     episode: "E17",
+  //   });
+  // });
+  test("Romance.Of.A.Twin.Flower.S01SP02.2023.2160p.WEB-DL.H265.AAC-HaresWEB.mp4", () => {
+    const name = "Romance.Of.A.Twin.Flower.S01SP02.2023.2160p.WEB-DL.H265.AAC-HaresWEB.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "Romance.Of.A.Twin.Flower",
+      season: "S01",
+      episode: "SP02",
+    });
+  });
+  test("[末路狂花钱].The.Last.Frenzy.2024.2160p.WEB-DL.HEVC.10bit.DTS5.1.6Audios-QHstudIo.mp4", () => {
+    const name = "[末路狂花钱].The.Last.Frenzy.2024.2160p.WEB-DL.HEVC.10bit.DTS5.1.6Audios-QHstudIo.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "末路狂花钱",
+      original_name: "The.Last.Frenzy",
+      season: "",
+      episode: "",
+    });
+  });
 });

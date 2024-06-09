@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 
 import { add_zeros, bytes_to_size, normalize_episode_text, relative_time_from_now } from "..";
-import { is_japanese, format_season_number } from "../parse_filename_for_video";
+import { is_japanese, format_season_number, format_episode_number } from "../parse_filename_for_video";
 
 // describe("tv is changed", () => {
 //   test("empty name to has value", () => {
@@ -211,7 +211,7 @@ describe("is japanese", () => {
 describe("format_number", () => {
   test("E003", () => {
     const episode_text = "E003";
-    const result = format_season_number(episode_text, "E");
+    const result = format_episode_number(episode_text);
     expect(result).toBe("E03");
   });
 });

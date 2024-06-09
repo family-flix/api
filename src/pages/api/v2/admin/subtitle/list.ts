@@ -80,7 +80,7 @@ export default async function v2_admin_subtitle_list(req: NextApiRequest, res: N
           },
         },
         orderBy: {
-          profile: { air_date: "desc" },
+          created: "desc",
         },
         ...extra,
       });

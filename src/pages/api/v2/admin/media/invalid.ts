@@ -45,6 +45,12 @@ export default async function v2_admin_media_invalid(req: NextApiRequest, res: N
           media: {
             include: {
               profile: true,
+              histories: {
+                include: {
+                  member: true,
+                },
+                take: 10,
+              },
             },
           },
         },
@@ -66,7 +72,7 @@ export default async function v2_admin_media_invalid(req: NextApiRequest, res: N
     next_marker: result.next_marker,
     list: result.list.map((tip) => {
       const {
-        media: { id, type, profile },
+        media: { id, type, profile, histories },
         profile: text,
       } = tip;
       const d = parseJSONStr<{ tips: string[] }>(text);
@@ -79,6 +85,13 @@ export default async function v2_admin_media_invalid(req: NextApiRequest, res: N
           name: profile.name,
           air_date: profile.air_date,
           poster_path: profile.poster_path,
+          histories: histories.map((history) => {
+            const { updated, member } = history;
+            return {
+              updated,
+              member_name: member.remark,
+            };
+          }),
         },
         tips: (() => {
           if (d.error) {

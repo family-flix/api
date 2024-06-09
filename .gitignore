@@ -24,6 +24,7 @@ bundle.js
 969.bundle.js
 /server.js
 /index.js
+*.zip
 
 # misc
 .DS_Store

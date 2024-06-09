@@ -505,7 +505,7 @@ describe("提取综艺信息", () => {
       name: "",
       original_name: "Sing.China",
       season: "S02",
-      episode: "E07",
+      episode: "SP07",
     });
   });
   test("第07.22期.The.Voice.of.China.2018.1080P.WEB-DL.X264.AAC.mp4", () => {

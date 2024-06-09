@@ -732,17 +732,6 @@ export class ScheduleTask {
         const profile = media.profile;
         const tips: string[] = [];
         console.log(profile.name);
-        if (_count.media_sources === 0) {
-          tips.push("关联的剧集数为 0");
-        }
-        if (_count.media_sources !== profile.source_count) {
-          if (resource_sync_tasks.length === 0) {
-            tips.push("集数不全且没有同步任务");
-          }
-          if (!profile.in_production) {
-            tips.push(`已完结但集数不全，总集数 ${profile.source_count}，当前集数 ${_count.media_sources}`);
-          }
-        }
         const invalid_media_sources = await this.store.prisma.media_source.findMany({
           where: {
             media_id: id,
@@ -751,18 +740,30 @@ export class ScheduleTask {
             },
           },
         });
-        if (invalid_media_sources.length !== 0) {
-          if (type === MediaTypes.Movie) {
-            tips.push("没有可播放的视频源");
+        if (type === MediaTypes.Season) {
+          if (_count.media_sources === 0) {
+            tips.push("关联的剧集数为 0");
           }
-          if (type === MediaTypes.Season) {
+          if (_count.media_sources !== profile.source_count) {
+            if (resource_sync_tasks.length === 0) {
+              tips.push("集数不全且没有同步任务");
+            }
+            if (!profile.in_production) {
+              tips.push(`已完结但集数不全，总集数 ${profile.source_count}，当前集数 ${_count.media_sources}`);
+            }
+          }
+          if (invalid_media_sources.length !== 0) {
             tips.push(`存在${invalid_media_sources.length}个没有视频源的剧集`);
           }
         }
-        console.log(tips);
-        // if (tips.length === 0) {
-        //   return;
-        // }
+        if (type === MediaTypes.Movie) {
+          if (_count.media_sources === 0) {
+            tips.push("关联的剧集数为 0");
+          }
+          if (invalid_media_sources.length !== 0) {
+            tips.push("没有可播放的视频源");
+          }
+        }
         const payload = { tips };
         const existing = await this.store.prisma.invalid_media.findFirst({
           where: {

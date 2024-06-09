@@ -9,7 +9,7 @@ const pkg = require("../package.json");
 
 const ROOT_PATH = process.cwd();
 function main() {
-  const zip_filepath = path.resolve(ROOT_PATH, `family-flix${pkg.version}.zip`);
+  const zip_filepath = path.resolve(ROOT_PATH, `family-flix@${pkg.version}.zip`);
   const files = [
     {
       type: "dir",

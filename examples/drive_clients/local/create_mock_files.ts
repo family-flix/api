@@ -8,17 +8,19 @@ import os from "os";
 import { Application } from "@/domains/application/index";
 import { Folder } from "@/domains/folder/index";
 import { FileManage } from "@/domains/uploader";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
+import { DriveTypes } from "@/domains/drive/constants";
 import { LocalFileDriveClient } from "@/domains/clients/local";
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource/index";
 import { is_img_file, is_nfo_file, is_subtitle_file, is_video_file } from "@/utils/index";
 
 const template_mp4_video = path.resolve(process.cwd(), "public/template_video.mp4");
 const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mkv");
-const template_img = path.resolve(process.cwd(), "public/template_img.jpg");
-const template_episode = path.resolve(process.cwd(), "public/profile_episode.nfo");
-const template_season = path.resolve(process.cwd(), "public/profile_season.nfo");
-const template_series = path.resolve(process.cwd(), "public/profile_tvshow.nfo");
-const template_subtitle = path.resolve(process.cwd(), "public/template_subtitle.vtt");
+// const template_img = path.resolve(process.cwd(), "public/template_img.jpg");
+// const template_episode = path.resolve(process.cwd(), "public/profile_episode.nfo");
+// const template_season = path.resolve(process.cwd(), "public/profile_season.nfo");
+// const template_series = path.resolve(process.cwd(), "public/profile_tvshow.nfo");
+// const template_subtitle = path.resolve(process.cwd(), "public/template_subtitle.vtt");
 
 (async () => {
   const OUTPUT_PATH = process.env.OUTPUT_PATH;
@@ -59,17 +61,48 @@ const template_subtitle = path.resolve(process.cwd(), "public/template_subtitle.
   //   console.log(r3.error.message);
   //   return;
   // }
-  const drive = await store.prisma.drive.findFirst({});
+  const rr = await AliyunDriveClient.Get({ unique_id: "880986603", store });
+  if (rr.error) {
+    console.log(rr.error.message);
+    return;
+  }
+  const client1 = rr.data;
+  // await client1.init();
+  // const rr2 = await client1.ping();
+  // if (rr2.error) {
+  //   console.log(rr2.error.message);
+  //   return;
+  // }
+  // console.log(rr2.data);
+  // return;
+  const drive = await store.prisma.drive.findFirst({
+    where: {
+      type: DriveTypes.AliyunResourceDrive,
+    },
+  });
   if (!drive) {
     console.log("请先添加一个云盘");
     return;
   }
-  const url = "https://www.aliyundrive.com/s/ACC1V8t18jg";
+  // console.log("drive is ", drive);
+  const SHARE_FOLDER = {
+    /** 春色寄情人  */
+    jiqingren: "https://www.alipan.com/s/BLKoFj39Wx9",
+    /** 第一神拳  */
+    diyishenquan: "https://www.aliyundrive.com/s/ACC1V8t18jg",
+    /** 微暗之火 */
+    weianzhihuo: "https://www.alipan.com/s/3AvVWwe5fRu",
+    /** 驯鹿宝贝 */
+    xunlubaobei: "https://www.alipan.com/s/pkqHFZe71MJ",
+  };
+  const url = SHARE_FOLDER.jiqingren;
   const r2 = await AliyunShareResourceClient.Get({ id: drive.id, url, store });
   if (r2.error) {
     console.log(r2.error.message);
     return;
   }
+  // console.log(r2.data);
+  // return;
   const resource_client = r2.data;
   const resource_folder = new Folder("root", {
     name: resource_client.name,
@@ -99,17 +132,17 @@ const template_subtitle = path.resolve(process.cwd(), "public/template_subtitle.
         return true;
       }
       if (is_img_file(name)) {
-        const r1 = await resource_client.fetch_file(id);
+        const r1 = await resource_client.download(id);
         if (r1.error) {
           console.log("获取图片文件下载路径失败，因为", r1.error.message);
           return true;
         }
-        if (!r1.data.thumbnail) {
-          console.log("获取图片文件下载路径失败，因为不存在图片");
+        if (!r1.data.url) {
+          console.log("获取图片文件下载路径失败，不存在下载地址");
           return true;
         }
         const filename = path.resolve(parent_file_id, name);
-        const r2 = await manage.download(r1.data.thumbnail, filename, {
+        const r2 = await manage.download(r1.data.url, filename, {
           is_fullpath: true,
         });
         if (r2.error) {
@@ -118,9 +151,18 @@ const template_subtitle = path.resolve(process.cwd(), "public/template_subtitle.
         return true;
       }
       if (is_subtitle_file(name)) {
-        const r2 = await client.upload(template_subtitle, {
-          name,
-          parent_file_id,
+        const r1 = await resource_client.download(id);
+        if (r1.error) {
+          console.log("获取字幕文件下载路径失败，因为", r1.error.message);
+          return true;
+        }
+        if (!r1.data.url) {
+          console.log("获取字幕文件下载路径失败，不存在下载地址");
+          return true;
+        }
+        const filename = path.resolve(parent_file_id, name);
+        const r2 = await manage.download(r1.data.url, filename, {
+          is_fullpath: true,
         });
         if (r2.error) {
           console.log("上传字幕文件失败", r2.error.message);
@@ -128,21 +170,21 @@ const template_subtitle = path.resolve(process.cwd(), "public/template_subtitle.
         return true;
       }
       if (is_nfo_file(name)) {
-        const template_profile = (() => {
-          if (name.match(/tvshow/)) {
-            return template_series;
-          }
-          if (name.match(/season/)) {
-            return template_season;
-          }
-          return template_episode;
-        })();
-        const r2 = await client.upload(template_profile, {
-          name,
-          parent_file_id,
+        const r1 = await resource_client.download(id);
+        if (r1.error) {
+          console.log("获取nfo文件下载路径失败，因为", r1.error.message);
+          return true;
+        }
+        if (!r1.data.url) {
+          console.log("获取nfo文件下载路径失败，不存在下载地址");
+          return true;
+        }
+        const filename = path.resolve(parent_file_id, name);
+        const r2 = await manage.download(r1.data.url, filename, {
+          is_fullpath: true,
         });
         if (r2.error) {
-          console.log("上传 nfo 文件失败", r2.error.message);
+          console.log("上传字幕文件失败", r2.error.message);
         }
         return true;
       }

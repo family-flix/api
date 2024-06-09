@@ -44,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("盗钥匙")) {
+    if (!filename.includes("末路狂花钱")) {
       return;
     }
-    // console.log(...args);
+    console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -75,10 +75,13 @@ export function parse_filename_for_video(
     // 在 小谢尔顿S01E01 这种 S01E01 紧跟着名字后面的场景，前面加一个符号来分割
     .replace(/(?=[sS][0-9]{2}[eE][0-9]{2})([sS][0-9]{2}[eE][0-9]{2})/, ".$1")
     .replace(/_([0-9]{1,3})_/, ".E$1.");
+
   const special_season_with_number_regexp = /(^|[^a-zA-Z])([sS][pP])([0-9]{1,})($|[^a-zA-Z])/;
   if (original_filename.match(special_season_with_number_regexp)) {
-    // name.SP2 改成 name.SP.E2
-    original_filename = original_filename.replace(special_season_with_number_regexp, "$1.SP.E$3.$4");
+    if (!original_filename.match(/[sS][0-9]{1,}[sS][pP][0-9]{1,}/)) {
+      // name.SP2 改成 name.SP.E2
+      original_filename = original_filename.replace(special_season_with_number_regexp, "$1.SP.E$3.$4");
+    }
   }
   original_filename = original_filename
     .replace(/^\./, "")
@@ -612,15 +615,18 @@ export function parse_filename_for_video(
     },
     {
       key: k("encode"),
-      regexp: /[xXhH]26[45]{1}/,
+      regexp: /[xXhH]26[45]{1}(-[0-9]{1,2}[bB][iI][tT]){0,1}/,
     },
-    // AVC 是编解码器，8位深度
     {
-      regexp: /AVC-[0-9]{1,}Bit/,
+      // AVC-10bit、HEVC-10bit
+      regexp: /([hH][eE]|[aA])[vV][cC]-[0-9]{1,2}[bB][iI][tT]/,
     },
     {
       // HEVC=H265? AVC=H264？
       regexp: /(HE|A)[VC]C(\.FLAC){0,1}/,
+    },
+    {
+      regexp: /[dD][tT][sS]5.1/
     },
     {
       regexp: /(MPEG|VP9|AV1){1}/,
@@ -678,6 +684,10 @@ export function parse_filename_for_video(
       regexp: /第[0-9]{1,}-[0-9]{1,}[集話话]/,
     },
     {
+      key: k("episode"),
+      regexp: /[sS][pP][0-9]{1,}/,
+    },
+    {
       regexp: /^[0-9]{1,}-[1-9][0-9]{0,}$/,
       after() {
         // @todo 这里很纠结，存在 综艺剧集数 01-20.mp4 这种情况，所以只有是文件夹时才将 01-20 视为剧集总数，否则就忽略
@@ -715,7 +725,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("season"),
-      desc: "special season2",
+      desc: "special season3",
       regexp: /[sS][pP]/,
       before() {
         const special_season_regexp = /(^|[^a-zA-Z])([sS][pP])($|[^a-zA-Z])/;
@@ -915,6 +925,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
+      // 08-4K.mp4 这种
       regexp: /^[0-9]{1,3}(-|$)/,
     },
     {
@@ -1486,7 +1497,15 @@ export function parse_filename_for_video(
         cur_filename = remove_str(cur_filename, from, c.length, placeholder);
       }
     }
-    log("[5]extracted content for", unique, "is", extracted_content, `key: ${key}`, `priority: ${priority}`);
+    log(
+      "[5]extracted content for",
+      unique,
+      "is",
+      extracted_content,
+      `key: ${key}`,
+      `priority: ${priority}`,
+      key ? `cur value: ${result[key]}` : ""
+    );
     if (key && VIDEO_ALL_KEYS.includes(key)) {
       // log("[6]replace value with priority", priority, priorityMap);
       if (!priority) {
@@ -1507,11 +1526,13 @@ export function parse_filename_for_video(
         result[key] = extracted_content;
         priorityMap[key] = priority;
       }
+      log("[6]bingo!!! save the content", key, extracted_content);
       result[key] = extracted_content;
     }
   }
+  log("[7]finish!");
   if (result.season) {
-    result.season = format_season_number(result.season);
+    result.season = format_season_number(result.season, { log });
   }
   if (result.episode) {
     result.episode = format_episode_number(result.episode, {
@@ -1561,6 +1582,7 @@ export function parse_filename_for_video(
       result.extra1 = "纯享版";
     }
   }
+  log("[10]finally result", result);
   return keys
     .map((k) => {
       return {
@@ -1603,9 +1625,16 @@ function format_subtitle_lang(lang: string) {
  * @param prefix
  * @returns
  */
-export function format_season_number(n: string, prefix = "S") {
+export function format_season_number(
+  n: string,
+  opt: {
+    log?: (...args: unknown[]) => void;
+  } = {}
+) {
+  const { log = () => {} } = opt;
+  const prefix = "S";
   const number = n.replace(/\.$/, "");
-  // console.log("(format_number) - season", number);
+  log("(format_number) - season", number);
   if (number === "Ⅱ") {
     return "S02";
   }
@@ -1714,7 +1743,7 @@ function format_episode_number2(n: string) {
  */
 export function format_episode_number(n: string, options: Partial<{ log: (...args: unknown[]) => void }> = {}): string {
   const { log = () => {} } = options;
-  // log("[]format_episode_number", n);
+  log("[]format_episode_number", n);
   const prefix = "E";
   const number = n.replace(/\.{1,}$/, "").replace(/^\.{1,}/, "");
   if (number.match(/[上下]/)) {

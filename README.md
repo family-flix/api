@@ -62,6 +62,12 @@
 
 <!-- ABOUT THE PROJECT -->
 
+## ✨ 功能
+
+- 🌈 索引云盘文件刮削影视剧信息
+- 🚀 追踪影视剧更新，自动同步新增内容到云盘
+- 📦 微信、桌面浏览器、小程序在线观看影视剧，记录观看历史
+
 ## ⭐️ 概览
 
 ![管理后台首页](assets/admin-home.png)
@@ -70,19 +76,12 @@
 [![移动端1][assets/mobile-example1.png]](https://docs.family-flix.github.com)
 [![移动端2][assets/mobile-example2.png]](https://docs.family-flix.github.com) -->
 
-本项目的初衷，是提供一个简单、方便的追剧工具，简单到不怎么会用手机的中老年也能使用。
-最终的方案是一些复杂的操作由应用维护者来做；视频观看方，只需要在微信里点开视频链接就能观看，无需下载安装 App、无需搜索、没有广告、不占手机空间。
+云盘看视频最简单的方案。应用维护方管理云盘和视频；视频观看方在微信里点开链接直接观看，无需下载安装 App、没有广告。
 
 ![移动端1](assets/mobile-example1.png)
 ![移动端2](assets/mobile-example2.png)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## ✨ 功能
-
-- 🌈 索引云盘文件刮削影视剧信息
-- 🚀 自动追踪影视剧更新并同步至云盘
-- 📦 微信内在线观看云盘视频、记录观看历史
 
 ## 👀 使用前须知
 

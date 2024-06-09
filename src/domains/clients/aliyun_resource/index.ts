@@ -58,6 +58,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       return Result.Err(r.error.message);
     }
     const client = r.data;
+    await client.ensure_initialized();
     const r1 = AliyunShareResourceClient.GetShareId(url);
     if (r1.error) {
       return Result.Err(r1.error.message);
@@ -646,25 +647,12 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
     }
     return Result.Ok({ file_id, file_name });
   }
-  /** 分享资源不能直接下载 */
   async download(file_id: string) {
     const r2 = await this.request.post<{
-      domain_id: string;
-      drive_id: string;
-      file_id: string;
-      revision_id: string;
-      method: string;
+      download_url: string;
       url: string;
-      internal_url: string;
-      expiration: string;
-      size: number;
-      crc64_hash: string;
-      content_hash: string;
-      content_hash_name: string;
-      punish_flag: number;
-      meta_name_punish_flag: number;
-      meta_name_investigation_status: number;
-    }>(API_HOST + "/v2/file/get_download_url", {
+      thumbnail: string;
+    }>(API_HOST + "/v2/file/get_share_link_download_url", {
       file_id,
       drive_id: String(this.unique_id),
     });

@@ -118,4 +118,18 @@ describe("自定义额外解析规则", () => {
       episode: "E01",
     });
   });
+  test("9-1-1.lone.star.s04e17.1080p.web.h264-cakes.chs.eng.mp4", () => {
+    const name = "9-1-1.lone.star.s04e17.1080p.web.h264-cakes.chs.eng.mp4";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["9-1-1.lone.star", "ORIGINAL_NAME"],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "9-1-1.lone.star",
+      season: "S04",
+      episode: "E17",
+    });
+  });
 });
