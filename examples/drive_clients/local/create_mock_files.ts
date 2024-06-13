@@ -94,6 +94,7 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     weianzhihuo: "https://www.alipan.com/s/3AvVWwe5fRu",
     /** 驯鹿宝贝 */
     xunlubaobei: "https://www.alipan.com/s/pkqHFZe71MJ",
+    // https://pan.quark.cn/s/6be908a4cc04#/list/share
   };
   const url = SHARE_FOLDER.jiqingren;
   const r2 = await AliyunShareResourceClient.Get({ id: drive.id, url, store });

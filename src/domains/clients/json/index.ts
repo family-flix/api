@@ -15,14 +15,14 @@ export class MockFileClient implements DriveClient {
   size = 10;
 
   tree: RequestedAliyunDriveFiles;
-  store: DatabaseStore;
+  $store: DatabaseStore;
 
   constructor(props: { data: RequestedAliyunDriveFiles }) {
     const { data } = props;
 
     this.tree = data;
     // 这里仅仅是为了兼容 DriveClient 必须有 store，并没有实际使用
-    this.store = new DatabaseStore({} as any);
+    this.$store = new DatabaseStore({} as any);
   }
   fetch_files(
     /** 该文件夹下的文件列表，默认 root 表示根目录 */

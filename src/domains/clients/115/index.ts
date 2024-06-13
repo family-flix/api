@@ -215,7 +215,7 @@ export class Drive115Client extends BaseDomain<TheTypesOfEvents> implements Driv
 
   /** 请求客户端 */
   request: HttpClientCore;
-  store: DataStore;
+  $store: DataStore;
 
   constructor(props: Partial<{ _name: string }> & Drive115ClientProps) {
     super(props);
@@ -225,7 +225,7 @@ export class Drive115Client extends BaseDomain<TheTypesOfEvents> implements Driv
     this.id = id;
     this.unique_id = unique_id;
     this.token = token;
-    this.store = store;
+    this.$store = store;
     this.request = new HttpClientCore({
       headers: {
         ...COMMON_HEADERS,
@@ -239,7 +239,7 @@ export class Drive115Client extends BaseDomain<TheTypesOfEvents> implements Driv
   async init() {
     // console.log("[DOMAIN]aliyundrive - init");
     const token_res = await (async () => {
-      const drive_record = await this.store.prisma.drive.findFirst({
+      const drive_record = await this.$store.prisma.drive.findFirst({
         where: {
           id: this.id,
         },

@@ -7,7 +7,7 @@ import { serve } from "@hono/node-server";
 
 import { compat_next } from "./utils/server";
 import { brand } from "./utils/text";
-import { app } from "./store/index";
+import { app, store } from "./store/index";
 import { static_serve } from "./middlewares/static";
 import v2_wechat_collection_list from "./pages/api/v2/wechat/collection/list";
 import v2_wechat_auth_register from "./pages/api/v2/wechat/auth/register";
@@ -164,6 +164,8 @@ import v2_wechat_mine_bind_weapp from "./pages/api/v2/wechat/mine/bind_weapp";
 // import v2_admin_live_update from "./pages/api/v2/admin/live/update";
 import v2_wechat_live_list from "./pages/api/v2/wechat/live/list";
 import v2_admin_media_source_list from "./pages/api/v2/admin/media_source/list";
+import { random_string, r_id } from "./utils";
+import { User } from "./domains/user";
 
 async function main() {
   const server = new Hono<{
@@ -761,6 +763,22 @@ async function main() {
   //   const qrval = `WIFI:${data};`;
   //   return c.text(qrval);
   // });
+
+  const admin = await store.prisma.user.findFirst({});
+  if (!admin) {
+    const email = "admin@funzm.com";
+    const pwd = random_string(6);
+    const r = await User.Create({ email, password: pwd }, store);
+    if (r.error) {
+      console.log(r.error.message);
+      return;
+    }
+    console.log("");
+    console.log("管理员账号");
+    console.log("email", email);
+    console.log("password", pwd);
+    console.log("");
+  }
 
   serve(
     {

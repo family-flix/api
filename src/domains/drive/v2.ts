@@ -86,6 +86,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       //   const client = r.data;
       //   return Result.Ok(client);
       // }
+      if (type === DriveTypes.QuarkDrive) {
+        const r = await QuarkDriveClient.Get({ id, store });
+        if (r.error) {
+          return Result.Err(r.error.message);
+        }
+        const client = r.data;
+        return Result.Ok(client);
+      }
       if (type === DriveTypes.LocalFolder) {
         const r = await LocalFileDriveClient.Get({ unique_id: drive_record.unique_id, store });
         if (r.error) {

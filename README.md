@@ -70,13 +70,13 @@
 
 ## ⭐️ 概览
 
+云盘看视频最简单的方案。应用维护方管理云盘和视频；视频观看方在微信里点开链接直接观看，无需下载安装 App、没有广告。
+
 ![管理后台首页](assets/admin-home.png)
 
 <!-- [![管理后台首页][assets/admin-home.png]](https://docs.family-flix.github.com)
 [![移动端1][assets/mobile-example1.png]](https://docs.family-flix.github.com)
 [![移动端2][assets/mobile-example2.png]](https://docs.family-flix.github.com) -->
-
-云盘看视频最简单的方案。应用维护方管理云盘和视频；视频观看方在微信里点开链接直接观看，无需下载安装 App、没有广告。
 
 ![移动端1](assets/mobile-example1.png)
 ![移动端2](assets/mobile-example2.png)

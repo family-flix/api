@@ -52,10 +52,7 @@ export default async function v2_drive_file_list(req: NextApiRequest, res: NextA
     return res.status(200).json({ code: 0, msg: "", data: r.data });
   }
   const id = (() => {
-    if (file_id) {
-      if (file_id === "root" && drive.profile.type === DriveTypes.Cloud189Drive) {
-        return "-11";
-      }
+    if (file_id && file_id !== "root") {
       return file_id;
     }
     if (drive.profile.type === DriveTypes.AliyunBackupDrive) {
@@ -66,6 +63,9 @@ export default async function v2_drive_file_list(req: NextApiRequest, res: NextA
     }
     if (drive.profile.type === DriveTypes.Cloud189Drive) {
       return "-11";
+    }
+    if (drive.profile.type === DriveTypes.QuarkDrive) {
+      return "0";
     }
     return null;
   })();

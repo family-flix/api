@@ -4,8 +4,8 @@
 import { BaseDomain, Handler } from "@/domains/base";
 import { BizError } from "@/domains/error/index";
 import { HttpClientCore } from "@/domains/http_client/index";
+import { Result } from "@/domains/result/index";
 import { UnpackedResult } from "@/types/index";
-import { Result } from "@/types/index";
 import { sleep } from "@/utils/index";
 
 import { RequestPayload, UnpackedRequestPayload } from "./utils";
@@ -105,7 +105,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
     };
   }
 
-  constructor(fn: F, props: RequestProps<F, P>) {
+  constructor(fn: F, props: RequestProps<F, P> = {}) {
     super();
 
     const {
@@ -185,7 +185,8 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
     this.emit(Events.BeforeRequest);
     let payloadProcess: null | ((v: any) => any) = null;
     const r2 = (() => {
-      const { hostname = "", url, method, query, body, process } = this.service(...(args as unknown as any[]));
+      const { hostname = "", url, method, query, body, headers, process } = this.service(...(args as unknown as any[]));
+      // console.log('[DOMAIN]request/index - after = this.service()', headers);
       if (process) {
         payloadProcess = process;
       }
@@ -193,6 +194,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
         // const [query, extra = {}] = args;
         const r = this.client.get<P>(hostname + url, query, {
           id: this.id,
+          headers,
         });
         return Result.Ok(r) as Result<Promise<Result<P>>>;
         // return Result.Ok(r);
@@ -201,6 +203,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
         // const [body, extra = {}] = args;
         const r = this.client.post<P>(hostname + url, body, {
           id: this.id,
+          headers,
         });
         // return Result.Ok(r);
         return Result.Ok(r) as Result<Promise<Result<P>>>;
@@ -287,7 +290,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
     }> = {}
   ) {
     if (opt.override) {
-      // this.offEvent(Events.Failed);
+      this.offEvent(Events.Failed);
     }
     return this.on(Events.Failed, handler);
   }

@@ -13,17 +13,17 @@ export class DatabaseDriveClient implements DriveClient {
   token: string = "";
   root_folder = null;
 
-  store: DataStore;
+  $store: DataStore;
 
   constructor(props: { drive_id: string; store: DataStore }) {
     const { drive_id, store } = props;
 
     this.unique_id = drive_id;
-    this.store = store;
+    this.$store = store;
   }
   async fetch_files(id: string, options: { marker?: string } = {}) {
     const { marker } = options;
-    const store = this.store;
+    const store = this.$store;
     const drive_id = this.unique_id;
     const page_size = 20;
     const r = await resultify(store.prisma.file.findMany.bind(store.prisma.file))({
@@ -67,7 +67,7 @@ export class DatabaseDriveClient implements DriveClient {
     return Result.Ok(result);
   }
   async fetch_file(id: string) {
-    const file = await this.store.prisma.file.findFirst({
+    const file = await this.$store.prisma.file.findFirst({
       where: {
         file_id: id,
         drive_id: this.unique_id,

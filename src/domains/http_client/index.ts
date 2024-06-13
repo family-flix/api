@@ -1,8 +1,6 @@
-// import axios, { AxiosError, AxiosInstance, CancelToken } from "axios";
-
 import { BaseDomain, Handler } from "@/domains/base";
+import { Result } from "@/domains/result/index";
 import { JSONObject } from "@/types/index";
-import { Result } from "@/types/index";
 import { query_stringify } from "@/utils/index";
 
 enum Events {
@@ -24,7 +22,7 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
   headers: Record<string, string> = {};
   debug = false;
 
-  constructor(props: Partial<{ _name: string }> & HttpClientCoreProps) {
+  constructor(props: HttpClientCoreProps = {}) {
     super(props);
 
     const { hostname = "", headers = {}, debug = false } = props;
@@ -36,8 +34,8 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
 
   async get<T>(
     endpoint: string,
-    query?: Record<string, string | number>,
-    extra: Partial<{ headers: Record<string, string>; id: string }> = {}
+    query?: Record<string, string | number | undefined>,
+    extra: Partial<{ headers: Record<string, string | number>; id: string }> = {}
   ): Promise<Result<T>> {
     try {
       const h = this.hostname;
@@ -65,7 +63,7 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
   async post<T>(
     endpoint: string,
     body?: JSONObject | FormData,
-    extra: Partial<{ headers: Record<string, string>; id: string }> = {}
+    extra: Partial<{ headers: Record<string, string | number>; id: string }> = {}
   ): Promise<Result<T>> {
     const h = this.hostname;
     const url = [h, endpoint].join("");
@@ -96,7 +94,7 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
     method: "GET" | "POST";
     id?: string;
     data?: JSONObject | FormData;
-    headers?: Record<string, string>;
+    headers?: Record<string, string | number>;
   }) {
     console.log("请在 connect 中实现 fetch 方法");
     return { data: {} } as { data: T };

@@ -101,7 +101,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
   code: string | null;
   size = 10;
 
-  store: DataStore;
+  $store: DataStore;
   client: AliyunDriveClient;
 
   get request() {
@@ -125,7 +125,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
     this.url = unique_id;
     this.code = code;
     this.client = client;
-    this.store = store;
+    this.$store = store;
   }
   /**
    * 获取分享详情（初始化）

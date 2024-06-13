@@ -214,7 +214,7 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
 
   /** 请求客户端 */
   request: RequestClient;
-  store: DataStore;
+  $store: DataStore;
 
   constructor(props: Partial<{ _name: string }> & Cloud189DriveClientProps) {
     super(props);
@@ -224,7 +224,7 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
     this.id = id;
     this.unique_id = unique_id;
     this.token = token;
-    this.store = store;
+    this.$store = store;
     const client = axios.create({
       timeout: 6000,
       withCredentials: true,
@@ -457,7 +457,7 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
   }
   /** 刷新 token */
   async refresh_access_token() {
-    const drive = await this.store.prisma.drive.findUnique({
+    const drive = await this.$store.prisma.drive.findUnique({
       where: {
         id: this.id,
       },
@@ -480,7 +480,7 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
     }
     const token = r2.data;
     this.token = token;
-    await this.store.prisma.drive_token.update({
+    await this.$store.prisma.drive_token.update({
       where: {
         id: drive.drive_token_id,
       },

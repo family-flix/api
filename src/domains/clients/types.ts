@@ -17,7 +17,7 @@ export interface DriveClient {
   /** 索引根目录，需要手动设置。不是云盘根文件夹 */
   root_folder: { id: string; name: string } | null;
 
-  store: DataStore;
+  $store: DataStore;
 
   /** 测试 token 是否有效 */
   ping(): Promise<Result<unknown>>;

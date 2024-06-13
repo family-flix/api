@@ -194,7 +194,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
 
   /** 请求客户端 */
   request: RequestClient;
-  store: DataStore;
+  $store: DataStore;
 
   constructor(props: Partial<{ _name: string }> & XunleiDriveClientProps) {
     super(props);
@@ -203,7 +203,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
 
     this.id = id;
     this.token = token;
-    this.store = store;
+    this.$store = store;
     const client = axios.create({
       timeout: 6000,
     });
@@ -284,7 +284,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
   async init() {
     // console.log("[DOMAIN]aliyundrive - init");
     const token_res = await (async () => {
-      const drive_record = await this.store.prisma.drive.findFirst({
+      const drive_record = await this.$store.prisma.drive.findFirst({
         where: {
           id: this.id,
         },

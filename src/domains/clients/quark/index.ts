@@ -1,48 +1,62 @@
 /**
  * @file 夸克云盘
- * WIP
  */
 import Joi from "joi";
-import axios from "axios";
-import type { AxiosError, AxiosRequestConfig } from "axios";
 
 import { BaseDomain } from "@/domains/base";
 import { User } from "@/domains/user";
 import { DataStore } from "@/domains/store/types";
 import { DriveClient } from "@/domains/clients/types";
 import { build_drive_file } from "@/domains/clients/utils";
+import { Result, resultify } from "@/domains/result/index";
+import { request_factory } from "@/domains/request/utils";
+import { RequestCore } from "@/domains/request/index";
+import { HttpClientCore } from "@/domains/http_client/index";
+import { connect } from "@/domains/http_client/provider.axios";
 import { DriveTypes } from "@/domains/drive/constants";
-import { query_stringify, sleep, parseJSONStr, r_id } from "@/utils";
-import { MediaResolutionTypes } from "@/constants";
-import { Result, resultify } from "@/types";
+import { query_stringify, sleep, parseJSONStr, r_id } from "@/utils/index";
+import { MediaResolutionTypes } from "@/constants/index";
 
 import { QuarkDriveFileResp, QuarkDriveProfile, QuarkDrivePayload } from "./types";
 
-const API_HOST = "https://drive-pc.quark.cn";
-const COMMON_HEADERS = {
-  authority: "drive-pc.quark.cn",
-  accept: "application/json, text/plain, */*",
-  "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
-  origin: "https://pan.quark.cn",
-  referer: "https://pan.quark.cn/",
-  "user-agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-};
 const DEFAULT_ROOT_FOLDER_ID = "0";
+const pc_client = request_factory({
+  hostnames: {
+    prod: "https://drive-pc.quark.cn",
+  },
+  headers: {
+    accept: "application/json, text/plain, */*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "content-type": "application/json;charset=UTF-8",
+    origin: "https://pan.quark.cn",
+    priority: "u=1, i",
+    referer: "https://pan.quark.cn/",
+    "sec-ch-ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"macOS"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+    "user-agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  },
+  process(v) {
+    if (v.error) {
+      return v;
+    }
+    const { status, code, msg, timestamp, data } = v.data;
+    if (code !== 0) {
+      return Result.Err(msg);
+    }
+    return Result.Ok(data);
+  },
+});
 
 enum Events {
   StateChange,
 }
 type TheTypesOfEvents = {
   [Events.StateChange]: QuarkDriveClientState;
-};
-type RequestClient = {
-  get: <T>(
-    url: string,
-    query?: Record<string, string | number | undefined | null>,
-    extra?: Partial<AxiosRequestConfig>
-  ) => Promise<Result<T>>;
-  post: <T>(url: string, body?: Record<string, unknown>, headers?: Record<string, unknown>) => Promise<Result<T>>;
 };
 type QuarkDriveClientProps = {
   id: string;
@@ -106,7 +120,7 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
     if (token_res.error) {
       return Result.Err(token_res.error);
     }
-    const { id: token_id, access_token, refresh_token } = token_res.data;
+    const { access_token, refresh_token } = token_res.data;
     return Result.Ok(
       new QuarkDriveClient({
         id: drive.id,
@@ -195,8 +209,8 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
   root_folder = null;
 
   /** 请求客户端 */
-  request: RequestClient;
-  store: DataStore;
+  $store: DataStore;
+  $client = new HttpClientCore();
 
   constructor(props: Partial<{ _name: string }> & QuarkDriveClientProps) {
     super(props);
@@ -206,79 +220,22 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
     this.id = id;
     this.unique_id = unique_id;
     this.token = token;
-    this.store = store;
-    const client = axios.create({
-      timeout: 6000,
+    this.$store = store;
+    connect(this.$client);
+    pc_client.appendHeaders({
+      cookie: `__pus=${this.token}`,
+      // cookie:
+      //   "ctoken=eieL4yfUDP2rxoD3NQIxVVn7; b-user-id=a2ecb52e-9110-be0e-1f8b-559bd109c4c9; grey-id=e8072998-7860-7a04-236f-6f05b3f47f53; grey-id.sig=GcywcDCBRvIb1L0EAHqFe1ToltCNx3iqvhg7nSi9z34; __wpkreporterwid_=8c06094d-b85b-44d8-08e4-82c18d8d3638; _UP_A4A_11_=wb965140c41f4eff9e8085c2a25496d3; _UP_30C_6A_=st9656201b8ld2vv125juamu27llms8m; _UP_TS_=sg197f45b2912abd70943a7c51f9bed2ba7; _UP_E37_B7_=sg197f45b2912abd70943a7c51f9bed2ba7; _UP_TG_=st9656201b8ld2vv125juamu27llms8m; _UP_335_2B_=1; tfstk=fS8ENBsUCavscW-lQO_PQKn2gT_dzZHXxU65ZQAlO9XhOwOkbQOq9_9BZT-PILhLRwDLrTAvBM6HFwwrzd7h2H65dT7ywKlshqgX9BQRoxMjl38hQTbAtyfuFGjGi39Rtk3X9BFMXK_P4qZz16SrUTvlxGfGZO2lr9bo_OfPMu2HEacwsOC5tkXhECAGis5osX8DyR55xvhoWFZZpbshnBXHOp8ipMqpsOzurF-NYtDPQz4k76ROBZdT-qWMA3YCSeDgeNAvfpfNu2yAThA2QiT_Cz_DDd8PmZoS9ZYpZnKkTVkcbnJMD1KtUuW2qBtv5MP4YaTese19USqBsgx6JiLIIy7DDB_BqKD_A9x2qesdyJSrC8CiLT8JY8qlx1CNhfliZxp1tp7hbcr82Mhd_tGhxuERxt1Nhfla2uIpm1WjtMf..; __itrace_wid=d164c2b2-6ea4-456f-2870-23b8b5bdcc1c; __chkey=; _UP_D_=pc; __pus=251cc95b68305c3068849cd709c2fe69AATosz7ayQV97l0sTAidY68EKSesA3P5QsfVKfuL0rsNZQLBMHasgZYaEYO6dVOsTHztBjKkONZQ3fTTZSJ//xa4; __kp=456f2fd0-2864-11ef-9572-639414945abf; __kps=AARSkxQqOKBEID5PUB4pg2lt; __ktd=i01zXsmiwy9A4la/5wsvYA==; __uid=AARSkxQqOKBEID5PUB4pg2lt; __puus=72a06bddc5e0b9277ae6bbc6140efffaAASJK8gRX2S5hCc097Sia8h2lnVGLQWGkp+SJu3c8NRnmGK2yTd2tYatWSCui3m95ORALKllb4vYvrovMRrMvHROS3ku9PLFfPmVxdAm5yuH03KGoVH5mExUDlB9CEFgQEW1ey2chzn0VUeSMGGs0NH+3+vaq93S+LzDzEAdyUjHB5hmlNy1SYGMspyLfIhCEs/cdtEdi2I6ZSx5KVDJedeg; Video-Auth=55PinJmcU4BikYhwgTriETpfAgQ9wknVjZV1/DDChgD9znDbJFCv3hCFKt6d+zaPEOqNk4KQBQdZ//LE0CTqPQ==",
+      // cookie:
+      //   "_UP_A4A_11_=wb965140c41f4eff9e8085c2a25496d3; _UP_30C_6A_=st9656201b8ld2vv125juamu27llms8m; _UP_TS_=sg197f45b2912abd70943a7c51f9bed2ba7; _UP_E37_B7_=sg197f45b2912abd70943a7c51f9bed2ba7; _UP_TG_=st9656201b8ld2vv125juamu27llms8m; _UP_335_2B_=1; tfstk=fS8ENBsUCavscW-lQO_PQKn2gT_dzZHXxU65ZQAlO9XhOwOkbQOq9_9BZT-PILhLRwDLrTAvBM6HFwwrzd7h2H65dT7ywKlshqgX9BQRoxMjl38hQTbAtyfuFGjGi39Rtk3X9BFMXK_P4qZz16SrUTvlxGfGZO2lr9bo_OfPMu2HEacwsOC5tkXhECAGis5osX8DyR55xvhoWFZZpbshnBXHOp8ipMqpsOzurF-NYtDPQz4k76ROBZdT-qWMA3YCSeDgeNAvfpfNu2yAThA2QiT_Cz_DDd8PmZoS9ZYpZnKkTVkcbnJMD1KtUuW2qBtv5MP4YaTese19USqBsgx6JiLIIy7DDB_BqKD_A9x2qesdyJSrC8CiLT8JY8qlx1CNhfliZxp1tp7hbcr82Mhd_tGhxuERxt1Nhfla2uIpm1WjtMf..; _UP_D_=pc; __pus=251cc95b68305c3068849cd709c2fe69AATosz7ayQV97l0sTAidY68EKSesA3P5QsfVKfuL0rsNZQLBMHasgZYaEYO6dVOsTHztBjKkONZQ3fTTZSJ//xa4; __kp=456f2fd0-2864-11ef-9572-639414945abf; __kps=AARSkxQqOKBEID5PUB4pg2lt; __ktd=i01zXsmiwy9A4la/5wsvYA==; __uid=AARSkxQqOKBEID5PUB4pg2lt; __puus=72a06bddc5e0b9277ae6bbc6140efffaAASJK8gRX2S5hCc097Sia8h2lnVGLQWGkp+SJu3c8NRnmGK2yTd2tYatWSCui3m95ORALKllb4vYvrovMRrMvHROS3ku9PLFfPmVxdAm5yuH03KGoVH5mExUDlB9CEFgQEW1ey2chzn0VUeSMGGs0NH+3+vaq93S+LzDzEAdyUjHB5hmlNy1SYGMspyLfIhCEs/cdtEdi2I6ZSx5KVDJedeg; Video-Auth=55PinJmcU4BikYhwgTriETpfAgQ9wknVjZV1/DDChgD9znDbJFCv3hCFKt6d+zaPEOqNk4KQBQdZ//LE0CTqPQ==",
     });
-    this.request = {
-      get: async (endpoint, query, extra: Partial<AxiosRequestConfig> = {}) => {
-        const url = `${endpoint}${query ? "?" + query_stringify(query) : ""}`;
-        const headers = {
-          ...COMMON_HEADERS,
-          Cookie: `__pus=${this.token}`,
-        };
-        try {
-          const resp = await client.get(url, {
-            headers,
-            ...extra,
-          });
-          return Result.Ok(resp.data);
-        } catch (err) {
-          const error = err as AxiosError<{ code: string; message: string }>;
-          const { response, message } = error;
-          console.error("\n");
-          console.error(url);
-          console.error("GET request failed, because", response?.status, response?.data);
-          if (response?.status === 401) {
-            //     await this.refresh_aliyun_access_token();
-          }
-          return Result.Err(response?.data?.message || message);
-        }
-      },
-      post: async (url, body, extra_headers = {}) => {
-        const headers = {
-          ...COMMON_HEADERS,
-          ...extra_headers,
-          //   authorization: this.access_token,
-          Cookie: `__pus=${this.token}`,
-        };
-        try {
-          const resp = await client.post(url, body, {
-            headers,
-          });
-          return Result.Ok(resp.data);
-        } catch (err) {
-          const error = err as AxiosError<{ code: string; message: string }>;
-          const { response, message } = error;
-          console.error("\n");
-          console.error(url);
-          // console.error(body, headers);
-          console.error("POST request failed, because", response?.data);
-          // console.log(response, message);
-          if (response?.status === 401) {
-            if (response?.data?.code === "UserDeviceOffline") {
-              //       await this.create_session();
-              return Result.Err(response?.data?.code);
-            }
-            if (response?.data?.code === "AccessTokenInvalid") {
-              // ...
-            }
-            if (response?.data?.code === "DeviceSessionSignatureInvalid") {
-              // ...
-            }
-            //     await this.refresh_aliyun_access_token();
-          }
-          return Result.Err(response?.data?.message || message, response?.data?.code);
-        }
-      },
-    };
   }
 
   /** 初始化所有信息 */
   async init() {
     // console.log("[DOMAIN]aliyundrive - init");
     const token_res = await (async () => {
-      const drive_record = await this.store.prisma.drive.findFirst({
+      const drive_record = await this.$store.prisma.drive.findFirst({
         where: {
           id: this.id,
         },
@@ -366,40 +323,31 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
     await this.ensure_initialized();
     const { page_size = 20, page = 1, sort = [{ field: "name", order: "desc" }] } = options;
     await sleep(800);
-    const r = await this.request.get<{
-      status: number;
-      code: number;
-      message: string;
-      timestamp: number;
-      data: {
-        last_view_list: unknown[];
-        recent_file_list: unknown[];
-        list: QuarkDriveFileResp[];
-      };
-      metadata: {
-        _size: number;
-        req_id: string;
-        _page: number;
-        _count: number;
-        _total: number;
-      };
-    }>(API_HOST + "/1/clouddrive/file/sort", {
-      pr: "ucpro",
-      fr: "pc",
-      uc_param_str: "",
-      pdir_fid: file_id,
-      _page: page,
-      _size: page_size,
-      _fetch_total: 1,
-      _fetch_sub_dirs: 0,
-      _sort: "file_type:asc,updated_at:desc",
-    });
+    const request = new RequestCore(
+      (values: { file_id: string; page_size: number; page: number }) => {
+        return pc_client.get<{
+          last_view_list: unknown[];
+          recent_file_list: unknown[];
+          list: QuarkDriveFileResp[];
+        }>("/1/clouddrive/file/sort", {
+          pr: "ucpro",
+          fr: "pc",
+          uc_param_str: "",
+          pdir_fid: values.file_id,
+          _page: values.page,
+          _size: values.page_size,
+          _fetch_total: 1,
+          _fetch_sub_dirs: 0,
+          _sort: "file_type:asc,updated_at:desc",
+        });
+      },
+      { client: this.$client }
+    );
+    const r = await request.run({ file_id, page, page_size });
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    const {
-      data: { list },
-    } = r.data;
+    const { list } = r.data;
     const result = {
       items: [
         ...list.map((file) => {
@@ -428,19 +376,23 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
       return Result.Err("请传入文件 id");
     }
     await this.ensure_initialized();
-    const r = await this.request.get<{
-      data: QuarkDriveFileResp;
-    }>(API_HOST + "/1/clouddrive/file/info", {
-      pr: "ucpro",
-      fr: "pc",
-      uc_param_str: "",
-      fid: file_id,
-      _fetch_full_path: 1,
-    });
+    const request = new RequestCore(
+      (values: { file_id: string }) => {
+        return pc_client.get<QuarkDriveFileResp>("/1/clouddrive/file/info", {
+          pr: "ucpro",
+          fr: "pc",
+          uc_param_str: "",
+          fid: values.file_id,
+          _fetch_full_path: 1,
+        });
+      },
+      { client: this.$client }
+    );
+    const r = await request.run({ file_id });
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    const file = r.data.data;
+    const file = r.data;
     const { fid, file_type, file_name, size, pdir_fid, thumbnail, format_type } = file;
     const data = build_drive_file({
       type: file_type === 1 ? "file" : "folder",
@@ -465,19 +417,25 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
   }) {
     const { name, type, page = 1, page_size = 20, marker } = params;
     await this.ensure_initialized();
-    const r = await this.request.post<{
-      items: QuarkDriveFileResp[];
-    }>(API_HOST + "/1/clouddrive/file/search", {
-      pr: "ucpro",
-      fr: "pc",
-      uc_param_str: "",
-      q: name,
-      _page: page,
-      _size: page_size,
-      _fetch_total: "1",
-      _sort: "file_type:desc,updated_at:desc",
-      _is_hl: "1",
-    });
+    const request = new RequestCore(
+      (values: { name: string; page: number; page_size: number }) => {
+        return pc_client.post<{
+          items: QuarkDriveFileResp[];
+        }>("/1/clouddrive/file/search", {
+          pr: "ucpro",
+          fr: "pc",
+          uc_param_str: "",
+          q: values.name,
+          _page: values.page,
+          _size: values.page_size,
+          _fetch_total: "1",
+          _sort: "file_type:desc,updated_at:desc",
+          _is_hl: "1",
+        });
+      },
+      { client: this.$client }
+    );
+    const r = await request.run({ name, page, page_size });
     if (r.error) {
       return r;
     }
@@ -497,28 +455,34 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
     });
   }
   async delete_file(file_id: string) {
-    const search = query_stringify({
-      pr: "ucpro",
-      fr: "pc",
-      uc_param_str: "",
-    });
-    const r = await this.request.post<{
-      status: number;
-      code: number;
-      message: string;
-      timestamp: number;
-      data: {
-        task_id: string;
-        finish: boolean;
-      };
-      metadata: {
-        tq_gap: number;
-      };
-    }>(API_HOST + "/1/clouddrive/file/delete?" + search, {
-      action_type: 2,
-      exclude_fids: [],
-      filelist: [file_id],
-    });
+    const request = new RequestCore(
+      (values: { file_id: string }) => {
+        const search = query_stringify({
+          pr: "ucpro",
+          fr: "pc",
+          uc_param_str: "",
+        });
+        return pc_client.post<{
+          status: number;
+          code: number;
+          message: string;
+          timestamp: number;
+          data: {
+            task_id: string;
+            finish: boolean;
+          };
+          metadata: {
+            tq_gap: number;
+          };
+        }>("/1/clouddrive/file/delete?" + search, {
+          action_type: 2,
+          exclude_fids: [],
+          filelist: [file_id],
+        });
+      },
+      { client: this.$client }
+    );
+    const r = await request.run({ file_id });
     if (r.error) {
       return Result.Err(r.error.message);
     }
@@ -539,21 +503,27 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
     return Result.Err("任务未完成");
   }
   async rename_file(file_id: string, next_name: string) {
-    const search = query_stringify({
-      pr: "ucpro",
-      fr: "pc",
-      uc_param_str: "",
-    });
-    const r = await this.request.post<{
-      status: number;
-      code: number;
-      message: string;
-      timestamp: number;
-      data: {};
-    }>(API_HOST + "/1/clouddrive/file/rename?" + search, {
-      fid: file_id,
-      file_name: next_name,
-    });
+    const request = new RequestCore(
+      (values: { file_id: string; next_name: string }) => {
+        const search = query_stringify({
+          pr: "ucpro",
+          fr: "pc",
+          uc_param_str: "",
+        });
+        return pc_client.post<{
+          status: number;
+          code: number;
+          message: string;
+          timestamp: number;
+          data: {};
+        }>("/1/clouddrive/file/rename?" + search, {
+          fid: values.file_id,
+          file_name: values.next_name,
+        });
+      },
+      { client: this.$client }
+    );
+    const r = await request.run({ file_id, next_name });
     if (r.error) {
       return Result.Err(r.error.message);
     }
@@ -572,27 +542,33 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
       return Result.Err("缺少文件夹名称");
     }
     await this.ensure_initialized();
-    const search = query_stringify({
-      pr: "ucpro",
-      fr: "pc",
-      uc_param_str: "",
-    });
-    const r = await this.request.post<{
-      status: number;
-      code: number;
-      message: string;
-      timestamp: number;
-      data: {
-        finish: boolean;
-        fid: string;
-      };
-      metadata: {};
-    }>(API_HOST + "/1/clouddrive/file?" + search, {
-      dir_init_lock: false,
-      dir_path: "",
-      file_name: name,
-      pdir_fid: parent_file_id,
-    });
+    const request = new RequestCore(
+      (values: { name: string; parent_file_id: string }) => {
+        const search = query_stringify({
+          pr: "ucpro",
+          fr: "pc",
+          uc_param_str: "",
+        });
+        return pc_client.post<{
+          status: number;
+          code: number;
+          message: string;
+          timestamp: number;
+          data: {
+            finish: boolean;
+            fid: string;
+          };
+          metadata: {};
+        }>("/1/clouddrive/file?" + search, {
+          dir_init_lock: false,
+          dir_path: "",
+          file_name: values.name,
+          pdir_fid: values.parent_file_id,
+        });
+      },
+      { client: this.$client }
+    );
+    const r = await request.run({ name, parent_file_id });
     if (r.error) {
       return Result.Err(r.error);
     }
@@ -617,40 +593,181 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
     return Result.Err("请实现该方法");
   }
   async fetch_video_preview_info(file_id: string) {
-    return Result.Err("请实现 fetch_video_preview_info 方法");
-    // const e = await this.ensure_initialized();
-    // const r = await this.request.get<{
-    //   normal: {
-    //     code: number;
-    //     message: string;
-    //     url: string;
-    //     videoKbps: number;
-    //   };
-    // }>(API_HOST + "/api/portal/getNewVlcVideoPlayUrl.action", {
-    //   fileId: file_id,
-    //   type: 2,
-    // });
-    // if (r.error) {
-    //   return Result.Err(r.error);
-    // }
-    // const { normal } = r.data;
-    // return Result.Ok({
-    //   sources: [
-    //     {
-    //       name: "",
-    //       width: 0,
-    //       height: 0,
-    //       type: MediaResolutionTypes.FHD,
-    //       url: normal.url,
-    //     },
-    //   ],
-    //   subtitles: [] as {
-    //     id: string;
-    //     name: string;
-    //     url: string;
-    //     language: "chi" | "eng" | "jpn";
-    //   }[],
-    // });
+    // return Result.Err("请实现 fetch_video_preview_info 方法");
+    const e = await this.ensure_initialized();
+    const request = new RequestCore(
+      (values: { file_id: string }) => {
+        return pc_client.post<{
+          default_resolution: string;
+          origin_default_resolution: string;
+          video_list: {
+            resolution: string;
+            video_info: {
+              duration: number;
+              size: number;
+              format: string;
+              width: number;
+              height: number;
+              bitrate: number;
+              codec: string;
+              fps: number;
+              rotate: number;
+              audio: {
+                duration: number;
+                bitrate: number;
+                codec: string;
+                channels: number;
+              };
+              update_time: number;
+              file_format: string;
+              streams: {
+                video_stream_list: {
+                  index: string;
+                  codec_name: string;
+                  codec_long_name: string;
+                  profile: string;
+                  codec_time_base: string;
+                  codec_tag_string: string;
+                  codec_tag: string;
+                  width: string;
+                  height: string;
+                  has_bframes: string;
+                  sar: string;
+                  dar: string;
+                  pix_fmt: string;
+                  level: string;
+                  fps: string;
+                  avg_fps: string;
+                  timebase: string;
+                  start_time: string;
+                  duration: string;
+                  bitrate: string;
+                  lang: string;
+                  network_cost: {};
+                }[];
+                audio_stream_list: {
+                  index: string;
+                  codec_name: string;
+                  codec_time_base: string;
+                  codec_long_name: string;
+                  codec_tag_string: string;
+                  codec_tag: string;
+                  sample_fmt: string;
+                  samplerate: string;
+                  channels: string;
+                  channel_layout: string;
+                  timebase: string;
+                  start_time: string;
+                  duration: string;
+                  bitrate: string;
+                  lang: string;
+                }[];
+                subtitle_stream_list: unknown[];
+              };
+              format_ext: {
+                num_streams: string;
+                num_programs: string;
+                format_name: string;
+                format_long_name: string;
+                start_time: string;
+                duration: string;
+                size: string;
+                bitrate: string;
+              };
+              url: string;
+              resolution: string;
+              hls_type: string;
+              finish: boolean;
+              resoultion: string;
+              success: boolean;
+            };
+            right: string;
+            member_right: string;
+            trans_status: string;
+            accessable: boolean;
+            supports_format: string;
+          }[];
+          audio_list: unknown[];
+          file_name: string;
+          name_space: number;
+          size: number;
+          thumbnail: string;
+          last_play_info: {
+            time: number;
+          };
+          seek_preview_data: {
+            total_frame_count: number;
+            total_sprite_count: number;
+            frame_width: number;
+            frame_height: number;
+            sprite_row: number;
+            sprite_column: number;
+            preview_sprite_infos: {
+              url: string;
+              frame_count: number;
+              times: number[];
+            }[];
+          };
+          obj_key: string;
+          meta: {
+            duration: number;
+            size: number;
+            format: string;
+            width: number;
+            height: number;
+            bitrate: number;
+            codec: string;
+            fps: number;
+            rotate: number;
+          };
+          preload_level: number;
+        }>(
+          "/1/clouddrive/file/v2/play" +
+            "?" +
+            query_stringify({
+              pr: "ucpro",
+              fr: "pc",
+              uc_param_str: "",
+            }),
+          {
+            fid: values.file_id,
+            resolutions: "normal,low,high,super,2k,4k",
+            supports: "fmp4,m3u8",
+          }
+        );
+      },
+      { client: this.$client }
+    );
+    const r = await request.run({ file_id });
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { video_list } = r.data;
+    const ResolutionMap: Record<string, MediaResolutionTypes> = {
+      super: MediaResolutionTypes.FHD,
+      high: MediaResolutionTypes.HD,
+      low: MediaResolutionTypes.LD,
+    };
+    return Result.Ok({
+      sources: video_list
+        .filter((file) => file.accessable)
+        .map((file) => {
+          return {
+            name: "",
+            width: file.video_info.width,
+            height: file.video_info.height,
+            type: ResolutionMap[file.video_info.resolution],
+            url: file.video_info.url,
+            invalid: 0,
+          };
+        }),
+      subtitles: [] as {
+        id: string;
+        name: string;
+        url: string;
+        language: "chi" | "eng" | "jpn";
+      }[],
+    });
   }
   async fetch_video_preview_info_for_download() {
     return Result.Err("请实现 fetch_video_preview_info_for_download 方法");
@@ -658,140 +775,50 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
   /** 获取一个文件夹的完整路径（包括自身） */
   async fetch_parent_paths(file_id: string) {
     await this.ensure_initialized();
-    const r = await this.request.get<{
-      data: {
-        createTime: number;
-        downloadUrl: string;
-        fileId: string;
-        fileIdDigest: string;
-        fileName: string;
-        fileSize: number;
-        fileType: string;
-        icon: {
-          largeUrl: string;
-          smallUrl: string;
-        };
-        isFolder: boolean;
-        isStarred: boolean;
-        lastOpTime: number;
-        mediaType: number;
-        parentId: string;
-        videoUrl: string;
-      }[];
-      pageNum: number;
-      pageSize: number;
-      path: {
-        fileId: string;
-        fileName: string;
-        isCoShare: number;
-      }[];
-      recordCount: number;
-    }>(API_HOST + "/api/portal/listFiles.action", {
-      fileId: file_id,
-    });
-    if (r.error) {
-      return Result.Err(r.error.message);
-    }
-    const paths = [];
-    for (let i = 0; i < r.data.path.length; i += 1) {
-      (() => {
-        const { fileId, fileName } = r.data.path[i];
-        if (String(fileId) === DEFAULT_ROOT_FOLDER_ID) {
-          return;
-        }
-        paths.push({
-          file_id: fileId,
-          name: fileName,
-          parent_file_id: r.data.path[i - 1]?.fileId,
-          type: "folder",
-        });
-      })();
+    const paths: {
+      file_id: string;
+      name: string;
+      parent_file_id: string;
+      type: "folder";
+    }[] = [];
+    let can_finish = true;
+    let id = file_id;
+    while (can_finish) {
+      const r1 = await this.fetch_file(id);
+      if (r1.error) {
+        return Result.Err(r1.error.message);
+      }
+      const file = r1.data;
+      paths.unshift({
+        file_id: file.file_id,
+        name: file.name,
+        parent_file_id: file.parent_file_id,
+        type: "folder",
+      });
+      id = file.parent_file_id;
+      if (file.parent_file_id === DEFAULT_ROOT_FOLDER_ID) {
+        can_finish = false;
+      }
     }
     return Result.Ok(paths);
   }
   /** 根据名称判断一个文件是否已存在 */
   async existing(parent_file_id: string, file_name: string) {
-    await this.ensure_initialized();
-    // @todo
-    const url = "/adrive/v3/file/search";
-    const result = await this.request.post<{
-      items: QuarkDriveFileResp[];
-      next_marker: string;
-    }>(API_HOST + url, {});
-    if (result.error) {
-      return Result.Err(result.error);
-    }
-    if (result.data.items.length === 0) {
-      return Result.Ok(null);
-    }
-    const { file_type, fid, file_name: name, pdir_fid, format_type, thumbnail } = result.data.items[0];
-    const data = build_drive_file({
-      type: file_type === 1 ? "file" : "folder",
-      file_id: fid,
-      name: file_name,
-      parent_file_id: pdir_fid,
-      mime_type: format_type,
-      thumbnail,
-    });
-    return Result.Ok(data);
+    // await this.ensure_initialized();
+    return Result.Err("请实现 existing 方法");
   }
   /** 移动指定文件到指定文件夹 */
   async move_files_to_folder(body: { files: { file_id: string }[]; target_folder_id: string }) {
-    await this.ensure_initialized();
-    // @todo
-    const { files, target_folder_id } = body;
-    const r = await this.request.post<{
-      items: QuarkDriveFileResp[];
-    }>(API_HOST + "/v3/batch", {
-      requests: files.map((file) => {
-        const { file_id } = file;
-        return {
-          body: {
-            file_id,
-            to_parent_file_id: target_folder_id,
-          },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          id: file_id,
-          method: "POST",
-          url: "/file/move",
-        };
-      }),
-      resource: "file",
-    });
-    if (r.error) {
-      return r;
-    }
-    return Result.Ok([]);
+    // await this.ensure_initialized();
+    return Result.Err("请实现 move_files_to_folder 方法");
   }
   async prepare_upload() {
-    const e = await this.ensure_initialized();
-    const r = await this.request.get<{
-      expire: number;
-      pkId: string;
-      pubKey: string;
-      ver: string;
-    }>(API_HOST + "/api/security/generateRsaKey.action", {});
-    if (r.error) {
-      return Result.Err(r.error);
-    }
-    return Result.Ok({
-      sources: [],
-      subtitles: [],
-    });
+    // const e = await this.ensure_initialized();
+    return Result.Err("请实现 prepare_upload 方法");
   }
   async download(file_id: string) {
-    await this.ensure_initialized();
-    const r = await this.request.get<{
-      fileDownloadUrl: string;
-    }>(API_HOST + "/api/open/file/getFileDownloadUrl.action", {
-      fileId: file_id,
-    });
-    if (r.error) {
-      return Result.Err(r.error.message);
-    }
-    return Result.Ok({ url: r.data.fileDownloadUrl });
+    // await this.ensure_initialized();
+    return Result.Err("请实现 download 方法");
   }
   async upload() {
     return Result.Err("请实现 upload 方法");
@@ -899,28 +926,34 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
   /** 查询任务状态 */
   async fetch_task_status(body: { task_id: string }) {
     const { task_id } = body;
-    const query = {
-      pr: "ucpro",
-      fr: "pc",
-      uc_param_str: "",
-      task_id: task_id,
-      retry_index: "0",
-    };
-    const r = await this.request.get<{
-      status: number;
-      code: number;
-      message: string;
-      timestamp: number;
-      data: {
-        task_id: string;
-        task_title: string;
-        status: number;
-        created_at: number;
-      };
-      metadata: {
-        tq_gap: number;
-      };
-    }>(API_HOST + "/1/clouddrive/task", query);
+    const request = new RequestCore(
+      (values: { task_id: string }) => {
+        const query = {
+          pr: "ucpro",
+          fr: "pc",
+          uc_param_str: "",
+          task_id: values.task_id,
+          retry_index: "0",
+        };
+        return pc_client.get<{
+          status: number;
+          code: number;
+          message: string;
+          timestamp: number;
+          data: {
+            task_id: string;
+            task_title: string;
+            status: number;
+            created_at: number;
+          };
+          metadata: {
+            tq_gap: number;
+          };
+        }>("/1/clouddrive/task", query);
+      },
+      { client: this.$client }
+    );
+    const r = await request.run({ task_id });
     if (r.error) {
       return Result.Err(r.error.message);
     }

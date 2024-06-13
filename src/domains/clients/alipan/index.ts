@@ -429,7 +429,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
    * 数据库操作
    * 由于 drive 依赖 access_token、refresh_token，必须有一个外部持久存储
    */
-  store: DataStore;
+  $store: DataStore;
 
   constructor(options: AliyunDriveProps) {
     super();
@@ -460,7 +460,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     }
     this.access_token = access_token;
     this.refresh_token = refresh_token;
-    this.store = store;
+    this.$store = store;
     const client = axios.create({
       timeout: 6000,
     });
@@ -535,7 +535,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
   /** 初始化所有信息 */
   async init() {
     const token_res = await (async () => {
-      const drive = await this.store.prisma.drive.findFirst({
+      const drive = await this.$store.prisma.drive.findFirst({
         where: {
           id: this.id,
         },
@@ -2328,7 +2328,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     }
     const resource_client_res = await AliyunDriveClient.Get({
       unique_id: this.resource_drive_id,
-      store: this.store,
+      store: this.$store,
     });
     if (resource_client_res.error) {
       return Result.Err(resource_client_res.error.message);
@@ -2637,7 +2637,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       return Result.Err("请先调用 client.init 方法获取云盘信息");
     }
     const { refresh_token, access_token, expired_at } = data;
-    const drive = await this.store.prisma.drive.findFirst({
+    const drive = await this.$store.prisma.drive.findFirst({
       where: {
         id: this.id,
       },
@@ -2648,7 +2648,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     if (!drive) {
       return Result.Err("没有匹配的记录");
     }
-    await this.store.prisma.drive_token.update({
+    await this.$store.prisma.drive_token.update({
       where: {
         id: drive.drive_token_id,
       },
@@ -2664,7 +2664,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     return Result.Ok(null);
   }
   async update_profile(values: Partial<AliyunDriveProfile>) {
-    const drive = await this.store.prisma.drive.findFirst({
+    const drive = await this.$store.prisma.drive.findFirst({
       where: {
         id: this.id,
       },
@@ -2682,7 +2682,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       ...prev_profile,
       ...values,
     };
-    await this.store.prisma.drive.update({
+    await this.$store.prisma.drive.update({
       where: {
         id: this.id,
       },

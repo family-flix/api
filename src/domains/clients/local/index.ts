@@ -87,7 +87,7 @@ export class LocalFileDriveClient implements DriveClient {
   token = "";
   root_folder: { id: string; name: string };
 
-  store = new FakeDatabaseStore();
+  $store = new FakeDatabaseStore();
 
   constructor(props: LocalFileDriveClientProps) {
     const { unique_id } = props;

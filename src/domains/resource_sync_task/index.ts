@@ -365,7 +365,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         continue;
       }
       if (effect_type === DiffTypes.Adding) {
-        if (type === "file" && !is_video_file(name)) {
+        if (type === "file" && !is_video_file(name) && !name.match(/\.[dD][oO][cC]$/)) {
           //   log(`[${prefix}]`, "非视频文件，跳过");
           continue;
         }
