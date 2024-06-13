@@ -429,6 +429,10 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
           // errors.push(new Error(`[${prefix}] 文件已存在临时文件列表，可能已转存到云盘中`));
           continue;
         }
+        this.emit(
+          Events.Print,
+          Article.build_line([`开始转存文件 '${shared_file_id}' 到云盘文件夹 '${prev_folder.id}'`])
+        );
         const r1 = await client.save_shared_files({
           url,
           file_id: shared_file_id,
