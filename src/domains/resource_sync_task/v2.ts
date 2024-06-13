@@ -109,7 +109,10 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       store,
     });
     if (r2.error) {
-      if (["share_link is cancelled by the creator", "share_link is forbidden"].includes(r2.error.message) && !ignore_invalid) {
+      if (
+        ["share_link is cancelled by the creator", "share_link is forbidden"].includes(r2.error.message) &&
+        !ignore_invalid
+      ) {
         await store.prisma.resource_sync_task.update({
           where: {
             id,
@@ -414,8 +417,9 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         continue;
       }
       if (effect_type === DiffTypes.Adding) {
-        if (type === "file" && !is_video_file(name)) {
+        if (type === "file" && !is_video_file(name) && !name.match(/\.[dD][oO][cC]$/)) {
           //   log(`[${prefix}]`, "非视频文件，跳过");
+          this.emit(Events.Print, Article.build_line([prefix, "非视频文件，跳过"]));
           continue;
         }
         if (type === "folder") {

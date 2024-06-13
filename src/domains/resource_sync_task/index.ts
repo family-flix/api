@@ -335,16 +335,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     });
     await differ.run();
     await this.consume_effects_for_shared_file(differ.effects);
-    this.emit(
-      Events.Print,
-      new ArticleLineNode({
-        children: [
-          new ArticleTextNode({
-            text: "完成资源同步",
-          }),
-        ],
-      })
-    );
+    this.emit(Events.Print, Article.build_line(["完成资源同步1"]));
     return Result.Ok({});
   }
   /**
@@ -356,6 +347,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     const user_id = this.user.id;
     const drive_id = this.drive.id;
     //     log("应用 diff 的结果，共", effects.length, "个");
+    this.emit(Events.Print, Article.build_line(["共", effects.length, "个资源变更"]));
     // const errors: Error[] = [];
     for (let i = 0; i < effects.length; i += 1) {
       const effect = effects[i];
