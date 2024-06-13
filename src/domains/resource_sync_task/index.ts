@@ -7,7 +7,13 @@ import dayjs from "dayjs";
 import { BaseDomain } from "@/domains/base";
 import { DifferEffect, DiffTypes, FolderDiffer } from "@/domains/folder_differ/index";
 import { Folder } from "@/domains/folder/index";
-import { ArticleCardNode, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article/index";
+import {
+  Article,
+  ArticleCardNode,
+  ArticleLineNode,
+  ArticleSectionNode,
+  ArticleTextNode,
+} from "@/domains/article/index";
 import { User } from "@/domains/user/index";
 import { DatabaseDriveClient } from "@/domains/clients/database/index";
 import { Drive } from "@/domains/drive/index";
@@ -356,7 +362,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       const { type: effect_type, payload } = effect;
       const { id: shared_file_id, name, type, parents, prev_folder } = payload;
       const parent_paths = parents.map((f) => f.name).join("/");
-      const prefix = `${parent_paths}/${name}`;
+      const prefix = [parent_paths, name].join("/");
       //       log(`[${prefix}]`, "是", effect_type === DiffTypes.Deleting ? "删除" : "新增");
       if (effect_type === DiffTypes.Deleting) {
         // log(`[${prefix}]`, "删除文件", shared_file_id);
@@ -367,6 +373,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       if (effect_type === DiffTypes.Adding) {
         if (type === "file" && !is_video_file(name) && !name.match(/\.[dD][oO][cC]$/)) {
           //   log(`[${prefix}]`, "非视频文件，跳过");
+          this.emit(Events.Print, Article.build_line([prefix, "非视频文件，跳过"]));
           continue;
         }
         if (type === "folder") {
@@ -430,16 +437,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         if (r1.error) {
           this.emit(
             Events.Print,
-            new ArticleLineNode({
-              children: [
-                new ArticleTextNode({
-                  text: `转存文件 '${shared_file_id}' 到云盘文件夹 '${prev_folder.id}' 失败`,
-                }),
-                new ArticleTextNode({
-                  text: r1.error.message,
-                }),
-              ],
-            })
+            Article.build_line([`转存文件 '${shared_file_id}' 到云盘文件夹 '${prev_folder.id}' 失败`, r1.error.message])
           );
           //   log(
           //     `[${prefix}]`,
@@ -472,7 +470,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     //   return Result.Err(errors.map((e) => e.message).join("\n"));
     // }
     //     log("完成同步");
-
     return Result.Ok(null);
   }
   /**
