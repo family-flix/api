@@ -95,6 +95,7 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
     id?: string;
     data?: JSONObject | FormData;
     headers?: Record<string, string | number>;
+    timeout?: number;
   }) {
     console.log("请在 connect 中实现 fetch 方法");
     return { data: {} } as { data: T };

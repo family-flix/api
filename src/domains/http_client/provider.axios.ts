@@ -7,7 +7,7 @@ import { HttpClientCore } from "./index";
 export function connect(store: HttpClientCore) {
   let requests: { id: string; source: CancelTokenSource }[] = [];
   store.fetch = async (options) => {
-    const { url, method, id, data, headers } = options;
+    const { url, method, id, data, headers, timeout = 2000 } = options;
     const source = axios.CancelToken.source();
     if (id) {
       requests.push({
@@ -21,6 +21,7 @@ export function connect(store: HttpClientCore) {
           params: data,
           headers,
           cancelToken: source.token,
+          timeout,
         });
         requests = requests.filter((r) => r.id !== id);
         return r;
@@ -34,6 +35,7 @@ export function connect(store: HttpClientCore) {
         const r = await axios.post(url, data, {
           headers,
           cancelToken: source.token,
+          timeout,
         });
         requests = requests.filter((r) => r.id !== id);
         return r;

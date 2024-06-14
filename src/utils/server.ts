@@ -78,6 +78,7 @@ export async function compat_next<
       parseBody(arg: { all: boolean }): Promise<unknown>;
     };
     json(data: any): void;
+    body(data: any): void;
   }
 >(
   c: T
@@ -87,6 +88,7 @@ export async function compat_next<
     {
       status(code: number): {
         json(data: any): BaseApiResp<unknown>;
+        body(data: any): BaseApiResp<unknown>;
       };
     }
   ]
@@ -114,6 +116,9 @@ export async function compat_next<
         return {
           json(data: any) {
             return c.json(data);
+          },
+          body(data: unknown) {
+            return c.body(data);
           },
         };
       },
