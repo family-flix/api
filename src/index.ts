@@ -257,17 +257,6 @@ async function main() {
   server.get("/api/proxy", async (c) => {
     return v0_proxy(...(await compat_next(c)));
   });
-  server.use(
-    "/api/proxy",
-    cors({
-      origin: "https://hlsjs.video-dev.org/",
-      allowHeaders: ["X-Custom-Header", "Upgrade-Insecure-Requests"],
-      allowMethods: ["POST", "GET", "OPTIONS"],
-      exposeHeaders: ["Content-Length", "X-Kuma-Revision"],
-      maxAge: 600,
-      credentials: true,
-    })
-  );
   /** 管理后台 */
   server.post("/api/admin/user/login", async (c) => {
     return v0_admin_user_login(...(await compat_next(c)));

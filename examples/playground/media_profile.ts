@@ -20,7 +20,7 @@ async function main() {
   //     return;
   //   }
   //   const results = r1.data.list;
-  const r2 = await client.fetch_media_profile(26818236);
+  const r2 = await client.fetch_media_profile(35856096);
   if (r2.error) {
     console.log(r2.error.message);
     return;
