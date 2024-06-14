@@ -731,7 +731,6 @@ export class ScheduleTask {
         const { id, type, resource_sync_tasks, _count } = media;
         const profile = media.profile;
         const tips: string[] = [];
-        console.log(profile.name);
         const invalid_media_sources = await this.store.prisma.media_source.findMany({
           where: {
             media_id: id,

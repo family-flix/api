@@ -834,7 +834,7 @@ export class MediaProfileClient {
       if (poster_path && poster_path !== media_profile.poster_path) {
         payload.poster_path = await this.download_image(poster_path, "poster");
       }
-      if (air_date && air_date !== media_profile.air_date) {
+      if (!media_profile.air_date && air_date && air_date !== media_profile.air_date) {
         payload.air_date = air_date;
       }
       if (Object.keys(payload).length === 1) {
@@ -1041,7 +1041,7 @@ export class MediaProfileClient {
       return Result.Err(tip);
     }
     const profile = profile_r.data;
-    console.log('[DOMAIN]media_profile/index - refresh_profile_with_douban_id', profile, media.air_date);
+    console.log("[DOMAIN]media_profile/index - refresh_profile_with_douban_id", profile, media.air_date);
     for (let i = 0; i < profile.genres.length; i += 1) {
       const { id, text } = profile.genres[i];
       const e = await store.prisma.media_genre.findFirst({
