@@ -1268,8 +1268,8 @@ export class MediaProfileClient {
    * 针对影视剧详情、海报等信息在云盘中的
    * 由具体的云盘实现来下载该云盘的图片
    */
-  async download_image_with_client(values: { file_id: string; parent_dir: string; client: DriveClient }) {
-    const { file_id, parent_dir, client } = values;
+  async download_image_with_client(values: { file_id: string; key?: string; parent_dir: string; client: DriveClient }) {
+    const { file_id, parent_dir, key, client } = values;
     const r = await client.download(file_id);
     if (r.error) {
       // @todo 返回一张默认图片
@@ -1280,6 +1280,12 @@ export class MediaProfileClient {
     const filename = (() => {
       const segments = url.split("/");
       const name = segments[segments.length - 1];
+      if (key) {
+        if (key.includes(".")) {
+          return key;
+        }
+        return [key, "jpg"].join(".");
+      }
       if (name.length >= 20) {
         return `${file_id}.jpg`;
       }

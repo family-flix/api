@@ -139,6 +139,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
     }
     const share_id = r.data;
     this.id = share_id;
+    // console.log("[DOMAIN]fetch_share_profile", this.token);
     if (this.token) {
       // 如果曾经调用过该方法获取到了 share_token，再次调用时就不会真正去调用了，而是复用之前获取到的
       return Result.Ok({
@@ -652,10 +653,17 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       download_url: string;
       url: string;
       thumbnail: string;
-    }>(API_HOST + "/v2/file/get_share_link_download_url", {
-      file_id,
-      drive_id: String(this.unique_id),
-    });
+    }>(
+      API_HOST + "/v2/file/get_share_link_download_url",
+      {
+        file_id,
+        // drive_id: String(this.unique_id),
+        share_id: this.id,
+      },
+      {
+        "x-share-token": this.token,
+      }
+    );
     if (r2.error) {
       return Result.Err(r2.error);
     }

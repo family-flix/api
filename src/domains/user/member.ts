@@ -403,9 +403,8 @@ export class Member {
         return Result.Err(r1.error.message);
       }
       const { openid, unionid, session_key } = r1.data;
-      // console.log('111', openid, unionid, r1);
       if (!openid && !unionid) {
-        return Result.Err("服务器异常", 3001);
+        return Result.Err("小程序授权失败", 3001);
       }
       const member = await (async () => {
         const existing = await store.prisma.member_authentication.findFirst({

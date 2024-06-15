@@ -1253,88 +1253,90 @@ export class ScheduleTask {
     return Result.Ok(null);
   }
   async update_media_rank() {
-    const store = this.store;
-    const client = MediaRankClient({ store });
     await this.walk_user(async (user) => {
-      console.log("更新 豆瓣电视剧排行");
-      await (async () => {
-        const douban_season = await (async () => {
-          const r = await store.prisma.collection_v2.findFirst({
-            where: {
-              type: CollectionTypes.DoubanSeasonRank,
-              user_id: user.id,
-            },
-          });
-          if (!r) {
-            return store.prisma.collection_v2.create({
-              data: {
-                id: r_id(),
-                title: "豆瓣热播电视剧",
+      const store = this.store;
+      const client = MediaRankClient({ app: this.app, user, store });
+      await this.walk_user(async (user) => {
+        console.log("更新 豆瓣电视剧排行");
+        await (async () => {
+          const douban_season = await (async () => {
+            const r = await store.prisma.collection_v2.findFirst({
+              where: {
                 type: CollectionTypes.DoubanSeasonRank,
                 user_id: user.id,
               },
             });
+            if (!r) {
+              return store.prisma.collection_v2.create({
+                data: {
+                  id: r_id(),
+                  title: "豆瓣热播电视剧",
+                  type: CollectionTypes.DoubanSeasonRank,
+                  user_id: user.id,
+                },
+              });
+            }
+            return r;
+          })();
+          const r = await client.fetch_douban_rank({ type: "tv" });
+          if (r.error) {
+            console.log(r.error.message);
+            return;
           }
-          return r;
-        })();
-        const r = await client.fetch_douban_rank({ type: "tv" });
-        if (r.error) {
-          console.log(r.error.message);
-          return;
-        }
-        await store.prisma.collection_v2.update({
-          where: {
-            id: douban_season.id,
-          },
-          data: {
-            updated: dayjs().toISOString(),
-            desc: `${dayjs().format("HH:mm")} 更新`,
-            extra: JSON.stringify({
-              list: r.data,
-            }),
-          },
-        });
-      })();
-      /**  */
-      console.log("更新 豆瓣电影排行");
-      await (async () => {
-        const douban_season = await (async () => {
-          const r = await store.prisma.collection_v2.findFirst({
+          await store.prisma.collection_v2.update({
             where: {
-              type: CollectionTypes.DoubanMovieRank,
-              user_id: user.id,
+              id: douban_season.id,
+            },
+            data: {
+              updated: dayjs().toISOString(),
+              desc: `${dayjs().format("HH:mm")} 更新`,
+              extra: JSON.stringify({
+                list: r.data,
+              }),
             },
           });
-          if (!r) {
-            return store.prisma.collection_v2.create({
-              data: {
-                id: r_id(),
-                title: "豆瓣热门电影",
+        })();
+        /**  */
+        console.log("更新 豆瓣电影排行");
+        await (async () => {
+          const douban_season = await (async () => {
+            const r = await store.prisma.collection_v2.findFirst({
+              where: {
                 type: CollectionTypes.DoubanMovieRank,
                 user_id: user.id,
               },
             });
+            if (!r) {
+              return store.prisma.collection_v2.create({
+                data: {
+                  id: r_id(),
+                  title: "豆瓣热门电影",
+                  type: CollectionTypes.DoubanMovieRank,
+                  user_id: user.id,
+                },
+              });
+            }
+            return r;
+          })();
+          const r = await client.fetch_douban_rank({ type: "movie" });
+          if (r.error) {
+            console.log(r.error.message);
+            return;
           }
-          return r;
+          await store.prisma.collection_v2.update({
+            where: {
+              id: douban_season.id,
+            },
+            data: {
+              updated: dayjs().toISOString(),
+              desc: `${dayjs().format("HH:mm")} 更新`,
+              extra: JSON.stringify({
+                list: r.data,
+              }),
+            },
+          });
         })();
-        const r = await client.fetch_douban_rank({ type: "movie" });
-        if (r.error) {
-          console.log(r.error.message);
-          return;
-        }
-        await store.prisma.collection_v2.update({
-          where: {
-            id: douban_season.id,
-          },
-          data: {
-            updated: dayjs().toISOString(),
-            desc: `${dayjs().format("HH:mm")} 更新`,
-            extra: JSON.stringify({
-              list: r.data,
-            }),
-          },
-        });
-      })();
+      });
     });
     console.log("finish update_media_rank");
     return Result.Ok(null);

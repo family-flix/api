@@ -453,6 +453,7 @@ export async function fetch_media_profile(id: number | undefined, query: Request
     air_date,
     source_count,
     alias,
+    type,
     // tagline,
     // status,
     // vote_average,
@@ -472,6 +473,7 @@ export async function fetch_media_profile(id: number | undefined, query: Request
   } = data;
   return Result.Ok({
     id,
+    type,
     name,
     original_name,
     air_date,

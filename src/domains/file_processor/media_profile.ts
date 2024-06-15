@@ -142,6 +142,7 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
             poster_path: season.poster_path
               ? await this.client.download_image_with_client({
                   file_id: season.poster_path.file_id,
+                  key: season.id ? season.id.replace("/", "_") : undefined,
                   parent_dir: "poster",
                   client: this.drive.client,
                 })
@@ -149,6 +150,7 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
             backdrop_path: season.backdrop_path
               ? await this.client.download_image_with_client({
                   file_id: season.backdrop_path.file_id,
+                  key: season.id ? season.id.replace("/", "_") : undefined,
                   parent_dir: "backdrop",
                   client: this.drive.client,
                 })
@@ -168,6 +170,7 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
           poster_path: poster_path
             ? await this.client.download_image_with_client({
                 file_id: poster_path.file_id,
+                key: id ? id.replace("/", "_") : undefined,
                 parent_dir: "poster",
                 client: this.drive.client,
               })
@@ -175,6 +178,7 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
           backdrop_path: backdrop_path
             ? await this.client.download_image_with_client({
                 file_id: backdrop_path.file_id,
+                key: id ? id.replace("/", "_") : undefined,
                 parent_dir: "backdrop",
                 client: this.drive.client,
               })
@@ -206,6 +210,7 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
             if (!matched) {
               return;
             }
+            console.log("---- matched", matched, season);
             const media = await this.searcher.get_season_media_record_by_profile({ id: season.id, name: season.name });
             const processed_episodes = [];
             for (let i = 0; i < season.episodes.length; i += 1) {

@@ -61,6 +61,9 @@ export default async function v2_drive_file_list(req: NextApiRequest, res: NextA
     if (drive.profile.type === DriveTypes.AliyunResourceDrive) {
       return "root";
     }
+    if (drive.profile.type === DriveTypes.LocalFolder) {
+      return "root";
+    }
     if (drive.profile.type === DriveTypes.Cloud189Drive) {
       return "-11";
     }

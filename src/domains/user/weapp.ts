@@ -9,10 +9,13 @@ const weapp_request = request_factory({
   hostnames: {
     prod: "https://api.weixin.qq.com",
   },
-  process(v: { errcode: number; errmsg: string }) {
-    const { errcode, errmsg, ...rest } = v;
+  process(r: Result<{ errcode: number; errmsg: string }>) {
+    if (r.error) {
+      return r;
+    }
+    const { errcode, errmsg, ...rest } = r.data;
     if (errcode && errcode !== 0) {
-      return Result.Err(errmsg);
+      return Result.Err(errmsg, errcode);
     }
     return Result.Ok(rest);
   },

@@ -12,7 +12,7 @@ import {
 } from "@/utils/parse_filename_for_video";
 import { is_img_file, is_nfo_file, is_subtitle_file, is_video_file, noop, promise_noop, sleep } from "@/utils/index";
 import { MutableRecordV2, Result } from "@/types/index";
-import { MediaTypes } from "@/constants";
+import { MediaTypes } from "@/constants/index";
 
 export type SearchedEpisode = {
   tv: {

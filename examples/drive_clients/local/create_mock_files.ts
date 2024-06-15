@@ -13,6 +13,7 @@ import { DriveTypes } from "@/domains/drive/constants";
 import { LocalFileDriveClient } from "@/domains/clients/local";
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource/index";
 import { is_img_file, is_nfo_file, is_subtitle_file, is_video_file } from "@/utils/index";
+import { Drive } from "@/domains/drive/v2";
 
 const template_mp4_video = path.resolve(process.cwd(), "public/template_video.mp4");
 const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mkv");
@@ -35,56 +36,29 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
   const dir = path.resolve(os.homedir(), "Documents/workspaces/medias");
   const manage = new FileManage({ root: dir });
   const r = await LocalFileDriveClient.Get({
-    unique_id: dir,
+    unique_id: manage.root,
     store,
   });
   if (r.error) {
-    console.log(r.error.message);
+    console.log("r.error", r.error.message);
     return;
   }
   const client = r.data;
-  // const r3 = await client.create_folder({ name: "大理寺少卿游", parent_file_id: "root" });
-  // if (r3.error) {
-  //   console.log(r3.error.message);
+  // const rr = await AliyunDriveClient.Get({ unique_id: "2243978430", store });
+  // if (rr.error) {
+  //   console.log(rr.error.message);
   //   return;
   // }
-  // const r3 = await client.upload(video_filepath, { name: "大理寺少卿游.S01E01.mp4", parent_file_id: "root" });
-  // if (r3.error) {
-  //   console.log(r3.error.message);
-  //   return;
-  // }
-  // const r3 = await client.upload(template_img, {
-  //   name: "大理寺少卿游.S01E01.jpg",
-  //   parent_file_id: path.resolve(client.root_folder.id, "江户前精灵"),
-  // });
-  // if (r3.error) {
-  //   console.log(r3.error.message);
-  //   return;
-  // }
-  const rr = await AliyunDriveClient.Get({ unique_id: "880986603", store });
-  if (rr.error) {
-    console.log(rr.error.message);
-    return;
-  }
-  const client1 = rr.data;
-  // await client1.init();
-  // const rr2 = await client1.ping();
-  // if (rr2.error) {
-  //   console.log(rr2.error.message);
-  //   return;
-  // }
-  // console.log(rr2.data);
-  // return;
-  const drive = await store.prisma.drive.findFirst({
-    where: {
-      type: DriveTypes.AliyunResourceDrive,
-    },
+  // const client1 = rr.data;
+  const r4 = await Drive.Get({
+    unique_id: "2243978430",
+    store,
   });
-  if (!drive) {
-    console.log("请先添加一个云盘");
+  if (r4.error) {
+    console.log("r4.error", r4.error.message);
     return;
   }
-  // console.log("drive is ", drive);
+  const drive = r4.data;
   const SHARE_FOLDER = {
     /** 春色寄情人  */
     jiqingren: "https://www.alipan.com/s/BLKoFj39Wx9",
@@ -95,15 +69,18 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     /** 驯鹿宝贝 */
     xunlubaobei: "https://www.alipan.com/s/pkqHFZe71MJ",
   };
-  const url = SHARE_FOLDER.jiqingren;
-  const r2 = await AliyunShareResourceClient.Get({ id: drive.id, url, store });
+  const url = SHARE_FOLDER.weianzhihuo;
+  const r2 = await AliyunShareResourceClient.Get({ unique_id: drive.profile.drive_id, url, store });
   if (r2.error) {
-    console.log(r2.error.message);
+    console.log("r2.error", r2.error.message, drive.profile.drive_id);
     return;
   }
-  // console.log(r2.data);
-  // return;
   const resource_client = r2.data;
+  const r5 = await resource_client.fetch_share_profile(resource_client.unique_id, { code: resource_client.code });
+  if (r5.error) {
+    console.log("r5.error", r5.error.message);
+    return;
+  }
   const resource_folder = new Folder("root", {
     name: resource_client.name,
     client: resource_client,
@@ -113,7 +90,7 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     // 这里 slice(1) 是因为拼上了资源文件夹根文件夹，和根文件夹内的文件夹名称发生了重复
     const filepath = [...parents.slice(1)].map((p) => p.name).join("/");
     const parent_file_id = path.resolve(client.root_folder.id, filepath);
-    // console.log(type, [filepath, name].filter(Boolean).join("/"));
+    console.log(type, [filepath, name].filter(Boolean).join("/"));
     if (type === "file") {
       if (is_video_file(name)) {
         const template_video = (() => {
@@ -122,6 +99,18 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
           }
           return template_mp4_video;
         })();
+        const filename = path.resolve(parent_file_id, name);
+        const r0 = await manage.existing(filename, {
+          is_fullpath: true,
+        });
+        if (r0.error) {
+          console.log("检查图片是否存在失败，因为", r0.error.message);
+          return true;
+        }
+        if (r0.data) {
+          console.log("文件已存在");
+          return true;
+        }
         const r = await client.upload(template_video, {
           name,
           parent_file_id,
@@ -132,6 +121,18 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
         return true;
       }
       if (is_img_file(name)) {
+        const filename = path.resolve(parent_file_id, name);
+        const r0 = await manage.existing(filename, {
+          is_fullpath: true,
+        });
+        if (r0.error) {
+          console.log("检查图片是否存在失败，因为", r0.error.message);
+          return true;
+        }
+        if (r0.data) {
+          console.log("文件已存在");
+          return true;
+        }
         const r1 = await resource_client.download(id);
         if (r1.error) {
           console.log("获取图片文件下载路径失败，因为", r1.error.message);
@@ -141,7 +142,6 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
           console.log("获取图片文件下载路径失败，不存在下载地址");
           return true;
         }
-        const filename = path.resolve(parent_file_id, name);
         const r2 = await manage.download(r1.data.url, filename, {
           is_fullpath: true,
         });
@@ -151,6 +151,18 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
         return true;
       }
       if (is_subtitle_file(name)) {
+        const filename = path.resolve(parent_file_id, name);
+        const r0 = await manage.existing(filename, {
+          is_fullpath: true,
+        });
+        if (r0.error) {
+          console.log("检查图片是否存在失败，因为", r0.error.message);
+          return true;
+        }
+        if (r0.data) {
+          console.log("文件已存在");
+          return true;
+        }
         const r1 = await resource_client.download(id);
         if (r1.error) {
           console.log("获取字幕文件下载路径失败，因为", r1.error.message);
@@ -160,7 +172,6 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
           console.log("获取字幕文件下载路径失败，不存在下载地址");
           return true;
         }
-        const filename = path.resolve(parent_file_id, name);
         const r2 = await manage.download(r1.data.url, filename, {
           is_fullpath: true,
         });
@@ -170,6 +181,18 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
         return true;
       }
       if (is_nfo_file(name)) {
+        const filename = path.resolve(parent_file_id, name);
+        const r0 = await manage.existing(filename, {
+          is_fullpath: true,
+        });
+        if (r0.error) {
+          console.log("检查图片是否存在失败，因为", r0.error.message);
+          return true;
+        }
+        if (r0.data) {
+          console.log("文件已存在");
+          return true;
+        }
         const r1 = await resource_client.download(id);
         if (r1.error) {
           console.log("获取nfo文件下载路径失败，因为", r1.error.message);
@@ -179,12 +202,11 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
           console.log("获取nfo文件下载路径失败，不存在下载地址");
           return true;
         }
-        const filename = path.resolve(parent_file_id, name);
         const r2 = await manage.download(r1.data.url, filename, {
           is_fullpath: true,
         });
         if (r2.error) {
-          console.log("上传字幕文件失败", r2.error.message);
+          console.log("上传nfo文件失败", r2.error.message);
         }
         return true;
       }

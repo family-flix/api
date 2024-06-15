@@ -1,6 +1,12 @@
 import { HttpClientCore } from "@/domains/http_client";
 import { connect } from "@/domains/http_client/provider.axios";
 import { RequestCore } from "@/domains/request/index";
+import { Application } from "@/domains/application";
+import { FileManage } from "@/domains/uploader";
+import { DoubanClient } from "@/domains/media_profile/douban/index";
+import { TMDBClient } from "@/domains/media_profile/tmdb_v2";
+import { MediaProfileClient } from "@/domains/media_profile/index";
+import { User } from "@/domains/user/index";
 import { request, TmpRequestResp } from "@/domains/request/utils";
 import { DataStore } from "@/domains/store/types";
 import { Result } from "@/types/index";
@@ -17,8 +23,8 @@ import { MediaTypes } from "@/constants/index";
 // 	}
 // }
 
-export function MediaRankClient(props: { store: DataStore }) {
-  const { store } = props;
+export function MediaRankClient(props: { app: Application<any>; user: User; store: DataStore }) {
+  const { app, user, store } = props;
 
   const $client = new HttpClientCore({});
   connect($client);
@@ -142,7 +148,57 @@ export function MediaRankClient(props: { store: DataStore }) {
         poster_path: string | null;
         vote_average: number | null;
       }[] = [];
+      const $douban = new DoubanClient({});
+      const $tmdb = user.settings.tmdb_token ? new TMDBClient({ token: user.settings.tmdb_token }) : null;
+      const $profile = user.settings.tmdb_token
+        ? new MediaProfileClient({
+            token: user.settings.tmdb_token,
+            uploader: new FileManage({ root: app.assets }),
+            store,
+          })
+        : null;
       for (let i = 0; i < list.length; i += 1) {
+        const { douban_id } = list[i];
+        (async () => {
+          if (!$tmdb || !$profile) {
+            return;
+          }
+          if (!douban_id) {
+            return;
+          }
+          const d1 = await store.prisma.media_profile.findFirst({
+            where: {
+              douban_id,
+            },
+          });
+          if (d1) {
+            return;
+          }
+          const r = await $douban.fetch_media_profile(douban_id);
+          if (r.error) {
+            console.log(r.error.message);
+            return;
+          }
+          if (!r.data.name) {
+            return;
+          }
+          const d2 = await store.prisma.media_series_profile.findFirst({
+            where: {
+              name: r.data.name,
+              original_name: r.data.original_name,
+              air_date: r.data.air_date,
+            },
+          });
+          if (d2) {
+            return;
+          }
+          if (r.data.type === "movie") {
+            await $profile.search_movie({ keyword: r.data.name, year: r.data.air_date });
+          }
+          if (r.data.type === "tv") {
+            await $profile.search_season({ keyword: r.data.name, season_text: null, year: r.data.air_date });
+          }
+        })();
         const r = await link_media_with_rank_media(list[i], {
           type: values.type === "movie" ? MediaTypes.Movie : MediaTypes.Season,
         });

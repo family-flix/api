@@ -38,7 +38,7 @@ export default async function v2_admin_season_profile(req: NextApiRequest, res: 
               drive: true,
             },
             orderBy: {
-              created: "asc",
+              created: "desc",
             },
           },
         },
