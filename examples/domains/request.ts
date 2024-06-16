@@ -1,5 +1,3 @@
-  import axios from "axios";
-
 import { HttpClientCore } from "@/domains/http_client";
 import { connect } from "@/domains/http_client/provider.axios";
 import { RequestCore } from "@/domains/request";

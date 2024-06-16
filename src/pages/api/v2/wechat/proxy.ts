@@ -32,11 +32,15 @@ export default async function v2_wechat_proxy(req: NextApiRequest, res: NextApiR
   }
   const client = new HttpClientCore();
   connect(client);
+  console.log(u);
   const request = new RequestCore(
     () => {
       return {
         method: "GET",
         url: u,
+        headers: {
+          Reference: "",
+        },
       };
     },
     { client }
@@ -46,5 +50,6 @@ export default async function v2_wechat_proxy(req: NextApiRequest, res: NextApiR
     return e(r);
   }
   const text = r.data as any as string;
+  console.log(text);
   return res.status(200).body(text);
 }
