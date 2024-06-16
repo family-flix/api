@@ -12,7 +12,7 @@ import { HttpClientCore } from "@/domains/http_client/index";
 import { connect } from "@/domains/http_client/provider.axios";
 import { response_error_factory } from "@/utils/server";
 
-export default async function v0_proxy(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
+export default async function v2_wechat_proxy(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { url } = req.query as Partial<{
     url: string;

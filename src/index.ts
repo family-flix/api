@@ -168,6 +168,7 @@ import v2_wechat_mine_bind_weapp from "./pages/api/v2/wechat/mine/bind_weapp";
 import v2_wechat_live_list from "./pages/api/v2/wechat/live/list";
 import v2_admin_media_source_list from "./pages/api/v2/admin/media_source/list";
 import v0_proxy from "./pages/api/proxy";
+import v2_wechat_proxy from "./pages/api/v2/wechat/proxy";
 
 async function main() {
   const server = new Hono<{
@@ -728,6 +729,9 @@ async function main() {
   });
   server.post("/api/v2/wechat/live/list", async (c) => {
     return v2_wechat_live_list(...(await compat_next(c)));
+  });
+  server.get("/api/v2/wechat/proxy", async (c) => {
+    return v2_wechat_proxy(...(await compat_next(c)));
   });
   // server.get("/api/v1/qrcode", async (c) => {
   //   const escape = (v: string) => {
