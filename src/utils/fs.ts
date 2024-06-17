@@ -1,7 +1,7 @@
 /*u
  * @file 封装的一些文件操作相关的函数
  */
-import { accessSync, createReadStream, createWriteStream, mkdirSync, statSync } from "fs";
+import { accessSync, createReadStream, createWriteStream, unlinkSync, rmdirSync, mkdirSync, statSync } from "fs";
 import path from "path";
 
 import { Result } from "@/types/index";
@@ -48,7 +48,13 @@ export function ensure_sync(filepath: string, next: string[] = []) {
   }
 }
 
-export async function file_info(file_path: string) {
+export async function file_info(file_path: string): Promise<
+  Result<{
+    file_type: "directory" | "file" | "unknown";
+    name: string;
+    size: number;
+  }>
+> {
   try {
     const stats = await statSync(file_path);
     const { base } = path.parse(file_path);
@@ -121,9 +127,27 @@ export async function access(filepath: string): Promise<Result<null>> {
     return Result.Err(e.message);
   }
 }
+export async function rmfile(filepath: string): Promise<Result<null>> {
+  try {
+    await unlinkSync(filepath);
+    return Result.Ok(null);
+  } catch (err) {
+    const e = err as Error;
+    return Result.Err(e.message);
+  }
+}
 export async function mkdir(filepath: string): Promise<Result<null>> {
   try {
     await mkdirSync(filepath);
+    return Result.Ok(null);
+  } catch (err) {
+    const e = err as Error;
+    return Result.Err(e.message);
+  }
+}
+export async function rmdir(filepath: string): Promise<Result<null>> {
+  try {
+    await rmdirSync(filepath, { recursive: true });
     return Result.Ok(null);
   } catch (err) {
     const e = err as Error;

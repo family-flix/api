@@ -58,10 +58,10 @@ export default async function v2_drive_file_delete(req: NextApiRequest, res: Nex
       job.update_title(`删除云盘文件「${file.name}」`);
     },
   });
+  job.finish();
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
-  job.finish();
   return res.status(200).json({
     code: 0,
     msg: "删除成功",

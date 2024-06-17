@@ -3,7 +3,6 @@
  */
 // import fs from "fs/promises";
 import { copyFileSync, mkdirSync, readdirSync, readFileSync, statSync } from "fs";
-import os from "os";
 import path from "path";
 
 import Joi from "joi";
@@ -15,7 +14,7 @@ import { DataStore } from "@/domains/store/types";
 import { DriveClient, GenreDriveFile } from "@/domains/clients/types";
 import { build_drive_file } from "@/domains/clients/utils";
 import { Result, resultify } from "@/types/index";
-import { check_existing } from "@/utils/fs";
+import { check_existing, file_info, rmdir, rmfile } from "@/utils/fs";
 import { r_id } from "@/utils/index";
 import { FileType } from "@/constants/index";
 
@@ -279,14 +278,39 @@ export class LocalFileDriveClient implements DriveClient {
   async search_files() {
     return Result.Err("请实现 search_files 方法");
   }
-  async existing() {
-    return Result.Err("请实现 existing 方法");
+  async existing(file_id: string) {
+    const r = await check_existing(file_id);
+    if (r.error) {
+      return r;
+    }
+    if (r.data) {
+      const r2 = await file_info(file_id);
+      if (r2.error) {
+        return r2;
+      }
+      const { name, size, file_type } = r2.data;
+      // return build_drive_file({
+      //   file_id,
+      //   name,
+      // });
+    }
+    return Result.Ok(null);
   }
   async rename_file() {
     return Result.Err("请实现 rename_file 方法");
   }
-  async delete_file() {
-    return Result.Err("请实现 delete_file 方法");
+  async delete_file(file_id: string) {
+    const r = await file_info(file_id);
+    if (r.error) {
+      return r;
+    }
+    if (r.data.file_type === "directory") {
+      return rmdir(file_id);
+    }
+    if (r.data.file_type === "file") {
+      return rmfile(file_id);
+    }
+    return Result.Err("未知的文件类型");
   }
   async fetch_video_preview_info() {
     return Result.Err("请实现 fetch_video_preview_info 方法");
