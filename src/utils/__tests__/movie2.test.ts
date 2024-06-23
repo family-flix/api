@@ -146,6 +146,26 @@ describe("电影", () => {
       episode: "",
     });
   });
+  test("蜘蛛侠：平行宇宙.Spider-Man.Into.the.Spider-Verse.2018.BD2160P×265.AAC.English.CHS-ENG.mp4", () => {
+    const name = "蜘蛛侠：平行宇宙.Spider-Man.Into.the.Spider-Verse.2018.BD2160P×265.AAC.English.CHS-ENG.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "蜘蛛侠：平行宇宙",
+      original_name: "Spider-Man.Into.the.Spider-Verse",
+      season: "",
+      episode: "",
+    });
+  });
+  test("林中小屋 (2012) DV 2160p Atmos.mkv", () => {
+    const name = "林中小屋 (2012) DV 2160p Atmos.mkv";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "林中小屋",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
   //
   // test("up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv", () => {
   //   const name = "up.2009.飞屋环游记.双语字幕.国英音轨.hr-hdtv.ac3.1024x576.x264-人人影视制作.mkv";

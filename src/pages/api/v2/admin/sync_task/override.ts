@@ -34,19 +34,19 @@ export default async function v2_admin_sync_task_override(
   if (!url) {
     return e(Result.Err("缺少资源 url"));
   }
-  const t_r1 = await ResourceSyncTask.Get({ id, assets: app.assets, ignore_invalid: true, user, store });
-  if (t_r1.error) {
-    return e(Result.Err(t_r1.error.message));
+  const r1 = await ResourceSyncTask.Get({ id, assets: app.assets, ignore_invalid: true, user, store });
+  if (r1.error) {
+    return e(Result.Err(r1.error.message));
   }
-  const task = t_r1.data;
-  const r = await task.override({
+  const task = r1.data;
+  const r2 = await task.override({
     url,
     pwd,
     resource_file_id,
     resource_file_name,
   });
-  if (r.error) {
-    return e(Result.Err(r.error.message));
+  if (r2.error) {
+    return e(Result.Err(r2.error.message));
   }
   return res.status(200).json({ code: 0, msg: "更新成功", data: null });
 }

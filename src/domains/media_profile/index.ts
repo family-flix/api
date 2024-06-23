@@ -20,7 +20,8 @@ import { r_id } from "@/utils";
 
 import { DoubanClient } from "./douban";
 import { TMDBClient } from "./tmdb_v2";
-import { SearchedTVItem, SearchedSeasonProfile } from "./types";
+import { MovieProfileFromTMDB } from "./tmdb_v2/services";
+import { SearchedTVItem, SearchedSeasonProfile, SearchedMovieItem } from "./types";
 import { format_season_name, map_season_number } from "./utils";
 
 type MediaProfileSearchProps = {
@@ -299,7 +300,6 @@ export class MediaProfileClient {
           id: String(id),
           type: MediaTypes.Season,
         },
-
         include: {
           media_profiles: {
             include: {
@@ -698,10 +698,33 @@ export class MediaProfileClient {
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    const { name, original_name, overview, poster_path, backdrop_path, runtime, air_date, origin_country } = r.data;
+    const created = await this.create_movie_profile({ ...r.data, tmdb_id: String(matched_movie.id) });
+    return Result.Ok(created);
+  }
+  async create_movie_profile(
+    data: MovieProfileFromTMDB & {
+      tmdb_id: string | null;
+      tvdb_id?: string | null;
+      imdb_id?: string | null;
+    }
+  ) {
+    const {
+      id,
+      name,
+      original_name,
+      overview,
+      poster_path,
+      backdrop_path,
+      runtime,
+      air_date,
+      origin_country,
+      tmdb_id,
+      tvdb_id,
+      imdb_id,
+    } = data;
     const created = await this.$store.prisma.media_profile.create({
       data: {
-        id: String(matched_movie.id),
+        id: String(id),
         type: MediaTypes.Movie,
         name,
         original_name,
@@ -713,7 +736,6 @@ export class MediaProfileClient {
         order: 1,
         in_production: 0,
         source_count: 1,
-        tmdb_id: String(matched_movie.id),
         origin_country: {
           connectOrCreate: origin_country.map((country) => {
             return {
@@ -731,10 +753,10 @@ export class MediaProfileClient {
           connectOrCreate: [
             {
               where: {
-                id: String(matched_movie.id),
+                id: tmdb_id || String(id),
               },
               create: {
-                id: String(matched_movie.id),
+                id: tmdb_id || String(id),
                 name,
                 original_name,
                 overview,
@@ -742,11 +764,13 @@ export class MediaProfileClient {
                 air_date,
                 order: 1,
                 runtime,
-                tmdb_id: String(matched_movie.id),
+                tmdb_id,
               },
             },
           ],
         },
+        tmdb_id,
+        imdb_id,
       },
       include: {
         source_profiles: true,
@@ -754,7 +778,7 @@ export class MediaProfileClient {
         genres: true,
       },
     });
-    return Result.Ok(created);
+    return created;
   }
   /** 使用 TDMB 刷新本地影视剧详情 */
   async refresh_media_profile_with_tmdb(media_profile: MediaProfileRecord) {

@@ -68,15 +68,20 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     weianzhihuo: "https://www.alipan.com/s/3AvVWwe5fRu",
     /** 驯鹿宝贝 */
     xunlubaobei: "https://www.alipan.com/s/pkqHFZe71MJ",
+    example: "https://www.alipan.com/s/2vuWzDz5UUM",
+    diershitiao: "https://www.alipan.com/s/aZRyS7V8cWV",
+    womenyiqiyaotaiyang: "https://www.alipan.com/s/HM1TEWhABVb",
+    /** 饥饿游戏 */
+    jieyouxi: 'https://www.alipan.com/s/So5yhYBxTyJ'
   };
-  const url = SHARE_FOLDER.weianzhihuo;
+  const url = SHARE_FOLDER.jieyouxi;
   const r2 = await AliyunShareResourceClient.Get({ unique_id: drive.profile.drive_id, url, store });
   if (r2.error) {
     console.log("r2.error", r2.error.message, drive.profile.drive_id);
     return;
   }
   const resource_client = r2.data;
-  const r5 = await resource_client.fetch_share_profile(resource_client.unique_id, { code: resource_client.code });
+  const r5 = await resource_client.fetch_share_profile();
   if (r5.error) {
     console.log("r5.error", r5.error.message);
     return;
@@ -207,6 +212,36 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
         });
         if (r2.error) {
           console.log("上传nfo文件失败", r2.error.message);
+        }
+        return true;
+      }
+      if (name.match(/\.epub$/)) {
+        const filename = path.resolve(parent_file_id, name);
+        const r0 = await manage.existing(filename, {
+          is_fullpath: true,
+        });
+        if (r0.error) {
+          console.log("检查epub是否存在失败，因为", r0.error.message);
+          return true;
+        }
+        if (r0.data) {
+          console.log("文件已存在");
+          return true;
+        }
+        const r1 = await resource_client.download(id);
+        if (r1.error) {
+          console.log("获取epub文件下载路径失败，因为", r1.error.message);
+          return true;
+        }
+        if (!r1.data.url) {
+          console.log("获取epub文件下载路径失败，不存在下载地址");
+          return true;
+        }
+        const r2 = await manage.download(r1.data.url, filename, {
+          is_fullpath: true,
+        });
+        if (r2.error) {
+          console.log("上传epub文件失败", r2.error.message);
         }
         return true;
       }

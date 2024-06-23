@@ -14,6 +14,8 @@ import { is_img_file, is_nfo_file, is_subtitle_file, is_video_file, noop, promis
 import { MutableRecordV2, Result } from "@/types/index";
 import { MediaTypes } from "@/constants/index";
 
+import { is_tv_nfo } from "./utils";
+
 export type SearchedEpisode = {
   tv: {
     /** tv 名称 */
@@ -85,6 +87,13 @@ type ArchivedEpisode = {
   original_name: string;
   season?: string;
   episode?: string;
+};
+type ArchivedMovie = {
+  file_id: string;
+  file_name: string;
+  file_path: string;
+  name: string;
+  original_name: string;
 };
 type PendingFile = {
   file_id: string;
@@ -165,6 +174,10 @@ export type MediaProfileInDrive = MutableRecordV2<{
     runtime: number | null;
     air_date: string | null;
     origin_country: string[];
+    subtitle_files: {
+      file_id: string;
+      name: string;
+    }[];
     tmdb_id: string | null;
     tvdb_id: string | null;
     imdb_id: string | null;
@@ -444,12 +457,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
             await this.walk(file, parent_folders);
             await (async () => {
               if (file instanceof Folder) {
-                if (file.can_save_episode) {
-                  await this.handle_folder_after_walk(file);
-                  return;
-                }
-                file.up_episodes();
-                file.up_relative_files();
+                await this.handle_folder_after_walk(file);
               }
             })();
           }
@@ -477,6 +485,16 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
             episode,
           };
         }
+        return {
+          file_id,
+          file_name: name,
+          file_path: filepath,
+          name: n,
+          original_name,
+        };
+      }
+      function generate_movie(profile: { name: string; original_name: string }) {
+        const { name: n, original_name } = profile;
         return {
           file_id,
           file_name: name,
@@ -562,6 +580,13 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
             md5,
             _position: "movie1",
           });
+          await this.handle_movie(
+            generate_movie({
+              name: last_parent?.name,
+              original_name: last_parent?.original_name,
+            }),
+            data
+          );
           return;
         }
         await this.on_movie({
@@ -576,6 +601,13 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
           md5,
           _position: "movie1",
         });
+        await this.handle_movie(
+          generate_movie({
+            name: last_parent?.name,
+            original_name: last_parent?.original_name,
+          }),
+          data
+        );
         // const reason = "可能是电影";
         // await this.on_error({
         //   file_id,
@@ -1439,22 +1471,6 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         parent_paths,
       };
       data.push_relative_files([file]);
-      // let finish = false;
-      // if (this.relative_episodes.length !== 0) {
-      //   for (let i = 0; i < this.relative_episodes.length; i += 1) {
-      //     const episode = this.relative_episodes[i];
-      //     const next_pending = await this.match_relative_file_with_episode(episode, [file]);
-      //     if (next_pending.length === 0) {
-      //       finish = true;
-      //       this.relative_episodes = this.relative_episodes.filter((e) => e.file_id !== episode.file_id);
-      //     }
-      //   }
-      //   return;
-      // }
-      // if (finish) {
-      //   return;
-      // }
-      // this.pending_files.push(file);
       return;
     }
     if (is_nfo_file(name)) {
@@ -1468,23 +1484,6 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         data.parent?.set_can_save_episode();
       }
       data.push_relative_files([file]);
-      // let finish = false;
-      // console.log("is nfo file", this.relative_episodes);
-      // if (this.relative_episodes.length !== 0) {
-      //   for (let i = 0; i < this.relative_episodes.length; i += 1) {
-      //     const episode = this.relative_episodes[i];
-      //     const next_pending = await this.match_relative_file_with_episode(episode, [file]);
-      //     if (next_pending.length === 0) {
-      //       finish = true;
-      //       this.relative_episodes = this.relative_episodes.filter((e) => e.file_id !== episode.file_id);
-      //     }
-      //   }
-      //   return;
-      // }
-      // if (finish) {
-      //   return;
-      // }
-      // this.pending_files.push(file);
       return;
     }
     // 没有匹配到预期的文件类型
@@ -1574,433 +1573,533 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     // const next_pending_files = await this.match_relative_file_with_episode(episode, this.pending_files);
     // this.pending_files = next_pending_files;
   }
+  async handle_movie(movie: ArchivedMovie, data: File) {
+    data.push_movies([movie]);
+  }
   /**
-   * 遍历完一个文件夹后，对文件夹内索引到的 剧集相关文件(图片、nfo、字幕等)进行处理
+   * 遍历完一个文件夹后，对文件夹内索引到的「剧集相关文件(图片、nfo、字幕等)」进行处理
    * 1、如果是字幕，就下载并关联对应剧集
    * 2、如果是图片
    * 3、如果是 nfo 文件，解析并组合 tvshow、season 和 episode 详情三个的关联关系，向外暴露 on_profile 回调
    */
   async handle_folder_after_walk(data: Folder | File) {
     if (data instanceof File) {
-      return;
-    }
-    if (!data.can_save_episode) {
-      return;
+      return Result.Err("无法处理文件");
     }
     const relative_files = [...data.relative_files];
     const episodes = [...data.episodes];
+    const movies = [...data.movies];
+    if (movies.length) {
+      // 判断 movies 存在才处理，会导致文件夹内如果有 nfo 文件会忽略掉
+      const movie_profile_files = relative_files.filter((file) => {
+        if (!file.name.match(/\.nfo$/)) {
+          return false;
+        }
+        if (is_tv_nfo(file.name)) {
+          return false;
+        }
+        const { season, episode } = parse_filename_for_video(file.name, ["season", "episode"]);
+        if (episode) {
+          return false;
+        }
+        return true;
+      });
+      if (movie_profile_files.length === 0) {
+        data.up_movie();
+        data.up_relative_files();
+        return Result.Err("没有找到匹配的详情文件");
+      }
+      data.clear_movie();
+      data.clear_relative_files();
+      const movie_nfo_file = movie_profile_files[0];
+      const segments = movie_nfo_file.name.split(".");
+      // const name = segments.slice(0, -1).join(".");
+      // const suffix = segments[0];
+      const movie_profile_r = await this.read_nfo(movie_nfo_file, data);
+      if (movie_profile_r.error) {
+        return Result.Err(movie_profile_r.error.message);
+      }
+      const movie_profile = movie_profile_r.data;
+      if (!movie_profile) {
+        return Result.Err(`${movie_nfo_file.name} 文件没有内容`);
+      }
+      if (movie_profile.type !== MediaProfileTypesFromNFOFile.Movie) {
+        return Result.Err("不是电影详情文件");
+      }
+      const files = this.find_relative_media_files({ file_name: movie_nfo_file.name }, relative_files);
+      const thumb_files = files.filter((file) => {
+        return is_img_file(file.name);
+      });
+      const subtitle_files = files.filter((file) => {
+        return is_subtitle_file(file.name);
+      });
+      const poster_file = thumb_files.find((f) => f.name.match(/poster-\./));
+      const backdrop_file = thumb_files.find((f) => f.name.match(/fanart-\./));
+      const {
+        name,
+        original_name,
+        overview,
+        runtime,
+        poster_path,
+        backdrop_path,
+        air_date,
+        tmdb_id,
+        tvdb_id,
+        imdb_id,
+      } = movie_profile;
+      const id = tmdb_id || imdb_id || imdb_id || "unknown_movie";
+      const movie_profile_payload: MediaProfileInDrive = {
+        type: MediaTypes.Movie,
+        id,
+        name,
+        original_name,
+        overview,
+        poster_path: (() => {
+          if (poster_file) {
+            return {
+              file_id: poster_file.file_id,
+            };
+          }
+          if (poster_path && poster_path.startsWith("http")) {
+            return {
+              file_id: poster_path,
+            };
+          }
+          return null;
+        })(),
+        backdrop_path: (() => {
+          if (backdrop_file) {
+            return {
+              file_id: backdrop_file.file_id,
+            };
+          }
+          if (backdrop_path && backdrop_path.startsWith("http")) {
+            return {
+              file_id: backdrop_path,
+            };
+          }
+          return null;
+        })(),
+        runtime,
+        air_date,
+        origin_country: [],
+        subtitle_files,
+        tmdb_id,
+        tvdb_id,
+        imdb_id,
+      };
+      await this.on_profile(movie_profile_payload);
+      // 在同一个文件夹，发现了 nfo 文件和电影文件，就把电影文件管理到 nfo 文件详情，不关心两个文件名字是否相同？
+      // 这样可以处理有一个 movie.nfo 和 蜘蛛侠：平行宇宙.Spider-Man.Into.the.Spider-Verse.2018.mp4 这种场景
+      // 缺点是如果电影文件和 nfo 文件不相关，就错误地关联了
+      return Result.Ok(id);
+    }
+    if (!data.can_save_episode) {
+      data.up_episodes();
+      data.up_relative_files();
+      return Result.Err("非电视剧文件夹");
+    }
     data.clear_episodes();
     data.clear_relative_files();
     const series_profile_file = relative_files.find((file) => {
-      return ["tvshow.nfo"].includes(file.name);
+      return is_tv_nfo(file.name);
     });
-    if (series_profile_file) {
-      // console.log("before read_nfo", series_profile_file);
-      const series_profile_r = await this.read_nfo(series_profile_file, data);
-      if (series_profile_r.error) {
-        return Result.Err(series_profile_r.error.message);
-      }
-      const series_profile = series_profile_r.data;
-      if (!series_profile) {
-        return;
-      }
-      if (series_profile.type === MediaProfileTypesFromNFOFile.Series) {
-        const episode_group_by_season: Record<
-          // season order
+    if (!series_profile_file) {
+      data.up_episodes();
+      data.up_relative_files();
+      return Result.Err("没有找到匹配的详情文件");
+    }
+    // console.log("before read_nfo", series_profile_file);
+    const series_profile_r = await this.read_nfo(series_profile_file, data);
+    if (series_profile_r.error) {
+      return Result.Err(series_profile_r.error.message);
+    }
+    const series_profile = series_profile_r.data;
+    if (!series_profile) {
+      return Result.Err(`${series_profile_file.name} 文件没有内容`);
+    }
+    if (series_profile.type === MediaProfileTypesFromNFOFile.Series) {
+      const episode_group_by_season: Record<
+        // season order
+        string,
+        Record<
+          // episode order
           string,
-          Record<
-            // episode order
-            string,
-            EpisodeProfileInDrive
-          >
-        > = {};
-        // const episode_nfo_files: {
-        //   file_id: string;
-        //   name: string;
-        //   parent_paths: string;
-        // }[] = [];
-        // const episode_thumb_files: {
-        //   file_id: string;
-        //   name: string;
-        //   parent_paths: string;
-        // }[] = [];
-        // const subtitle_files: {
-        //   file_id: string;
-        //   name: string;
-        //   parent_paths: string;
-        // }[] = [];
-        for (let i = 0; i < episodes.length; i += 1) {
-          await (async () => {
-            const episode = episodes[i];
-            const files = await this.find_relative_episode_files(episode, relative_files);
-            const episode_profile_files = files.filter((file) => {
-              return is_nfo_file(file.name);
-            });
-            // episode_nfo_files.push(...episode_profile_files);
-            const episode_thumb_files = files.filter((file) => {
-              return is_img_file(file.name);
-            });
-            // episode_thumb_files.push(...image_files2);
-            const episode_subtitle_files = files.filter((file) => {
-              return is_subtitle_file(file.name);
-            });
-            // console.log('episode_subtitle_files', episode_subtitle_files.length);
-            // subtitle_files.push(...subtitle_files2);
-            if (episode_profile_files.length === 0) {
-              console.log(`剧集 ${episode.name}/${episode.episode} 没有关联的详情文件`);
-              return;
+          EpisodeProfileInDrive
+        >
+      > = {};
+      for (let i = 0; i < episodes.length; i += 1) {
+        await (async () => {
+          const episode = episodes[i];
+          const files = this.find_relative_media_files(episode, relative_files);
+          const episode_profile_files = files.filter((file) => {
+            return is_nfo_file(file.name);
+          });
+          // episode_nfo_files.push(...episode_profile_files);
+          const episode_thumb_files = files.filter((file) => {
+            return is_img_file(file.name);
+          });
+          // episode_thumb_files.push(...image_files2);
+          const episode_subtitle_files = files.filter((file) => {
+            return is_subtitle_file(file.name);
+          });
+          // console.log('episode_subtitle_files', episode_subtitle_files.length);
+          // subtitle_files.push(...subtitle_files2);
+          if (episode_profile_files.length === 0) {
+            console.log(`剧集 ${episode.name}/${episode.episode} 没有关联的详情文件`);
+            return;
+          }
+          // 一个剧集有多个详情文件，这种情况取第一个吧，简单点
+          const episode_profile_file = episode_profile_files[0];
+          // console.log(episode_profile_file);
+          const r = await this.read_nfo(episode_profile_file, data);
+          if (r.error) {
+            console.log(`读取 nfo 文件 '${r.error.message}' 失败，因为`, r.error.message);
+            return;
+          }
+          const profile = r.data;
+          if (profile.type !== MediaProfileTypesFromNFOFile.Episode) {
+            console.log(`详情文件 '${episode_profile_file.file_id}' 不是剧集详情文件`);
+            return;
+          }
+          const { name, overview, air_date, season, runtime, original_filename } = profile;
+          let order = profile.order;
+          // console.log("content from episode nfo file", episode.file_name, season, order);
+          if (!order) {
+            // 没有第几集信息，一般不可能
+            console.log(`详情文件 '${episode_profile_file.file_id}' 中缺少剧集集数信息`);
+            return;
+          }
+          // 从文件名判断是第几季
+          const { season: season_str, episode: episode_str } = parse_filename_for_video(episode_profile_file.name, [
+            "name",
+            "original_name",
+            "season",
+            "episode",
+            "year",
+          ]);
+          if (episode_str) {
+            // 优先使用文件名上面的 episode_number，是为了兼容单测时所有 episode nfo 文件是同一个，导致集数都相同的问题
+            // 现在不用了，episode info 文件内容都是正确的
+            const episode_number = format_episode_number(episode_str);
+            const n = episode_number.match(/E([0-9]{1,})/);
+            if (n) {
+              order = Number(n[1]);
             }
-            // 一个剧集有多个详情文件，这种情况取第一个吧，简单点
-            const episode_profile_file = episode_profile_files[0];
-            // console.log(episode_profile_file);
-            const r = await this.read_nfo(episode_profile_file, data);
-            if (r.error) {
-              console.log(`读取 nfo 文件 '${r.error.message}' 失败，因为`, r.error.message);
-              return;
+          }
+          const season_number = (() => {
+            if (season) {
+              return season;
             }
-            const profile = r.data;
-            if (profile.type !== MediaProfileTypesFromNFOFile.Episode) {
-              console.log(`详情文件 '${episode_profile_file.file_id}' 不是剧集详情文件`);
-              return;
-            }
-            const { name, overview, air_date, season, runtime } = profile;
-            let order = profile.order;
-            // console.log("content from episode nfo file", episode.file_name, season, order);
-            if (!order) {
-              // 没有第几集信息，一般不可能
-              console.log(`详情文件 '${episode_profile_file.file_id}' 中缺少剧集集数信息`);
-              return;
-            }
-            // 从文件名判断是第几季
-            const { season: season_str, episode: episode_str } = parse_filename_for_video(episode_profile_file.name, [
-              "name",
-              "original_name",
-              "season",
-              "episode",
-              "year",
-            ]);
-            if (episode_str) {
-              // 优先使用文件名上面的 episode_number，是为了兼容单测时所有 episode nfo 文件是同一个，导致集数都相同的问题
-              const episode_number = format_episode_number(episode_str);
-              const n = episode_number.match(/E([0-9]{1,})/);
+            if (season_str) {
+              const season_number = format_season_number(season_str);
+              const n = season_number.match(/S([0-9]{1,})/);
               if (n) {
-                order = Number(n[1]);
+                return Number(n[0]);
               }
             }
-            const season_number = (() => {
-              if (season) {
-                return season;
+            return null;
+          })();
+          if (season_number === null) {
+            console.log(`详情文件 '${episode_profile_file.file_id}' 中缺少季数信息且文件名中也未解析出季数`);
+            return;
+          }
+          // console.log("before save episode profiles");
+          const s = String(season_number);
+          const o = String(order);
+          episode_group_by_season[s] = episode_group_by_season[s] || {};
+          // console.log(`save episode to episode_profiles ${s}/${o}`);
+          episode_group_by_season[s][o] = {
+            id: `unknown_series/${s}/${o}`,
+            name,
+            overview,
+            air_date,
+            episode_number: order,
+            season_number,
+            runtime,
+            still_path: episode_thumb_files.length ? episode_thumb_files[0] : null,
+            subtitle_files: episode_subtitle_files,
+            relative_source_id: episode.file_id,
+          };
+        })();
+      }
+      const season_profile_files = relative_files.filter((file) => {
+        return file.name.match(/[sS]eason[0-9]{0,}\.nfo/);
+      });
+      const season_profiles: SeasonProfileInDrive[] = [];
+      for (let i = 0; i < season_profile_files.length; i += 1) {
+        await (async () => {
+          const season_profile_file = season_profile_files[i];
+          const { name, parent_paths } = season_profile_file;
+          const r = await this.read_nfo(season_profile_file, data);
+          if (r.error) {
+            console.log(`读取 nfo 文件 '${name}' 失败，因为`, r.error.message);
+            return;
+          }
+          const season_profile = r.data;
+          if (season_profile.type !== MediaProfileTypesFromNFOFile.Season) {
+            console.log(`详情文件 '${name}' 不是季详情文件`);
+            return;
+          }
+          if (!season_profile.order) {
+            const season_num = (() => {
+              const n = name.match(/season([0-9]{1,})/);
+              if (n) {
+                return Number(n[0]);
               }
-              if (season_str) {
-                const season_number = format_season_number(season_str);
-                const n = season_number.match(/S([0-9]{1,})/);
-                if (n) {
-                  return Number(n[0]);
+              const parent_pathname = parent_paths.split("/").pop();
+              if (parent_pathname) {
+                const r1 = parent_pathname.match(/[sS]([0-9]{1,})/);
+                if (r1) {
+                  return Number(r1[0]);
+                }
+                const r2 = parent_pathname.match(/[sS]eason([0-9]{1,})/);
+                if (r2) {
+                  return Number(r2[0]);
                 }
               }
               return null;
             })();
-            if (season_number === null) {
-              console.log(`详情文件 '${episode_profile_file.file_id}' 中缺少季数信息且文件名中也未解析出季数`);
-              return;
-            }
-            // console.log("before save episode profiles");
-            const s = String(season_number);
-            const o = String(order);
-            episode_group_by_season[s] = episode_group_by_season[s] || {};
-            // console.log(`save episode to episode_profiles ${s}/${o}`);
-            episode_group_by_season[s][o] = {
-              id: `unknown_series/${s}/${o}`,
-              name,
-              overview,
-              air_date,
-              episode_number: order,
-              season_number,
-              runtime,
-              still_path: episode_thumb_files.length ? episode_thumb_files[0] : null,
-              subtitle_files: episode_subtitle_files,
-              relative_source_id: episode.file_id,
-            };
-          })();
-        }
-        const season_profile_files = relative_files.filter((file) => {
-          return file.name.match(/[sS]eason[0-9]{0,}\.nfo/);
-        });
-        const season_profiles: SeasonProfileInDrive[] = [];
-        for (let i = 0; i < season_profile_files.length; i += 1) {
-          await (async () => {
-            const season_profile_file = season_profile_files[i];
-            const { name, parent_paths } = season_profile_file;
-            const r = await this.read_nfo(season_profile_file, data);
-            if (r.error) {
-              console.log(`读取 nfo 文件 '${name}' 失败，因为`, r.error.message);
-              return;
-            }
-            const season_profile = r.data;
-            if (season_profile.type !== MediaProfileTypesFromNFOFile.Season) {
-              console.log(`详情文件 '${name}' 不是季详情文件`);
-              return;
-            }
-            if (!season_profile.order) {
-              const season_num = (() => {
-                const n = name.match(/season([0-9]{1,})/);
-                if (n) {
-                  return Number(n[0]);
-                }
-                const parent_pathname = parent_paths.split("/").pop();
-                if (parent_pathname) {
-                  const r1 = parent_pathname.match(/[sS]([0-9]{1,})/);
-                  if (r1) {
-                    return Number(r1[0]);
-                  }
-                  const r2 = parent_pathname.match(/[sS]eason([0-9]{1,})/);
-                  if (r2) {
-                    return Number(r2[0]);
-                  }
-                }
-                return null;
-              })();
-              season_profile.order = season_num;
-            }
-            if (!season_profile.order) {
-              console.log(`详情文件 '${season_profile_file.file_id}' 中缺少季数信息且文件名中也未解析出季数`);
-              return;
-            }
-            const episode_map = episode_group_by_season[season_profile.order];
-            // console.log("episode map of season", season_profile.order, episode_group_by_season);
-            season_profiles.push({
-              id: `unknown_series/${season_profile.order}`,
-              name: season_profile.name,
-              overview: season_profile.overview,
-              season_number: season_profile.order,
-              air_date: season_profile.air_date,
-              poster_path: (() => {
-                if (season_profile.poster_path && season_profile.poster_path.startsWith("http")) {
-                  return {
-                    // 网络图片
-                    file_id: season_profile.poster_path,
-                  };
-                }
-                const file = relative_files.find((file) => {
-                  return file.name.match(/^season[0-9]{1,}-poster/);
-                });
-                if (file) {
-                  return {
-                    // 云盘内文件
-                    file_id: file.file_id,
-                  };
-                }
-                return null;
-              })(),
-              backdrop_path: (() => {
-                const file = relative_files.find((file) => {
-                  return file.name.match(/^fanart\./);
-                });
-                if (file) {
-                  return {
-                    file_id: file.file_id,
-                  };
-                }
-                return null;
-              })(),
-              vote_average: season_profile.rating,
-              episode_count: episode_map ? Object.keys(episode_map).length : 0,
-              episodes: episode_map ? Object.values(episode_map) : [],
-            });
-          })();
-        }
-        const { name, original_name, overview, poster_path, backdrop_path, air_date, tmdb_id, tvdb_id, imdb_id } =
-          series_profile;
-        const id = tmdb_id || imdb_id || imdb_id || "unknown_movie";
-        // console.log("series_profile_payload", season_profiles);
-        const seasons = (() => {
-          if (season_profiles.length) {
-            return season_profiles;
+            season_profile.order = season_num;
           }
-          // 没有 season.nfo 文件，有 S01E01.episode.nfo 文件
-          const seasons = Object.keys(episode_group_by_season);
-          if (seasons.length === 0) {
-            return [];
+          if (!season_profile.order) {
+            console.log(`详情文件 '${season_profile_file.file_id}' 中缺少季数信息且文件名中也未解析出季数`);
+            return;
           }
-          return seasons.map((season_number) => {
-            const episode_map = episode_group_by_season[season_number];
-            const episodes = Object.values(episode_map);
-            return {
-              id: `unknown_series/${season_number}`,
-              name: `第 ${season_number} 季`,
-              overview: null,
-              season_number: Number(season_number),
-              air_date: (() => {
-                const first = episodes.find((e) => e.episode_number === 1);
-                if (first) {
-                  return first.air_date;
-                }
-                return null;
-              })(),
-              poster_path: (() => {
-                const file = relative_files.find((file) => {
-                  return file.name.match(/^season[0-9]{1,}-poster/);
-                });
-                if (file) {
-                  return {
-                    // 云盘内文件
-                    file_id: file.file_id,
-                  };
-                }
-                return null;
-              })(),
-              backdrop_path: (() => {
-                const file = relative_files.find((file) => {
-                  return file.name.match(/^fanart\./);
-                });
-                if (file) {
-                  return {
-                    file_id: file.file_id,
-                  };
-                }
-                return null;
-              })(),
-              vote_average: null,
-              episode_count: episodes.length,
-              episodes,
-            };
+          const episode_map = episode_group_by_season[season_profile.order];
+          // console.log("episode map of season", season_profile.order, episode_group_by_season);
+          season_profiles.push({
+            id: `unknown_series/${season_profile.order}`,
+            name: season_profile.name,
+            overview: season_profile.overview,
+            season_number: season_profile.order,
+            air_date: season_profile.air_date,
+            poster_path: (() => {
+              if (season_profile.poster_path && season_profile.poster_path.startsWith("http")) {
+                return {
+                  // 网络图片
+                  file_id: season_profile.poster_path,
+                };
+              }
+              const file = relative_files.find((file) => {
+                return file.name.match(/^season[0-9]{1,}-poster/);
+              });
+              if (file) {
+                return {
+                  // 云盘内文件
+                  file_id: file.file_id,
+                };
+              }
+              return null;
+            })(),
+            backdrop_path: (() => {
+              const file = relative_files.find((file) => {
+                return file.name.match(/^fanart\./);
+              });
+              if (file) {
+                return {
+                  file_id: file.file_id,
+                };
+              }
+              return null;
+            })(),
+            vote_average: season_profile.rating,
+            episode_count: episode_map ? Object.keys(episode_map).length : 0,
+            episodes: episode_map ? Object.values(episode_map) : [],
           });
         })();
-        const series_poster_path = (() => {
+      }
+      const { name, original_name, overview, poster_path, backdrop_path, air_date, tmdb_id, tvdb_id, imdb_id } =
+        series_profile;
+      const id = tmdb_id || imdb_id || imdb_id || "unknown_movie";
+      // console.log("series_profile_payload", season_profiles);
+      const seasons = (() => {
+        if (season_profiles.length) {
+          return season_profiles;
+        }
+        // 没有 season.nfo 文件，有 S01E01.episode.nfo 文件
+        const seasons = Object.keys(episode_group_by_season);
+        if (seasons.length === 0) {
+          return [];
+        }
+        return seasons.map((season_number) => {
+          const episode_map = episode_group_by_season[season_number];
+          const episodes = Object.values(episode_map);
+          return {
+            id: `unknown_series/${season_number}`,
+            name: `第 ${season_number} 季`,
+            overview: null,
+            season_number: Number(season_number),
+            air_date: (() => {
+              const first = episodes.find((e) => e.episode_number === 1);
+              if (first) {
+                return first.air_date;
+              }
+              return null;
+            })(),
+            poster_path: (() => {
+              const file = relative_files.find((file) => {
+                return file.name.match(/^season[0-9]{1,}-poster/);
+              });
+              if (file) {
+                return {
+                  // 云盘内文件
+                  file_id: file.file_id,
+                };
+              }
+              return null;
+            })(),
+            backdrop_path: (() => {
+              const file = relative_files.find((file) => {
+                return file.name.match(/^fanart\./);
+              });
+              if (file) {
+                return {
+                  file_id: file.file_id,
+                };
+              }
+              return null;
+            })(),
+            vote_average: null,
+            episode_count: episodes.length,
+            episodes,
+          };
+        });
+      })();
+      const series_poster_path = (() => {
+        if (poster_path && poster_path.startsWith("http")) {
+          return {
+            // 网络图片
+            file_id: poster_path,
+          };
+        }
+        const file = relative_files.find((file) => {
+          return file.name.match(/^poster\./);
+        });
+        if (file) {
+          return {
+            // 云盘内文件
+            file_id: file.file_id,
+          };
+        }
+        return null;
+      })();
+      const series_backdrop_path = (() => {
+        if (backdrop_path && backdrop_path.startsWith("http")) {
+          return {
+            // 网络图片
+            file_id: backdrop_path,
+          };
+        }
+        const file = relative_files.find((file) => {
+          return file.name.match(/^fanart\./);
+        });
+        if (file) {
+          return {
+            file_id: file.file_id,
+          };
+        }
+        return null;
+      })();
+      const series_profile_payload: MediaProfileInDrive = {
+        type: MediaTypes.Season,
+        id,
+        name,
+        original_name,
+        overview,
+        poster_path: series_poster_path,
+        backdrop_path: series_backdrop_path,
+        first_air_date: air_date,
+        number_of_seasons: seasons.length,
+        seasons: seasons.map((s) => {
+          const { id: season_id, episodes } = s;
+          // console.log("replace season_id", season_id, id);
+          return {
+            id: season_id.replace(/unknown_series/, id),
+            name: s.name || name,
+            overview: s.overview || overview,
+            season_number: s.season_number,
+            poster_path: s.poster_path || series_poster_path,
+            backdrop_path: s.backdrop_path || series_backdrop_path,
+            air_date: s.air_date || air_date,
+            vote_average: s.vote_average,
+            episode_count: s.episode_count,
+            episodes: episodes.map((e) => {
+              const { id: episode_id, ...rest } = e;
+              // console.log("replace episode_id", episode_id, season_id, id);
+              return {
+                id: episode_id.replace(/unknown_series/, id),
+                ...rest,
+              };
+            }),
+          };
+        }),
+        origin_country: [],
+        next_episode_to_air: null,
+        in_production: false,
+        genres: [],
+        tmdb_id,
+        tvdb_id,
+        imdb_id,
+      };
+      // 通知新增电视剧详情
+      await this.on_profile(series_profile_payload);
+    }
+    if (series_profile.type === MediaProfileTypesFromNFOFile.Movie) {
+      // 通知新增电影详情
+      const {
+        name,
+        original_name,
+        overview,
+        runtime,
+        poster_path,
+        backdrop_path,
+        air_date,
+        tmdb_id,
+        tvdb_id,
+        imdb_id,
+      } = series_profile;
+      const id = tmdb_id || imdb_id || imdb_id || "unknown_movie";
+      const movie_profile_payload: MediaProfileInDrive = {
+        type: MediaTypes.Movie,
+        id,
+        name,
+        original_name,
+        overview,
+        poster_path: (() => {
           if (poster_path && poster_path.startsWith("http")) {
             return {
-              // 网络图片
               file_id: poster_path,
             };
           }
-          const file = relative_files.find((file) => {
-            return file.name.match(/^poster\./);
-          });
-          if (file) {
-            return {
-              // 云盘内文件
-              file_id: file.file_id,
-            };
-          }
           return null;
-        })();
-        const series_backdrop_path = (() => {
+        })(),
+        backdrop_path: (() => {
           if (backdrop_path && backdrop_path.startsWith("http")) {
             return {
-              // 网络图片
               file_id: backdrop_path,
             };
           }
-          const file = relative_files.find((file) => {
-            return file.name.match(/^fanart\./);
-          });
-          if (file) {
-            return {
-              file_id: file.file_id,
-            };
-          }
           return null;
-        })();
-        const series_profile_payload: MediaProfileInDrive = {
-          type: MediaTypes.Season,
-          id,
-          name,
-          original_name,
-          overview,
-          poster_path: series_poster_path,
-          backdrop_path: series_backdrop_path,
-          first_air_date: air_date,
-          number_of_seasons: seasons.length,
-          seasons: seasons.map((s) => {
-            const { id: season_id, episodes } = s;
-            // console.log("replace season_id", season_id, id);
-            return {
-              id: season_id.replace(/unknown_series/, id),
-              name: s.name || name,
-              overview: s.overview || overview,
-              season_number: s.season_number,
-              poster_path: s.poster_path || series_poster_path,
-              backdrop_path: s.backdrop_path || series_backdrop_path,
-              air_date: s.air_date || air_date,
-              vote_average: s.vote_average,
-              episode_count: s.episode_count,
-              episodes: episodes.map((e) => {
-                const { id: episode_id, ...rest } = e;
-                // console.log("replace episode_id", episode_id, season_id, id);
-                return {
-                  id: episode_id.replace(/unknown_series/, id),
-                  ...rest,
-                };
-              }),
-            };
-          }),
-          origin_country: [],
-          next_episode_to_air: null,
-          in_production: false,
-          genres: [],
-          tmdb_id,
-          tvdb_id,
-          imdb_id,
-        };
-        // 通知新增电视剧详情
-        await this.on_profile(series_profile_payload);
-      }
-      if (series_profile.type === MediaProfileTypesFromNFOFile.Movie) {
-        // 通知新增电影详情
-        const {
-          name,
-          original_name,
-          overview,
-          runtime,
-          poster_path,
-          backdrop_path,
-          air_date,
-          tmdb_id,
-          tvdb_id,
-          imdb_id,
-        } = series_profile;
-        const id = tmdb_id || imdb_id || imdb_id || "unknown_movie";
-        const movie_profile_payload: MediaProfileInDrive = {
-          type: MediaTypes.Movie,
-          id,
-          name,
-          original_name,
-          overview,
-          poster_path: (() => {
-            if (poster_path && poster_path.startsWith("http")) {
-              return {
-                file_id: poster_path,
-              };
-            }
-            return null;
-          })(),
-          backdrop_path: (() => {
-            if (backdrop_path && backdrop_path.startsWith("http")) {
-              return {
-                file_id: backdrop_path,
-              };
-            }
-            return null;
-          })(),
-          runtime,
-          air_date,
-          origin_country: [],
-          tmdb_id,
-          tvdb_id,
-          imdb_id,
-        };
-        await this.on_profile(movie_profile_payload);
-      }
+        })(),
+        runtime,
+        air_date,
+        origin_country: [],
+        subtitle_files: [],
+        tmdb_id,
+        tvdb_id,
+        imdb_id,
+      };
+      await this.on_profile(movie_profile_payload);
     }
-    const movie_profile_file = relative_files.find((file) => {
-      return ["movie.nfo"].includes(file.name);
-    });
-    if (movie_profile_file) {
-      // ...
-    }
+    return Result.Err("不是正确的 nfo type 值");
   }
-  async find_relative_episode_files(
-    episode: ArchivedEpisode,
+  /**
+   * 从文件列表中找到一些相关的文件，比如 MovieName.nfo
+   * 可以找到类似 MovieName.ass、MovieName-fanart.jpg 这些名字相同的文件
+   */
+  find_relative_media_files(
+    episode: { file_name: string },
     pending_files: {
       file_id: string;
       name: string;
@@ -2066,28 +2165,10 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     }
     this.need_stop = true;
   }
-  // log(...args: unknown[]) {
-  // }
-
   on_print(handler: Handler<TheTypesOfEvents[Events.Print]>) {
     return this.on(Events.Print, handler);
   }
   on_stop(handler: Handler<TheTypesOfEvents[Events.Stop]>) {
     return this.on(Events.Stop, handler);
   }
-  // on_file(handler: Handler<TheTypesOfEvents[Events.File]>) {
-  //   return this.on(Events.File, handler);
-  // }
-  // on_episode(handler: Handler<TheTypesOfEvents[Events.Episode]>) {
-  //   return this.on(Events.Episode, handler);
-  // }
-  // on_movie(handler: Handler<TheTypesOfEvents[Events.Movie]>) {
-  //   return this.on(Events.Movie, handler);
-  // }
-  // on_error(handler: Handler<TheTypesOfEvents[Events.Error]>) {
-  //   return this.on(Events.Error, handler);
-  // }
-  // on_warning(handler: Handler<TheTypesOfEvents[Events.Warning]>) {
-  //   return this.on(Events.Warning, handler);
-  // }
 }

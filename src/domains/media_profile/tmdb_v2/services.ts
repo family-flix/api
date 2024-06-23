@@ -593,7 +593,6 @@ export async function fetch_movie_profile(
   const { api_key, language } = query;
   const r = await request.get<{
     adult: boolean;
-    backdrop_path: string;
     belongs_to_collection: {
       id: number;
       name: string;
@@ -609,10 +608,11 @@ export async function fetch_movie_profile(
     id: number;
     imdb_id: string;
     original_language: string;
-    original_title: string;
-    overview: string;
+    original_title: string | null;
+    overview: string | null;
     popularity: number;
-    poster_path: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
     production_companies: {
       id: number;
       logo_path: string;
@@ -623,9 +623,9 @@ export async function fetch_movie_profile(
       iso_3166_1: string;
       name: string;
     }[];
-    release_date: string;
+    release_date: string | null;
     revenue: number;
-    runtime: number;
+    runtime: number | null;
     spoken_languages: {
       english_name: string;
       iso_639_1: string;
@@ -659,14 +659,11 @@ export async function fetch_movie_profile(
   } = r.data;
   return Result.Ok({
     id,
-    title,
-    original_title,
     name: title,
     original_name: original_title,
     air_date: release_date,
-    release_date,
     overview,
-    tagline,
+    // tagline,
     status,
     vote_average,
     popularity,
@@ -675,9 +672,12 @@ export async function fetch_movie_profile(
     origin_country: r.data.production_countries.map((country) => {
       return country["iso_3166_1"];
     }),
-    ...fix_TMDB_image_path({
+    ...(fix_TMDB_image_path({
       poster_path,
       backdrop_path,
+    }) as {
+      poster_path: string | null;
+      backdrop_path: string | null;
     }),
   });
 }

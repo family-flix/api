@@ -25,6 +25,13 @@ type ArchivedEpisode = {
   season?: string;
   episode?: string;
 };
+type ArchivedMovie = {
+  file_id: string;
+  file_name: string;
+  file_path: string;
+  name: string;
+  original_name: string;
+};
 type PendingFile = {
   file_id: string;
   name: string;
@@ -59,14 +66,16 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
   delay?: number;
   /** 该文件夹解析出的剧集列表 */
   episodes: ArchivedEpisode[] = [];
+  movies: ArchivedEpisode[] = [];
   /** 该文件夹内和「影视剧」相关的文件，如字幕、封面、nfo 文件等 */
   relative_files: PendingFile[] = [];
   /**
-   * 索引过程只有根文件夹可以保持 episodes；假设索引 medias 文件夹
+   * 索引过程只有根文件夹可以保存 episodes；假设索引 medias 文件夹
    * - medias
    *    - 请回答1998（2015）
    *      - S01
    *    - L 零号追杀.2023
+   *
    * 只有 请回答1998（2015） 和 L 零号追杀.2023 两个文件夹可以保持 episodes。S01 不行
    * 这样当索引完 请回答1998（2015） 后可以将 episodes 清空，释放一些内存？
    */
@@ -227,13 +236,6 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
   push_episodes(episodes: ArchivedEpisode[]) {
     // console.log("folder push episode", this.name, this.can_save_episode, this.parent?.name, episode.file_name);
     this.episodes.push(...episodes);
-    // if (this.can_save_episode) {
-    //   this.episodes.push(...episodes);
-    //   return;
-    // }
-    // if (this.parent) {
-    //   this.parent.push_episodes(episodes);
-    // }
   }
   up_episodes() {
     if (this.parent) {
@@ -244,16 +246,21 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
   clear_episodes() {
     this.episodes = [];
   }
+  push_movie(movies: ArchivedEpisode[]) {
+    this.movies.push(...movies);
+  }
+  up_movie() {
+    if (this.parent) {
+      this.parent.push_movie(this.movies);
+    }
+    this.movies = [];
+  }
+  clear_movie() {
+    this.movies = [];
+  }
   push_relative_files(files: PendingFile[]) {
     // console.log("folder push relative file", this.name, this.parent?.name, file.name, this.can_save_episode);
     this.relative_files.push(...files);
-    // if (this.can_save_episode) {
-    //   this.relative_files.push(...files);
-    //   return;
-    // }
-    // if (this.parent) {
-    //   this.parent.push_relative_files(files);
-    // }
   }
   up_relative_files() {
     if (this.parent) {
@@ -336,6 +343,13 @@ export class File {
       return;
     }
     this.parent.push_episodes(episodes);
+  }
+  push_movies(movies: ArchivedMovie[]) {
+    // console.log("file push episode", this.name, this.parent?.name, episode.file_name);
+    if (!this.parent) {
+      return;
+    }
+    this.parent.push_movie(movies);
   }
   push_relative_files(files: PendingFile[]) {
     // console.log("file push relative file", this.name, this.parent?.name, file.name);

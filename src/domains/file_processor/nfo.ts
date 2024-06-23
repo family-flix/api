@@ -49,6 +49,7 @@ type MediaProfileFromNFOFile = MutableRecordV2<{
     order: number | null;
     runtime: number | null;
     season: number | null;
+    original_filename: string | null;
     imdbid: string | null;
     tvdbid: string | null;
   };
@@ -60,6 +61,7 @@ type MediaProfileFromNFOFile = MutableRecordV2<{
     backdrop_path: string | null;
     air_date: string | null;
     runtime: number | null;
+    original_filename: string | null;
     tmdb_id: string | null;
     imdb_id: string | null;
     tvdb_id: string | null;
@@ -203,6 +205,91 @@ type EpisodeProfilePayload = {
         }[];
       }[];
     }[];
+    original_filename: string | null;
+  };
+};
+
+type MovieProfilePayload = {
+  movie: {
+    title: string;
+    originaltitle: string;
+    sorttitle: string;
+    epbookmark: string;
+    year: number;
+    ratings: {
+      rating: {
+        default: boolean;
+        max: number;
+        name: string;
+        value: number;
+        votes: number;
+      };
+    };
+    userrating: number;
+    top250: number;
+    set: string;
+    plot: string;
+    outline: string;
+    tagline: string;
+    runtime: number;
+    thumb: {
+      aspect: "poster" | "landscape";
+      url: string;
+    };
+    fanart: {
+      thumb: string;
+    };
+    mpaa: string;
+    certification: string;
+    id: string;
+    tmdbid: number;
+    uniqueid: {
+      default: boolean;
+      type: string;
+      value: string;
+    };
+    country: string;
+    status: string;
+    code: string;
+    premiered: string;
+    watched: boolean;
+    playcount: number;
+    lastplayed: string;
+    genre: string[];
+    studio: string;
+    credits: { tmdbid: string };
+    director: { tmdbid: string };
+    actor: {
+      name: string;
+      role: string;
+      thumb: string;
+      profile: string;
+      tmdbid: number;
+    }[];
+    trailer: string;
+    languages: string[];
+    dateadded: string;
+    fileinfo: {
+      streamdetails: {
+        video: {
+          codec: string;
+          aspect: string;
+          width: number;
+          height: number;
+          durationinseconds: number;
+          stereomode: string;
+        };
+        audio: {
+          codec: string;
+          language: string;
+          channels: number;
+        }[];
+      };
+    };
+    source: string;
+    edition: string;
+    original_filename: string;
+    user_note: string;
   };
 };
 type NfoFileProcessorProps = {
@@ -316,7 +403,7 @@ export class NfoFileProcessor extends BaseDomain<TheTypesOfEvents> {
       });
     }
     if (this.is_episode(name) && data.episodedetails) {
-      const { title, plot, outline, aired, episode, runtime, season, imdbid, tvdbid } =
+      const { title, plot, outline, aired, episode, runtime, season, imdbid, tvdbid, original_filename } =
         data.episodedetails as EpisodeProfilePayload["episodedetails"];
       return Result.Ok({
         type: MediaProfileTypesFromNFOFile.Episode,
@@ -327,13 +414,27 @@ export class NfoFileProcessor extends BaseDomain<TheTypesOfEvents> {
         order: episode ? Number(episode[0]) : null,
         season: season ? Number(season[0]) : null,
         runtime: runtime ? Number(runtime) : null,
+        original_filename,
         imdbid: imdbid ? imdbid[0] : null,
         tvdbid: tvdbid ? tvdbid[0] : null,
       });
     }
     // if (this.is_movie(name)) {
+    //   const { title, originaltitle, plot, outline, runtime, tmdbid, premiered, original_filename } =
+    //     data.episodedetails as MovieProfilePayload["movie"];
     //   return Result.Ok({
-
+    //     type: MediaProfileTypesFromNFOFile.Movie,
+    //     name: title?.[0],
+    //     original_name: originaltitle,
+    //     overview: plot?.[0] || outline?.[0] || null,
+    //     poster_path: null,
+    //     backdrop_path: null,
+    //     air_date: premiered || null,
+    //     runtime: runtime ? Number(runtime) : null,
+    //     original_filename,
+    //     tmdb_id: tmdbid || null,
+    //     imdbid: imdbid ? imdbid[0] : null,
+    //     tvdbid: tvdbid ? tvdbid[0] : null,
     //   });
     // }
     return Result.Err("不是预期的详情文件");
@@ -362,6 +463,10 @@ export class NfoFileProcessor extends BaseDomain<TheTypesOfEvents> {
   }
   is_movie(name: string) {
     if (name.match(/movie\.nfo/)) {
+      return true;
+    }
+    const { episode } = parse_filename_for_video(name);
+    if (!episode) {
       return true;
     }
     return false;

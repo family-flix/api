@@ -189,3 +189,7 @@ export function build_folder_tree(records: ParsedEpisodeRecord[]) {
 export type RequestedAliyunDriveFiles = GenreDriveFile & {
   items?: RequestedAliyunDriveFiles[];
 };
+
+export function is_tv_nfo(name: string) {
+  return ["tvshow.nfo"].includes(name);
+}

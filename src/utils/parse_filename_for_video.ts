@@ -44,10 +44,10 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("末路狂花钱")) {
+    if (!filename.includes("Spider")) {
       return;
     }
-    console.log(...args);
+    // console.log(...args);
   }
   // @ts-ignore
   const result: Record<VideoKeys, string> = keys
@@ -608,14 +608,14 @@ export function parse_filename_for_video(
     {
       key: k("encode"),
       // 能处理 HD4K、HD265 这种异常数据
-      regexp: /[xX]{0,1}[hH]{0,1}[dD]{0,1}\.26[45]{1}(_FLAC){0,1}/,
+      regexp: /[xX×]{0,1}[hH]{0,1}[dD]{0,1}\.26[45]{1}(_FLAC){0,1}/,
       before() {
-        cur_filename = cur_filename.replace(/([xX]26[45])\.(FLAC)/, "$1_$2");
+        cur_filename = cur_filename.replace(/([xX×]26[45])\.(FLAC)/, "$1_$2");
       },
     },
     {
       key: k("encode"),
-      regexp: /[xXhH]26[45]{1}(-[0-9]{1,2}[bB][iI][tT]){0,1}/,
+      regexp: /[xXhH×]26[45]{1}(-[0-9]{1,2}[bB][iI][tT]){0,1}/,
     },
     {
       // AVC-10bit、HEVC-10bit
@@ -626,7 +626,7 @@ export function parse_filename_for_video(
       regexp: /(HE|A)[VC]C(\.FLAC){0,1}/,
     },
     {
-      regexp: /[dD][tT][sS]5.1/
+      regexp: /[dD][tT][sS]5.1/,
     },
     {
       regexp: /(MPEG|VP9|AV1){1}/,
@@ -640,6 +640,9 @@ export function parse_filename_for_video(
     },
     // 音频编码方式
     {
+      regexp: /Atmos/,
+    },
+    {
       key: "voice_encode",
       /**
        * DDP5.1: dolby digital plus 5.1声道，有损压缩，流媒体专用
@@ -647,7 +650,7 @@ export function parse_filename_for_video(
        * DDP2.0 这是什么？
        * DDP    这是什么？
        */
-      regexp: /D[dD]([pP]|\+){0,1}(\.){0,1}([25]\.[01]){0,1}(\.Atmos){0,1}/,
+      regexp: /D[dD]([pP]|\+){0,1}(\.){0,1}([25]\.[01]){0,1}/,
     },
     {
       regexp: /[dD]olby/,

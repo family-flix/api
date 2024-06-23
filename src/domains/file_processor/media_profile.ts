@@ -100,11 +100,6 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
     }
     if (type === MediaTypes.Season) {
       const { tmdb_id } = data;
-      // for (let i = 0; i < data.seasons.length; i += 1) {
-      //   const { episodes } = data.seasons[i];
-      //   episodes.map(console.log);
-      // }
-      // data.episodes.map(console.log);
       // console.log("before media_series_profile.findFirst", tmdb_id);
       const existing_series_profile = await store.prisma.media_series_profile.findFirst({
         where: {
@@ -210,7 +205,6 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
             if (!matched) {
               return;
             }
-            console.log("---- matched", matched, season);
             const media = await this.searcher.get_season_media_record_by_profile({ id: season.id, name: season.name });
             const processed_episodes = [];
             for (let i = 0; i < season.episodes.length; i += 1) {
@@ -317,33 +311,47 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
       return Result.Ok(existing_series_profile);
     }
     if (type === MediaTypes.Movie) {
-      // const { tmdb_id } = data;
-      // const existing_series_profile = await store.prisma.media_series_profile.findFirst({
-      //   where: {
-      //     id: String(tmdb_id),
-      //   },
-      //   include: {
-      //     media_profiles: true,
-      //   },
-      // });
-      // if (!existing_series_profile) {
-      //   /**
-      //    * ----------------------------------------
-      //    * 详情不存在，新增电视剧、季详情记录
-      //    * ----------------------------------------
-      //    */
-      //   const { name, original_name, overview, poster_path, backdrop_path, seasons, number_of_season } = data;
-      //   const created = await this.client.create_series_profile({
-      //     name,
-      //     original_name,
-      //     overview,
-      //     poster_path,
-      //     backdrop_path,
-      //     seasons,
-      //     number_of_season,
-      //   });
-      //   return Result.Ok(created);
-      // }
+      const { tmdb_id } = data;
+      const existing_series_profile = await store.prisma.media_profile.findFirst({
+        where: {
+          id: String(tmdb_id),
+        },
+      });
+      if (!existing_series_profile) {
+        const { id, name, original_name, overview, poster_path, backdrop_path, runtime, air_date, origin_country } =
+          data;
+        const created = await this.client.create_movie_profile({
+          id: Number(id),
+          name,
+          original_name,
+          overview,
+          poster_path: poster_path
+            ? await this.client.download_image_with_client({
+                file_id: poster_path.file_id,
+                key: id ? id.replace("/", "_") : undefined,
+                parent_dir: "poster",
+                client: this.drive.client,
+              })
+            : null,
+          backdrop_path: backdrop_path
+            ? await this.client.download_image_with_client({
+                file_id: backdrop_path.file_id,
+                key: id ? id.replace("/", "_") : undefined,
+                parent_dir: "backdrop",
+                client: this.drive.client,
+              })
+            : null,
+          air_date,
+          runtime,
+          origin_country,
+          status: "",
+          vote_average: 0,
+          popularity: 0,
+          genres: [],
+          tmdb_id,
+        });
+        return Result.Ok(created);
+      }
       // return Result.Ok(existing_series_profile);
     }
     return Result.Err(`未知的 type 值 '${type}'`);

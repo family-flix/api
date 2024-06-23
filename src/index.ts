@@ -169,6 +169,10 @@ import v2_wechat_live_list from "./pages/api/v2/wechat/live/list";
 import v2_admin_media_source_list from "./pages/api/v2/admin/media_source/list";
 import v0_proxy from "./pages/api/proxy";
 import v2_wechat_proxy from "./pages/api/v2/wechat/proxy";
+import v2_admin_drive_set_root_folder from "./pages/api/v2/admin/drive/set_root_folder";
+import v2_admin_drive_set_token from "./pages/api/v2/admin/drive/set_token";
+import v2_admin_drive_export from "./pages/api/v2/admin/drive/export";
+import v2_admin_drive_check_in from "./pages/api/v2/admin/drive/check_in";
 
 async function main() {
   const server = new Hono<{
@@ -350,13 +354,25 @@ async function main() {
     return v2_admin_analysis_new_files(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/drive/add", async (c) => {
-    return v2_admin_drive_delete(...(await compat_next(c)));
+    return v2_admin_drive_add(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/drive/delete", async (c) => {
-    return v2_admin_drive_add(...(await compat_next(c)));
+    return v2_admin_drive_delete(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/drive/refresh", async (c) => {
     return v2_admin_drive_refresh(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/drive/set_token", async (c) => {
+    return v2_admin_drive_set_token(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/drive/set_root_folder", async (c) => {
+    return v2_admin_drive_set_root_folder(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/drive/export", async (c) => {
+    return v2_admin_drive_export(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/drive/check_in", async (c) => {
+    return v2_admin_drive_check_in(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/resource/files", async (c) => {
     return v2_admin_resource_files(...(await compat_next(c)));

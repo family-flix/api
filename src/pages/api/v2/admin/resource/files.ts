@@ -18,7 +18,7 @@ async function get_drive_client(values: { user: User; store: DataStore }) {
   // 取第一个云盘用来获取分享文件列表，不涉及转存逻辑
   const drive = await store.prisma.drive.findFirst({
     where: {
-      type: DriveTypes.AliyunBackupDrive,
+      type: DriveTypes.AliyunResourceDrive,
       user_id: user.id,
     },
   });
@@ -68,6 +68,11 @@ export default async function v2_admin_resource_files(req: NextApiRequest, res: 
     user,
     store,
   });
+  // console.log("[API]v2/admin/resource - after AliyunShareResourceClient.Get");
+  if (r3.error) {
+    return Result.Err(r3.error.message);
+  }
+  const client = r3.data;
   (async () => {
     // 保存查询记录
     if (parent_file_id !== "root") {
@@ -91,10 +96,6 @@ export default async function v2_admin_resource_files(req: NextApiRequest, res: 
       },
     });
   })();
-  if (r3.error) {
-    return Result.Err(r3.error.message);
-  }
-  const client = r3.data;
   const r4 = await client.fetch_files(parent_file_id, {
     marker: next_marker,
   });
