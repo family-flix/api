@@ -43,7 +43,7 @@ export default async function v2_admin_movie_profile(req: NextApiRequest, res: N
               drive: true,
             },
             orderBy: {
-              created: "asc",
+              created: "desc",
             },
           },
         },

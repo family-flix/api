@@ -39,6 +39,7 @@ import v0_wechat_invitee_list from "./pages/api/invitee/list";
 import v0_wechat_collection_list from "./pages/api/collection/list";
 import v0_admin_parse from "./pages/api/admin/parse";
 import v2_admin_drive_add from "./pages/api/v2/admin/drive/add";
+import v2_admin_drive_list from "./pages/api/v2/admin/drive/list";
 import v0_admin_drive_list from "./pages/api/admin/drive/list";
 import v2_admin_analysis from "./pages/api/v2/admin/analysis";
 import v2_admin_analysis_files from "./pages/api/v2/admin/analysis/files";
@@ -354,6 +355,9 @@ async function main() {
   });
   server.post("/api/v2/admin/analysis/new_files", async (c) => {
     return v2_admin_analysis_new_files(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/drive/list", async (c) => {
+    return v2_admin_drive_list(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/drive/add", async (c) => {
     return v2_admin_drive_add(...(await compat_next(c)));
