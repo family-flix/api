@@ -44,7 +44,6 @@ import v2_admin_analysis from "./pages/api/v2/admin/analysis";
 import v2_admin_analysis_files from "./pages/api/v2/admin/analysis/files";
 import v2_admin_analysis_new_files from "./pages/api/v2/admin/analysis/new_files";
 import v2_admin_parsed_media_match_profile from "./pages/api/v2/admin/parsed_media/match_profile";
-import v2_drive_update from "./pages/api/v2/drive/update";
 import v0_admin_person_list from "./pages/api/admin/person/list";
 import v0_admin_check_same_name from "./pages/api/admin/shared_file/check_same_name";
 import v2_admin_resource_files from "./pages/api/v2/admin/resource/files";
@@ -173,6 +172,13 @@ import v2_admin_drive_set_root_folder from "./pages/api/v2/admin/drive/set_root_
 import v2_admin_drive_set_token from "./pages/api/v2/admin/drive/set_token";
 import v2_admin_drive_export from "./pages/api/v2/admin/drive/export";
 import v2_admin_drive_check_in from "./pages/api/v2/admin/drive/check_in";
+import v2_admin_drive_update from "./pages/api/v2/admin/drive/update";
+import v2_admin_drive_profile from "./pages/api/v2/admin/drive/profile";
+import v2_drive_file_add from "./pages/api/v2/drive/file/add";
+import v2_admin_drive_receive_rewards from "./pages/api/v2/admin/drive/receive_rewards";
+import v2_admin_parsed_media_delete from "./pages/api/v2/admin/parsed_media/delete";
+import v2_admin_sync_task_transfer_history from "./pages/api/v2/admin/sync_task/transfer_history_list";
+import v2_admin_sync_task_search_history from "./pages/api/v2/admin/sync_task/search_history_list";
 
 async function main() {
   const server = new Hono<{
@@ -183,10 +189,6 @@ async function main() {
   }>();
 
   server.use(logger());
-  // server.use(async (c, next) => {
-  //   console.log(`[${c.req.method}] ${c.req.url}`);
-  //   await next();
-  // });
   server.use(
     "/mobile/*",
     static_serve({
@@ -359,6 +361,9 @@ async function main() {
   server.post("/api/v2/admin/drive/delete", async (c) => {
     return v2_admin_drive_delete(...(await compat_next(c)));
   });
+  server.post("/api/v2/admin/drive/profile", async (c) => {
+    return v2_admin_drive_profile(...(await compat_next(c)));
+  });
   server.post("/api/v2/admin/drive/refresh", async (c) => {
     return v2_admin_drive_refresh(...(await compat_next(c)));
   });
@@ -373,6 +378,12 @@ async function main() {
   });
   server.post("/api/v2/admin/drive/check_in", async (c) => {
     return v2_admin_drive_check_in(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/drive/receive_rewards", async (c) => {
+    return v2_admin_drive_receive_rewards(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/drive/update", async (c) => {
+    return v2_admin_drive_update(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/resource/files", async (c) => {
     return v2_admin_resource_files(...(await compat_next(c)));
@@ -455,6 +466,9 @@ async function main() {
   server.post("/api/v2/admin/parsed_media/set_profile_in_file_id", async (c) => {
     return v2_admin_parsed_media_set_profile_in_file_id(...(await compat_next(c)));
   });
+  server.post("/api/v2/admin/parsed_media/delete", async (c) => {
+    return v2_admin_parsed_media_delete(...(await compat_next(c)));
+  });
   server.post("/api/v2/admin/parsed_media_source/list", async (c) => {
     return v2_admin_parsed_media_source_list(...(await compat_next(c)));
   });
@@ -533,6 +547,12 @@ async function main() {
   server.post("/api/v2/admin/sync_task/override", async (c) => {
     return v2_admin_sync_task_override(...(await compat_next(c)));
   });
+  server.post("/api/v2/admin/sync_task/transfer_history", async (c) => {
+    return v2_admin_sync_task_transfer_history(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/sync_task/search_history", async (c) => {
+    return v2_admin_sync_task_search_history(...(await compat_next(c)));
+  });
   server.post("/api/v2/admin/report/list", async (c) => {
     return v2_admin_report_list(...(await compat_next(c)));
   });
@@ -551,8 +571,8 @@ async function main() {
   server.post("/api/v2/parsed_media/match_profile", async (c) => {
     return v2_admin_parsed_media_match_profile(...(await compat_next(c)));
   });
-  server.post("/api/v2/drive/update", async (c) => {
-    return v2_drive_update(...(await compat_next(c)));
+  server.post("/api/v2/drive/file/add", async (c) => {
+    return v2_drive_file_add(...(await compat_next(c)));
   });
   server.post("/api/v2/drive/file/list", async (c) => {
     return v2_drive_file_list(...(await compat_next(c)));

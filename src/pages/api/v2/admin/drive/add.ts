@@ -14,11 +14,11 @@ export default async function v2_admin_drive_add(req: NextApiRequest, res: NextA
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { type, payload } = req.body as Partial<{ type: number; payload: unknown }>;
-  const t_res = await Administrator.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res.error);
+  const t = await Administrator.New(authorization, store);
+  if (t.error) {
+    return e(t);
   }
-  const user = t_res.data;
+  const user = t.data;
   if (type === undefined) {
     return e(Result.Err("请指定云盘类型"));
   }
@@ -27,7 +27,7 @@ export default async function v2_admin_drive_add(req: NextApiRequest, res: NextA
   }
   const r = await Drive.Create({ type, payload, store, user });
   if (r.error) {
-    return e(Result.Err(r.error.message));
+    return e(r);
   }
   user.update_stats({
     drive_count: user.statistics.drive_count + 1,

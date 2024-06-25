@@ -11,7 +11,7 @@ import { app, store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive/v2";
 import { Job, TaskTypes } from "@/domains/job/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 
 export default async function v2_drive_file_delete(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -22,11 +22,11 @@ export default async function v2_drive_file_delete(req: NextApiRequest, res: Nex
     file_id: string;
     drive_id: string;
   }>;
-  const t_res = await User.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res);
+  const t = await User.New(authorization, store);
+  if (t.error) {
+    return e(t);
   }
-  const user = t_res.data;
+  const user = t.data;
   if (!drive_id) {
     return e(Result.Err("缺少云盘 id"));
   }
@@ -47,7 +47,7 @@ export default async function v2_drive_file_delete(req: NextApiRequest, res: Nex
     store,
   });
   if (job_res.error) {
-    return e(Result.Err(job_res.error.message));
+    return e(job_res);
   }
   const job = job_res.data;
   drive.on_print((v) => {
@@ -60,7 +60,7 @@ export default async function v2_drive_file_delete(req: NextApiRequest, res: Nex
   });
   job.finish();
   if (r.error) {
-    return e(Result.Err(r.error.message));
+    return e(r);
   }
   return res.status(200).json({
     code: 0,

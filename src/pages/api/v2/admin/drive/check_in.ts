@@ -13,21 +13,20 @@ export default async function v2_admin_drive_check_in(req: NextApiRequest, res: 
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id: drive_id } = req.body as Partial<{ id: string }>;
+  const t = await User.New(authorization, store);
+  if (t.error) {
+    return e(t);
+  }
+  const user = t.data;
   if (!drive_id) {
     return e("缺少云盘 id");
   }
-  const t_res = await User.New(authorization, store);
-  if (t_res.error) {
-    return e(t_res);
-  }
-  const user = t_res.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
   }
   const drive = drive_res.data;
-  const { client } = drive;
-  const r = await client.checked_in();
+  const r = await drive.client.checked_in();
   if (r.error) {
     return e(r);
   }

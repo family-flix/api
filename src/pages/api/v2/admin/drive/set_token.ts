@@ -5,9 +5,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { store, BaseApiResp } from "@/store/index";
-import { User } from "@/domains/user";
-import { Drive } from "@/domains/drive";
-import { Result } from "@/types/index";
+import { User } from "@/domains/user/index";
+import { Drive } from "@/domains/drive/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { parseJSONStr } from "@/utils/index";
 
@@ -18,17 +18,17 @@ export default async function v2_admin_drive_set_token(
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { id: drive_id, refresh_token } = req.body as Partial<{ id: string; refresh_token: string }>;
+  const t = await User.New(authorization, store);
+  if (t.error) {
+    return e(t);
+  }
+  const user = t.data;
   if (!drive_id) {
-    return e("缺少云盘 id");
+    return e(Result.Err("缺少云盘 id"));
   }
   if (!refresh_token) {
-    return e("缺少 refresh_token");
+    return e(Result.Err("缺少 refresh_token"));
   }
-  const t_resp = await User.New(authorization, store);
-  if (t_resp.error) {
-    return e(t_resp);
-  }
-  const user = t_resp.data;
   const drive_res = await Drive.Get({ id: drive_id, user, store });
   if (drive_res.error) {
     return e(drive_res);
