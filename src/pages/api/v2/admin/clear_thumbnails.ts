@@ -41,7 +41,6 @@ export default async function v2_admin_clear_thumbnails(
       return f.replace(/\/thumbnail\//, "");
     }) as string[];
   const thumbnail_dir = path.resolve(app.assets, "thumbnail");
-  let j = 0;
   try {
     const files = fs.readdirSync(thumbnail_dir);
     for (let i = 0; i < files.length; i += 1) {

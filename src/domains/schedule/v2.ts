@@ -1,3 +1,6 @@
+import path from "path";
+import fs from "fs";
+
 import dayjs from "dayjs";
 
 import { Application } from "@/domains/application";
@@ -1340,5 +1343,38 @@ export class ScheduleTask {
     });
     console.log("finish update_media_rank");
     return Result.Ok(null);
+  }
+  async delete_thumbnails() {
+    const histories = await this.store.prisma.play_history_v2.findMany({
+      select: {
+        thumbnail_path: true,
+      },
+      orderBy: {
+        updated: "desc",
+      },
+    });
+    const thumbnails = histories
+      .map((h) => h.thumbnail_path)
+      .filter(Boolean)
+      .map((f) => {
+        if (!f) {
+          return null;
+        }
+        return f.replace(/\/thumbnail\//, "");
+      }) as string[];
+    const thumbnail_dir = path.resolve(this.app.assets, "thumbnail");
+    try {
+      const files = fs.readdirSync(thumbnail_dir);
+      for (let i = 0; i < files.length; i += 1) {
+        const f = files[i];
+        if (!thumbnails.includes(f)) {
+          fs.unlinkSync(path.resolve(thumbnail_dir, f));
+        }
+      }
+    } catch (err) {
+      const error = err as Error;
+      console.log(error.message);
+    }
+    console.log("Completed");
   }
 }

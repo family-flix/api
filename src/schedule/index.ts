@@ -191,6 +191,7 @@ import { Notify } from "@/domains/notify/index";
     async () => {
       console.log("执行任务 at 0 0 3 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
       await schedule.clear_expired_parsed_source();
+      await schedule.delete_thumbnails();
     },
     null,
     true,
