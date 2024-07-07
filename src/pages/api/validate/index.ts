@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { store, BaseApiResp } from "@/store/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { Member } from "@/domains/user/member";
 import { response_error_factory } from "@/utils/server";
 import { compare_versions_with_timestamp } from "@/utils/index";

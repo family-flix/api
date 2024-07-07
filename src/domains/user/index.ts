@@ -2,7 +2,7 @@ import Joi from "joi";
 
 import { DatabaseStore } from "@/domains/store/index";
 import { DataStore } from "@/domains/store/types";
-import { Result, resultify } from "@/types/index";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 import { parseJSONStr, r_id } from "@/utils/index";
 import { DEFAULT_STATS } from "@/constants/index";
 

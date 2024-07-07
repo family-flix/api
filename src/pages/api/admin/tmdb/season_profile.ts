@@ -4,11 +4,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user";
-import { TMDBClient } from "@/domains/media_profile/tmdb";
-import { BaseApiResp, Result } from "@/types";
+import { TMDBClient } from "~/src/domains/media_profile/tmdb";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
-import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

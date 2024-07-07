@@ -8,7 +8,7 @@ import { store, BaseApiResp } from "@/store/index";
 import { Member } from "@/domains/user/member";
 import { Notify } from "@/domains/notify";
 import { ReportTypes } from "@/constants";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { r_id } from "@/utils/index";
 

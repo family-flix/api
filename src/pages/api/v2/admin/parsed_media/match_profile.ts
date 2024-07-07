@@ -11,7 +11,7 @@ import { TaskTypes } from "@/domains/job/constants";
 import { MediaSearcher } from "@/domains/searcher/v2";
 import { Job } from "@/domains/job/index";
 import { response_error_factory } from "@/utils/server";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 export default async function v2_admin_parsed_media_match_profile(
   req: NextApiRequest,

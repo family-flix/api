@@ -16,7 +16,7 @@ import { Job, TaskTypes } from "@/domains/job";
 import { Application } from "@/domains/application";
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource/index";
 import { DataStore, ResourceSyncTaskRecord } from "@/domains/store/types";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { is_video_file, r_id, sleep } from "@/utils/index";
 import { FileType, ResourceSyncTaskStatus } from "@/constants/index";
 

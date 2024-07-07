@@ -1,6 +1,6 @@
 import { Drive } from "@/domains/drive";
 import { User } from "@/domains/user";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { describe, it, expect } from "vitest";
 
 import { test_store as store } from "../store";

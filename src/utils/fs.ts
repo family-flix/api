@@ -4,7 +4,7 @@
 import { accessSync, createReadStream, createWriteStream, unlinkSync, rmdirSync, mkdirSync, statSync } from "fs";
 import path from "path";
 
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 /**
  * 确保某个路径必然存在

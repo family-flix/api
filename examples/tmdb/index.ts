@@ -1,4 +1,4 @@
-import { TMDBClient } from "@/domains/media_profile/tmdb";
+import { TMDBClient } from "~/src/domains/media_profile/tmdb";
 
 async function main() {
   const client = new TMDBClient({
@@ -18,7 +18,6 @@ async function main() {
   //   return;
   // }
   // console.log(person.data);
-
 
   const person = await client.fetch_person_profile({ person_id: "126778" });
   if (person.error) {

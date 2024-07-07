@@ -3,8 +3,9 @@ import { parseStringPromise } from "xml2js";
 import { BaseDomain } from "@/domains/base";
 import { ArticleLineNode } from "@/domains/article/index";
 import { DriveClient } from "@/domains/clients/types";
+import { Result, resultify } from "@/domains/result/index";
 import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
-import { MutableRecordV2, Result } from "@/types";
+import { MutableRecordV2 } from "@/types";
 
 enum Events {
   AddMovie,

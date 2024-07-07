@@ -10,7 +10,7 @@ import { BaseDomain, Handler } from "@/domains/base";
 import { DriveTypes } from "@/domains/drive/constants";
 import { FileType, MediaTypes } from "@/constants";
 import { update } from "@/utils";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 import {
   DataStore,

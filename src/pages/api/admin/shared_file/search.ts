@@ -9,7 +9,7 @@ import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { User } from "@/domains/user/index";
 import { AliyunDriveProfile } from "@/domains/clients/alipan/types";
 import { response_error_factory } from "@/utils/server";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { parseJSONStr } from "@/utils/index";
 
 // let cached_drive: Record<string, AliyunDriveClient> = {};

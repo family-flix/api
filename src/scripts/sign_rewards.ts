@@ -2,7 +2,8 @@
  * @file 领取签到奖励
  */
 import { Application } from "@/domains/application";
-import { ScheduleTask } from "@/domains/schedule";
+import { ScheduleTask } from "@/domains/schedule/v2";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { DriveTypes } from "@/domains/drive/constants";
 
 async function walk_drive() {
@@ -22,7 +23,11 @@ async function walk_drive() {
       return;
     }
     console.log(drive.name);
-    const r = await drive.client.fetch_rewards();
+    const c = drive.client;
+    if (!(c instanceof AliyunDriveClient)) {
+      return;
+    }
+    const r = await c.fetch_rewards();
     if (r.error) {
       console.log(["获取奖励失败，因为", r.error.message].join(" "));
       return;
@@ -31,7 +36,7 @@ async function walk_drive() {
       await (async () => {
         const { day, rewardAmount } = r.data[i];
         console.log([`领取第 ${day} 天奖励`].join(" "));
-        const r2 = await drive.client.receive_reward(day);
+        const r2 = await c.receive_reward(day);
         if (r2.error) {
           console.log([`领取第 ${day} 天奖励失败，因为`, r2.error.message].join(" "));
           return;

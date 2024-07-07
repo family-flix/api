@@ -10,7 +10,7 @@ import { DriveTypes } from "@/domains/drive/constants";
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource";
 import { DataStore } from "@/domains/store/types";
 import { response_error_factory } from "@/utils/server";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { r_id } from "@/utils/index";
 
 async function get_drive_client(values: { user: User; store: DataStore }) {

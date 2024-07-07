@@ -7,7 +7,7 @@ import { ReadStream } from "fs";
 import { Application } from "@/domains/application/index";
 import { DataStore } from "@/domains/store/types";
 import { SpeechToText } from "@/domains/speech/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 type FlixWechatBotProps = {
   app: Application<any>;

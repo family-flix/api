@@ -12,10 +12,10 @@ import { build_drive_file } from "@/domains/clients/utils";
 import { DriveTypes } from "@/domains/drive/constants";
 import { HttpClientCore } from "@/domains/http_client/index";
 import { connect } from "@/domains/http_client/provider.axios";
+import { Result, resultify } from "@/domains/result/index";
 import { request_factory } from "@/domains/request/utils";
 import { RequestCore } from "@/domains/request/index";
 import { query_stringify, sleep, parseJSONStr, r_id } from "@/utils";
-import { Result, resultify } from "@/types/index";
 
 import { Drive115FileResp, Drive115Profile, Drive115Payload } from "./types";
 

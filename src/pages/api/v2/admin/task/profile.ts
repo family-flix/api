@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { app, store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { Job } from "@/domains/job/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 
 export default async function v2_admin_task_profile(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

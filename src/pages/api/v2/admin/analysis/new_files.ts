@@ -11,7 +11,7 @@ import { DriveAnalysis } from "@/domains/analysis/v2";
 import { Job } from "@/domains/job/index";
 import { TaskTypes } from "@/domains/job/constants";
 import { response_error_factory } from "@/utils/server";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 export default async function v2_admin_analysis_new_files(
   req: NextApiRequest,

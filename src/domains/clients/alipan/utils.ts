@@ -15,7 +15,7 @@ import { Job } from "@/domains/job";
 import { User } from "@/domains/user";
 import { DatabaseStore } from "@/domains/store";
 import { FileType, MediaTypes } from "@/constants";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { build_media_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
 
 export function get_part_info_list(file_size: number, upload_chunk_size: number) {

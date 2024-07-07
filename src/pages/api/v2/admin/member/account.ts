@@ -9,7 +9,7 @@ import { User } from "@/domains/user/index";
 import { ModelQuery } from "@/domains/store/types";
 import { response_error_factory } from "@/utils/server";
 import { AuthenticationProviders } from "@/constants/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 export default async function v2_admin_member_list(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

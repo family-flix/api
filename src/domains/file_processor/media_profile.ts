@@ -13,7 +13,7 @@ import { User } from "@/domains/user/index";
 import { FileManage } from "@/domains/uploader/index";
 import { Drive } from "@/domains/drive/v2";
 import { ArticleLineNode } from "@/domains/article/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { MediaTypes } from "@/constants/index";
 
 enum Events {

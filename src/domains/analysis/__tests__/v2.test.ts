@@ -10,7 +10,7 @@ import { Drive } from "@/domains/drive/v2";
 import { User } from "@/domains/user/index";
 import { DriveTypes } from "@/domains/drive/constants";
 import { Job, TaskTypes } from "@/domains/job";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { FileType } from "@/constants/index";
 
 const app = new Application({

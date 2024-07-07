@@ -11,7 +11,7 @@ import { Job } from "@/domains/job/index";
 import { Drive } from "@/domains/drive/v2";
 import { TaskTypes } from "@/domains/job/constants";
 import { DriveAnalysis } from "@/domains/analysis/v2";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { FileType } from "@/constants/index";
 

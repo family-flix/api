@@ -5,13 +5,14 @@ import { Handler, BaseDomain } from "@/domains/base";
 import { File, Folder } from "@/domains/folder/index";
 import { ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article/index";
 import { MediaProfileTypesFromNFOFile, NfoFileProcessor } from "@/domains/file_processor/nfo";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 import {
   format_episode_number,
   format_season_number,
   parse_filename_for_video,
 } from "@/utils/parse_filename_for_video";
 import { is_img_file, is_nfo_file, is_subtitle_file, is_video_file, noop, promise_noop, sleep } from "@/utils/index";
-import { MutableRecordV2, Result } from "@/types/index";
+import { MutableRecordV2 } from "@/types/index";
 import { MediaTypes } from "@/constants/index";
 
 import { is_tv_nfo } from "./utils";

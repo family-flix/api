@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { app, store, BaseApiResp } from "@/store";
 import { SpeechToText } from "@/domains/speech";
 import { Member } from "@/domains/user/member";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 
 export default async function v2_wechat_recognize(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

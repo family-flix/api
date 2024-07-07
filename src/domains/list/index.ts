@@ -3,8 +3,9 @@
  */
 import { BaseDomain, Handler } from "@/domains/base";
 import { RequestCore } from "@/domains/request/index";
+import { Result, resultify } from "@/domains/result/index";
 import { debounce } from "@/utils/lodash/debounce";
-import { Result, UnpackedResult } from "@/types";
+import { UnpackedResult } from "@/types";
 
 import { DEFAULT_RESPONSE, DEFAULT_PARAMS, DEFAULT_CURRENT_PAGE, DEFAULT_PAGE_SIZE, DEFAULT_TOTAL } from "./constants";
 import { OriginalResponse, FetchParams, Response, Search, ParamsProcessor, ListProps } from "./typing";

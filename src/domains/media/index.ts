@@ -7,7 +7,7 @@ import {
 } from "@/domains/store/types";
 import { Member } from "@/domains/user/member";
 import { MediaTypes, SubtitleFileTypes, SubtitleLanguageMap } from "@/constants/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 import {
   find_missing_episodes,

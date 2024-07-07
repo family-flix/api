@@ -8,7 +8,7 @@ import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive/v2";
 import { DriveTypes } from "@/domains/drive/constants";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 
 export default async function v2_drive_file_list(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

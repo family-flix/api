@@ -1,6 +1,6 @@
 import { TVProfileRecord, SeasonProfileRecord, MovieProfileRecord, EpisodeProfileRecord } from "@/domains/store/types";
-import { MediaSearcher } from "@/domains/searcher";
-import { Unpacked } from "@/types";
+import { MediaSearcher } from "@/domains/searcher/v2";
+import { Unpacked } from "@/types/index";
 
 export function check_tv_profile_need_refresh(
   existing_profile: TVProfileRecord,

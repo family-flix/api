@@ -13,9 +13,9 @@ import { DataStore } from "@/domains/store/types";
 import { GenreDriveFile } from "@/domains/clients/types";
 import { DriveClient } from "@/domains/clients/types";
 import { DriveTypes } from "@/domains/drive/constants";
+import { Result, resultify } from "@/domains/result/index";
 import { query_stringify, sleep, parseJSONStr, r_id } from "@/utils";
 import { MediaResolutionTypes } from "@/constants";
-import { Result, resultify } from "@/types";
 
 import { XunleiDriveFileResp, XunleiDriveProfile, XunleiDrivePayload } from "./types";
 

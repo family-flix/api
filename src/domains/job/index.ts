@@ -8,7 +8,7 @@ import { BaseDomain, Handler } from "@/domains/base";
 import { Article, ArticleLineNode, ArticleTextNode } from "@/domains/article/index";
 import { Application } from "@/domains/application/index";
 import { AsyncTaskRecord, DataStore } from "@/domains/store/types";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { r_id } from "@/utils/index";
 
 import { TaskStatus, TaskTypes } from "./constants";

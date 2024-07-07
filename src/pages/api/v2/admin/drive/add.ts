@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { store, BaseApiResp } from "@/store/index";
 import { Drive } from "@/domains/drive/v2";
 import { Administrator } from "@/domains/administrator";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 
 export default async function v2_admin_drive_add(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

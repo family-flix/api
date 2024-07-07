@@ -16,13 +16,13 @@ import {
   TVProfileRecord,
   TVRecord,
 } from "@/domains/store/types";
-import { TMDBClient } from "@/domains/media_profile/tmdb";
-import { EpisodeProfileFromTMDB } from "@/domains/media_profile/tmdb/services";
+import { TMDBClient } from "~/src/domains/media_profile/tmdb";
+import { EpisodeProfileFromTMDB } from "~/src/domains/media_profile/tmdb/services";
 import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
 import { User } from "@/domains/user";
-import { MediaSearcher } from "@/domains/searcher";
+import { MediaSearcher } from "@/domains/searcher/v2";
 import { walk_model_with_cursor } from "@/domains/store/utils";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { MediaProfileSourceTypes } from "@/constants";
 
 import {
@@ -633,45 +633,6 @@ export class ProfileRefresh extends BaseDomain<TheTypesOfEvents> {
         .filter((p) => p.name) as { name: string }[],
       override: false,
     });
-  }
-  /** 改变指定电视剧的详情为另一个（顺便更新了电视剧季和剧集？ */
-  async change_season_profile(
-    payload: {
-      season: SeasonRecord & {
-        profile: SeasonProfileRecord;
-      };
-      tv: TVRecord & { profile: TVProfileRecord };
-    },
-    extra: { source?: number; unique_id: string }
-  ) {
-    const { season, tv } = payload;
-    const prefix = `[${[tv.profile.name, season.season_text].join("/")}]`;
-    const r1 = await this.change_tv_profile({ id: tv.id, profile: tv.profile }, extra);
-    if (r1.error) {
-      // this.emit(Events.Print, Article.build_line([prefix, "改变电视剧详情失败", r1.error.message]));
-      return Result.Err(r1.error.message);
-    }
-    if (r1.data.unique_id === tv.profile.unique_id) {
-      // this.emit(Events.Print, Article.build_line([prefix, "详情没有变更，异常情况"]));
-      return Result.Err("详情没有变更，异常情况");
-    }
-    this.emit(Events.Print, Article.build_line([prefix, "重新搜索季详情"]));
-    const scopes = (() => {
-      if (r1.data.scopes) {
-        return r1.data.scopes;
-      }
-      return [r1.data.name, r1.data.original_name].filter(Boolean).map((name) => {
-        return { name } as { name: string };
-      });
-    })();
-    this.emit(Events.Print, Article.build_line([prefix, JSON.stringify(scopes)]));
-    // await this.searcher.process_parsed_season_list(scopes, { force_search_tmdb: true });
-    //
-    if (scopes.length === 0) {
-      // 这里要终止吗，不然就索引全云盘了
-    }
-    await this.searcher.process_parsed_episode_list(scopes, { force_search_tmdb: true });
-    return Result.Ok(null);
   }
   /** 变更电影详情 */
   async change_movie_profile(

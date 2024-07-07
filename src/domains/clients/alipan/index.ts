@@ -17,10 +17,10 @@ import { Article, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource";
 import { build_drive_file, run } from "@/domains/clients/utils";
 import { DriveClient, GenreDriveFile } from "@/domains/clients/types";
+import { Result, resultify } from "@/domains/result/index";
 import { BaseDomain, Handler } from "@/domains/base";
 import { parseJSONStr, query_stringify, r_id, sleep } from "@/utils/index";
 import { MediaResolutionTypes } from "@/constants/index";
-import { Result, resultify, Unpacked } from "@/types/index";
 
 import { AliyunDriveFileResp, AliyunDriveToken, PartialVideo, AliyunDriveProfile, AliyunDrivePayload } from "./types";
 import { get_part_info_list, prepare_upload_file, read_part_file, file_info } from "./utils";
@@ -1986,7 +1986,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     }>(API_HOST + url, b);
     if (r.error) {
       // 不要 Result.Err(r.err.message)
-      return r;
+      return Result.Err(r.error.message);
     }
     return Result.Ok(r.data);
   }

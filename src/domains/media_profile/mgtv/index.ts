@@ -1,7 +1,7 @@
 /**
  * @file 芒果TV
  */
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 import {
   fetch_episode_profile,

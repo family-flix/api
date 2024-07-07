@@ -17,7 +17,7 @@ import { MediaSourceProfileRecord, MediaSourceRecord, ParsedMediaSourceRecord } 
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { archive_media_files, TheFilePrepareTransferV2 } from "@/domains/clients/alipan/utilsV2";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { FileType, MediaTypes } from "@/constants/index";
 import { response_error_factory } from "@/utils/server";
 import { padding_zero, sleep } from "@/utils/index";

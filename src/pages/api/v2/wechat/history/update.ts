@@ -9,7 +9,7 @@ import { app, store, BaseApiResp } from "@/store";
 import { MediaThumbnail } from "@/domains/media_thumbnail";
 import { Member } from "@/domains/user/member";
 import { Drive } from "@/domains/drive/v2";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { r_id } from "@/utils/index";
 

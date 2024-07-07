@@ -4,7 +4,8 @@
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 
-import { JSONArray, JSONObject, Result } from "@/types";
+import { Result } from "@/domains/result/index";
+import { JSONArray, JSONObject } from "@/types";
 
 import { cn as nzhcn } from "./nzh/index";
 

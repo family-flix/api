@@ -3,7 +3,7 @@
  */
 import axios from "axios";
 
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { query_stringify } from "@/utils";
 import { app } from "@/store";
 

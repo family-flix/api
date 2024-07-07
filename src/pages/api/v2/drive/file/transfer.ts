@@ -13,7 +13,7 @@ import { ParsedMediaSourceRecord } from "@/domains/store/types";
 import { Drive } from "@/domains/drive/v2";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { archive_media_files } from "@/domains/clients/alipan/utilsV2";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { FileType, MediaTypes } from "@/constants/index";
 import { response_error_factory } from "@/utils/server";
 import { sleep } from "@/utils/index";

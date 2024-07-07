@@ -4,7 +4,8 @@
 import axios from "axios";
 import cheerio from "cheerio";
 
-import { Result, Unpacked, UnpackedResult } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { Unpacked } from "@/types";
 import { MEDIA_SOURCE_MAP, MEDIA_TYPE_MAP, MEDIA_COUNTRY_MAP } from "@/constants";
 import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { query_stringify } from "@/utils";

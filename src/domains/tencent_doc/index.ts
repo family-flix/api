@@ -4,7 +4,7 @@
 import axios from "axios";
 
 import { utils } from "./utils";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 export class TencentDoc {
   url: string;

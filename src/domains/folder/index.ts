@@ -4,7 +4,7 @@
 import { BaseDomain, Handler } from "@/domains/base";
 import { GenreDriveFile } from "@/domains/clients/types";
 import { DriveClient } from "@/domains/clients/types";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { sleep } from "@/utils";
 
 enum Events {

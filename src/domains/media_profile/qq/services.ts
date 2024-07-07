@@ -4,7 +4,8 @@
 
 import axios from "axios";
 
-import { Result, Unpacked, UnpackedResult } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { Unpacked } from "@/types";
 import { MediaId, SearchedTVItem, SeasonProfile, TVProfile } from "../types";
 import { MEDIA_COUNTRY_MAP, MEDIA_SOURCE_MAP, MEDIA_TYPE_MAP } from "@/constants";
 

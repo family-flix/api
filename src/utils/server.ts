@@ -1,8 +1,8 @@
 import os from "os";
 
 import { decode_token } from "@/domains/user/jwt";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 import { BaseApiResp } from "@/store/index";
-import { Result, resultify } from "@/types/index";
 
 /**
  * 解析 token

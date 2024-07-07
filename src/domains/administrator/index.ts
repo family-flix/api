@@ -15,7 +15,7 @@ import {
   ResourceSyncTaskStatus,
 } from "@/constants/index";
 import { parseJSONStr, r_id } from "@/utils/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 export class Administrator extends User {
   static async New(token: string | undefined, store: DataStore) {

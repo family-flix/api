@@ -4,12 +4,12 @@ import { RequestCore } from "@/domains/request/index";
 import { Application } from "@/domains/application";
 import { FileManage } from "@/domains/uploader";
 import { DoubanClient } from "@/domains/media_profile/douban/index";
-import { TMDBClient } from "@/domains/media_profile/tmdb_v2";
+import { TMDBClient } from "~/src/domains/media_profile/tmdb";
 import { MediaProfileClient } from "@/domains/media_profile/index";
 import { User } from "@/domains/user/index";
 import { request, TmpRequestResp } from "@/domains/request/utils";
 import { DataStore } from "@/domains/store/types";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { MediaTypes } from "@/constants/index";
 
 // export class MediaRankClient {
@@ -174,7 +174,7 @@ export function MediaRankClient(props: { app: Application<any>; user: User; stor
           if (d1) {
             return;
           }
-          const r = await $douban.fetch_media_profile(douban_id);
+          const r = await $douban.fetch_media_profile(douban_id, {});
           if (r.error) {
             console.log(r.error.message);
             return;

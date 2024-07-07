@@ -2,8 +2,9 @@
  * @file 扩容码
  */
 import { Application } from "@/domains/application";
-import { ScheduleTask } from "@/domains/schedule";
+import { ScheduleTask } from "@/domains/schedule/v2";
 import { DriveTypes } from "@/domains/drive/constants";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
 
 async function walk_drive() {
   const OUTPUT_PATH = process.env.OUTPUT_PATH;
@@ -23,6 +24,9 @@ async function walk_drive() {
       return;
     }
     console.log(drive.name);
+    if (!(client instanceof AliyunDriveClient)) {
+      return;
+    }
     const r = await client.receive_awards_form_code("");
     if (r.error) {
       console.log(r.error.message);

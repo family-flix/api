@@ -1,5 +1,6 @@
 import { GenreDriveFile, RequestedAliyunDriveFiles } from "@/domains/clients/types";
-import { Result, Unpacked } from "@/types/index";
+import { Result, resultify } from "@/domains/result/index";
+import { Unpacked } from "@/types/index";
 
 const DefaultDriveFile = {
   url: "",

@@ -77,7 +77,9 @@ export async function prepare(password: string) {
 // }
 
 import { Crypto } from "@peculiar/webcrypto";
-import { Result, resultify } from "@/types";
+
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+
 import { decode_token } from "./jwt";
 
 // import type { Algorithms } from "@/lib/utils/types";

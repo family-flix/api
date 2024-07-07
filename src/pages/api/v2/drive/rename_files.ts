@@ -9,7 +9,7 @@ import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive/v2";
 import { Folder } from "@/domains/folder/index";
 import { Job, TaskTypes } from "@/domains/job/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 
 export default async function v2_drive_rename_files(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

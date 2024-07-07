@@ -4,13 +4,14 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { User } from "@/domains/user";
-import { BaseApiResp, Result } from "@/types";
-import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive";
-import { FileType } from "@/constants";
 import { FileRecord } from "@/domains/store/types";
+import { FileType } from "@/constants";
+import { BaseApiResp } from "@/types";
+import { response_error_factory } from "@/utils/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

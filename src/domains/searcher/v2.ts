@@ -9,7 +9,7 @@ import {
   MovieProfileFromTMDB,
   PartialSeasonFromTMDB,
   TVProfileFromTMDB,
-} from "@/domains/media_profile/tmdb/services";
+} from "~/src/domains/media_profile/tmdb/services";
 import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive/v2";
@@ -30,7 +30,7 @@ import {
 } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { MediaProfileClient } from "@/domains/media_profile";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { episode_to_num, r_id } from "@/utils";
 import { parse_filename_for_video } from "@/utils/parse_filename_for_video";
 import { MediaTypes } from "@/constants";
@@ -944,7 +944,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       vote_average,
       number_of_episodes,
       number_of_seasons,
-      status,
       in_production,
       genres,
       origin_country,
@@ -979,7 +978,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
       vote_count: 0,
       episode_count: number_of_episodes,
       season_count: number_of_seasons,
-      status,
       in_production: Number(in_production),
       genres: genres
         .map((g) => {

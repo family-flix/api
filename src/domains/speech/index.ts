@@ -1,7 +1,7 @@
 import * as tencentcloud from "tencentcloud-sdk-nodejs-asr";
 import { Client } from "tencentcloud-sdk-nodejs-asr/tencentcloud/services/asr/v20190614/asr_client";
 
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 const AsrClient = tencentcloud.asr.v20190614.Client;
 type SpeechToTextProps = {

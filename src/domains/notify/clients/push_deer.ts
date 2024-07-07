@@ -5,7 +5,7 @@
 import axios from "axios";
 import qs from "qs";
 
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 import { SendPayload } from "../types";
 

@@ -3,44 +3,46 @@ import { Unpacked } from "@/types/index";
 
 export type Resp<T> = {
   data: T extends null ? null : T;
+  code?: number | string;
   error: T extends null ? BizError : null;
+  profile?: unknown;
 };
 export type Result<T> = Resp<T> | Resp<null>;
-
+export type UnpackedResult<T> = NonNullable<T extends Resp<infer U> ? (U extends null ? U : U) : T>;
 /** 构造一个结果对象 */
 export const Result = {
   /** 构造成功结果 */
-  Ok: <T>(value: T) => {
+  Ok: <T>(value: T, code?: number | string, profile: unknown = null) => {
     const result = {
       data: value,
+      code,
       error: null,
+      profile,
     } as Result<T>;
     return result;
   },
   /** 构造失败结果 */
-  Err: <T>(message: string | BizError | Error | Result<null>, code?: string | number, data: unknown = null) => {
+  Err: <T>(message: string | Error | Result<null>, code?: number | string, profile: unknown = null) => {
     const result = {
-      data,
+      data: null,
       code,
       error: (() => {
-        if (typeof message === "string") {
-          const e = new BizError(message, code, data);
-          return e;
-        }
-        if (message instanceof BizError) {
-          return message;
-        }
-        if (typeof message === "object") {
-          const e = new BizError((message as Error).message, code, data);
-          return e;
-        }
         if (!message) {
-          const e = new BizError("未知错误", code, data);
-          return e;
+          return new BizError("未知错误");
+        }
+        if (typeof message === "string") {
+          return new BizError(message, code);
+        }
+        if (message instanceof Error) {
+          return new BizError(message.message, code);
         }
         const r = message as Result<null>;
+        if (code) {
+          r.error.code = code;
+        }
         return r.error;
       })(),
+      profile,
     } as Result<null>;
     return result;
   },

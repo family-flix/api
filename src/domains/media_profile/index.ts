@@ -15,12 +15,12 @@ import { walk_model_with_cursor } from "@/domains/store/utils";
 import { DriveClient } from "@/domains/clients/types";
 import { FileManage } from "@/domains/uploader";
 import { MediaTypes } from "@/constants";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { r_id } from "@/utils";
 
 import { DoubanClient } from "./douban";
-import { TMDBClient } from "./tmdb_v2";
-import { MovieProfileFromTMDB } from "./tmdb_v2/services";
+import { TMDBClient } from "./tmdb";
+import { MovieProfileFromTMDB } from "./tmdb/services";
 import { SearchedTVItem, SearchedSeasonProfile, SearchedMovieItem } from "./types";
 import { format_season_name, map_season_number } from "./utils";
 

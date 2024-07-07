@@ -9,7 +9,7 @@ import path from "path";
 import axios from "axios";
 
 import { check_existing, copy, ensure } from "@/utils/fs";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 export class FileManage {
   static ensure(filepath: string) {

@@ -1,6 +1,6 @@
 import { BaseDomain } from "@/domains/base";
 import { DatabaseStore } from "@/domains/store/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 import { pushdeer_send } from "./clients/push_deer";
 import { PushClientTypes } from "./constants";

@@ -4,6 +4,7 @@
 import dayjs from "dayjs";
 import Joi from "joi";
 
+import { BaseDomain, Handler } from "@/domains/base";
 import { AliyunDriveClient } from "@/domains/clients/alipan/index";
 import { AliyunDriveProfile } from "@/domains/clients/alipan/types";
 import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article/index";
@@ -15,10 +16,9 @@ import { LocalFileDriveClient } from "@/domains/clients/local/index";
 import { DriveClient } from "@/domains/clients/types";
 import { DatabaseDriveClient } from "@/domains/clients/database/index";
 import { User } from "@/domains/user/index";
-import { BaseDomain, Handler } from "@/domains/base";
+import { Result, resultify } from "@/domains/result/index";
 import { DatabaseStore } from "@/domains/store/index";
 import { FileType } from "@/constants/index";
-import { Result, resultify } from "@/types/index";
 import { parseJSONStr } from "@/utils/index";
 
 import { DriveTypes } from "./constants";

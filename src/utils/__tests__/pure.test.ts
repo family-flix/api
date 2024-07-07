@@ -530,4 +530,14 @@ describe("番外", () => {
       episode: "",
     });
   });
+  test("4KHQ60FPS", () => {
+    const name = "4KHQ60FPS";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

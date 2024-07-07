@@ -7,8 +7,9 @@ import path from "path";
 import axios from "axios";
 // import cheerio from "cheerio";
 
-import { Result, Unpacked, UnpackedResult } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 import { DOUBAN_GENRE_TEXT_TO_VALUE } from "@/constants";
+import { Unpacked } from "@/types/index";
 // import { query_stringify } from "@/utils";
 
 const API_HOST = "https://frodo.douban.com/api/v2";

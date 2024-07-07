@@ -2,7 +2,7 @@ import { ExtraUserAndDriveInfo } from "@/domains/walker/utils";
 import { DatabaseStore } from "@/domains/store";
 import { FileRecord } from "@/domains/store/types";
 import { FileType } from "@/constants";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 /**
  * 在遍历文件夹的过程中，根据给定的目标文件/文件夹，和当前遍历到的文件夹/文件进行对比，判断是否要跳过

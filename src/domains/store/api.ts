@@ -7,7 +7,7 @@ import { PrismaClient } from "@prisma/client";
 import { BaseDomain, Handler } from "@/domains/base";
 import { HttpClientCore } from "@/domains/http_client";
 import { connect } from "@/domains/http_client/provider.axios";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 import { DataStore } from "./types";
 

@@ -4,9 +4,21 @@
  */
 import { PrismaClient } from "@prisma/client";
 
-import { Result, Unpacked } from "@/types";
+import { Unpacked } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 
-type ModelKeys = keyof Omit<PrismaClient, "$on" | "$connect" | "$disconnect" | "$use" | "$executeRaw" | "$executeRawUnsafe" | "$queryRaw" | "$queryRawUnsafe" | "$transaction">;
+type ModelKeys = keyof Omit<
+  PrismaClient,
+  | "$on"
+  | "$connect"
+  | "$disconnect"
+  | "$use"
+  | "$executeRaw"
+  | "$executeRawUnsafe"
+  | "$queryRaw"
+  | "$queryRawUnsafe"
+  | "$transaction"
+>;
 
 export function paginationFactory<T>(params: PaginationParams): [any, (list: T[], total: number) => any] {
   return [paginationParams<T>(params), result<T>(params)];

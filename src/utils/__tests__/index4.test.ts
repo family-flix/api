@@ -209,4 +209,14 @@ describe("电视剧4", () => {
       episode: "",
     });
   });
+  test("D 度华年 (2024) 4K60FPS", () => {
+    const name = "D 度华年 (2024) 4K60FPS";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "度华年",
+      original_name: "",
+      season: "",
+      episode: "",
+    });
+  });
 });

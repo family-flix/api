@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 type ChannelGroup = {
   title: string;

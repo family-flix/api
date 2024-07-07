@@ -14,14 +14,14 @@ export type RequestPayload<T> = {
   body?: any;
   headers?: Record<string, string | number>;
   // defaultResponse?: T;
-  process?: (v: any) => T;
+  process?: (v: Result<any>) => T;
 };
 /**
  * GetRespTypeFromRequestPayload
  * T extends RequestPayload
  */
-export type UnpackedRequestPayload<T> = NonNullable<T extends RequestPayload<infer U> ? (U extends null ? U : U) : T>;
-// export type UnpackedRequestPayload<T> = T extends RequestPayload<infer U> ? U : T;
+// export type UnpackedRequestPayload<T> = NonNullable<T extends RequestPayload<infer U> ? (U extends null ? U : U) : T>;
+export type UnpackedRequestPayload<T> = T extends RequestPayload<infer U> ? U : T;
 export type TmpRequestResp<T extends (...args: any[]) => any> = Result<UnpackedRequestPayload<RequestedResource<T>>>;
 
 let posterHandler: null | ((v: RequestPayload<any>) => void) = null;

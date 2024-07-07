@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 import dayjs from "dayjs";
 
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { MEDIA_COUNTRY_MAP, MEDIA_GENRES_MAP } from "@/constants";
 
 import { YoukuProfilePageInfo } from "./services";

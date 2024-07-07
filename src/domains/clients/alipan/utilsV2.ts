@@ -15,7 +15,7 @@ import { Job } from "@/domains/job/index";
 import { User } from "@/domains/user/index";
 import { DatabaseStore } from "@/domains/store/index";
 import { FileType, MediaTypes } from "@/constants/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { build_media_name, parse_filename_for_video } from "@/utils/parse_filename_for_video";
 
 export type TheFilePrepareTransferV2 = {

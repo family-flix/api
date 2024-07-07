@@ -10,7 +10,8 @@ import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive/index";
 import { Folder } from "@/domains/folder/index";
 import { Job, TaskTypes } from "@/domains/job/index";
-import { BaseApiResp, Result } from "@/types/index";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { BaseApiResp } from "@/types/index";
 import { response_error_factory } from "@/utils/server";
 import { FileType } from "@/constants/index";
 

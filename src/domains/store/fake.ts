@@ -8,7 +8,7 @@ import debounce from "lodash/debounce";
 import omit from "lodash/omit";
 
 import { BaseDomain, Handler } from "@/domains/base";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 import { DataStore } from "./types";
 

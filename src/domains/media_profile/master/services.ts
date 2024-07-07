@@ -4,7 +4,8 @@
  */
 import axios from "axios";
 
-import { Result, Unpacked, UnpackedResult } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { Unpacked } from "@/types";
 import { query_stringify } from "@/utils";
 
 const API_HOST = "http://127.0.0.1:3000/api/v1/";

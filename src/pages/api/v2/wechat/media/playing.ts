@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { store, BaseApiResp } from "@/store/index";
 import { Member } from "@/domains/user/member";
 import { Media } from "@/domains/media/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { MediaTypes } from "@/constants/index";
 

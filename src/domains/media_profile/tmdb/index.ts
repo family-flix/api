@@ -1,19 +1,36 @@
 /**
  * @file TMDB 搜索客户端
  */
-import { Result } from "@/types";
+import { RequestCore } from "@/domains/request/index";
+import { SearchedMovieItem, SearchedTVItem } from "@/domains/media_profile/types";
+import { Result } from "@/domains/result/index";
+import { HttpClientCore } from "@/domains/http_client/index";
+import { connect } from "@/domains/http_client/provider.axios";
+
 import {
+  Language,
   fetch_episode_profile,
   fetch_season_profile,
   fetch_tv_profile,
   fetch_movie_profile,
-  Language,
-  search_tv_in_tmdb,
-  search_movie_in_tmdb,
+  search_tv,
+  search_tv_process,
+  search_movie,
   fetch_persons_of_season,
-  fetch_person_profile,
   fetch_persons_of_movie,
+  fetch_person_profile,
+  fetch_tv_profile_process,
+  fetch_season_profile_process,
+  search_movie_process,
+  fetch_persons_of_movie_process,
+  fetch_person_profile_process,
+  fetch_persons_of_season_process,
+  fetch_episode_profile_process,
+  fetch_movie_profile_process,
 } from "./services";
+
+const client = new HttpClientCore();
+connect(client, { timeout: 10000 });
 
 export class TMDBClient {
   options: {
@@ -37,30 +54,46 @@ export class TMDBClient {
       language,
     };
   }
+  tv_cache: Record<
+    string,
+    Result<{
+      list: SearchedTVItem[];
+    }>
+  > = {};
   /** 根据关键字搜索电视剧 */
   async search_tv(keyword: string, extra: Partial<{ page: number; language: "zh-CN" | "en-US" }> = {}) {
     const { token } = this.options;
     const { page, language } = extra;
-    return search_tv_in_tmdb(keyword, {
+    const unique_key = [keyword, page].filter(Boolean).join("/");
+    if (this.tv_cache[unique_key]) {
+      return this.tv_cache[unique_key] as Result<{ total: number; page: number; list: SearchedTVItem[] }>;
+    }
+    const r = await new RequestCore(search_tv, { process: search_tv_process, client }).run({
+      keyword,
       page,
       api_key: token,
       language: language || this.options.language,
     });
+    this.tv_cache[unique_key] = r;
+    return r;
   }
   /** 获取电视剧详情 */
   async fetch_tv_profile(id: number | string) {
     const { token, language } = this.options;
-    const result = await fetch_tv_profile(Number(id), {
-      api_key: token,
-      language,
-    });
+    const result = await new RequestCore(fetch_tv_profile, { process: fetch_tv_profile_process, client }).run(
+      Number(id),
+      {
+        api_key: token,
+        language,
+      }
+    );
     return result;
   }
   /** 获取季详情 */
   async fetch_season_profile(body: { tv_id: number; season_number: string | number }) {
     const { tv_id, season_number } = body;
     const { token, language } = this.options;
-    const r = await fetch_season_profile(
+    const r = await new RequestCore(fetch_season_profile, { process: fetch_season_profile_process, client }).run(
       {
         tv_id,
         season_number: Number(season_number),
@@ -82,7 +115,7 @@ export class TMDBClient {
   async fetch_partial_season_profile(body: { tv_id: number; season_number: string | number }) {
     const { tv_id, season_number } = body;
     const { token, language } = this.options;
-    const r = await fetch_tv_profile(tv_id, {
+    const r = await new RequestCore(fetch_tv_profile, { process: fetch_tv_profile_process, client }).run(tv_id, {
       api_key: token,
       language,
     });
@@ -106,7 +139,7 @@ export class TMDBClient {
   }) {
     const { token, language } = this.options;
     const { tv_id, season_number, episode_number } = body;
-    const result = await fetch_episode_profile(
+    const result = await new RequestCore(fetch_episode_profile, { process: fetch_episode_profile_process, client }).run(
       {
         tv_id,
         season_number,
@@ -119,30 +152,48 @@ export class TMDBClient {
     );
     return result;
   }
+  movie_cache: Record<
+    string,
+    Result<{
+      list: SearchedMovieItem[];
+    }>
+  > = {};
   /** 根据关键字搜索电影 */
   async search_movie(keyword: string, extra: Partial<{ page: number; language: "zh-CN" | "en-US" }> = {}) {
     const { token } = this.options;
     const { page, language } = extra;
-    return search_movie_in_tmdb(keyword, {
+    const unique_key = [keyword, page].filter(Boolean).join("/");
+    if (this.movie_cache[unique_key]) {
+      return this.movie_cache[unique_key] as Result<{ total: number; page: number; list: SearchedMovieItem[] }>;
+    }
+    const r = await new RequestCore(search_movie, { process: search_movie_process, client }).run(keyword, {
       page,
       api_key: token,
       language: language || this.options.language,
     });
+    this.movie_cache[unique_key] = r;
+    return r;
   }
   /** 获取电视剧详情 */
   async fetch_movie_profile(id: number | string) {
     const { token, language } = this.options;
-    const result = await fetch_movie_profile(Number(id), {
-      api_key: token,
-      language,
-    });
+    const result = await new RequestCore(fetch_movie_profile, { process: fetch_movie_profile_process, client }).run(
+      Number(id),
+      {
+        api_key: token,
+        language,
+      }
+    );
     return result;
   }
   /** 获取电视剧季参与的演员、导演等工作人员 */
   async fetch_persons_of_season(values: { tv_id: number | string; season_number: number }) {
     const { token, language } = this.options;
     const { tv_id, season_number } = values;
-    const result = await fetch_persons_of_season(
+    const result = await new RequestCore(fetch_persons_of_season, {
+      process: fetch_persons_of_season_process,
+      client,
+    }).run(
       { tv_id, season_number },
       {
         api_key: token,
@@ -155,7 +206,10 @@ export class TMDBClient {
   async fetch_persons_of_movie(values: { movie_id: number | string }) {
     const { token, language } = this.options;
     const { movie_id } = values;
-    const result = await fetch_persons_of_movie(
+    const result = await new RequestCore(fetch_persons_of_movie, {
+      process: fetch_persons_of_movie_process,
+      client,
+    }).run(
       { movie_id },
       {
         api_key: token,
@@ -168,7 +222,7 @@ export class TMDBClient {
   async fetch_person_profile(values: { person_id: number | string }) {
     const { token, language } = this.options;
     const { person_id } = values;
-    const result = await fetch_person_profile(
+    const result = await new RequestCore(fetch_person_profile, { process: fetch_person_profile_process, client }).run(
       { person_id },
       {
         api_key: token,

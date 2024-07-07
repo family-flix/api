@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user";
 import { Member } from "@/domains/user/member";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { random_string, r_id } from "@/utils/index";
 import { AuthenticationProviders } from "@/constants/index";

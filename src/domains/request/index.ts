@@ -168,18 +168,17 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
       return Result.Err("缺少 client");
     }
     if (this.pending !== null) {
-      const r = await this.pending;
-      this.loading = false;
-      const data = r.data as P;
-      this.pending = null;
-      return Result.Ok(data);
+      // const r = await this.pending;
+      // this.loading = false;
+      // const data = r.data as P;
+      // this.pending = null;
+      // return Result.Ok(data);
+      return Result.Err("请勿重复请求");
     }
     // this.args = args;
     this.loading = true;
     this.response = this.defaultResponse;
     this.error = null;
-    // const source = axios.CancelToken.source();
-    // this.source = source;
     this.emit(Events.LoadingChange, true);
     this.emit(Events.StateChange, { ...this.state });
     this.emit(Events.BeforeRequest);
@@ -216,28 +215,28 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
     this.pending = r2.data;
     const [r] = await Promise.all([this.pending, this.delay === null ? null : sleep(this.delay)]);
     this.loading = false;
-    const rr = (() => {
+    const rr1 = (() => {
       if (payloadProcess) {
         return payloadProcess(r);
       }
       return r;
     })();
-    const resp = this.process ? this.process(rr as any) : rr;
+    const rr2 = this.process ? this.process(rr1 as any) : rr1;
     this.emit(Events.LoadingChange, false);
     this.emit(Events.StateChange, { ...this.state });
     this.emit(Events.Completed);
     this.pending = null;
-    if (resp.error) {
-      if (resp.error.code === "CANCEL") {
+    if (rr2.error) {
+      if (rr2.error.code === "CANCEL") {
         this.emit(Events.Canceled);
-        return Result.Err(resp.error);
+        return Result.Err(rr2.error);
       }
-      this.error = resp.error;
-      this.emit(Events.Failed, resp.error);
+      this.error = rr2.error;
+      this.emit(Events.Failed, rr2.error);
       this.emit(Events.StateChange, { ...this.state });
-      return Result.Err(resp.error.message);
+      return Result.Err(rr2.error.message);
     }
-    const data = resp.data as P;
+    const data = rr2.data as P;
     this.response = data;
     this.emit(Events.Success, data);
     this.emit(Events.StateChange, { ...this.state });

@@ -20,7 +20,7 @@ import { Administrator } from "@/domains/administrator";
 import { TencentDoc } from "@/domains/tencent_doc";
 import { MediaRankClient } from "@/domains/media_rank";
 import { DoubanClient } from "@/domains/media_profile/douban";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import {
   CollectionTypes,
   FileType,

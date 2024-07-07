@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BaseApiResp } from "@/store/index";
 // import { pocket_base } from "@/store/pocketbase";
 import { response_error_factory } from "@/utils/server";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 export default async function v0_admin_user_logout(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

@@ -1,7 +1,7 @@
 /**
  * @file 影视剧详情搜索
  */
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import {
   fetch_episode_profile,
   fetch_season_profile,

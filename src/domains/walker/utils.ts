@@ -1,8 +1,8 @@
 import { GenreDriveFile } from "@/domains/clients/types";
 import { DatabaseStore } from "@/domains/store";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 import { ParsedTVRecord, ParsedEpisodeRecord, RecordCommonPart, ParsedSeasonRecord } from "@/domains/store/types";
 import { is_video_file } from "@/utils";
-import { Result, resultify } from "@/types";
 import { FileType } from "@/constants";
 
 export type EventHandlers = Partial<{

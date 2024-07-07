@@ -3,7 +3,7 @@ import { connect } from "@/domains/http_client/provider.axios";
 import { request_factory } from "@/domains/request/utils";
 import { RequestCore } from "@/domains/request/index";
 import { Application } from "@/domains/application/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 const weapp_request = request_factory({
   hostnames: {

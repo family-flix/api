@@ -4,7 +4,7 @@
 import { DriveClient, GenreDriveFile, RequestedAliyunDriveFiles } from "@/domains/clients/types";
 import { build_drive_file } from "@/domains/clients/utils";
 import { DatabaseStore } from "@/domains/store/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 export class MockFileClient implements DriveClient {
   id: string = "";

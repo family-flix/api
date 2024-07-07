@@ -8,7 +8,7 @@ import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive/v2";
 import { FileRecord } from "@/domains/store/types";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { FileType } from "@/constants/index";
 

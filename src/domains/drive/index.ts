@@ -18,9 +18,9 @@ import { ModelParam, ModelQuery, DriveRecord, FileRecord, DataStore } from "@/do
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { User } from "@/domains/user";
 import { BaseDomain, Handler } from "@/domains/base";
+import { Result, resultify } from "@/domains/result/index";
 import { DatabaseStore } from "@/domains/store";
 import { FileType } from "@/constants";
-import { Result, resultify } from "@/types";
 import { parseJSONStr, r_id } from "@/utils";
 
 import { DriveTypes } from "./constants";

@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import { app, store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { ResourceSyncTaskStatus } from "@/constants/index";
 

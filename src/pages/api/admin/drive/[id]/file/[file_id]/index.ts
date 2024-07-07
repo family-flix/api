@@ -4,7 +4,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { BaseApiResp, Result } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
 import { User } from "@/domains/user";

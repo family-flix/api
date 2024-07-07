@@ -81,7 +81,7 @@ async function main() {
             tips.push(tip);
             return;
           }
-          const profile_r = await client.fetch_media_profile(matched.id);
+          const profile_r = await client.fetch_media_profile(matched.id, {});
           if (profile_r.error) {
             const tip = `获取详情失败，因为 ${profile_r.error.message}`;
             tips.push(tip);

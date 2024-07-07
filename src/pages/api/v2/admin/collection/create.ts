@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { CollectionTypes } from "@/constants/index";
 import { response_error_factory } from "@/utils/server";
 import { r_id } from "@/utils/index";

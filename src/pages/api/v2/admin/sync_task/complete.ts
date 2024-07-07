@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 
 import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { ResourceSyncTaskStatus } from "@/constants/index";
 

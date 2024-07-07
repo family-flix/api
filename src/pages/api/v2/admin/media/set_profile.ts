@@ -9,7 +9,7 @@ import { User } from "@/domains/user";
 import { ParsedMediaSourceRecord } from "@/domains/store/types";
 import { MediaSearcher } from "@/domains/searcher/v2";
 import { MediaProfileClient } from "@/domains/media_profile";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { MediaTypes } from "@/constants/index";
 import { response_error_factory } from "@/utils/server";
 

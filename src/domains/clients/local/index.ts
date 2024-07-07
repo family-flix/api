@@ -13,7 +13,7 @@ import { DriveTypes } from "@/domains/drive/constants";
 import { DataStore } from "@/domains/store/types";
 import { DriveClient, GenreDriveFile } from "@/domains/clients/types";
 import { build_drive_file } from "@/domains/clients/utils";
-import { Result, resultify } from "@/types/index";
+import { Result, resultify } from "@/domains/result/index";
 import { check_existing, file_info, rmdir, rmfile } from "@/utils/fs";
 import { r_id } from "@/utils/index";
 import { FileType } from "@/constants/index";

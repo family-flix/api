@@ -1,12 +1,12 @@
 require("dotenv").config();
 
-import { TMDBClient } from "@/domains/media_profile/tmdb";
+import { TMDBClient } from "@/domains/media_profile/tmdb/index";
 
 async function main() {
   const client = new TMDBClient({
     token: process.env.TMDB_TOKEN,
   });
-  const list_res = await client.search_tv("问心");
+  const list_res = await client.search_tv("度华年");
   if (list_res.error) {
     console.log("搜索失败，因为", list_res.error.message);
     return;

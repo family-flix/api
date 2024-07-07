@@ -3,7 +3,7 @@ import { ReadStream } from "fs";
 import qiniu from "qiniu";
 import axios from "axios";
 
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 
 import { random_string } from "../../utils";
 

@@ -2,37 +2,41 @@
  * @file TMDB api
  * @doc https://developer.themoviedb.org/reference/intro/getting-started
  */
-import axios from "axios";
+import { SearchedMovieItem, SearchedTVItem } from "@/domains/media_profile/types";
+import { request_factory, TmpRequestResp } from "@/domains/request/utils";
+import { Result, UnpackedResult } from "@/domains/result/index";
+import { Unpacked } from "@/types/index";
+import { MEDIA_SOURCE_MAP } from "@/constants/index";
 
-import { Result, Unpacked, UnpackedResult } from "@/types";
-import { query_stringify } from "@/utils";
-
-// const API_HOST = "https://proxy.funzm.com/api/tmdb/3";
-const API_HOST = "https://proxy.f1x.fun/api/tmdb/3";
 export type Language = "zh-CN" | "en-US";
-export type TMDBRequestCommentPart = {
+type TMDBRequestCommentPart = {
   /** tmdb api key */
   api_key: string;
   /** 语言 */
   language: Language;
 };
-function fix_TMDB_image_path({
-  backdrop_path,
-  poster_path,
-  profile_path,
-}: Partial<{
-  backdrop_path: null | string;
-  poster_path: null | string;
-  profile_path: null | string;
-}>) {
-  const result: {
-    backdrop_path: string | null;
-    poster_path: string | null;
-    profile_path: string | null;
-  } = {
+type TMDBImagePaths = {
+  backdrop_path?: string | null;
+  poster_path?: string | null;
+  profile_path?: string | null;
+  still_path?: string | null;
+};
+type FixedTMDBImagePaths<T extends TMDBImagePaths> = {
+  // [K in keyof T as Exclude<K, "backdrop_path" | "poster_path" | "profile_path" | "still_path">]?: never;
+  // Include only the keys that are present in T and map their types to non-null strings
+  [P in keyof T as P extends "backdrop_path" | "poster_path" | "profile_path" | "still_path"
+    ? T[P] extends null | undefined
+      ? never
+      : P
+    : never]: T[P] extends null | undefined ? never : string;
+};
+function fix_TMDB_image_path<T extends TMDBImagePaths>(values: T): FixedTMDBImagePaths<T> {
+  const { backdrop_path, poster_path, profile_path, still_path } = values;
+  const result: any = {
     backdrop_path: null,
     poster_path: null,
     profile_path: null,
+    still_path: null,
   };
   if (backdrop_path) {
     // result.backdrop_path = `https://proxy.funzm.com/api/tmdb_site/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
@@ -44,56 +48,35 @@ function fix_TMDB_image_path({
   if (profile_path) {
     result.profile_path = `https://www.themoviedb.org/t/p/w600_and_h900_bestv2${profile_path}`;
   }
-  return result;
+  if (still_path) {
+    result.still_path = `https://www.themoviedb.org/t/p/w227_and_h127_bestv2${still_path}`;
+  }
+  return result as FixedTMDBImagePaths<T>;
 }
 
-const client = axios.create({
-  baseURL: API_HOST,
-  timeout: 6000,
+const request = request_factory({
+  hostnames: {
+    prod: "https://proxy.f1x.fun/api/tmdb/3",
+    // prod: "https://api.themoviedb.org/3",
+  },
 });
-type RequestClient = {
-  get: <T>(url: string, query?: Record<string, string | number | undefined>) => Promise<Result<T>>;
-  post: <T>(url: string, body: Record<string, string | number | undefined>) => Promise<Result<T>>;
-};
-const request: RequestClient = {
-  get: async <T extends null>(endpoint: string, query?: Record<string, string | number | undefined>) => {
-    try {
-      const url = `${endpoint}${query ? "?" + query_stringify(query) : ""}`;
-      // console.log("[LOG](request)", "get", API_HOST + url);
-      const resp = await client.get(url);
-      return Result.Ok<T>(resp.data);
-    } catch (err) {
-      const error = err as Error;
-      return Result.Err(error.message);
-    }
-  },
-  post: async <T>(endpoint: string, body?: Record<string, unknown>) => {
-    try {
-      // console.log("[LOG](request)", "post", API_HOST + endpoint, body);
-      const resp = await client.post(endpoint, body);
-      return Result.Ok<T>(resp.data);
-    } catch (err) {
-      const error = err as Error;
-      return Result.Err(error.message);
-    }
-  },
-};
 
 /**
  * tv 列表中的元素
  */
-export type PartialSearchedTV = Omit<TVProfileItemInTMDB, "id" | "search_tv_in_tmdb_then_save" | "original_country"> & {
-  id: string;
-  created: string;
-  updated: string;
-};
+// type PartialSearchedTV = Omit<TVProfileItemInTMDB, "id" | "search_tv_in_tmdb_then_save" | "original_country"> & {
+//   id: string;
+//   created: string;
+//   updated: string;
+// };
 /**
  * 根据关键字搜索电视剧
  * @param keyword
  */
-export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCommentPart & { page?: number }) {
-  console.log("[SERVICE]search_tv_in_tmdb ", keyword);
-  const endpoint = `/search/tv`;
+export function search_tv(options: TMDBRequestCommentPart & { keyword: string; page?: number }) {
+  const { keyword } = options;
+  console.log("[SERVICE]/media_profile/tmdb_v2/service - search_tv", keyword);
+  const endpoint = "/search/tv";
   const { page, api_key, language } = options;
   const query = {
     api_key,
@@ -102,7 +85,7 @@ export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCom
     page,
     include_adult: "false",
   };
-  const result = await request.get<{
+  return request.get<{
     page: number;
     total_pages: number;
     total_results: number;
@@ -134,8 +117,10 @@ export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCom
       adult?: boolean;
     }[];
   }>(endpoint, query);
+}
+export function search_tv_process(r: TmpRequestResp<typeof search_tv>) {
   // '/search/tv?api_key=XXX&language=zh-CN&query=Modern%20Family&page=1&include_adult=false'
-  const { error, data } = result;
+  const { error, data } = r;
   if (error) {
     return Result.Err(error.message);
   }
@@ -143,27 +128,44 @@ export async function search_tv_in_tmdb(keyword: string, options: TMDBRequestCom
     page: data.page,
     total: data.total_results,
     list: data.results.map((result) => {
-      const { backdrop_path, poster_path } = result;
+      const {
+        id,
+        name,
+        original_name,
+        overview,
+        backdrop_path,
+        poster_path,
+        first_air_date,
+        origin_country = [],
+        genre_ids = [],
+      } = result;
       return {
-        ...result,
+        id,
+        name,
+        original_name,
+        overview,
         ...fix_TMDB_image_path({
           backdrop_path,
           poster_path,
         }),
-      };
+        first_air_date,
+        origin_country,
+        type: "tv",
+        source: MEDIA_SOURCE_MAP["tmdb"],
+      } as SearchedTVItem;
     }),
   };
   return Result.Ok(resp);
 }
-export type TVProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof search_tv_in_tmdb>>>["list"][number];
+// export type TVProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof search_tv>>>["list"][number];
 
 /**
  * 根据关键字搜索电视剧
  * @param keyword
  */
-export async function search_movie_in_tmdb(keyword: string, options: TMDBRequestCommentPart & { page?: number }) {
-  console.log("[SERVICE]search_movie_in_tmdb ", keyword);
-  const endpoint = `/search/movie`;
+export function search_movie(keyword: string, options: TMDBRequestCommentPart & { page?: number }) {
+  console.log("[SERVICE]/media_profile/tmdb_v2/service - search_movie", keyword);
+  const endpoint = "/search/movie";
   const { page, api_key, language } = options;
   const query = {
     api_key,
@@ -172,7 +174,7 @@ export async function search_movie_in_tmdb(keyword: string, options: TMDBRequest
     page,
     include_adult: "false",
   };
-  const result = await request.get<{
+  return request.get<{
     page: number;
     total_pages: number;
     total_results: number;
@@ -193,8 +195,10 @@ export async function search_movie_in_tmdb(keyword: string, options: TMDBRequest
       vote_count: number;
     }[];
   }>(endpoint, query);
+}
+export function search_movie_process(r: TmpRequestResp<typeof search_movie>) {
   // '/search/tv?api_key=XXX&language=zh-CN&query=Modern%20Family&page=1&include_adult=false'
-  const { error, data } = result;
+  const { error, data } = r;
   if (error) {
     return Result.Err(error.message);
   }
@@ -202,43 +206,48 @@ export async function search_movie_in_tmdb(keyword: string, options: TMDBRequest
     page: data.page,
     total: data.total_results,
     list: data.results.map((result) => {
-      const { title, original_title, backdrop_path, poster_path, release_date } = result;
+      const { id, title, original_title, overview, backdrop_path, poster_path, release_date, genre_ids = [] } = result;
       return {
-        ...result,
+        id,
         name: title,
         original_name: original_title,
+        overview,
         air_date: release_date,
         first_air_date: release_date,
+        genre_ids,
+        origin_country: [],
         ...fix_TMDB_image_path({
           backdrop_path,
           poster_path,
         }),
-      };
+        type: "movie",
+        source: MEDIA_SOURCE_MAP["tmdb"],
+      } as SearchedMovieItem;
     }),
   };
   return Result.Ok(resp);
 }
-export type MovieProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof search_movie_in_tmdb>>>["list"][number];
+// export type MovieProfileItemInTMDB = UnpackedResult<Unpacked<ReturnType<typeof search_movie_in_tmdb>>>["list"][number];
 
 /**
  * 获取电视剧详情
  * @link https://developers.themoviedb.org/3/tv/get-tv-details
  * @param id 电视剧 tmdb id
  */
-export async function fetch_tv_profile(
-  id: number | undefined,
+export function fetch_tv_profile(
+  id: number,
   query: {
     api_key: string;
     language?: Language;
   }
 ) {
-  console.log("[SERVICE]fetch_tv_profile ", id);
-  if (id === undefined) {
-    return Result.Err("请传入电视剧 id");
-  }
+  console.log("[SERVICE]/media_profile/tmdb_v2/service - fetch_tv_profile");
+  // if (id === undefined) {
+  //   return Result.Err("请传入电视剧 id");
+  // }
   const endpoint = `/tv/${id}`;
   const { api_key, language } = query;
-  const r = await request.get<{
+  return request.get<{
     backdrop_path: string | null;
     created_by: {
       id: number;
@@ -248,7 +257,7 @@ export async function fetch_tv_profile(
       profile_path: string;
     }[];
     episode_run_time: number[];
-    first_air_date: string;
+    first_air_date: string | null;
     genres: {
       id: number;
       name: string;
@@ -271,7 +280,7 @@ export async function fetch_tv_profile(
       vote_count: number;
     };
     name: string | null;
-    next_episode_to_air: null;
+    next_episode_to_air: string | null;
     networks: {
       name: string;
       id: number;
@@ -297,14 +306,14 @@ export async function fetch_tv_profile(
       name: string;
     }[];
     seasons: {
+      id: number;
       air_date: string;
       episode_count: number;
-      id: number;
       name: string;
-      overview: string;
-      poster_path: string;
+      overview: string | null;
+      poster_path: string | null;
       season_number: number;
-      vote_average: number;
+      vote_average: number | null;
     }[];
     spoken_languages: {
       english_name: string;
@@ -316,16 +325,21 @@ export async function fetch_tv_profile(
     /** 一句话说明 */
     tagline: string;
     type: string;
-    vote_average: number;
+    vote_average: number | null;
     vote_count: number;
   }>(endpoint, {
     api_key,
     language,
   });
+}
+// export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_tv_profile>>>;
+// export type PartialSeasonFromTMDB = TVProfileFromTMDB["seasons"][number];
+export function fetch_tv_profile_process(r: TmpRequestResp<typeof fetch_tv_profile>) {
   if (r.error) {
     return Result.Err(r.error);
   }
   const {
+    id,
     name,
     original_name,
     overview,
@@ -340,20 +354,22 @@ export async function fetch_tv_profile(
     number_of_episodes,
     number_of_seasons,
     in_production,
+    next_episode_to_air,
   } = r.data;
-  return Result.Ok({
+  const result: SearchedTVItem = {
     id,
-    name,
+    name: (name || original_name)!,
     original_name,
     first_air_date,
     overview,
-    tagline,
-    status,
+    // tagline,
+    // status,
     vote_average,
     popularity,
     number_of_episodes,
     number_of_seasons,
     in_production,
+    next_episode_to_air,
     ...fix_TMDB_image_path({
       poster_path,
       backdrop_path,
@@ -367,17 +383,18 @@ export async function fetch_tv_profile(
     }),
     genres: r.data.genres,
     origin_country: r.data.origin_country,
-  });
+    type: "tv",
+    source: "tmdb",
+  };
+  return Result.Ok(result);
 }
-export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_tv_profile>>>;
-export type PartialSeasonFromTMDB = TVProfileFromTMDB["seasons"][number];
 
 /**
  * 获取电视剧某一季详情
  * @link https://developers.themoviedb.org/3/tv/get-tv-details
  * @param number 第几季
  */
-export async function fetch_season_profile(
+export function fetch_season_profile(
   body: {
     tv_id: number | string;
     season_number: number | undefined;
@@ -387,14 +404,15 @@ export async function fetch_season_profile(
     language?: Language;
   }
 ) {
-  console.log("[SERVICE]fetch_season_profile ", body);
+  // console.log("[SERVICE]fetch_season_profile_in_tmdb_v2", body.tv_id, body.season_number);
+  console.log("[SERVICE]/media_profile/tmdb_v2/service - fetch_season_profile");
   const { tv_id, season_number } = body;
-  if (season_number === undefined) {
-    return Result.Err("请传入季数");
-  }
+  // if (season_number === undefined) {
+  //   return Result.Err("请传入季数");
+  // }
   const endpoint = `/tv/${tv_id}/season/${season_number}`;
   const { api_key, language } = options;
-  const result = await request.get<{
+  return request.get<{
     _id: string;
     air_date: string;
     episodes: {
@@ -445,23 +463,25 @@ export async function fetch_season_profile(
     api_key,
     language,
   });
-  if (result.error) {
+}
+export function fetch_season_profile_process(r: TmpRequestResp<typeof fetch_season_profile>) {
+  if (r.error) {
     // console.log("find season in tmdb failed", result.error.message);
-    if (result.error.message.includes("404")) {
+    if (r.error.message.includes("404")) {
       return Result.Ok(null);
     }
-    return Result.Err(result.error);
+    return Result.Err(r.error);
   }
-  const { id, name, overview, air_date, episodes, poster_path } = result.data;
+  const { id, name, overview, air_date, episodes, poster_path, season_number } = r.data;
   return Result.Ok({
     id,
     name,
-    number: result.data.season_number,
+    number: season_number,
     air_date,
     overview,
     season_number,
     episodes: episodes.map((e) => {
-      const { id, air_date, overview, episode_number, season_number, name, runtime } = e;
+      const { id, air_date, overview, episode_number, season_number, still_path, name, runtime } = e;
       return {
         id,
         name,
@@ -470,6 +490,9 @@ export async function fetch_season_profile(
         episode_number,
         season_number,
         runtime,
+        ...fix_TMDB_image_path({
+          still_path,
+        }),
       };
     }),
     ...fix_TMDB_image_path({
@@ -477,13 +500,14 @@ export async function fetch_season_profile(
     }),
   });
 }
-export type SeasonProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_season_profile>>>;
+export type TVProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_tv_profile_process>>>;
+export type PartialSeasonFromTMDB = TVProfileFromTMDB["seasons"][number];
 
 /**
  * 获取电视剧某一集详情
  * @param number 第几季
  */
-export async function fetch_episode_profile(
+export function fetch_episode_profile(
   body: {
     tv_id: number | string;
     season_number: number | string | undefined;
@@ -494,17 +518,16 @@ export async function fetch_episode_profile(
     language?: Language;
   }
 ) {
-  console.log("[SERVICE]fetch_episode_profile ", body);
   const { tv_id, season_number, episode_number } = body;
-  if (season_number === undefined) {
-    return Result.Err("请传入季数");
-  }
-  if (episode_number === undefined) {
-    return Result.Err("请传入集数");
-  }
+  // if (season_number === undefined) {
+  //   return Result.Err("请传入季数");
+  // }
+  // if (episode_number === undefined) {
+  //   return Result.Err("请传入集数");
+  // }
   const endpoint = `/tv/${tv_id}/season/${season_number}/episode/${episode_number}`;
   const { api_key, language } = option;
-  const result = await request.get<{
+  return request.get<{
     air_date: string;
     episode_number: number;
     name: string;
@@ -520,14 +543,17 @@ export async function fetch_episode_profile(
     api_key,
     language,
   });
-  if (result.error) {
+}
+export type EpisodeProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_episode_profile_process>>>;
+export function fetch_episode_profile_process(r: TmpRequestResp<typeof fetch_episode_profile>) {
+  if (r.error) {
     // console.log("find episode in tmdb failed", result.error.message);
-    if (result.error.message.includes("404")) {
+    if (r.error.message.includes("404")) {
       return Result.Ok(null);
     }
-    return Result.Err(result.error);
+    return Result.Err(r.error);
   }
-  const { id, name, overview, air_date, runtime, episode_number: e_n, season_number: s_n } = result.data;
+  const { id, name, overview, air_date, runtime, episode_number: e_n, season_number: s_n } = r.data;
   return Result.Ok({
     id,
     name,
@@ -538,30 +564,25 @@ export async function fetch_episode_profile(
     runtime,
   });
 }
-
-export type EpisodeProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_episode_profile>>>;
-
 /**
  * 获取电视剧详情
  * @link https://developers.themoviedb.org/3/tv/get-tv-details
  * @param id 电视剧 tmdb id
  */
-export async function fetch_movie_profile(
+export function fetch_movie_profile(
   id: number | undefined,
   query: {
     api_key: string;
     language?: Language;
   }
 ) {
-  console.log("[SERVICE]fetch_movie_profile ", id);
-  if (id === undefined) {
-    return Result.Err("请传入电影 id");
-  }
+  // if (id === undefined) {
+  //   return Result.Err("请传入电影 id");
+  // }
   const endpoint = `/movie/${id}`;
   const { api_key, language } = query;
-  const r = await request.get<{
+  return request.get<{
     adult: boolean;
-    backdrop_path: string;
     belongs_to_collection: {
       id: number;
       name: string;
@@ -577,10 +598,11 @@ export async function fetch_movie_profile(
     id: number;
     imdb_id: string;
     original_language: string;
-    original_title: string;
-    overview: string;
+    original_title: string | null;
+    overview: string | null;
     popularity: number;
-    poster_path: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
     production_companies: {
       id: number;
       logo_path: string;
@@ -591,9 +613,9 @@ export async function fetch_movie_profile(
       iso_3166_1: string;
       name: string;
     }[];
-    release_date: string;
+    release_date: string | null;
     revenue: number;
-    runtime: number;
+    runtime: number | null;
     spoken_languages: {
       english_name: string;
       iso_639_1: string;
@@ -609,10 +631,14 @@ export async function fetch_movie_profile(
     api_key,
     language,
   });
+}
+export type MovieProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_movie_profile_process>>>;
+export function fetch_movie_profile_process(r: TmpRequestResp<typeof fetch_movie_profile>) {
   if (r.error) {
     return Result.Err(r.error);
   }
   const {
+    id,
     overview,
     tagline,
     status,
@@ -627,14 +653,11 @@ export async function fetch_movie_profile(
   } = r.data;
   return Result.Ok({
     id,
-    title,
-    original_title,
     name: title,
     original_name: original_title,
     air_date: release_date,
-    release_date,
     overview,
-    tagline,
+    // tagline,
     status,
     vote_average,
     popularity,
@@ -643,13 +666,15 @@ export async function fetch_movie_profile(
     origin_country: r.data.production_countries.map((country) => {
       return country["iso_3166_1"];
     }),
-    ...fix_TMDB_image_path({
+    ...(fix_TMDB_image_path({
       poster_path,
       backdrop_path,
+    }) as {
+      poster_path: string | null;
+      backdrop_path: string | null;
     }),
   });
 }
-export type MovieProfileFromTMDB = UnpackedResult<Unpacked<ReturnType<typeof fetch_movie_profile>>>;
 
 type DepartmentTypes =
   | "Acting"
@@ -663,7 +688,7 @@ type DepartmentTypes =
   | "Art"
   | "Visual Effects";
 
-export async function fetch_persons_of_season(
+export function fetch_persons_of_season(
   body: {
     tv_id: number | string;
     season_number: number | string | undefined;
@@ -673,14 +698,13 @@ export async function fetch_persons_of_season(
     language?: Language;
   }
 ) {
-  console.log("[SERVICE]fetch_persons_of_season ", body);
   const { tv_id, season_number } = body;
-  if (season_number === undefined) {
-    return Result.Err("请传入季数");
-  }
+  // if (season_number === undefined) {
+  //   return Result.Err("请传入季数");
+  // }
   const endpoint = `/tv/${tv_id}/season/${season_number}/credits`;
   const { api_key, language } = option;
-  const result = await request.get<{
+  return request.get<{
     /** 演员列表 */
     cast: {
       adult: boolean;
@@ -724,10 +748,12 @@ export async function fetch_persons_of_season(
     api_key,
     language,
   });
-  if (result.error) {
-    return Result.Err(result.error);
+}
+export function fetch_persons_of_season_process(r: TmpRequestResp<typeof fetch_persons_of_season>) {
+  if (r.error) {
+    return Result.Err(r.error);
   }
-  const { id, cast, crew } = result.data;
+  const { id, cast, crew } = r.data;
   return Result.Ok(
     [...cast, ...crew].map((person) => {
       const { id, name, gender, known_for_department, profile_path, order = 9999 } = person;
@@ -742,8 +768,7 @@ export async function fetch_persons_of_season(
     })
   );
 }
-
-export async function fetch_persons_of_movie(
+export function fetch_persons_of_movie(
   body: {
     movie_id: number | string;
   },
@@ -752,11 +777,10 @@ export async function fetch_persons_of_movie(
     language?: Language;
   }
 ) {
-  console.log("[SERVICE]fetch_persons_of_movie ", body);
   const { movie_id } = body;
   const endpoint = `/movie/${movie_id}/credits`;
   const { api_key, language } = option;
-  const result = await request.get<{
+  return request.get<{
     /** 演员列表 */
     cast: {
       adult: boolean;
@@ -800,10 +824,12 @@ export async function fetch_persons_of_movie(
     api_key,
     language,
   });
-  if (result.error) {
-    return Result.Err(result.error);
+}
+export function fetch_persons_of_movie_process(r: TmpRequestResp<typeof fetch_persons_of_movie>) {
+  if (r.error) {
+    return Result.Err(r.error);
   }
-  const { id, cast, crew } = result.data;
+  const { id, cast, crew } = r.data;
   return Result.Ok(
     [...cast, ...crew].map((person) => {
       const { id, name, gender, known_for_department, profile_path, order = 9999 } = person;
@@ -818,8 +844,7 @@ export async function fetch_persons_of_movie(
     })
   );
 }
-
-export async function fetch_person_profile(
+export function fetch_person_profile(
   body: {
     person_id: number | string;
   },
@@ -828,14 +853,13 @@ export async function fetch_person_profile(
     language?: Language;
   }
 ) {
-  console.log("[SERVICE]fetch_person_profile ", body);
   const { person_id } = body;
-  if (person_id === undefined) {
-    return Result.Err("请传入 person_id");
-  }
+  // if (person_id === undefined) {
+  //   return Result.Err("请传入 person_id");
+  // }
   const endpoint = `/person/${person_id}`;
   const { api_key, language } = option;
-  const result = await request.get<{
+  return request.get<{
     adult: boolean;
     also_known_as: DepartmentTypes[];
     biography: string;
@@ -854,11 +878,12 @@ export async function fetch_person_profile(
     api_key,
     language,
   });
-  if (result.error) {
-    return Result.Err(result.error);
+}
+export function fetch_person_profile_process(r: TmpRequestResp<typeof fetch_person_profile>) {
+  if (r.error) {
+    return Result.Err(r.error);
   }
-  const { id, name, also_known_as, known_for_department, biography, profile_path, place_of_birth, birthday } =
-    result.data;
+  const { id, name, also_known_as, known_for_department, biography, profile_path, place_of_birth, birthday } = r.data;
   return Result.Ok({
     id,
     name: (() => {

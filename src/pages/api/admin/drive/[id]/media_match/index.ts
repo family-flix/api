@@ -6,8 +6,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { app, store } from "@/store/index";
 import { User } from "@/domains/user/index";
-import { Drive } from "@/domains/drive/index";
-import { MediaSearcher } from "@/domains/searcher/index";
+import { Drive } from "@/domains/drive/v2";
+import { MediaSearcher } from "@/domains/searcher/v2";
 import { Job } from "@/domains/job/index";
 import { response_error_factory } from "@/utils/server";
 import { BaseApiResp, Result } from "@/types/index";

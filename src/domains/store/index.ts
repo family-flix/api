@@ -1,4 +1,5 @@
-import { Result, Unpacked } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { Unpacked } from "@/types";
 import { bytes_to_size } from "@/utils";
 import { PrismaClient } from "@prisma/client";
 

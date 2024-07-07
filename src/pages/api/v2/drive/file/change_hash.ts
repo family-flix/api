@@ -17,7 +17,7 @@ import { Drive } from "@/domains/drive/v2";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { Job, TaskTypes } from "@/domains/job/index";
 import { response_error_factory } from "@/utils/server";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { FileType, MediaResolutionTypes, MediaTypes } from "@/constants/index";
 import { bytes_to_size } from "@/utils/index";
 import { build_media_name } from "@/utils/parse_filename_for_video";

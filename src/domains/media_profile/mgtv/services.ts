@@ -5,7 +5,8 @@
 import axios from "axios";
 import dayjs from "dayjs";
 
-import { Result, Unpacked, UnpackedResult } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { Unpacked } from "@/types";
 import { MEDIA_SOURCE_MAP, MEDIA_TYPE_MAP, MEDIA_COUNTRY_MAP } from "@/constants";
 
 import { SearchedTVItem } from "../types";

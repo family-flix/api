@@ -5,7 +5,7 @@ import { app } from "@/store/index";
 import { User } from "@/domains/user";
 import { DatabaseStore } from "@/domains/store";
 import { DataStore } from "@/domains/store/types";
-import { Result, resultify } from "@/types/index";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 import { parseJSONStr, random_string, r_id } from "@/utils/index";
 
 import { Credentials } from "./services";

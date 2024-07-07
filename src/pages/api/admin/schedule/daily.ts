@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { ScheduleTask } from "@/domains/schedule";
+import { ScheduleTask } from "@/domains/schedule/v2";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { app, store } from "@/store";

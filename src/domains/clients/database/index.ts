@@ -4,8 +4,8 @@
 import { DriveClient } from "@/domains/clients/types";
 import { DataStore } from "@/domains/store/types";
 import { build_drive_file } from "@/domains/clients/utils";
-import { FileType } from "@/constants";
-import { Result, resultify } from "@/types";
+import { Result, resultify } from "@/domains/result/index";
+import { FileType } from "@/constants/index";
 
 export class DatabaseDriveClient implements DriveClient {
   id: string = "";

@@ -5,7 +5,7 @@ import { FileManage } from "@/domains/uploader";
 import { DatabaseStore } from "@/domains/store";
 import { Drive } from "@/domains/drive/v2";
 import { r_id } from "@/utils/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 import { format_number_with_3decimals } from "./utils";
 

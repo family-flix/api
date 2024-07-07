@@ -80,7 +80,6 @@ import v0_admin_tv_list from "./pages/api/admin/tv/list";
 import v2_admin_sync_task_override from "./pages/api/v2/admin/sync_task/override";
 import v2_admin_sync_task_delete from "./pages/api/v2/admin/sync_task/delete";
 import v2_admin_sync_task_complete from "./pages/api/v2/admin/sync_task/complete";
-import v2_admin_sync_task_run_all from "./pages/api/v2/admin/sync_task/run_all";
 import v2_admin_sync_task_run from "./pages/api/v2/admin/sync_task/run";
 import v2_admin_sync_task_update from "./pages/api/v2/admin/sync_task/update";
 import v2_admin_sync_task_partial from "./pages/api/v2/admin/sync_task/partial";
@@ -526,9 +525,6 @@ async function main() {
   });
   server.post("/api/v2/admin/sync_task/complete", async (c) => {
     return v2_admin_sync_task_complete(...(await compat_next(c)));
-  });
-  server.post("/api/v2/admin/sync_task/run_all", async (c) => {
-    return v2_admin_sync_task_run_all(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/sync_task/run", async (c) => {
     return v2_admin_sync_task_run(...(await compat_next(c)));

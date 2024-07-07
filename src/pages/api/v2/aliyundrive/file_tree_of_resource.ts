@@ -9,7 +9,7 @@ import { Folder } from "@/domains/folder";
 import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource";
 import { DriveTypes } from "@/domains/drive/constants";
 import { User } from "@/domains/user";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 
 type SimpleAliyunDriveFile = {

@@ -12,7 +12,7 @@ import { Drive } from "@/domains/drive/v2";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { Job } from "@/domains/job/index";
 import { response_error_factory } from "@/utils/server";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 export default async function v2_admin_analysis(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

@@ -19,7 +19,7 @@ import { DatabaseDriveClient } from "@/domains/clients/database/index";
 import { Drive } from "@/domains/drive/index";
 import { DataStore, SyncTaskRecord } from "@/domains/store/types";
 import { AliyunDriveClient } from "@/domains/clients/alipan/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { is_video_file, r_id, sleep } from "@/utils/index";
 import { FileType } from "@/constants/index";
 

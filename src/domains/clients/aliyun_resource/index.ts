@@ -11,7 +11,7 @@ import { User } from "@/domains/user";
 import { AliyunDriveFileResp } from "@/domains/clients/alipan/types";
 import { DriveClient } from "@/domains/clients/types";
 import { build_drive_file, run } from "@/domains/clients/utils";
-import { Result } from "@/types";
+import { Result } from "@/domains/result/index";
 import { sleep } from "@/utils";
 
 const API_HOST = "https://api.aliyundrive.com";

@@ -12,7 +12,7 @@ import { DataStore } from "@/domains/store/types";
 import { DriveClient } from "@/domains/clients/types";
 import { DriveTypes } from "@/domains/drive/constants";
 import { parse_argv } from "@/utils/server";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 import { r_id } from "@/utils/index";
 
 enum Events {

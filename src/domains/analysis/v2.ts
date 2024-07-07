@@ -4,8 +4,8 @@
  * 2. 将获取到的剧集和电影在 TMDB 上搜索海报、简介等信息
  */
 import { BaseDomain, Handler } from "@/domains/base";
-import { EpisodeFileProcessor } from "@/domains/file_processor/episode_v2";
-import { MovieFileProcessor } from "@/domains/file_processor/movie_v2";
+import { EpisodeFileProcessor } from "~/src/domains/file_processor/episode";
+import { MovieFileProcessor } from "~/src/domains/file_processor/movie";
 import { MediaProfileProcessor } from "@/domains/file_processor/media_profile";
 import { MediaSearcher } from "@/domains/searcher/v2";
 import { File, Folder } from "@/domains/folder/index";
@@ -15,7 +15,7 @@ import { Drive } from "@/domains/drive/v2";
 import { User } from "@/domains/user/index";
 import { FolderWalker } from "@/domains/walker/index";
 import { FileType } from "@/constants/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 import { get_diff_of_file, need_skip_the_file_when_walk } from "./utils";
 

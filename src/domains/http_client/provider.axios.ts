@@ -4,7 +4,7 @@ import { Result } from "@/domains/result/index";
 
 import { HttpClientCore } from "./index";
 
-export function connect(store: HttpClientCore) {
+export function connect(store: HttpClientCore, extra: Partial<{ timeout: number }> = {}) {
   let requests: { id: string; source: CancelTokenSource }[] = [];
   store.fetch = async (options) => {
     const { url, method, id, data, headers, timeout = 2000 } = options;
@@ -17,11 +17,12 @@ export function connect(store: HttpClientCore) {
     }
     if (method === "GET") {
       try {
+        console.log("[DOMAIN]http_client/provider.axios - before axios.get", url);
         const r = await axios.get(url, {
           params: data,
           headers,
           cancelToken: source.token,
-          timeout,
+          timeout: extra.timeout || timeout,
         });
         requests = requests.filter((r) => r.id !== id);
         return r;
@@ -35,7 +36,7 @@ export function connect(store: HttpClientCore) {
         const r = await axios.post(url, data, {
           headers,
           cancelToken: source.token,
-          timeout,
+          timeout: extra.timeout || timeout,
         });
         requests = requests.filter((r) => r.id !== id);
         return r;

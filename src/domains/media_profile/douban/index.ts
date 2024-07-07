@@ -5,11 +5,13 @@ import axios from "axios";
 import dayjs from "dayjs";
 import uniq from "lodash/uniq";
 
-import { Result, Unpacked, UnpackedResult } from "@/types/index";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { Unpacked } from "@/types/index";
 import { DOUBAN_GENRE_TEXT_TO_VALUE, MediaTypes } from "@/constants/index";
 import { num_to_chinese } from "@/utils/index";
 
 import {
+  RequestCommonPart,
   fetch_episode_profile,
   fetch_season_profile,
   fetch_media_profile,
@@ -17,7 +19,7 @@ import {
   search_movie_in_tmdb,
 } from "./services";
 import { decrypt, DoubanSearchItem } from "./decrypt";
-import { split_name_and_original_name } from "./utils";
+import { parse_profile_page_html, split_name_and_original_name } from "./utils";
 
 export class DoubanClient {
   options: {
@@ -303,7 +305,22 @@ export class DoubanClient {
     });
     return result;
   }
-  async fetch_media_profile(id: number | string) {
-    return fetch_media_profile(Number(id), {});
+  async fetch_media_profile(id: number | string, query: RequestCommonPart = {}) {
+    // return fetch_media_profile(Number(id), {});
+    if (id === undefined) {
+      return Result.Err("请传入电视剧 id");
+    }
+    const endpoint = `https://movie.douban.com/subject/${id}/`;
+    const {} = query;
+    const resp = await axios.get<string>(endpoint, {});
+    const html = resp.data;
+    const r = parse_profile_page_html(html);
+    if (r.error) {
+      return r;
+    }
+    return Result.Ok({
+      id,
+      ...r.data,
+    });
   }
 }

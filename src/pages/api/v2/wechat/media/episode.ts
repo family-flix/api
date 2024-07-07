@@ -8,7 +8,7 @@ import { Member } from "@/domains/user/member";
 import { Media } from "@/domains/media/index";
 import { response_error_factory } from "@/utils/server";
 import { MediaTypes } from "@/constants/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 export default async function v2_wechat_media_episode(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);

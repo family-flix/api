@@ -3,7 +3,8 @@
  */
 import dayjs from "dayjs";
 
-import { Result, Unpacked } from "@/types";
+import { Result, resultify, UnpackedResult } from "@/domains/result/index";
+import { Unpacked } from "@/types";
 import { MEDIA_COUNTRY_MAP, MEDIA_GENRES_MAP } from "@/constants";
 
 import {

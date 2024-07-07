@@ -5,7 +5,7 @@ import { DataStore } from "@/domains/store/types";
 import { Handler } from "@/domains/base";
 import { ArticleLineNode, ArticleSectionNode } from "@/domains/article/index";
 import { FileType, MediaResolutionTypes } from "@/constants/index";
-import { Result } from "@/types/index";
+import { Result } from "@/domains/result/index";
 
 export interface DriveClient {
   /** 数据库记录 id */
