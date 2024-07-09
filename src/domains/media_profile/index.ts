@@ -244,7 +244,7 @@ export class MediaProfileClient {
    * 不保存剧集，因为获取 season 只需要调用一次 fetch_tv_profile。保存剧集还需要遍历 season 依次获取详情
    * 如果 season 很多可能太过耗时
    */
-  async cache_tv_profile(matched_tv: { id: number | string }) {
+  async cache_tv_profile(matched_tv: { id: number | string }, extra: Partial<{ force: boolean }> = {}) {
     const r1 = await this.$store.prisma.media_series_profile.findFirst({
       where: {
         id: String(matched_tv.id),
@@ -261,7 +261,7 @@ export class MediaProfileClient {
         genres: true,
       },
     });
-    if (r1 && r1.media_profiles.length) {
+    if (r1 && r1.media_profiles.length && !extra.force) {
       return Result.Ok(r1);
     }
     const r = await this.$tmdb.fetch_tv_profile(matched_tv.id as number);
