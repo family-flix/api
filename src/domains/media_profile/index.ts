@@ -788,6 +788,10 @@ export class MediaProfileClient {
       if (season_number === undefined) {
         return Result.Err("详情 id 不包含 season_number");
       }
+      const r0 = await this.cache_tv_profile({ id: tmdb_id });
+      if (r0.error) {
+        return Result.Err(r0.error.message);
+      }
       const r = await this.$tmdb.fetch_season_profile({
         tv_id: Number(tmdb_id),
         season_number: Number(season_number),
