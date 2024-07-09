@@ -788,7 +788,7 @@ export class MediaProfileClient {
       if (season_number === undefined) {
         return Result.Err("详情 id 不包含 season_number");
       }
-      const r0 = await this.cache_tv_profile({ id: tmdb_id });
+      const r0 = await this.cache_tv_profile({ id: tmdb_id }, { force: true });
       if (r0.error) {
         return Result.Err(r0.error.message);
       }
@@ -984,7 +984,10 @@ export class MediaProfileClient {
     }
     return Result.Err("未知类型");
   }
-  async refresh_profile_with_douban(data: MediaProfileRecord & { series: MediaSeriesProfileRecord | null }) {
+  async refresh_profile_with_douban(
+    data: MediaProfileRecord & { series: MediaSeriesProfileRecord | null },
+    extra: Partial<{ override: number }> = {}
+  ) {
     const { id, name, order, air_date, series } = data;
     const client = this.$douban;
     const store = this.$store;
@@ -1025,7 +1028,7 @@ export class MediaProfileClient {
           return;
         }
         const matched = match_r.data;
-        const r2 = await this.refresh_profile_with_douban_id(data, { douban_id: matched.id });
+        const r2 = await this.refresh_profile_with_douban_id(data, { douban_id: matched.id, override: extra.override });
         if (r2.error) {
           tips.push(r2.error.message);
         }
@@ -1069,7 +1072,7 @@ export class MediaProfileClient {
       return Result.Err(tip);
     }
     const profile = profile_r.data;
-    console.log("[DOMAIN]media_profile/index - refresh_profile_with_douban_id", profile, media.air_date);
+    // console.log("[DOMAIN]media_profile/index - refresh_profile_with_douban_id", profile, media.air_date);
     for (let i = 0; i < profile.genres.length; i += 1) {
       const { id, text } = profile.genres[i];
       const e = await store.prisma.media_genre.findFirst({

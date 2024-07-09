@@ -58,7 +58,7 @@ export default async function v2_media_profile_init_series(
       return Result.Err(profile_client_res.error.message);
     }
     const profile_client = profile_client_res.data;
-    const r = await profile_client.cache_tv_profile({ id: series_id });
+    const r = await profile_client.cache_tv_profile({ id: series_id }, { force: true });
     if (r.error) {
       return Result.Err(r.error.message);
     }
