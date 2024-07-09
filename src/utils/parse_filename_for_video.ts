@@ -44,7 +44,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("Spider")) {
+    if (!filename.includes("lone")) {
       return;
     }
     // console.log(...args);
@@ -59,11 +59,59 @@ export function parse_filename_for_video(
     .reduce((total, prev) => {
       return { ...total, ...prev };
     }, {});
+  const priority_keys: Record<VideoKeys, string> = { ...result };
   const k = has_key_factory(VIDEO_ALL_KEYS);
+  let original_filename = filename;
   // 做一些预处理
+  for (let i = 0; i < extra_rules.length; i += 1) {
+    (() => {
+      const rule = extra_rules[i];
+      const { replace } = rule;
+      try {
+        // log("before apply parse", replace[0]);
+        const regexp = new RegExp(replace[0]);
+        if (!original_filename.match(regexp)) {
+          return;
+        }
+        // log("apply custom parse", regexp, replace[1]);
+        if (replace[1] === "ORIGINAL_NAME") {
+          if (!keys.includes("original_name")) {
+            return;
+          }
+          const r = original_filename.match(regexp);
+          if (r) {
+            result["original_name"] = r[0];
+            priority_keys["original_name"] = "1";
+            original_filename = original_filename.replace(r[0], "");
+            return;
+          }
+        }
+        if (replace[1] === "NAME") {
+          if (!keys.includes("name")) {
+            return;
+          }
+          const r = original_filename.match(regexp);
+          log("[]NAME rule", r);
+          if (r) {
+            result["name"] = r[0];
+            priority_keys["name"] = "1";
+            original_filename = original_filename.replace(r[0], "");
+            return;
+          }
+        }
+        if (replace[1] === "EMPTY") {
+          original_filename = original_filename.replace(regexp, "");
+          return;
+        }
+        original_filename = original_filename.replace(regexp, replace[1]);
+      } catch (err) {
+        // replace[0] 可能不是合法的正则
+      }
+    })();
+  }
   // 移除 [name][] 前面的 [name]，大部分日本动漫前面的 [name] 是发布者信息
   log("filename is", filename);
-  let original_filename = filename
+  original_filename = original_filename
     .trim()
     .replace(/(第 ){0,1}([2][0-3][0-9]{2})-{0,1}([0-2][0-9])-{0,1}([0-3][0-9]) 期/, "$2$3$4期")
     .replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
@@ -75,7 +123,6 @@ export function parse_filename_for_video(
     // 在 小谢尔顿S01E01 这种 S01E01 紧跟着名字后面的场景，前面加一个符号来分割
     .replace(/(?=[sS][0-9]{2}[eE][0-9]{2})([sS][0-9]{2}[eE][0-9]{2})/, ".$1")
     .replace(/_([0-9]{1,3})_/, ".E$1.");
-
   const special_season_with_number_regexp = /(^|[^a-zA-Z])([sS][pP])([0-9]{1,})($|[^a-zA-Z])/;
   if (original_filename.match(special_season_with_number_regexp)) {
     if (!original_filename.match(/[sS][0-9]{1,}[sS][pP][0-9]{1,}/)) {
@@ -112,52 +159,6 @@ export function parse_filename_for_video(
     .replace(/([^.(]{1})\([0-9]{1,}\)/, "$1.")
     .replace(/(\.){2,}/g, ".");
   // const special_season_regexp = /(^|[^a-zA-Z])([sS][pP])($|[^a-zA-Z])/;
-  log("before custom parse", original_filename);
-  for (let i = 0; i < extra_rules.length; i += 1) {
-    (() => {
-      const rule = extra_rules[i];
-      const { replace } = rule;
-      try {
-        // log("before apply parse", replace[0]);
-        const regexp = new RegExp(replace[0]);
-        if (!original_filename.match(regexp)) {
-          return;
-        }
-        // log("apply custom parse", regexp, replace[1]);
-        if (replace[1] === "ORIGINAL_NAME") {
-          if (!keys.includes("original_name")) {
-            return;
-          }
-          const r = original_filename.match(regexp);
-          if (r) {
-            result["original_name"] = r[0];
-            original_filename = original_filename.replace(r[0], "");
-            return;
-          }
-        }
-        if (replace[1] === "NAME") {
-          if (!keys.includes("name")) {
-            return;
-          }
-          const r = original_filename.match(regexp);
-          log("[]NAME rule", r);
-          if (r) {
-            result["name"] = r[0];
-            original_filename = original_filename.replace(r[0], "");
-            return;
-          }
-        }
-        if (replace[1] === "EMPTY") {
-          original_filename = original_filename.replace(regexp, "");
-          return;
-        }
-        original_filename = original_filename.replace(regexp, replace[1]);
-      } catch (err) {
-        // replace[0] 可能不是合法的正则
-      }
-    })();
-  }
-  log("after  custom parse", original_filename);
   let cur_filename = original_filename;
   log("start name", cur_filename);
   type ExtraRule = {
@@ -186,7 +187,7 @@ export function parse_filename_for_video(
     /** 当该方法存在且返回 true，才执行该正则 */
     when?: () => boolean;
   };
-  const priorityMap: Partial<Record<VideoKeys, number>> = {};
+  const priority_map: Partial<Record<VideoKeys, number>> = {};
   // 制作组
   const publishers = [
     "-Huawei",
@@ -1445,6 +1446,9 @@ export function parse_filename_for_video(
     })();
     log("\n");
     log("[1]extra start", unique, "from", cur_filename);
+    if (key && priority_keys[key]) {
+      continue;
+    }
     // log("[1]start extra content for", chalk.greenBright(unique), "and cur filename is", chalk.blueBright(cur_filename));
     /**
      * 如果重复出现同一个信息，比如 S01E22.第22集，这里「集数」重复出现了
@@ -1512,7 +1516,7 @@ export function parse_filename_for_video(
     if (key && VIDEO_ALL_KEYS.includes(key)) {
       // log("[6]replace value with priority", priority, priorityMap);
       if (!priority) {
-        if (priorityMap[key]) {
+        if (priority_map[key]) {
           continue;
         }
       }
@@ -1522,12 +1526,12 @@ export function parse_filename_for_video(
         continue;
       }
       if (priority !== undefined) {
-        const prevKeyPriority = priorityMap[key];
-        if (prevKeyPriority && priority <= prevKeyPriority) {
+        const prev_key_priority = priority_map[key];
+        if (prev_key_priority && priority <= prev_key_priority) {
           continue;
         }
         result[key] = extracted_content;
-        priorityMap[key] = priority;
+        priority_map[key] = priority;
       }
       log("[6]bingo!!! save the content", key, extracted_content);
       result[key] = extracted_content;

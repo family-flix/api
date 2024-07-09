@@ -112,7 +112,7 @@ describe("自定义额外解析规则", () => {
       },
     ]);
     expect(result).toStrictEqual({
-      name: "如果.30.歲還是處男，似乎就能成為魔法師",
+      name: "如果 30 歲還是處男，似乎就能成為魔法師",
       original_name: "",
       season: "",
       episode: "E01",
