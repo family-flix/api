@@ -16,8 +16,8 @@ import {
   TVProfileRecord,
   TVRecord,
 } from "@/domains/store/types";
-import { TMDBClient } from "~/src/domains/media_profile/tmdb";
-import { EpisodeProfileFromTMDB } from "~/src/domains/media_profile/tmdb/services";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
+import { EpisodeProfileFromTMDB } from "@/domains/media_profile/tmdb/services";
 import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
 import { User } from "@/domains/user";
 import { MediaSearcher } from "@/domains/searcher/v2";

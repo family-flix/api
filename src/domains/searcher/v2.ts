@@ -9,7 +9,7 @@ import {
   MovieProfileFromTMDB,
   PartialSeasonFromTMDB,
   TVProfileFromTMDB,
-} from "~/src/domains/media_profile/tmdb/services";
+} from "@/domains/media_profile/tmdb/services";
 import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article";
 import { User } from "@/domains/user";
 import { Drive } from "@/domains/drive/v2";

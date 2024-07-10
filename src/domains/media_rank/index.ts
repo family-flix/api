@@ -4,7 +4,7 @@ import { RequestCore } from "@/domains/request/index";
 import { Application } from "@/domains/application";
 import { FileManage } from "@/domains/uploader";
 import { DoubanClient } from "@/domains/media_profile/douban/index";
-import { TMDBClient } from "~/src/domains/media_profile/tmdb";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 import { MediaProfileClient } from "@/domains/media_profile/index";
 import { User } from "@/domains/user/index";
 import { request, TmpRequestResp } from "@/domains/request/utils";

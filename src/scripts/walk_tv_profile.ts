@@ -4,7 +4,7 @@
 import { app, store } from "@/store";
 import { DatabaseStore } from "@/domains/store";
 import { walk_records } from "@/domains/store/utils";
-import { TMDBClient } from "~/src/domains/media_profile/tmdb";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 import { FileManage } from "@/domains/uploader";
 
 async function walk_tv_profile(store: DatabaseStore) {

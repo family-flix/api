@@ -5,7 +5,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
-import { TMDBClient } from "~/src/domains/media_profile/tmdb";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
 import { store } from "@/store";
