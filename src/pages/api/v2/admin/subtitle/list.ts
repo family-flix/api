@@ -13,11 +13,11 @@ export default async function v2_admin_subtitle_list(req: NextApiRequest, res: N
   const e = response_error_factory(res);
   const {
     name,
-    next_marker = "",
-    page_size,
+    page = 1,
+    page_size = 20,
   } = req.body as Partial<{
     name: string;
-    next_marker: string;
+    page: number;
     page_size: number;
   }>;
   const { authorization } = req.headers;
@@ -61,61 +61,79 @@ export default async function v2_admin_subtitle_list(req: NextApiRequest, res: N
   const count = await store.prisma.media.count({
     where,
   });
-  const result = await store.list_with_cursor({
-    fetch(extra) {
-      return store.prisma.media.findMany({
-        where,
-        include: {
-          profile: true,
-          media_sources: {
-            include: {
-              subtitles: true,
-              profile: true,
-            },
-            orderBy: {
-              profile: {
-                order: "asc",
-              },
-            },
-          },
-        },
-        orderBy: {
-          created: "desc",
-        },
-        ...extra,
-      });
-    },
-    next_marker,
-    page_size,
-  });
+  const offset = (page - 1) * page_size;
+  const result: {
+    id: string;
+    name: string;
+    poster_path: string;
+    type: number;
+    media_sources: string;
+  }[] = await store.prisma.$queryRaw`
+    SELECT 
+      m.id, mp.name, mp.poster_path, mp.type,
+      (
+        SELECT json_group_array(
+            json_object(
+                'id', ms.id,
+                'order', msp.\'order\',
+                'name', msp.name,
+                'subtitles', (
+                    SELECT json_group_array(json_object(
+                        'id', s.id,
+                        'language', s.language,
+                        'type', s.type,
+                        'unique_id', s.unique_id
+                    ))
+                    FROM subtitle_v2 s
+                    WHERE s.media_source_id = ms.id
+                )
+            )
+        )
+        FROM MediaSource ms
+        JOIN MediaSourceProfile msp ON ms.profile_id = msp.id
+        WHERE ms.media_id = m.id
+    ) AS media_sources
+    FROM media m
+    JOIN MediaSource ms ON m.id = ms.media_id
+    LEFT JOIN MediaProfile mp ON m.profile_id = mp.id
+    WHERE EXISTS (
+        SELECT 1 
+        FROM subtitle_v2 s 
+        WHERE s.media_source_id = ms.id
+    )
+    GROUP BY m.id
+    ORDER BY (
+        SELECT MAX(s.created) 
+        FROM subtitle_v2 s 
+        JOIN MediaSource ms2 ON s.media_source_id = ms2.id
+        WHERE ms2.media_id = m.id
+    ) DESC
+    LIMIT ${page_size} OFFSET ${offset};
+  `;
   const data = {
     total: count,
     page_size,
-    next_marker: result.next_marker,
-    list: result.list.map((media) => {
-      const { id, type, profile, media_sources } = media;
+    page: page + 1,
+    no_more: result.length + (page - 1) * page_size >= count,
+    list: result.map((media) => {
+      const { id, type, name, poster_path, media_sources } = media;
+      const sources: {
+        id: string;
+        name: string;
+        order: number;
+        subtitles: {
+          id: string;
+          language: string;
+          type: number;
+          unique_id: string;
+        }[];
+      }[] = JSON.parse(media_sources);
       return {
         id,
         type,
-        name: profile.name,
-        poster_path: profile.poster_path,
-        sources: media_sources.map((episode) => {
-          const { id, profile, subtitles } = episode;
-          return {
-            id,
-            name: profile.name,
-            order: profile.order,
-            subtitles: subtitles.map((subtitle) => {
-              const { id, type, language, unique_id } = subtitle;
-              return {
-                id,
-                type,
-                unique_id,
-                language,
-              };
-            }),
-          };
-        }),
+        name,
+        poster_path,
+        sources,
       };
     }),
   };
