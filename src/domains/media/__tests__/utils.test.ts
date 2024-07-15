@@ -101,6 +101,50 @@ describe("生成剧集范围", () => {
       [41, 46],
     ]);
   });
+  test("770", () => {
+    const range = split_count_into_ranges(20, 770);
+    expect(range).toStrictEqual([
+      [1, 20],
+      [21, 40],
+      [41, 60],
+      [61, 80],
+      [81, 100],
+      [101, 120],
+      [121, 140],
+      [141, 160],
+      [161, 180],
+      [181, 200],
+      [201, 220],
+      [221, 240],
+      [241, 260],
+      [261, 280],
+      [281, 300],
+      [301, 320],
+      [321, 340],
+      [341, 360],
+      [361, 380],
+      [381, 400],
+      [401, 420],
+      [421, 440],
+      [441, 460],
+      [461, 480],
+      [481, 500],
+      [501, 520],
+      [521, 540],
+      [541, 560],
+      [561, 580],
+      [581, 600],
+      [601, 620],
+      [621, 640],
+      [641, 660],
+      [661, 680],
+      [681, 700],
+      [701, 720],
+      [721, 740],
+      [741, 760],
+      [761, 770],
+    ]);
+  });
 });
 
 describe("计算缺少的剧集", () => {
@@ -114,12 +158,20 @@ describe("计算缺少的剧集", () => {
     });
     expect(range).toStrictEqual([10]);
   });
-  test("2", () => {
+  test("集数为空", () => {
     const range = find_missing_episodes({
       count: 3,
       episode_orders: [],
     });
     expect(range).toStrictEqual([1, 2, 3]);
+  });
+  test("缺少开始剧集", () => {
+    const range = find_missing_episodes({
+      count: 8,
+      start: 1,
+      episode_orders: [2, 3, 4, 6, 7, 8],
+    });
+    expect(range).toStrictEqual([1, 5]);
   });
   test("3", () => {
     const range = find_missing_episodes({
@@ -143,7 +195,7 @@ describe("根据缺少的剧集，修复剧集分组", () => {
       missing_episodes: [9, 10],
     });
     expect(range).toStrictEqual([
-      [1, 8],
+      [1, 10],
       [11, 20],
     ]);
   });
@@ -168,7 +220,7 @@ describe("根据缺少的剧集，修复剧集分组", () => {
       ],
       missing_episodes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     });
-    expect(range).toStrictEqual([[], [11, 20]]);
+    expect(range).toStrictEqual([[1, 10], [11, 20]]);
   });
   test("4", () => {
     const range = fix_episode_group_by_missing_episodes({
@@ -179,8 +231,8 @@ describe("根据缺少的剧集，修复剧集分组", () => {
       missing_episodes: [1, 2, 3, 11, 12],
     });
     expect(range).toStrictEqual([
-      [4, 10],
-      [13, 20],
+      [1, 10],
+      [11, 20],
     ]);
   });
   test("5", () => {
@@ -192,8 +244,8 @@ describe("根据缺少的剧集，修复剧集分组", () => {
       missing_episodes: [8, 9, 10, 11, 12],
     });
     expect(range).toStrictEqual([
-      [1, 7],
-      [13, 20],
+      [1, 10],
+      [11, 20],
     ]);
   });
   test("6", () => {

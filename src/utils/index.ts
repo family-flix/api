@@ -367,3 +367,18 @@ export function compare_versions_with_timestamp(version1: string, version2: stri
 
   return 0;
 }
+
+export function has_repeating_phrases(input: string) {
+  input = input.trim();
+  /**
+   * /(.+?)\1{2,}/：正则表达式的解释：
+   *  (.+?)：匹配任意非空字符（最短匹配），并捕获为第一个子表达式。
+   *  \1{2,}：表示前面捕获的子表达式至少重复两次。
+   */
+  const regex = /(.+?)\1{2,}/;
+  const match = input.match(regex);
+  if (!match) {
+    return null;
+  }
+  return match[1];
+}

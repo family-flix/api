@@ -161,7 +161,6 @@ describe("获取指定影视剧播放信息", () => {
       ],
     });
   });
-
   test("28集、缺少 9,10、首次播放", async () => {
     const store: DataStore = {
       prisma: {
@@ -333,7 +332,6 @@ describe("获取指定影视剧播放信息", () => {
       ],
     });
   });
-
   test("21集、首次播放", async () => {
     const store: DataStore = {
       prisma: {
@@ -487,9 +485,14 @@ describe("获取指定影视剧播放信息", () => {
     });
   });
 });
-
 describe("获取指定范围内的剧集", () => {
   test("共28集、缺 24,25、获取21-28", async () => {
+    const count = 28;
+    const start = 20;
+    const end = 28;
+    const remaining1 = end - start;
+    const remaining2 = count - end;
+    const missing_orders = [24, 25];
     const store: DataStore = {
       prisma: {
         media: {
@@ -499,7 +502,7 @@ describe("获取指定范围内的剧集", () => {
               id: "media_id",
               profile: {
                 name: "微暗之火",
-                source_count: 28,
+                source_count: count,
                 origin_country: [],
                 genres: [],
               },
@@ -512,14 +515,14 @@ describe("获取指定范围内的剧集", () => {
             return {
               id: "media_source",
               profile: {
-                order: 28,
+                order: count,
               },
             };
           },
           // @ts-ignore
           findMany(args) {
             if (args && args.select) {
-              return [...Array(28)].map((_, i) => {
+              return [...Array(count)].map((_, i) => {
                 return {
                   profile: {
                     order: i + 1,
@@ -527,11 +530,10 @@ describe("获取指定范围内的剧集", () => {
                 };
               });
             }
-            return [...Array(8)]
+            return [...Array(remaining1)]
               .map((_, i) => {
-                const base = 20;
-                const order = base + i + 1;
-                if ([24, 25].includes(order)) {
+                const order = start + i + 1;
+                if (missing_orders.includes(order)) {
                   return null;
                 }
                 return {
@@ -570,18 +572,147 @@ describe("获取指定范围内的剧集", () => {
       return;
     }
     const media = r.data;
-    const r2 = await media.fetch_episodes_by_range({ start: 21, end: 28 });
+    const r2 = await media.fetch_episodes_by_range({ start, end });
     expect(r2.error).toBe(null);
     if (r2.error) {
       console.log(r2.error.message);
       return;
     }
     expect(r2.data).toStrictEqual(
-      [...Array(8)]
+      [...Array(remaining1)]
         .map((_, i) => {
-          const base = 20;
-          const order = base + i + 1;
-          if ([24, 25].includes(order)) {
+          const order = start + i + 1;
+          if (missing_orders.includes(order)) {
+            return {
+              id: "",
+              name: "",
+              overview: "",
+              order,
+              runtime: null,
+              media_id: "",
+              still_path: "",
+              sources: [],
+              subtitles: [],
+            };
+          }
+          return {
+            id: String(order),
+            name: `第${order}集`,
+            overview: undefined,
+            order,
+            runtime: undefined,
+            media_id,
+            still_path: undefined,
+            sources: [
+              {
+                id: "1",
+                file_name: "file_1",
+                parent_paths: undefined,
+              },
+            ],
+            subtitles: [],
+          };
+        })
+        .filter(Boolean)
+    );
+  });
+  test("共528集、缺 64,81,82至100、获取61-80", async () => {
+    const count = 528;
+    const start = 60;
+    const end = 80;
+    const remaining1 = end - start;
+    const remaining2 = count - end;
+    const missing_orders = [64, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100];
+    const store: DataStore = {
+      prisma: {
+        media: {
+          // @ts-ignore
+          findFirst(args) {
+            return {
+              id: "media_id",
+              profile: {
+                name: "哆啦A梦",
+                source_count: count,
+                origin_country: [],
+                genres: [],
+              },
+            };
+          },
+        },
+        media_source: {
+          // @ts-ignore
+          findFirst(args) {
+            return {
+              id: "media_source",
+              profile: {
+                order: count,
+              },
+            };
+          },
+          // @ts-ignore
+          findMany(args) {
+            if (args && args.select) {
+              return [...Array(end)].map((_, i) => {
+                return {
+                  profile: {
+                    order: i + 1,
+                  },
+                };
+              });
+            }
+            return [...Array(remaining1)]
+              .map((_, i) => {
+                const order = start + i + 1;
+                if (missing_orders.includes(order)) {
+                  return null;
+                }
+                return {
+                  id: String(order),
+                  profile: {
+                    name: `第${order}集`,
+                    order,
+                  },
+                  subtitles: [],
+                  files: [
+                    {
+                      id: "1",
+                      name: "file",
+                      file_name: "file_1",
+                      file_id: "",
+                      drive: {
+                        name: "drive",
+                      },
+                    },
+                  ],
+                };
+              })
+              .filter(Boolean);
+          },
+        },
+      },
+    };
+    const user = new User({ id: "", token: "", store });
+    const member = new Member({ id: "", remark: "", email: "", token: "", permissions: [], user, store });
+    const media_id = "xxx";
+    const type = MediaTypes.Season;
+    const r = await Media.Get({ id: media_id, type, member, store });
+    expect(r.error).toBe(null);
+    if (r.error) {
+      console.log(r.error.message);
+      return;
+    }
+    const media = r.data;
+    const r2 = await media.fetch_episodes_by_range({ start, end });
+    expect(r2.error).toBe(null);
+    if (r2.error) {
+      console.log(r2.error.message);
+      return;
+    }
+    expect(r2.data).toStrictEqual(
+      [...Array(remaining1)]
+        .map((_, i) => {
+          const order = start + i + 1;
+          if (missing_orders.includes(order)) {
             return {
               id: "",
               name: "",

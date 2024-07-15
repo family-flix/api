@@ -132,4 +132,32 @@ describe("自定义额外解析规则", () => {
       episode: "E17",
     });
   });
+  test("[夜莺家族&YYQ字幕组]哆啦A梦新番688[1080P][MP4].mp4", () => {
+    const name = "[夜莺家族&YYQ字幕组]哆啦A梦新番688[1080P][MP4].mp4";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["哆啦A梦新番([0-9]{1,})", "哆啦A梦.E$1"],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "哆啦A梦",
+      original_name: "",
+      season: "",
+      episode: "E688",
+    });
+  });
+  test("[YGSUB][2005.11.25][029][HDTV][X264.MP4].mp4", () => {
+    const name = "[YGSUB][2005.11.25][029][HDTV][X264.MP4].mp4";
+    const result = parse_filename_for_video(name, undefined, [
+      {
+        replace: ["\\[YGSUB\\]\\[[0-9]{4}\\.[0-9]{1,}\\.[0-9]{2}\\]\\[([0-9]{1,})\\]", "哆啦A梦.E$1"],
+      },
+    ]);
+    expect(result).toStrictEqual({
+      name: "哆啦A梦",
+      original_name: "",
+      season: "",
+      episode: "E29",
+    });
+  });
 });

@@ -77,37 +77,47 @@ export function format_episode(
     }),
   };
 }
-
+/** 根据缺少的剧集，更新 groups 的范围值 */
 export function fix_episode_group_by_missing_episodes(values: {
   missing_episodes: number[];
   groups: [number, number][];
 }) {
   const { groups, missing_episodes } = values;
-  const updated_groups: [number?, number?][] = [];
-  if (missing_episodes.length === 0) {
-    return groups;
-  }
-  for (let i = 0; i < groups.length; i += 1) {
-    let [start, end] = groups[i];
-    const range: number[] = [];
-    for (let i = start; i < end + 1; i += 1) {
-      if (!missing_episodes.includes(i)) {
-        range.push(i);
-      }
-    }
-    if (range.length === 0) {
-      updated_groups.push([]);
-      continue;
-    }
-    updated_groups.push([range[0], range[range.length - 1]]);
-  }
-  return updated_groups;
+  return groups;
+  // const updated_groups: [number?, number?][] = [];
+  // if (missing_episodes.length === 0) {
+  //   return groups;
+  // }
+  // for (let i = 0; i < groups.length; i += 1) {
+  //   let [start, end] = groups[i];
+  //   const range: number[] = [];
+  //   for (let i = start; i < end + 1; i += 1) {
+  //     if (!missing_episodes.includes(i)) {
+  //       range.push(i);
+  //     }
+  //   }
+  //   if (range.length === 0) {
+  //     updated_groups.push([]);
+  //     continue;
+  //   }
+  //   updated_groups.push([range[0], range[range.length - 1]]);
+  // }
+  // return updated_groups;
 }
 
-export function find_missing_episodes(values: { count: number; episode_orders: number[] }) {
-  const { count, episode_orders } = values;
+export function find_missing_episodes(values: {
+  count: number;
+  start?: number;
+  end?: number;
+  episode_orders: number[];
+}) {
+  const { count, start, end, episode_orders } = values;
+  if (episode_orders.length === 0) {
+    return [...new Array(count)].map((_, i) => i + 1);
+  }
   const missing_episodes: number[] = [];
-  for (let i = 1; i <= count; i++) {
+  const e = end ? Math.min(count, end) : count;
+  for (let i = start || episode_orders[0]; i <= e; i++) {
     if (!episode_orders.includes(i)) {
       missing_episodes.push(i);
     }

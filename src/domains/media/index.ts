@@ -267,12 +267,18 @@ export class Media {
       where: {
         media_id,
       },
+      orderBy: {
+        profile: {
+          order: "asc",
+        },
+      },
     });
     const cur_episode_orders = episode_orders.map((e) => e.profile.order);
     const missing_episodes = find_missing_episodes({
       count: latest_source.profile.order,
       episode_orders: cur_episode_orders,
     });
+    // console.log('before fix_episode_group_by_missing_episodes', groups);
     const episode_ranges = fix_episode_group_by_missing_episodes({
       groups,
       missing_episodes,
@@ -333,6 +339,7 @@ export class Media {
     if (!latest_source) {
       return Result.Err("没有找到剧集");
     }
+    // 找出指定范围内关联了视频源的剧集
     const media_sources = await this.store.prisma.media_source.findMany({
       where: {
         files: {
@@ -359,6 +366,7 @@ export class Media {
         },
       },
     });
+    // 范围内剧集，不关心是否关联了视频源
     const episode_orders = await this.store.prisma.media_source.findMany({
       select: {
         profile: {
@@ -368,21 +376,34 @@ export class Media {
         },
       },
       where: {
+        profile: {
+          order: {
+            gte: start,
+            lte: end,
+          },
+        },
         media_id: this.id,
       },
+      orderBy: {
+        profile: {
+          order: "asc",
+        },
+      },
     });
-    const sources = media_sources.map((episode) => format_episode(episode, this.id));
-    const cur_episode_orders = episode_orders.map((e) => e.profile.order);
+    const cur_sources = media_sources.map((episode) => format_episode(episode, this.id));
+    const all_episode_orders = episode_orders.map((e) => e.profile.order);
     const missing_episodes = find_missing_episodes({
       count: latest_source.profile.order,
-      episode_orders: cur_episode_orders,
+      start,
+      end,
+      episode_orders: all_episode_orders,
     });
     const episodes =
-      sources.length === TheEpisodeCountPerGroup
-        ? sources
+      cur_sources.length === TheEpisodeCountPerGroup
+        ? cur_sources
         : fix_missing_episodes({
             missing_episodes,
-            episodes: sources,
+            episodes: cur_sources,
           });
     return Result.Ok(episodes);
   }

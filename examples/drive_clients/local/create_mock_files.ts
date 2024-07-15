@@ -72,9 +72,11 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     diershitiao: "https://www.alipan.com/s/aZRyS7V8cWV",
     womenyiqiyaotaiyang: "https://www.alipan.com/s/HM1TEWhABVb",
     /** 饥饿游戏 */
-    jieyouxi: 'https://www.alipan.com/s/So5yhYBxTyJ'
+    jieyouxi: "https://www.alipan.com/s/So5yhYBxTyJ",
+    /** 哆啦A梦 */
+    duolaiameng: "https://www.aliyundrive.com/s/EY63JTaMUZ1",
   };
-  const url = SHARE_FOLDER.jieyouxi;
+  const url = SHARE_FOLDER.duolaiameng;
   const r2 = await AliyunShareResourceClient.Get({ unique_id: drive.profile.drive_id, url, store });
   if (r2.error) {
     console.log("r2.error", r2.error.message, drive.profile.drive_id);
