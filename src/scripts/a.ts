@@ -1,6 +1,5 @@
 import { MediaTypes, ResourceSyncTaskStatus } from "@/constants";
 import { Application } from "@/domains/application";
-import { MediaProfileClient } from "@/domains/media_profile";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { parseJSONStr } from "@/utils";
 

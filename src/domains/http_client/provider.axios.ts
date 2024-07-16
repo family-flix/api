@@ -17,7 +17,7 @@ export function connect(store: HttpClientCore, extra: Partial<{ timeout: number 
     }
     if (method === "GET") {
       try {
-        console.log("[DOMAIN]http_client/provider.axios - before axios.get", url);
+        // console.log("[DOMAIN]http_client/provider.axios - before axios.get", url);
         const r = await axios.get(url, {
           params: data,
           headers,

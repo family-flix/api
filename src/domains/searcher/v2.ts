@@ -169,7 +169,7 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     this.drive = drive;
     this.upload = new FileManage({ root: assets });
     this.client = new MediaProfileClient({
-      token: user.settings.tmdb_token!,
+      tmdb: { token: user.settings.tmdb_token! },
       uploader: this.upload,
       store,
     });

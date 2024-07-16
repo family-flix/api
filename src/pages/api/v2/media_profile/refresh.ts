@@ -40,7 +40,8 @@ export default async function v2_media_profile_refresh(
     return e(Result.Err("没有匹配的记录"));
   }
   const client_res = await MediaProfileClient.New({
-    token: user.settings.tmdb_token,
+    tmdb: { token: user.settings.tmdb_token },
+    third_douban: user.settings.third_douban,
     assets: app.assets,
     store,
   });

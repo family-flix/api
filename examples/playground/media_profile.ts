@@ -1,5 +1,4 @@
 import { Application } from "@/domains/application";
-import { MediaProfileClient } from "@/domains/media_profile";
 import { DoubanClient } from "@/domains/media_profile/douban";
 
 async function main() {

@@ -110,7 +110,7 @@ import { Notify } from "@/domains/notify/index";
     "0 */10 8-23 * * *",
     async () => {
       console.log("执行任务 at 0 */10 8-23 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      await schedule.update_media_rank();
+      await schedule.update_media_rank_all();
     },
     null,
     true,

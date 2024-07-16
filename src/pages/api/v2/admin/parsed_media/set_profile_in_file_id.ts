@@ -68,7 +68,7 @@ export default async function v2_admin_parsed_media_set_profile_in_file_id(
       return Result.Ok(existing);
     }
     const profile_client_res = await MediaProfileClient.New({
-      token: user.settings.tmdb_token,
+      tmdb: { token: user.settings.tmdb_token },
       assets: app.assets,
       store,
     });

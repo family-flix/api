@@ -13,6 +13,12 @@ import { Result, resultify } from "@/types/index";
 
 const schema = Joi.object({
   push_deer_token: Joi.string().allow(""),
+  telegram_token: Joi.string().allow(""),
+  tmdb_token: Joi.string().allow(""),
+  third_douban: Joi.object({
+    hostname: Joi.string().allow(""),
+    token: Joi.string().allow(""),
+  }).optional(),
   extra_filename_rules: Joi.string().allow(""),
   ignore_files_when_sync: Joi.string().allow(""),
   max_size_when_sync: Joi.number().allow(""),

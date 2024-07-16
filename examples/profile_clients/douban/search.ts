@@ -1,6 +1,4 @@
 import { MediaTypes } from "@/constants";
-import { Application } from "@/domains/application";
-import { MediaProfileClient } from "@/domains/media_profile";
 import { DoubanClient } from "@/domains/media_profile/douban";
 
 async function main() {
@@ -31,13 +29,13 @@ async function main() {
     return;
   }
   console.log(rr.data);
-//   const profile_r = await client.fetch_media_profile(rr.data.id);
-//   if (profile_r.error) {
-//     console.log(`获取详情失败，因为 ${profile_r.error.message}`);
-//     return;
-//   }
-//   const profile = profile_r.data;
-//   console.log(profile);
+  //   const profile_r = await client.fetch_media_profile(rr.data.id);
+  //   if (profile_r.error) {
+  //     console.log(`获取详情失败，因为 ${profile_r.error.message}`);
+  //     return;
+  //   }
+  //   const profile = profile_r.data;
+  //   console.log(profile);
   console.log("Success");
 }
 

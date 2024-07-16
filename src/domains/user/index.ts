@@ -23,11 +23,20 @@ export type UserSettings = {
   qiniu_access_token?: string;
   qiniu_secret_token?: string;
   qiniu_scope?: string;
+  /** 影视剧详情相关 */
   tmdb_token?: string;
+  third_douban?: {
+    hostname: string;
+    token: string;
+  };
+  /** 消息推送相关 */
   push_deer_token?: string;
+  telegram_token?: string;
+  /** 影视剧文件名解析相关 */
   extra_filename_rules?: string;
   ignore_files_when_sync?: string;
   max_size_when_sync?: number;
+  /** 其他 */
   can_register?: boolean;
   no_need_invitation_code?: boolean;
 };
@@ -70,9 +79,9 @@ export class User {
     if (!existing) {
       return Result.Err("无效的 token", 900);
     }
-    const { settings: settings_str } = existing;
-    const settings = await User.ParseSettings(settings_str);
-    // 要不要生成一个新的 token？
+    const settings = await User.ParseSettings(existing.settings);
+    // console.log('[DOMAIN]user/index - before new User({', existing.settings, settings);
+    // @todo 要不要生成一个新的 token？
     const user = new User({
       id,
       token,
@@ -320,6 +329,8 @@ export class User {
         qiniu_scope,
         tmdb_token,
         push_deer_token,
+        telegram_token,
+        third_douban,
         extra_filename_rules,
         ignore_files_when_sync,
         max_size_when_sync,
@@ -331,7 +342,17 @@ export class User {
         qiniu_secret_token: qiniu_secret_token ?? undefined,
         qiniu_scope: qiniu_scope ?? undefined,
         tmdb_token: tmdb_token ?? "c2e5d34999e27f8e0ef18421aa5dec38",
+        telegram_token: telegram_token ?? undefined,
         push_deer_token: push_deer_token ?? undefined,
+        third_douban: (() => {
+          if (!third_douban) {
+            return undefined;
+          }
+          if (third_douban.hostname && third_douban.token) {
+            return third_douban;
+          }
+          return undefined;
+        })(),
         extra_filename_rules: extra_filename_rules ?? "",
         ignore_files_when_sync,
         max_size_when_sync,

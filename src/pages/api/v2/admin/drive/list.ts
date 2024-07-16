@@ -55,7 +55,6 @@ export default async function v2_admin_drive_list(req: NextApiRequest, res: Next
     page_size,
     next_marker,
   });
-  // const { list, page, page_size, total, no_more } = r.data;
   const data = [];
   for (let i = 0; i < result.list.length; i += 1) {
     const drive = result.list[i];

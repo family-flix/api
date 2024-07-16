@@ -214,6 +214,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
     }
     this.pending = r2.data;
     const [r] = await Promise.all([this.pending, this.delay === null ? null : sleep(this.delay)]);
+    this.pending = null;
     this.loading = false;
     const rr1 = (() => {
       if (payloadProcess) {
@@ -225,7 +226,6 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
     this.emit(Events.LoadingChange, false);
     this.emit(Events.StateChange, { ...this.state });
     this.emit(Events.Completed);
-    this.pending = null;
     if (rr2.error) {
       if (rr2.error.code === "CANCEL") {
         this.emit(Events.Canceled);

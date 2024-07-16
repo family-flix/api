@@ -16,8 +16,8 @@ async function main() {
   });
   const store = app.store;
   const profile_client_r = await MediaProfileClient.New({
+    tmdb: { token: "c2e5d34999e27f8e0ef18421aa5dec38" },
     assets: app.assets,
-    token: "c2e5d34999e27f8e0ef18421aa5dec38",
     store,
   });
   if (profile_client_r.error) {

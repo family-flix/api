@@ -15,7 +15,7 @@ async function main() {
   const store = app.store;
   console.log("Start");
   const profile_r = await MediaProfileClient.New({
-    token: "c2e5d34999e27f8e0ef18421aa5dec38",
+    tmdb: { token: "c2e5d34999e27f8e0ef18421aa5dec38" },
     assets: app.assets,
     store,
   });

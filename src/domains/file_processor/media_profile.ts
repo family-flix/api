@@ -75,7 +75,7 @@ export class MediaProfileProcessor extends BaseDomain<TheTypesOfEvents> {
     this.user = user;
     this.drive = drive;
     this.client = new MediaProfileClient({
-      token,
+      tmdb: { token },
       store,
       uploader: new FileManage({ root: assets }),
     });

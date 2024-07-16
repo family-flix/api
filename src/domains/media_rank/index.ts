@@ -1,14 +1,11 @@
 import { HttpClientCore } from "@/domains/http_client";
 import { connect } from "@/domains/http_client/provider.axios";
-import { RequestCore } from "@/domains/request/index";
 import { Application } from "@/domains/application";
 import { FileManage } from "@/domains/uploader";
-import { DoubanClient } from "@/domains/media_profile/douban/index";
-import { TMDBClient } from "@/domains/media_profile/tmdb";
 import { MediaProfileClient } from "@/domains/media_profile/index";
 import { User } from "@/domains/user/index";
-import { request, TmpRequestResp } from "@/domains/request/utils";
 import { DataStore } from "@/domains/store/types";
+import { ThirdDoubanClient } from "@/domains/media_profile/third_douban";
 import { Result } from "@/domains/result/index";
 import { MediaTypes } from "@/constants/index";
 
@@ -26,44 +23,21 @@ import { MediaTypes } from "@/constants/index";
 export function MediaRankClient(props: { app: Application<any>; user: User; store: DataStore }) {
   const { app, user, store } = props;
 
-  const $client = new HttpClientCore({});
-  connect($client);
-  // @ts-ignore
-  const _client: HttpClientCore = {
-    async get<T>(...args: Parameters<typeof $client.get>) {
-      const r = await $client.get<{ code: number; msg: string; data: T }>(...args);
-      if (r.error) {
-        return Result.Err(r.error.message);
-      }
-      const { code, msg, data } = r.data;
-      if (code !== 0) {
-        return Result.Err(msg);
-      }
-      return Result.Ok(data as T);
-    },
-  };
-  function fetch_douban_rank(values: { type: "movie" | "tv" }) {
-    return request.get<{
-      list: {
-        name: string;
-        /** 序号 */
-        order: number;
-        /** 豆瓣评分 */
-        rate: number | null;
-        extra_text: string | null;
-        /** 豆瓣 id */
-        douban_id: string | null;
-      }[];
-    }>("http://127.0.0.1:9001/api/v1/media_rank", {
-      source: 1,
-      type: values.type,
-    });
-  }
-  const $douban_rank = new RequestCore(fetch_douban_rank, {
-    client: _client,
-  });
+  const client = new HttpClientCore({});
+  connect(client);
+
+  // const { hostname, token } = user.settings.third_douban!;
+
+  // const $douban_rank = new RequestCore(fetch_douban_rank, {
+  //   client,
+  // });
   async function link_media_with_rank_media(
-    rank_media: NonNullable<TmpRequestResp<typeof fetch_douban_rank>["data"]>["list"][number],
+    rank_media: {
+      name: string;
+      order: number;
+      rate: number | null;
+      douban_id: string | null;
+    },
     opt: { type: MediaTypes }
   ) {
     const { name, order, rate, douban_id } = rank_media;
@@ -135,7 +109,15 @@ export function MediaRankClient(props: { app: Application<any>; user: User; stor
   }
   return {
     async fetch_douban_rank(values: { type: "tv" | "movie" }) {
-      const r = await $douban_rank.run(values);
+      const { tmdb_token, third_douban } = user.settings;
+      if (!third_douban) {
+        return Result.Err("必须使用三方豆瓣接口");
+      }
+      if (!tmdb_token) {
+        return Result.Err("缺少 tmdb_token");
+      }
+      const client = ThirdDoubanClient({ hostname: third_douban.hostname, token: third_douban.token });
+      const r = await client.fetch_media_rank(values);
       if (r.error) {
         return Result.Err(r.error.message);
       }
@@ -148,21 +130,15 @@ export function MediaRankClient(props: { app: Application<any>; user: User; stor
         poster_path: string | null;
         vote_average: number | null;
       }[] = [];
-      const $douban = new DoubanClient({});
-      const $tmdb = user.settings.tmdb_token ? new TMDBClient({ token: user.settings.tmdb_token }) : null;
-      const $profile = user.settings.tmdb_token
-        ? new MediaProfileClient({
-            token: user.settings.tmdb_token,
-            uploader: new FileManage({ root: app.assets }),
-            store,
-          })
-        : null;
+      // const $profile = new MediaProfileClient({
+      //   tmdb: { token: tmdb_token },
+      //   third_douban,
+      //   uploader: new FileManage({ root: app.assets }),
+      //   store,
+      // });
       for (let i = 0; i < list.length; i += 1) {
         const { douban_id } = list[i];
-        (async () => {
-          if (!$tmdb || !$profile) {
-            return;
-          }
+        await (async () => {
           if (!douban_id) {
             return;
           }
@@ -174,9 +150,9 @@ export function MediaRankClient(props: { app: Application<any>; user: User; stor
           if (d1) {
             return;
           }
-          const r = await $douban.fetch_media_profile(douban_id, {});
+          const r = await client.fetch_media_profile(douban_id, {});
           if (r.error) {
-            console.log(r.error.message);
+            console.log("client.fetch_media_profile failed", r.error.message);
             return;
           }
           if (!r.data.name) {
@@ -192,12 +168,12 @@ export function MediaRankClient(props: { app: Application<any>; user: User; stor
           if (d2) {
             return;
           }
-          if (r.data.type === "movie") {
-            await $profile.search_movie({ keyword: r.data.name, year: r.data.air_date });
-          }
-          if (r.data.type === "tv") {
-            await $profile.search_season({ keyword: r.data.name, season_text: null, year: r.data.air_date });
-          }
+          // if (r.data.type === "movie") {
+          //   await $profile.search_movie({ keyword: r.data.name, year: r.data.air_date });
+          // }
+          // if (r.data.type === "tv") {
+          //   await $profile.search_season({ keyword: r.data.name, season_text: null, year: r.data.air_date });
+          // }
         })();
         const r = await link_media_with_rank_media(list[i], {
           type: values.type === "movie" ? MediaTypes.Movie : MediaTypes.Season,

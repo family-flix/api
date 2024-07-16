@@ -54,6 +54,9 @@ export class Notify extends BaseDomain<TheTypesOfEvents> {
     if (this.type === PushClientTypes.PushDeer) {
       return pushdeer_send(msg, this.token);
     }
+    // if (this.type === PushClientTypes.Telegram) {
+    //   return pushdeer_send(msg, this.token);
+    // }
     return Promise.resolve(Result.Err("推送异常"));
   }
 }

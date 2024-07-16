@@ -405,9 +405,9 @@ export class ScheduleTask {
     }
     const job = job_res.data;
     const profile_res = await MediaProfileClient.New({
-      store: this.store,
+      tmdb: { token: user.settings.tmdb_token },
       assets: this.app.assets,
-      token: user.settings.tmdb_token,
+      store: this.store,
     });
     if (profile_res.error) {
       return Result.Err(profile_res.error.message);
@@ -1048,7 +1048,7 @@ export class ScheduleTask {
   async update_media_profile(values: { tmdb_token?: string }) {
     const store = this.store;
     const client_res = await MediaProfileClient.New({
-      token: values.tmdb_token,
+      tmdb: { token: values.tmdb_token },
       assets: this.app.assets,
       store,
     });
@@ -1255,93 +1255,93 @@ export class ScheduleTask {
     console.log("finish fetch_added_files_daily");
     return Result.Ok(null);
   }
-  async update_media_rank() {
+  async update_media_rank_all() {
+    const store = this.store;
     await this.walk_user(async (user) => {
-      const store = this.store;
-      const client = MediaRankClient({ app: this.app, user, store });
-      await this.walk_user(async (user) => {
-        console.log("更新 豆瓣电视剧排行");
-        await (async () => {
-          const douban_season = await (async () => {
-            const r = await store.prisma.collection_v2.findFirst({
-              where: {
-                type: CollectionTypes.DoubanSeasonRank,
-                user_id: user.id,
-              },
-            });
-            if (!r) {
-              return store.prisma.collection_v2.create({
-                data: {
-                  id: r_id(),
-                  title: "豆瓣热播电视剧",
-                  type: CollectionTypes.DoubanSeasonRank,
-                  user_id: user.id,
-                },
-              });
-            }
-            return r;
-          })();
-          const r = await client.fetch_douban_rank({ type: "tv" });
-          if (r.error) {
-            console.log(r.error.message);
-            return;
-          }
-          await store.prisma.collection_v2.update({
-            where: {
-              id: douban_season.id,
-            },
-            data: {
-              updated: dayjs().toISOString(),
-              desc: `${dayjs().format("HH:mm")} 更新`,
-              extra: JSON.stringify({
-                list: r.data,
-              }),
-            },
-          });
-        })();
-        /**  */
-        console.log("更新 豆瓣电影排行");
-        await (async () => {
-          const douban_season = await (async () => {
-            const r = await store.prisma.collection_v2.findFirst({
-              where: {
-                type: CollectionTypes.DoubanMovieRank,
-                user_id: user.id,
-              },
-            });
-            if (!r) {
-              return store.prisma.collection_v2.create({
-                data: {
-                  id: r_id(),
-                  title: "豆瓣热门电影",
-                  type: CollectionTypes.DoubanMovieRank,
-                  user_id: user.id,
-                },
-              });
-            }
-            return r;
-          })();
-          const r = await client.fetch_douban_rank({ type: "movie" });
-          if (r.error) {
-            console.log(r.error.message);
-            return;
-          }
-          await store.prisma.collection_v2.update({
-            where: {
-              id: douban_season.id,
-            },
-            data: {
-              updated: dayjs().toISOString(),
-              desc: `${dayjs().format("HH:mm")} 更新`,
-              extra: JSON.stringify({
-                list: r.data,
-              }),
-            },
-          });
-        })();
-      });
+      await this.update_media_rank({ user, store });
     });
     console.log("finish update_media_rank");
+    return Result.Ok(null);
+  }
+  async update_media_rank(params: { user: User; store: DatabaseStore }) {
+    const { user, store } = params;
+    const client = MediaRankClient({ app: this.app, user, store });
+    await (async () => {
+      const douban_season = await (async () => {
+        const r = await store.prisma.collection_v2.findFirst({
+          where: {
+            type: CollectionTypes.DoubanSeasonRank,
+            user_id: user.id,
+          },
+        });
+        if (!r) {
+          return store.prisma.collection_v2.create({
+            data: {
+              id: r_id(),
+              title: "豆瓣热播电视剧",
+              type: CollectionTypes.DoubanSeasonRank,
+              user_id: user.id,
+            },
+          });
+        }
+        return r;
+      })();
+      const r = await client.fetch_douban_rank({ type: "tv" });
+      if (r.error) {
+        console.log(r.error.message);
+        return;
+      }
+      await store.prisma.collection_v2.update({
+        where: {
+          id: douban_season.id,
+        },
+        data: {
+          updated: dayjs().toISOString(),
+          desc: `${dayjs().format("HH:mm")} 更新`,
+          extra: JSON.stringify({
+            list: r.data,
+          }),
+        },
+      });
+    })();
+    await (async () => {
+      const douban_season = await (async () => {
+        const r = await store.prisma.collection_v2.findFirst({
+          where: {
+            type: CollectionTypes.DoubanMovieRank,
+            user_id: user.id,
+          },
+        });
+        if (!r) {
+          return store.prisma.collection_v2.create({
+            data: {
+              id: r_id(),
+              title: "豆瓣热门电影",
+              type: CollectionTypes.DoubanMovieRank,
+              user_id: user.id,
+            },
+          });
+        }
+        return r;
+      })();
+      const r = await client.fetch_douban_rank({ type: "movie" });
+      if (r.error) {
+        console.log(r.error.message);
+        return;
+      }
+      await store.prisma.collection_v2.update({
+        where: {
+          id: douban_season.id,
+        },
+        data: {
+          updated: dayjs().toISOString(),
+          desc: `${dayjs().format("HH:mm")} 更新`,
+          extra: JSON.stringify({
+            list: r.data,
+          }),
+        },
+      });
+    })();
     return Result.Ok(null);
   }
   async delete_thumbnails() {

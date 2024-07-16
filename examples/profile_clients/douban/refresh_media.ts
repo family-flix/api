@@ -40,7 +40,7 @@ async function main() {
     return;
   }
   const client_res = await MediaProfileClient.New({
-    token: user.settings.tmdb_token,
+    tmdb: { token: user.settings.tmdb_token },
     assets: app.assets,
     store,
   });

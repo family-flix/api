@@ -13,22 +13,25 @@ type TheTypesOfEvents = {
 type HttpClientCoreProps = {
   hostname?: string;
   headers?: Record<string, string>;
+  timeout?: number;
   debug?: boolean;
 };
 type HttpClientCoreState = {};
 
 export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
   hostname: string = "";
+  timeout: number;
   headers: Record<string, string> = {};
   debug = false;
 
   constructor(props: HttpClientCoreProps = {}) {
     super(props);
 
-    const { hostname = "", headers = {}, debug = false } = props;
+    const { hostname = "", timeout = 6000, headers = {}, debug = false } = props;
 
     this.hostname = hostname;
     this.headers = headers;
+    this.timeout = timeout;
     this.debug = debug;
   }
 
@@ -48,6 +51,7 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
           ...this.headers,
           ...(extra.headers || {}),
         },
+        timeout: this.timeout,
       };
       if (this.debug) {
         console.log("[DOMAIN]http_client - before fetch", payload);
@@ -77,6 +81,7 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
           ...this.headers,
           ...(extra.headers || {}),
         },
+        timeout: this.timeout,
       };
       if (this.debug) {
         console.log("[DOMAIN]http_client - before fetch", payload);

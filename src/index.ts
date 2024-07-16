@@ -179,6 +179,7 @@ import v2_admin_drive_receive_rewards from "./pages/api/v2/admin/drive/receive_r
 import v2_admin_parsed_media_delete from "./pages/api/v2/admin/parsed_media/delete";
 import v2_admin_sync_task_transfer_history from "./pages/api/v2/admin/sync_task/transfer_history_list";
 import v2_admin_sync_task_search_history from "./pages/api/v2/admin/sync_task/search_history_list";
+import v2_admin_collection_refresh_media_rank from "./pages/api/v2/admin/collection/update_media_rank";
 
 async function main() {
   const server = new Hono<{
@@ -522,6 +523,9 @@ async function main() {
   });
   server.post("/api/v2/admin/collection/profile", async (c) => {
     return v2_admin_collection_profile(...(await compat_next(c)));
+  });
+  server.post("/api/v2/admin/collection/refresh_media_rank", async (c) => {
+    return v2_admin_collection_refresh_media_rank(...(await compat_next(c)));
   });
   server.post("/api/v2/admin/sync_task/complete", async (c) => {
     return v2_admin_sync_task_complete(...(await compat_next(c)));

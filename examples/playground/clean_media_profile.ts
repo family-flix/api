@@ -1,6 +1,4 @@
 import { Application } from "@/domains/application";
-import { MediaProfileClient } from "@/domains/media_profile";
-import { DoubanClient } from "@/domains/media_profile/douban";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 
 async function main() {

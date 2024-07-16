@@ -30,7 +30,11 @@ export default async function v2_admin_media_refresh_profile(
       user_id: user.id,
     },
     include: {
-      profile: true,
+      profile: {
+        include: {
+          series: true,
+        },
+      },
     },
   });
   if (media === null) {
@@ -40,7 +44,8 @@ export default async function v2_admin_media_refresh_profile(
     return e(Result.Err("该记录没有匹配详情"));
   }
   const client_res = await MediaProfileClient.New({
-    token: user.settings.tmdb_token,
+    tmdb: { token: user.settings.tmdb_token },
+    third_douban: user.settings.third_douban,
     assets: app.assets,
     store,
   });
@@ -51,6 +56,10 @@ export default async function v2_admin_media_refresh_profile(
   const r = await client.refresh_media_profile_with_tmdb(media.profile);
   if (r.error) {
     return e(Result.Err(r.error.message));
+  }
+  const r2 = await client.refresh_profile_with_douban(media.profile, { override: 1 });
+  if (r2.error) {
+    return e(Result.Err(r2.error.message));
   }
   return res.status(200).json({
     code: 0,

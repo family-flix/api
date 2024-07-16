@@ -10,14 +10,7 @@ import { Unpacked } from "@/types/index";
 import { DOUBAN_GENRE_TEXT_TO_VALUE, MediaTypes } from "@/constants/index";
 import { num_to_chinese } from "@/utils/index";
 
-import {
-  RequestCommonPart,
-  fetch_episode_profile,
-  fetch_season_profile,
-  fetch_media_profile,
-  search_tv_in_douban,
-  search_movie_in_tmdb,
-} from "./services";
+import { RequestCommonPart } from "./services";
 import { decrypt, DoubanSearchItem } from "./decrypt";
 import { parse_profile_page_html, split_name_and_original_name } from "./utils";
 
@@ -230,81 +223,6 @@ export class DoubanClient {
     }
     return Result.Ok(matched);
   }
-  /** 根据关键字搜索电视剧 */
-  async search_tv(keyword: string, extra: Partial<{ page: number; language: "zh-CN" | "en-US" }> = {}) {
-    const { token } = this.options;
-    const { page } = extra;
-    return search_tv_in_douban(keyword, {
-      page,
-      // api_key: token,
-    });
-  }
-  /** 获取电视剧详情 */
-  async fetch_tv_profile(id: number | string) {
-    const { token } = this.options;
-    const result = await fetch_media_profile(Number(id), {
-      api_key: token,
-    });
-    return result;
-  }
-  /** 获取季详情 */
-  async fetch_season_profile(body: { tv_id: number; season_number: string | number }) {
-    const { tv_id, season_number } = body;
-    const { token } = this.options;
-    const r = await fetch_season_profile(
-      {
-        tv_id,
-        season_number: Number(season_number),
-      },
-      {
-        // api_key: token,
-      }
-    );
-    if (r.error) {
-      return Result.Err(r.error);
-    }
-    if (!r.data) {
-      return Result.Err("没有匹配的结果");
-    }
-    return Result.Ok(r.data);
-  }
-  /** 获取剧集详情 */
-  async fetch_episode_profile(body: {
-    tv_id: string | number;
-    season_number: string | number;
-    episode_number: string | number;
-  }) {
-    const { token } = this.options;
-    const { tv_id, season_number, episode_number } = body;
-    const result = await fetch_episode_profile(
-      {
-        tv_id,
-        season_number,
-        episode_number,
-      },
-      {
-        // api_key: token,
-      }
-    );
-    return result;
-  }
-  /** 根据关键字搜索电影 */
-  async search_movie(keyword: string, extra: Partial<{ page: number; language: "zh-CN" | "en-US" }> = {}) {
-    const { token } = this.options;
-    const { page } = extra;
-    return search_movie_in_tmdb(keyword, {
-      page,
-      api_key: token,
-    });
-  }
-  /** 获取电视剧详情 */
-  async fetch_movie_profile(id: number | string) {
-    const { token } = this.options;
-    const result = await fetch_media_profile(Number(id), {
-      // api_key: token,
-    });
-    return result;
-  }
   async fetch_media_profile(id: number | string, query: RequestCommonPart = {}) {
     // return fetch_media_profile(Number(id), {});
     if (id === undefined) {
@@ -321,6 +239,52 @@ export class DoubanClient {
     return Result.Ok({
       id,
       ...r.data,
+    });
+  }
+  async fetch_media_rank(values: { type: "tv" | "movie" }) {
+    const endpoint = "https://movie.douban.com/j/search_subjects";
+    const params = {
+      type: values.type,
+      tag: "热门",
+      page_limit: "50",
+      page_start: "0",
+    };
+    const resp = await axios.get(endpoint, {
+      params,
+    });
+    const data: {
+      subjects: {
+        /** 集数描述 */
+        episodes_info: string;
+        /** 评分 */
+        rate: string;
+        cover_x: number;
+        /** 影视剧名称 */
+        title: string;
+        /** 详情地址 */
+        url: string;
+        /** 是否可播放 */
+        playable: boolean;
+        /** 封面地址 */
+        cover: string;
+        /** 豆瓣ID */
+        id: string;
+        cover_y: number;
+        /** 是否新上映 */
+        is_new: boolean;
+      }[];
+    } = resp.data;
+    return Result.Ok({
+      list: data.subjects.map((record, index) => {
+        const { title, episodes_info, rate, id } = record;
+        return {
+          name: title,
+          order: index + 1,
+          rate: rate ? Number(rate) : null,
+          extra_text: episodes_info || null,
+          douban_id: id,
+        };
+      }),
     });
   }
 }

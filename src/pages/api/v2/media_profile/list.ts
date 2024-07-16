@@ -90,7 +90,7 @@ export default async function v2_media_profile_list(req: NextApiRequest, res: Ne
     });
     if (!series) {
       const profile_client_res = await MediaProfileClient.New({
-        token: user.settings.tmdb_token,
+        tmdb: { token: user.settings.tmdb_token },
         assets: app.assets,
         store,
       });
