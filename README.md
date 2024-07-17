@@ -99,14 +99,16 @@
 
 > 要求 `NodeJs` 版本大于 `18`。
 
-下载源码包并解压至本地，随后安装依赖并初始化数据库
+从 [Release](https://github.com/family-flix/api/releases) 下载 `family-flix@xxx.zip` 名字的压缩包,并解压至本地。
+
+1. 安装依赖并初始化数据库
 
 ```bash
 yarn
 yarn prisma migrate deploy --schema ./prisma/schema.prisma
 ```
 
-数据库初始化完成后执行 `yarn start` 即可启动项目。
+2. 数据库初始化完成后执行 `yarn start` 即可启动项目。
 
 ```bash
 # 运行
@@ -119,8 +121,13 @@ yarn start
 - http://127.0.0.1:3200/mobile/home/index 视频播放移动端
 - http://127.0.0.1:3200/pc/home/index 视频播放桌面端
 
+> 首次访问会创建管理员账号，请注意终端信息。之后启动将不再展示管理员账号密码，如遗忘密码则只能修改密码。
+
+![服务器启动](assets/server-start01.jpg)
+
 添加云盘、刮削等操作可以参考文档。<a href="https://family-flix.github.io/docs/"><strong>Explore the docs »</strong></a>
 
+<!--
 ### 更新
 
 只需要拉取新代码，再执行一次安装依赖、应用数据库变更、打包即可。
@@ -136,7 +143,7 @@ yarn prisma migrate deploy --schema ./prisma/schema.prisma
 yarn build
 # 运行
 yarn start
-```
+``` -->
 
 ## API 文档
 
