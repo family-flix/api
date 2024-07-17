@@ -176,7 +176,7 @@ import { Notify } from "@/domains/notify/index";
     "0 0 2 * * *",
     async () => {
       console.log("执行任务 at 0 0 2 * * *", dayjs().format("YYYY/MM/DD HH:mm:ss"));
-      await schedule.update_media_profile({ tmdb_token: app.env.TMDB_TOKEN });
+      await schedule.update_media_profile();
       notify.send({
         title: "影视剧刷新",
         markdown: "执行了一次影视剧刷新任务",

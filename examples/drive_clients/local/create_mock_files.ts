@@ -69,10 +69,14 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     /** 驯鹿宝贝 */
     xunlubaobei: "https://www.alipan.com/s/pkqHFZe71MJ",
     example: "https://www.alipan.com/s/2vuWzDz5UUM",
+    /** 第二十条 */
     diershitiao: "https://www.alipan.com/s/aZRyS7V8cWV",
+    /** 我们一起摇太阳 */
     womenyiqiyaotaiyang: "https://www.alipan.com/s/HM1TEWhABVb",
     /** 饥饿游戏 */
     jieyouxi: "https://www.alipan.com/s/So5yhYBxTyJ",
+    /** 闪灵 */
+    shanling: 'https://www.aliyundrive.com/s/iScJ55YBEjy',
     /** 哆啦A梦 */
     duolaiameng: "https://www.aliyundrive.com/s/EY63JTaMUZ1",
   };

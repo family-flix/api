@@ -46,7 +46,7 @@ export class APIStore extends BaseDomain<TheTypesOfEvents> implements DataStore 
   constructor(props: Partial<{ _name: string }> & APIStoreProps) {
     super(props);
 
-    const { hostname = "https://media.funzm.com", token } = props;
+    const { hostname = "", token } = props;
 
     this.token = token;
     this.hostname = hostname;

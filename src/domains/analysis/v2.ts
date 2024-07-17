@@ -65,7 +65,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       return Result.Err("缺少用户信息");
     }
     if (!user.settings.tmdb_token) {
-      return Result.Err("缺少 TMDB_TOKEN");
+      return Result.Err("缺少 tmdb_token");
     }
     if (!assets) {
       return Result.Err("缺少静态资源根路径");

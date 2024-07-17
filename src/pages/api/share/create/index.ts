@@ -77,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         })
       );
     }
-    const url = `http://media.funzm.com/mobile/tv_play?${query_stringify({
+    const url = `/mobile/tv_play?${query_stringify({
       id: existing_season.tv_id,
       season_id,
       token: valid_token.id,
@@ -146,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         })
       );
     }
-    const url = `http://media.funzm.com/mobile/movie_play?${query_stringify({
+    const url = `/mobile/movie_play?${query_stringify({
       id: existing_movie.id,
       token: valid_token.id,
       rate: 1.5,

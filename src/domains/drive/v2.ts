@@ -140,13 +140,13 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       // if (type === DriveTypes.Cloud189Drive) {
       //   return Cloud189DriveClient.Create({ payload, skip_ping, store, user });
       // }
-      if (type === DriveTypes.QuarkDrive) {
-        return QuarkDriveClient.Create({ payload, skip_ping, store, user });
-      }
-      if (type === DriveTypes.LocalFolder) {
-        return LocalFileDriveClient.Create({ payload, store, user });
-      }
-      return Result.Err("未知云盘类型");
+      // if (type === DriveTypes.QuarkDrive) {
+      //   return QuarkDriveClient.Create({ payload, skip_ping, store, user });
+      // }
+      // if (type === DriveTypes.LocalFolder) {
+      //   return LocalFileDriveClient.Create({ payload, store, user });
+      // }
+      return Result.Err("未知或暂不支持的云盘类型");
     })();
     if (created_drive_res.error) {
       return Result.Err(created_drive_res.error.message);

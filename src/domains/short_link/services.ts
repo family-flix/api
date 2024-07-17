@@ -3,13 +3,11 @@
  */
 import axios from "axios";
 
+import { app } from "@/store/index";
 import { Result } from "@/domains/result/index";
 import { query_stringify } from "@/utils";
-import { app } from "@/store";
 
-const API_HOST = "http://t.funzm.com";
 const client = axios.create({
-  baseURL: API_HOST,
   timeout: 6000,
 });
 type RequestClient = {

@@ -112,7 +112,12 @@ export async function copy(src: string, dest: string): Promise<Result<string>> {
 
 export async function check_existing(filepath: string) {
   try {
-    await statSync(filepath);
+    await statSync((() => {
+      if (!filepath.includes('?')) {
+        return filepath;
+      }
+      return filepath.split('?')[0];
+    })());
     return Result.Ok(true);
   } catch (err) {
     return Result.Ok(false);

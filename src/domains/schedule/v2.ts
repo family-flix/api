@@ -1045,53 +1045,59 @@ export class ScheduleTask {
       })();
     }
   }
-  async update_media_profile(values: { tmdb_token?: string }) {
+  async update_media_profile() {
     const store = this.store;
-    const client_res = await MediaProfileClient.New({
-      tmdb: { token: values.tmdb_token },
-      assets: this.app.assets,
-      store,
-    });
-    if (client_res.error) {
-      console.log(client_res.error.message);
-      return Result.Err(client_res.error.message);
-    }
-    const client = client_res.data;
-    await walk_model_with_cursor({
-      fn(extra) {
-        return store.prisma.media_profile.findMany({
-          where: {
-            // douban_id: null,
-            order: {
-              not: 0,
+    await this.walk_user(async (user) => {
+      if (!user.settings.tmdb_token) {
+        return;
+      }
+      const client_res = await MediaProfileClient.New({
+        tmdb: { token: user.settings.tmdb_token },
+        third_douban: user.settings.third_douban,
+        assets: this.app.assets,
+        store,
+      });
+      if (client_res.error) {
+        console.log(client_res.error.message);
+        return Result.Err(client_res.error.message);
+      }
+      const client = client_res.data;
+      await walk_model_with_cursor({
+        fn(extra) {
+          return store.prisma.media_profile.findMany({
+            where: {
+              // douban_id: null,
+              order: {
+                not: 0,
+              },
             },
-          },
-          include: {
-            series: true,
-          },
-          ...extra,
-        });
-      },
-      async handler(data, index) {
-        const { id, type, name, order, air_date, series } = data;
-        console.log(`${index + 1}、`, name);
-        await Promise.all([
-          (async () => {
-            const r1 = await client.refresh_media_profile_with_tmdb(data);
-            if (r1.error) {
-              console.log(r1.error.message);
-              return;
-            }
-          })(),
-          (async () => {
-            const r1 = await client.refresh_profile_with_douban(data);
-            if (r1.error) {
-              console.log(r1.error.message);
-              return;
-            }
-          })(),
-        ]);
-      },
+            include: {
+              series: true,
+            },
+            ...extra,
+          });
+        },
+        async handler(data, index) {
+          const { id, type, name, order, air_date, series } = data;
+          console.log(`${index + 1}、`, name);
+          await Promise.all([
+            (async () => {
+              const r1 = await client.refresh_media_profile_with_tmdb(data);
+              if (r1.error) {
+                console.log(r1.error.message);
+                return;
+              }
+            })(),
+            (async () => {
+              const r1 = await client.refresh_profile_with_douban(data);
+              if (r1.error) {
+                console.log(r1.error.message);
+                return;
+              }
+            })(),
+          ]);
+        },
+      });
     });
     return Result.Ok({});
   }

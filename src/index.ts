@@ -1,4 +1,5 @@
 import path from "path";
+import fs from "fs";
 import { IncomingMessage } from "http";
 
 import { Hono } from "hono";
@@ -180,6 +181,7 @@ import v2_admin_parsed_media_delete from "./pages/api/v2/admin/parsed_media/dele
 import v2_admin_sync_task_transfer_history from "./pages/api/v2/admin/sync_task/transfer_history_list";
 import v2_admin_sync_task_search_history from "./pages/api/v2/admin/sync_task/search_history_list";
 import v2_admin_collection_refresh_media_rank from "./pages/api/v2/admin/collection/update_media_rank";
+import { check_existing } from "./utils/fs";
 
 async function main() {
   const server = new Hono<{
@@ -773,62 +775,37 @@ async function main() {
   server.get("/api/v2/wechat/proxy", async (c) => {
     return v2_wechat_proxy(...(await compat_next(c)));
   });
-  // server.get("/api/v1/qrcode", async (c) => {
-  //   const escape = (v: string) => {
-  //     const needsEscape = ['"', ";", ",", ":", "\\"];
-  //     let escaped = "";
-  //     for (const c of v) {
-  //       if (needsEscape.includes(c)) {
-  //         escaped += `\\${c}`;
-  //       } else {
-  //         escaped += c;
-  //       }
-  //     }
-  //     return escaped;
-  //   };
-  //   const ssid = "wpt-guest";
-  //   const password = `wpt${dayjs().format("YYYYMMDD")}`;
-  //   const props = {
-  //     settings: {
-  //       encryptionMode: "WPA",
-  //       eapMethod: "",
-  //       eapIdentity: "",
-  //       ssid,
-  //       password,
-  //       hiddenSSID: false,
-  //     },
-  //   };
-  //   const opts: Partial<{ T: string; E: string; I: string; S: string; P: string; H: boolean }> = {};
-  //   opts.T = props.settings.encryptionMode || "nopass";
-  //   if (props.settings.encryptionMode === "WPA2-EAP") {
-  //     opts.E = props.settings.eapMethod;
-  //     opts.I = props.settings.eapIdentity;
-  //   }
-  //   opts.S = escape(props.settings.ssid);
-  //   opts.P = escape(props.settings.password);
-  //   opts.H = props.settings.hiddenSSID;
-  //   let data = "";
-  //   Object.entries(opts).forEach(([k, v]) => (data += `${k}:${v};`));
-  //   const qrval = `WIFI:${data};`;
-  //   return c.text(qrval);
-  // });
-
-  const admin = await store.prisma.user.findFirst({});
-  if (!admin) {
-    const email = "admin@funzm.com";
-    const pwd = random_string(6);
-    const r = await User.Create({ email, password: pwd }, store);
-    if (r.error) {
-      console.log(r.error.message);
-      return;
-    }
-    console.log("");
-    console.log("管理员账号");
-    console.log("email", email);
-    console.log("password", pwd);
-    console.log("");
+  const r = await check_existing(app.database_path);
+  if (r.error) {
+    console.log("数据库校验失败", r.error.message);
+    return;
   }
-
+  if (!r.data) {
+    console.log("数据库文件不存在，请先初始化数据库");
+    console.log("yarn prisma migrate deploy --schema ./prisma/schema.prisma");
+    return;
+  }
+  try {
+    const admin = await store.prisma.user.findFirst({});
+    if (!admin) {
+      const email = "admin@funzm.com";
+      const pwd = random_string(6);
+      const r = await User.Create({ email, password: pwd }, store);
+      if (r.error) {
+        console.log("初始化管理员账号失败");
+        console.log(r.error.message);
+        return;
+      }
+      console.log("");
+      console.log("管理员账号");
+      console.log("email", email);
+      console.log("password", pwd);
+      console.log("");
+    }
+  } catch (err) {
+    console.log("初始化管理员账号失败");
+    return;
+  }
   serve(
     {
       fetch: server.fetch,
@@ -877,3 +854,12 @@ async function main() {
   );
 }
 main();
+
+process.on("uncaughtException", (err) => {
+  const error = err as unknown as { code: string; address: string; port: number };
+  if (error.code === "EADDRINUSE") {
+    console.log(`${error.address}:${error.port} 已经被使用，请指定其他端口`);
+    console.log("yarn start --port 3001");
+    return;
+  }
+});

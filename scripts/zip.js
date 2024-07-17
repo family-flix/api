@@ -34,7 +34,7 @@ function main() {
     {
       type: "file",
       filepath: path.resolve(ROOT_PATH, ".env.template"),
-      target_path: ".env.template",
+      target_path: ".env",
     },
   ];
   const pkg_content = {
