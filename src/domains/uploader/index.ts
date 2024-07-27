@@ -96,7 +96,7 @@ export class FileManage {
     // console.log("copy_local_file success", result);
     return Result.Ok(result);
   }
-  /** 下载网络文件到本地 */
+  /** 检查文件是否存在 */
   async existing(
     key: string,
     options: Partial<{

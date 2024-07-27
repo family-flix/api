@@ -181,6 +181,7 @@ import v2_admin_parsed_media_delete from "./pages/api/v2/admin/parsed_media/dele
 import v2_admin_sync_task_transfer_history from "./pages/api/v2/admin/sync_task/transfer_history_list";
 import v2_admin_sync_task_search_history from "./pages/api/v2/admin/sync_task/search_history_list";
 import v2_admin_collection_refresh_media_rank from "./pages/api/v2/admin/collection/update_media_rank";
+import v2_media_profile_profile from "./pages/api/v2/media_profile/profile";
 import { check_existing } from "./utils/fs";
 
 async function main() {
@@ -618,6 +619,9 @@ async function main() {
   });
   server.post("/api/v2/media_profile/partial", async (c) => {
     return v2_media_profile_partial(...(await compat_next(c)));
+  });
+  server.post("/api/v2/media_profile/profile", async (c) => {
+    return v2_media_profile_profile(...(await compat_next(c)));
   });
   server.post("/api/v2/media_profile/refresh", async (c) => {
     return v2_media_profile_refresh(...(await compat_next(c)));

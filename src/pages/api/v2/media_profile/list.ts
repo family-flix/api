@@ -106,6 +106,7 @@ export default async function v2_media_profile_list(req: NextApiRequest, res: Ne
       return store.prisma.media_profile.findMany({
         where,
         include: {
+          _count: true,
           source_profiles: true,
           series: true,
           persons: {
@@ -143,6 +144,7 @@ export default async function v2_media_profile_list(req: NextApiRequest, res: Ne
         persons,
         genres,
         origin_country,
+        _count
       } = media_profile;
       return {
         id,
@@ -155,6 +157,7 @@ export default async function v2_media_profile_list(req: NextApiRequest, res: Ne
         vote_average,
         source_count,
         order,
+        has_media: _count.media > 0,
         series: (() => {
           if (!series) {
             return null;
