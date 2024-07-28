@@ -9,6 +9,7 @@ import { User } from "@/domains/user/index";
 import { Drive } from "@/domains/drive/v2";
 import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
+import { SubtitleFileTypes } from "@/constants/index";
 
 export default async function v2_admin_parsed_media_source_preview(
   req: NextApiRequest,
@@ -93,11 +94,16 @@ export default async function v2_admin_parsed_media_source_preview(
     subtitles: info.subtitles.map((subtitle) => {
       const { id, url, name, language } = subtitle;
       return {
-        type: 1,
+        type: SubtitleFileTypes.MediaInnerFile,
         id,
         name,
         url,
-        language,
+        language: (() => {
+          if (language === "chi") {
+            return "chs";
+          }
+          return language;
+        })(),
       };
     }),
   };
