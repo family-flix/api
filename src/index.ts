@@ -184,6 +184,7 @@ import v2_admin_collection_refresh_media_rank from "./pages/api/v2/admin/collect
 import v2_media_profile_profile from "./pages/api/v2/media_profile/profile";
 import { check_existing } from "./utils/fs";
 import v2_media_profile_set_name from "./pages/api/v2/media_profile/set_name";
+import v2_media_profile_series_profile from "./pages/api/v2/media_profile/series_profile";
 
 async function main() {
   const server = new Hono<{
@@ -623,6 +624,9 @@ async function main() {
   });
   server.post("/api/v2/media_profile/profile", async (c) => {
     return v2_media_profile_profile(...(await compat_next(c)));
+  });
+  server.post("/api/v2/media_profile/series_profile", async (c) => {
+    return v2_media_profile_series_profile(...(await compat_next(c)));
   });
   server.post("/api/v2/media_profile/set_name", async (c) => {
     return v2_media_profile_set_name(...(await compat_next(c)));

@@ -9,7 +9,7 @@ import { User } from "@/domains/user";
 import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 
-export default async function v2_media_profile_profile(
+export default async function v2_media_profile_series_profile(
   req: NextApiRequest,
   res: NextApiResponse<BaseApiResp<unknown>>
 ) {
