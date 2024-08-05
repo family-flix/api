@@ -470,10 +470,10 @@
   resolved "https://registry.npmjs.org/@prisma/engines-version/-/engines-version-4.13.0-50.1e7af066ee9cb95cf3a403c78d9aab3e6b04f37a.tgz"
   integrity sha512-fsQlbkhPJf08JOzKoyoD9atdUijuGBekwoOPZC3YOygXEml1MTtgXVpnUNchQlRSY82OQ6pSGQ9PxUe4arcSLQ==
 
-"@prisma/engines@4.16.2":
-  version "4.16.2"
-  resolved "https://registry.npmmirror.com/@prisma/engines/-/engines-4.16.2.tgz"
-  integrity sha512-vx1nxVvN4QeT/cepQce68deh/Turxy5Mr+4L4zClFuK1GlxN3+ivxfuv+ej/gvidWn1cE1uAhW7ALLNlYbRUAw==
+"@prisma/engines@4.13.0":
+  version "4.13.0"
+  resolved "https://registry.npmmirror.com/@prisma/engines/-/engines-4.13.0.tgz#582a6b90b6efeb0f465984f1fe0e72a4afaaa5ae"
+  integrity sha512-HrniowHRZXHuGT9XRgoXEaP2gJLXM5RMoItaY2PkjvuZ+iHc0Zjbm/302MB8YsPdWozAPHHn+jpFEcEn71OgPw==
 
 "@prisma/get-platform@^5.14.0":
   version "5.14.0"
@@ -3942,12 +3942,12 @@ prisma-online@^0.2.1:
   resolved "https://registry.npmmirror.com/prisma-online/-/prisma-online-0.2.1.tgz"
   integrity sha512-sKNfwgq8u0W9t6Fk4atukI45xm25u5IcnASg4SZCAdr8sLU7dGJ0GZKZAHOazGcR5Md5M5A4xaqbMtKyC3+qnA==
 
-prisma@^4.16.2:
-  version "4.16.2"
-  resolved "https://registry.npmmirror.com/prisma/-/prisma-4.16.2.tgz"
-  integrity sha512-SYCsBvDf0/7XSJyf2cHTLjLeTLVXYfqp7pG5eEVafFLeT0u/hLFz/9W196nDRGUOo1JfPatAEb+uEnTQImQC1g==
+prisma@4.13.0:
+  version "4.13.0"
+  resolved "https://registry.npmmirror.com/prisma/-/prisma-4.13.0.tgz#0b83f40acf50cd47d7463a135c4e9b275713e602"
+  integrity sha512-L9mqjnSmvWIRCYJ9mQkwCtj4+JDYYTdhoyo8hlsHNDXaZLh/b4hR0IoKIBbTKxZuyHQzLopb/+0Rvb69uGV7uA==
   dependencies:
-    "@prisma/engines" "4.16.2"
+    "@prisma/engines" "4.13.0"
 
 process-nextick-args@~2.0.0:
   version "2.0.1"

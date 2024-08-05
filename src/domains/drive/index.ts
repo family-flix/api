@@ -80,16 +80,16 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (drive_record === null) {
       return Result.Err("没有匹配的云盘记录");
     }
-    const { type, name, profile, used_size, total_size, root_folder_id, root_folder_name, drive_token_id } =
+    const { type, name, profile, unique_id, used_size, total_size, root_folder_id, root_folder_name, drive_token_id } =
       drive_record;
     const r = parseJSONStr<AliyunDriveProfile>(profile);
     if (r.error) {
       return Result.Err(r.error);
     }
     const { drive_id, ...rest } = r.data;
-    // console.log("[DOMAIN]drive/index - Get", drive_id, type, drive_token_id);
+    // console.log("[DOMAIN]drive/index - Get", profile, drive_id, type, drive_token_id);
     const client_res = await (async (): Promise<Result<AliyunDriveClient>> => {
-      const r = await AliyunDriveClient.Get({ unique_id: drive_id, store });
+      const r = await AliyunDriveClient.Get({ unique_id, store });
       if (r.error) {
         return Result.Err(r.error.message);
       }

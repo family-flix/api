@@ -2,7 +2,7 @@
  * @file 将本机视为 云盘
  */
 // import fs from "fs/promises";
-import { copyFileSync, mkdirSync, readdirSync, readFileSync, statSync } from "fs";
+import { copyFileSync, renameSync, mkdirSync, readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
 
 import Joi from "joi";
@@ -23,7 +23,18 @@ type LocalFileDriveClientProps = {
 };
 export class LocalFileDriveClient implements DriveClient {
   static async Get(options: { unique_id: string; user?: User; store?: DataStore }) {
-    const { unique_id } = options;
+    const { unique_id, store } = options;
+    if (!store) {
+      return Result.Ok(new LocalFileDriveClient({ unique_id }));
+    }
+    const drive = await store.prisma.drive.findFirst({
+      where: {
+        unique_id,
+      },
+    });
+    if (!drive) {
+      return Result.Err("没有匹配的记录");
+    }
     return Result.Ok(new LocalFileDriveClient({ unique_id }));
   }
   static async Create(values: { payload: unknown; user: User; store: DataStore }) {
@@ -59,7 +70,7 @@ export class LocalFileDriveClient implements DriveClient {
         avatar: "",
         type: DriveTypes.LocalFolder,
         unique_id: dir,
-        profile: JSON.stringify({ dir, name } as { dir: string; name: string }),
+        profile: JSON.stringify({ dir, drive_id: dir, name } as { dir: string; name: string }),
         root_folder_id: dir,
         drive_token: {
           create: {
@@ -296,8 +307,16 @@ export class LocalFileDriveClient implements DriveClient {
     }
     return Result.Ok(null);
   }
-  async rename_file() {
-    return Result.Err("请实现 rename_file 方法");
+  async rename_file(file_id: string, name: string) {
+    try {
+      const r = path.parse(file_id);
+      const next_filename = path.resolve(r.dir, name);
+      renameSync(file_id, next_filename);
+      return Result.Ok(null);
+    } catch (err) {
+      const e = err as Error;
+      return Result.Err(e.message);
+    }
   }
   async delete_file(file_id: string) {
     const r = await file_info(file_id);

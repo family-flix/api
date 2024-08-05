@@ -811,7 +811,9 @@ async function main() {
       console.log("");
     }
   } catch (err) {
+    const e = err as Error;
     console.log("初始化管理员账号失败");
+    console.log(e.message);
     return;
   }
   serve(

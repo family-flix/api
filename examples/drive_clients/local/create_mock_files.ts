@@ -33,7 +33,7 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
-  const dir = path.resolve(os.homedir(), "Documents/workspaces/medias");
+  const dir = path.resolve(os.homedir(), "Documents/MediaData/mock");
   const manage = new FileManage({ root: dir });
   const r = await LocalFileDriveClient.Get({
     unique_id: manage.root,
@@ -51,7 +51,7 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
   // }
   // const client1 = rr.data;
   const r4 = await Drive.Get({
-    unique_id: "2243978430",
+    unique_id: "925747323",
     store,
   });
   if (r4.error) {
@@ -61,7 +61,7 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
   const drive = r4.data;
   const SHARE_FOLDER = {
     /** 春色寄情人  */
-    jiqingren: "https://www.alipan.com/s/BLKoFj39Wx9",
+    jiqingren: "https://www.aliyundrive.com/s/TCWsNrc3y7C",
     /** 第一神拳  */
     diyishenquan: "https://www.aliyundrive.com/s/ACC1V8t18jg",
     /** 微暗之火 */
@@ -79,8 +79,9 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     shanling: 'https://www.aliyundrive.com/s/iScJ55YBEjy',
     /** 哆啦A梦 */
     duolaiameng: "https://www.aliyundrive.com/s/EY63JTaMUZ1",
+    tangchaoguishilu: 'https://www.aliyundrive.com/s/EaYtjKv4B6G',
   };
-  const url = SHARE_FOLDER.duolaiameng;
+  const url = SHARE_FOLDER.tangchaoguishilu;
   const r2 = await AliyunShareResourceClient.Get({ unique_id: drive.profile.drive_id, url, store });
   if (r2.error) {
     console.log("r2.error", r2.error.message, drive.profile.drive_id);
@@ -101,7 +102,7 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     // 这里 slice(1) 是因为拼上了资源文件夹根文件夹，和根文件夹内的文件夹名称发生了重复
     const filepath = [...parents.slice(1)].map((p) => p.name).join("/");
     const parent_file_id = path.resolve(client.root_folder.id, filepath);
-    console.log(type, [filepath, name].filter(Boolean).join("/"));
+    // console.log(type, [filepath, name].filter(Boolean).join("/"));
     if (type === "file") {
       if (is_video_file(name)) {
         const template_video = (() => {

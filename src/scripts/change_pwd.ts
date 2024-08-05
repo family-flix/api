@@ -12,7 +12,13 @@ async function main() {
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
-  const r = await User.ChangePassword({}, store);
+  const r = await User.ChangePassword(
+    {
+      email: "",
+      password: "",
+    },
+    store
+  );
   if (r.error) {
     console.log(r.error.message);
     return;

@@ -73,7 +73,7 @@
     "eslint-config-next": "13.1.5",
     "husky": "^8.0.3",
     "pkg": "^5.8.1",
-    "prisma": "^4.16.2",
+    "prisma": "4.13.0",
     "prisma-online": "^0.2.1",
     "resolve": "^1.22.8",
     "ts-morph": "^21.0.1",

@@ -1,4 +1,5 @@
 import path from "path";
+import os from 'os';
 
 import { PrismaClient } from "@prisma/client";
 
@@ -56,7 +57,7 @@ export class Application<
         new PrismaClient({
           datasources: {
             db: {
-              url: `file://${this.database_path}`,
+              url: os.type() !== 'Windows_NT' ?  `file://${this.database_path}` : `file:${this.database_path}`,
             },
           },
         })
