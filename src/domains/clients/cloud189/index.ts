@@ -735,7 +735,7 @@ export class Cloud189DriveClient extends BaseDomain<TheTypesOfEvents> implements
     //     id: string;
     //     name: string;
     //     url: string;
-    //     language: "chi" | "eng" | "jpn";
+    //     language: "chs" | "eng" | "jpn";
     //   }[],
     // });
     return Result.Err("请实现 fetch_video_preview_info 方法");

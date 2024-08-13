@@ -970,7 +970,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
         };
         live_transcoding_task_list: PartialVideo[];
         live_transcoding_subtitle_task_list: {
-          language: "chi" | "eng" | "jpn";
+          language: "chi" | "chs" | "eng" | "jpn";
           status: string;
           url: string;
         }[];

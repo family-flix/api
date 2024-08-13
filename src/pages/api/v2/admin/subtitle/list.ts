@@ -133,7 +133,14 @@ export default async function v2_admin_subtitle_list(req: NextApiRequest, res: N
         type,
         name,
         poster_path,
-        sources,
+        sources: sources
+          .sort((a, b) => a.order - b.order)
+          .map((source) => {
+            return {
+              ...source,
+              subtitles: source.subtitles.reverse(),
+            };
+          }),
       };
     }),
   };

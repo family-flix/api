@@ -105,7 +105,7 @@ export interface DriveClient {
         id: string;
         name: string;
         url: string;
-        language: "chi" | "eng" | "jpn";
+        language: "chi" | "chs" | "eng" | "jpn";
       }[];
     }>
   >;

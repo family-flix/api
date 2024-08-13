@@ -765,7 +765,7 @@ export class QuarkDriveClient extends BaseDomain<TheTypesOfEvents> implements Dr
         id: string;
         name: string;
         url: string;
-        language: "chi" | "eng" | "jpn";
+        language: "chi" | "chs" | "eng" | "jpn";
       }[],
     });
   }

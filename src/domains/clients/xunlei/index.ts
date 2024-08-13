@@ -618,7 +618,7 @@ export class XunleiDriveClient extends BaseDomain<TheTypesOfEvents> implements D
     //     id: string;
     //     name: string;
     //     url: string;
-    //     language: "chi" | "eng" | "jpn";
+    //     language: "chs" | "eng" | "jpn";
     //   }[],
     // });
   }

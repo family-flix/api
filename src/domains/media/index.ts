@@ -173,7 +173,7 @@ export class Media {
                     id,
                     type: SubtitleFileTypes.LocalFile,
                     name,
-                    language: SubtitleLanguageMap[language as "chi"] || [],
+                    language: SubtitleLanguageMap[language] || [],
                     url: unique_id,
                   };
                 }),

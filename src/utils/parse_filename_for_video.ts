@@ -17,6 +17,7 @@ export const VIDEO_KEY_NAME_MAP = {
   voice_type: "语言",
   /**
    * chi 中文
+   * chs 中文
    * eng 英文
    * jpn 日文
    */

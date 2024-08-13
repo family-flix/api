@@ -459,8 +459,10 @@ export const MovieGenresOptions = MovieGenres.map((text) => {
   };
 });
 
-export const SubtitleLanguageMap = {
+export const SubtitleLanguageMap: Record<string, MediaOriginCountries[]> = {
+  "chs&eng": [MediaOriginCountries.CN, MediaOriginCountries.US],
   chi: [MediaOriginCountries.CN],
+  chs: [MediaOriginCountries.CN],
   eng: [MediaOriginCountries.US],
   jpn: [MediaOriginCountries.JP],
 };
