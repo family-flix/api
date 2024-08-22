@@ -44,6 +44,11 @@ export default async function v2_media_profile_profile(
           },
         },
       },
+      persons: {
+        include: {
+          profile: true,
+        },
+      },
     },
   });
   if (!media_profile) {
@@ -55,12 +60,14 @@ export default async function v2_media_profile_profile(
     name,
     original_name,
     poster_path,
+    backdrop_path,
     overview,
     air_date,
     order,
     source_count,
-    source_profiles,
     vote_average,
+    source_profiles,
+    persons,
   } = media_profile;
   const data = {
     id,
@@ -75,7 +82,7 @@ export default async function v2_media_profile_profile(
     order,
     series: null,
     episodes: source_profiles.map((source_profile) => {
-      const { id, name, order, overview, still_path, media_sources } = source_profile;
+      const { id, name, order, overview, still_path, runtime, media_sources } = source_profile;
       // 没有多租户，所以第一个，如果存在，肯定是我的
       const source = media_sources[0];
       return {
@@ -84,6 +91,7 @@ export default async function v2_media_profile_profile(
         overview,
         order,
         still_path,
+        runtime,
         subtitles: source
           ? source.subtitles.map((subtitle) => {
               const { id, name, unique_id, type, language } = subtitle;
@@ -107,6 +115,27 @@ export default async function v2_media_profile_profile(
           : [],
       };
     }),
+    actors: persons
+      .map((person) => {
+        const { known_for_department, profile, order } = person;
+        return {
+          id: profile.id,
+          name: profile.name,
+          role: known_for_department,
+          order,
+        };
+      })
+      .sort((a, b) => {
+        const map: Record<string, number> = {
+          star: 1,
+          director: 2,
+          scriptwriter: 3,
+        };
+        if (a.role && b.role) {
+          return map[a.role] - map[b.role];
+        }
+        return a.order - b.order;
+      }),
   };
   return res.status(200).json({ code: 0, msg: "", data });
 }
