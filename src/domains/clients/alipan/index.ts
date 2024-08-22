@@ -90,7 +90,7 @@ type AliyunDriveProps = {
 type AliyunDriveState = {};
 
 export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements DriveClient {
-  static async Get(options: Partial<{ id?: string; unique_id?: string; user?: User; store: DataStore }>) {
+  static async Get(options: { id?: string; unique_id?: string; user?: User; store: DataStore }) {
     const { id, unique_id, user, store } = options;
     if (!store) {
       return Result.Err("缺少数据库实例");

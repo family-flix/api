@@ -24,7 +24,7 @@ export default async function v2_aliyundrive_refresh(req: NextApiRequest, res: N
   if (!unique_id) {
     return e(Result.Err("缺少云盘 unique_id 参数"));
   }
-  const r = await AliyunDriveClient.Get({ unique_id, user });
+  const r = await AliyunDriveClient.Get({ unique_id, store, user });
   if (r.error) {
     return e(Result.Err(r.error.message));
   }
