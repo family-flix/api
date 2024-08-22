@@ -785,7 +785,7 @@ async function main() {
   server.post("/api/v2/wechat/live/list", async (c) => {
     return v2_wechat_live_list(...(await compat_next(c)));
   });
-  server.get("/api/v2/aliyundrive/refresh", async (c) => {
+  server.post("/api/v2/aliyundrive/refresh", async (c) => {
     return v2_aliyundrive_refresh(...(await compat_next(c)));
   });
   server.get("/api/v2/wechat/proxy", async (c) => {
