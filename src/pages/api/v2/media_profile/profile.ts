@@ -75,6 +75,7 @@ export default async function v2_media_profile_profile(
     name,
     original_name: name === original_name ? null : original_name,
     poster_path,
+    backdrop_path,
     overview,
     air_date,
     vote_average,
