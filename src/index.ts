@@ -185,6 +185,7 @@ import v2_media_profile_profile from "./pages/api/v2/media_profile/profile";
 import { check_existing } from "./utils/fs";
 import v2_media_profile_set_name from "./pages/api/v2/media_profile/set_name";
 import v2_media_profile_series_profile from "./pages/api/v2/media_profile/series_profile";
+import v2_aliyundrive_refresh from "./pages/api/v2/aliyundrive/refresh";
 
 async function main() {
   const server = new Hono<{
@@ -784,9 +785,13 @@ async function main() {
   server.post("/api/v2/wechat/live/list", async (c) => {
     return v2_wechat_live_list(...(await compat_next(c)));
   });
+  server.get("/api/v2/aliyundrive/refresh", async (c) => {
+    return v2_aliyundrive_refresh(...(await compat_next(c)));
+  });
   server.get("/api/v2/wechat/proxy", async (c) => {
     return v2_wechat_proxy(...(await compat_next(c)));
   });
+
   const r = await check_existing(app.database_path);
   if (r.error) {
     console.log("数据库校验失败", r.error.message);

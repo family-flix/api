@@ -10,7 +10,7 @@ import { Result } from "@/domains/result/index";
 import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { response_error_factory } from "@/utils/server";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<unknown>) {
+export default async function v2_aliyundrive_refresh(req: NextApiRequest, res: NextApiResponse<unknown>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
   const { unique_id } = req.body as Partial<{
