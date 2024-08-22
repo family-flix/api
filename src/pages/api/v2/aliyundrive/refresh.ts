@@ -26,12 +26,12 @@ export default async function v2_aliyundrive_refresh(req: NextApiRequest, res: N
   }
   const r = await AliyunDriveClient.Get({ unique_id, user });
   if (r.error) {
-    return e(r);
+    return e(Result.Err(r.error.message));
   }
   const client = r.data;
-  const r2 = await client.refresh_access_token();
+  const r2 = await client.fetch_token();
   if (r2.error) {
-    return e(r);
+    return e(Result.Err(r2.error.message));
   }
   const { device_id } = client;
   const { access_token, refresh_token } = r2.data;

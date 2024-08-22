@@ -532,6 +532,42 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       },
     };
   }
+  async fetch_token() {
+    const drive = await this.$store.prisma.drive.findFirst({
+      where: {
+        id: this.id,
+      },
+      include: {
+        drive_token: true,
+      },
+    });
+    if (!drive) {
+      return Result.Err("没有匹配的云盘凭证记录");
+    }
+    const { data, expired_at } = drive.drive_token;
+    const r = parseJSONStr<{
+      refresh_token: string;
+      access_token: string;
+    }>(data);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    const { refresh_token, access_token } = r.data;
+    if (refresh_token === null) {
+      return Result.Err("云盘凭证缺少 refresh_token");
+    }
+    if (!expired_at || dayjs(expired_at * 1000).isBefore(dayjs())) {
+      const r1 = await this.refresh_access_token();
+      if (r1.error) {
+        return Result.Err(r1.error);
+      }
+      return Result.Ok(r1.data);
+    }
+    return Result.Ok({
+      refresh_token,
+      access_token,
+    });
+  }
   /** 初始化所有信息 */
   async init() {
     const token_res = await (async () => {
