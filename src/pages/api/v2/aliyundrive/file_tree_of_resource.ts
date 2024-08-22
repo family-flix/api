@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
   const drive = await store.prisma.drive.findFirst({ where: { type: DriveTypes.AliyunBackupDrive, user_id: user.id } });
   if (!drive) {
-    return Result.Err("请先添加一个云盘", 10002);
+    return e(Result.Err("请先添加一个云盘", 10002));
   }
   // const r = await Drive.Get({ id: drive.id, user, store });
   // if (r.error) {

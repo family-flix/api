@@ -487,7 +487,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
           console.error(url);
           console.error("GET request failed, because", response?.status, response?.data);
           if (response?.status === 401) {
-            await this.refresh_aliyun_access_token();
+            await this.refresh_access_token();
           }
           return Result.Err(response?.data?.message || message);
         }
@@ -525,7 +525,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
             if (response?.data?.code === "DeviceSessionSignatureInvalid") {
               // ...
             }
-            await this.refresh_aliyun_access_token();
+            await this.refresh_access_token();
           }
           return Result.Err(response?.data?.message || message, response?.data?.code);
         }
@@ -570,7 +570,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
       // );
       if (!expired_at || dayjs(expired_at * 1000).isBefore(dayjs())) {
         // console.log("access token is expired, refresh it");
-        const r1 = await this.refresh_aliyun_access_token();
+        const r1 = await this.refresh_access_token();
         if (r1.error) {
           return Result.Err(r1.error);
         }
@@ -2582,7 +2582,7 @@ export class AliyunDriveClient extends BaseDomain<TheTypesOfEvents> implements D
    * 请求接口时返回了 401，并且还有 refresh_token 时，拿 refresh_token 换 access_token
    * @param token 用来获取新 token 的 refresh_token
    */
-  async refresh_aliyun_access_token() {
+  async refresh_access_token() {
     // console.log("refresh_aliyun_access_token", this.refresh_token);
     const r = await this.request.post<{
       access_token: string;
