@@ -33,9 +33,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (r2.error) {
     return e(r);
   }
+  const { device_id } = client;
+  const { access_token, refresh_token } = r2.data;
   return res.status(200).json({
     code: 0,
     msg: "",
-    data: r.data,
+    data: {
+      device_id,
+      access_token,
+      refresh_token,
+    },
   });
 }
