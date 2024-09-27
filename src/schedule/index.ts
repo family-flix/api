@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { Application } from "@/domains/application/index";
 import { ScheduleTask } from "@/domains/schedule/v2";
 import { Notify } from "@/domains/notify/index";
+import { PushClientTypes } from "@/domains/notify/constants";
 
 // import { notice_push_deer } from "../../examples/notice";
 
@@ -21,12 +22,11 @@ import { Notify } from "@/domains/notify/index";
     console.error("缺少数据库文件路径");
     return;
   }
-  const token = process.env.PUSH_DEER_TOKEN;
+  const token = process.env.WXPUSH_TOKEN;
   if (!token) {
-    console.error("缺少 PushDeer token");
+    console.error("缺少 WXPush token");
     return;
   }
-
   const app = new Application({
     root_path: OUTPUT_PATH,
     env: process.env,
@@ -34,7 +34,7 @@ import { Notify } from "@/domains/notify/index";
   const store = app.store;
   const schedule = new ScheduleTask({ app, store });
 
-  const notify_res = await Notify.New({ type: 1, store, token });
+  const notify_res = await Notify.New({ type: PushClientTypes.WXPush, store, token });
   if (notify_res.error) {
     console.log(`实例化推送失败`, notify_res.error.message);
     return;

@@ -7,10 +7,11 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { store, BaseApiResp } from "@/store/index";
 import { Member } from "@/domains/user/member";
 import { Notify } from "@/domains/notify";
-import { ReportTypes } from "@/constants";
+import { PushClientTypes } from "@/domains/notify/constants";
 import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { r_id } from "@/utils/index";
+import { ReportTypes } from "@/constants";
 
 export default async function v2_wechat_report_create(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -37,7 +38,11 @@ export default async function v2_wechat_report_create(req: NextApiRequest, res: 
       console.log(`推送消息失败，请传入文本消息，传入了 `, text);
       return;
     }
-    const notify_res = await Notify.New({ type: 1, store, token: member.user.settings.push_deer_token });
+    const notify_res = await Notify.New({
+      type: PushClientTypes.WXPush,
+      store,
+      token: member.user.settings.wxpush_token,
+    });
     if (notify_res.error) {
       console.log(`推送消息 '${text}' 失败`, notify_res.error.message);
       return;

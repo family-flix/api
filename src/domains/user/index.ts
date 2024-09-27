@@ -32,6 +32,7 @@ export type UserSettings = {
   /** 消息推送相关 */
   push_deer_token?: string;
   telegram_token?: string;
+  wxpush_token?: string;
   /** 影视剧文件名解析相关 */
   extra_filename_rules?: string;
   ignore_files_when_sync?: string;

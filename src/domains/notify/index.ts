@@ -3,6 +3,7 @@ import { DatabaseStore } from "@/domains/store/index";
 import { Result } from "@/domains/result/index";
 
 import { pushdeer_send } from "./clients/push_deer";
+import { wxpush_send } from "./clients/wxpush";
 import { PushClientTypes } from "./constants";
 import { SendPayload } from "./types";
 
@@ -10,7 +11,7 @@ enum Events {}
 type TheTypesOfEvents = {};
 
 type NotifyProps = {
-  type: number;
+  type: PushClientTypes;
   token: string;
   store: DatabaseStore;
 };
@@ -37,7 +38,7 @@ export class Notify extends BaseDomain<TheTypesOfEvents> {
   }
 
   store: NotifyProps["store"];
-  type: number;
+  type: PushClientTypes;
   token: string;
 
   constructor(props: { _name?: string } & NotifyProps) {
@@ -53,6 +54,9 @@ export class Notify extends BaseDomain<TheTypesOfEvents> {
     // console.log("[DOMAIN]notify - send", msg);
     if (this.type === PushClientTypes.PushDeer) {
       return pushdeer_send(msg, this.token);
+    }
+    if (this.type === PushClientTypes.WXPush) {
+      return wxpush_send(msg, this.token);
     }
     // if (this.type === PushClientTypes.Telegram) {
     //   return pushdeer_send(msg, this.token);

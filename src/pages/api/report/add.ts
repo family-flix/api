@@ -4,13 +4,14 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { store } from "@/store";
 import { Member } from "@/domains/user/member";
-import { BaseApiResp, Result } from "@/types";
+import { Notify } from "@/domains/notify";
+import { PushClientTypes } from "@/domains/notify/constants";
+import { ReportTypes } from "@/constants";
 import { response_error_factory } from "@/utils/server";
 import { parseJSONStr } from "@/utils";
-import { store } from "@/store";
-import { Notify } from "@/domains/notify";
-import { ReportTypes } from "@/constants";
+import { BaseApiResp, Result } from "@/types";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -92,7 +93,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       console.log(`推送消息失败，请传入文本消息，传入了 `, text);
       return;
     }
-    const notify_res = await Notify.New({ type: 1, store, token: member.user.settings.push_deer_token });
+    const notify_res = await Notify.New({
+      type: PushClientTypes.WXPush,
+      store,
+      token: member.user.settings.wxpush_token,
+    });
     if (notify_res.error) {
       console.log(`推送消息 '${text}' 失败`, notify_res.error.message);
       return;
