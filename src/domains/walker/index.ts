@@ -1605,6 +1605,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         }
         return true;
       });
+      // console.log("[BIZ]walker/index - handler_folder_after_walk before if (movie_profile_files.length === 0)", movie_profile_files);
       if (movie_profile_files.length === 0) {
         data.up_movie();
         data.up_relative_files();
@@ -1616,14 +1617,17 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       const segments = movie_nfo_file.name.split(".");
       // const name = segments.slice(0, -1).join(".");
       // const suffix = segments[0];
+      // console.log("[BIZ]walker/index - handler_folder_after_walk before 1");
       const movie_profile_r = await this.read_nfo(movie_nfo_file, data);
       if (movie_profile_r.error) {
         return Result.Err(movie_profile_r.error.message);
       }
       const movie_profile = movie_profile_r.data;
+      // console.log("[BIZ]walker/index - handler_folder_after_walk before 2");
       if (!movie_profile) {
         return Result.Err(`${movie_nfo_file.name} 文件没有内容`);
       }
+      // console.log("[BIZ]walker/index - handler_folder_after_walk before 3");
       if (movie_profile.type !== MediaProfileTypesFromNFOFile.Movie) {
         return Result.Err("不是电影详情文件");
       }
@@ -1689,12 +1693,14 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
         tvdb_id,
         imdb_id,
       };
+      // console.log("[BIZ]walker/index - handler_folder_after_walk before 4");
       await this.on_profile(movie_profile_payload);
       // 在同一个文件夹，发现了 nfo 文件和电影文件，就把电影文件管理到 nfo 文件详情，不关心两个文件名字是否相同？
       // 这样可以处理有一个 movie.nfo 和 蜘蛛侠：平行宇宙.Spider-Man.Into.the.Spider-Verse.2018.mp4 这种场景
       // 缺点是如果电影文件和 nfo 文件不相关，就错误地关联了
       return Result.Ok(id);
     }
+    // console.log("[BIZ]walker/index - handler_folder_after_walk before !data.can_save_episode");
     if (!data.can_save_episode) {
       data.up_episodes();
       data.up_relative_files();
@@ -1705,12 +1711,13 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     const series_profile_file = relative_files.find((file) => {
       return is_tv_nfo(file.name);
     });
+    // console.log("[BIZ]walker/index - handler_folder_after_walk before if (!series_profile_file)");
     if (!series_profile_file) {
       data.up_episodes();
       data.up_relative_files();
       return Result.Err("没有找到匹配的详情文件");
     }
-    // console.log("before read_nfo", series_profile_file);
+    // console.log("[BIZ]walker/index - handler_folder_after_walk before this.read_nfo");
     const series_profile_r = await this.read_nfo(series_profile_file, data);
     if (series_profile_r.error) {
       return Result.Err(series_profile_r.error.message);
@@ -1719,6 +1726,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
     if (!series_profile) {
       return Result.Err(`${series_profile_file.name} 文件没有内容`);
     }
+    // console.log("[BIZ]walker/index - before series_profile.type === MediaProfileTypesFromNFOFile.Series");
     if (series_profile.type === MediaProfileTypesFromNFOFile.Series) {
       const episode_group_by_season: Record<
         // season order
@@ -2046,6 +2054,7 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       // 通知新增电视剧详情
       await this.on_profile(series_profile_payload);
     }
+    // console.log("[BIZ]walker/index - before series_profile.type === MediaProfileTypesFromNFOFile.Movie");
     if (series_profile.type === MediaProfileTypesFromNFOFile.Movie) {
       // 通知新增电影详情
       const {
@@ -2145,12 +2154,14 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
       file_id: file.file_id,
       client: data.client,
     });
+    // console.log("[BIZ]walker/index - read_nfo before process.fetch_content");
     const r = await process.fetch_content();
     if (r.error) {
       return Result.Err(r.error.message);
     }
     const content = r.data;
     // console.log("nfo file", file.name, "content");
+    // console.log("[BIZ]walker/index - read_nfo before process.parse");
     const r2 = await process.parse(file.name, content);
     if (r2.error) {
       // console.log("parse nfo content failed, because", r2.error.message, { file: file.name });

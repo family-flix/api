@@ -324,7 +324,11 @@ export class NfoFileProcessor extends BaseDomain<TheTypesOfEvents> {
     if (!content) {
       return Result.Err(`'${name}' 内容为空`);
     }
-    const data = await parseStringPromise(content);
+    const r = await resultify(parseStringPromise)(content);
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    const data = r.data;
     if (this.is_series(name) && data.tvshow) {
       // 电视剧详情
       const {

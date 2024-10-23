@@ -193,3 +193,6 @@ export type RequestedAliyunDriveFiles = GenreDriveFile & {
 export function is_tv_nfo(name: string) {
   return ["tvshow.nfo"].includes(name);
 }
+export function is_movie_nfo(name: string) {
+  return ["movie.nfo"].includes(name);
+}
