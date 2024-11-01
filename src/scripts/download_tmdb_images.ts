@@ -24,7 +24,7 @@ async function main() {
     return;
   }
   const client = profile_r.data;
-  const img_proxy = "https://proxy.f1x.fun/api/tmdb_site";
+  const img_proxy = "https://proxy.f2x.fun/api/tmdb_site";
   await walk_model_with_cursor({
     fn(extra) {
       return store.prisma.media_profile.findMany({

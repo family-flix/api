@@ -1317,7 +1317,7 @@ export class MediaProfileClient {
       }
       return `${r_id()}.jpg`;
     })();
-    const img_proxy = "https://proxy.f1x.fun/api/tmdb_site";
+    const img_proxy = "https://proxy.f2x.fun/api/tmdb_site";
     const r = await this.$upload.download(
       url.replace("https://www.themoviedb.org", img_proxy),
       `/${parent_dir}/${filename}`
