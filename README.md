@@ -95,6 +95,34 @@
 
 ## 🖥️ 部署
 
+### docker 部署
+
+```bash
+# Windows
+docker run -d -v ${PWD}:/output -p 8000:8000 --name flix family_flix:2.4.1
+
+# linux
+docker run -d -v $(pwd):/output -p 8000:8000 --name flix family_flix:2.4.1
+```
+
+第一次启动必然会因为栈溢出失败，当容器终止后，重新启动容器即可。
+
+```bash
+docker start flix
+```
+
+然后查看容器内终端输出，会显示管理员账户与密码
+
+```bash
+docker logs flix
+```
+
+如果忘记或没看到密码，可以通过终端修改密码
+
+```bash
+docker exec flix node /app/pwd.js new_pwd
+```
+
 ### 源码部署
 
 > 要求 `NodeJs` 版本大于 `18`。

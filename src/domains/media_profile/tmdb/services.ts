@@ -39,7 +39,6 @@ function fix_TMDB_image_path<T extends TMDBImagePaths>(values: T): FixedTMDBImag
     still_path: null,
   };
   if (backdrop_path) {
-    // result.backdrop_path = `https://proxy.funzm.com/api/tmdb_site/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
     result.backdrop_path = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces${backdrop_path}`;
   }
   if (poster_path) {

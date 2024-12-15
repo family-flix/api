@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "tsx watch ./src/index.ts --port 3200",
     "start": "node server.js",
-    "build": "esbuild ./src/index.ts --platform=node --target=node12 --legal-comments=none --bundle --minify --outfile=server.js",
+    "build": "esbuild ./src/index.ts --platform=node --target=node12 --external:@prisma/client --legal-comments=none --bundle --minify --outfile=./dist/server.js",
+    "build2": "esbuild ./src/scripts/change_pwd.ts --platform=node --target=node12 --external:@prisma/client --legal-comments=none --bundle --minify --outfile=./dist/pwd.js",
     "db": "prisma studio",
     "check": "tsc --noEmit",
     "schedule": "vite-node ./src/schedule/index.ts",

@@ -93,7 +93,7 @@ export default async function v2_admin_member_add(req: NextApiRequest, res: Next
     id: r2.data.id,
     token: r2.data.token,
     // account: {
-    //   id: `${unique_id}@funzm.com`,
+    //   id: `${unique_id}@flix.com`,
     //   pwd,
     // },
   };

@@ -3,9 +3,14 @@ import { User } from "@/domains/user/index";
 
 async function main() {
   const OUTPUT_PATH = process.env.OUTPUT_PATH;
-  //   const DATABASE_PATH = "file://$OUTPUT_PATH/data/family-flix.db?connection_limit=1";
   if (!OUTPUT_PATH) {
     console.error("缺少数据库文件路径");
+    return;
+  }
+  const args = process.argv;
+  const password = args[2];
+  if (!password) {
+    console.error("请指定新密码，如 node pwd.js new_pwd");
     return;
   }
   const app = new Application({
@@ -14,8 +19,8 @@ async function main() {
   const store = app.store;
   const r = await User.ChangePassword(
     {
-      email: "",
-      password: "",
+      email: "admin@flix.com",
+      password,
     },
     store
   );

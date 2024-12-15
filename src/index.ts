@@ -805,7 +805,7 @@ async function main() {
   try {
     const admin = await store.prisma.user.findFirst({});
     if (!admin) {
-      const email = "admin@funzm.com";
+      const email = "admin@flix.com";
       const pwd = random_string(6);
       const r = await User.Create({ email, password: pwd }, store);
       if (r.error) {

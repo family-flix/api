@@ -1,15 +1,13 @@
-FROM node:16
+FROM docker.unsee.tech/node:20
 
 ENV PORT 8000
-ENV OUTPUT_PATH /output
-ENV DATABASE_PATH file:///output/data/family-flix.db?connection_limit=1
+ENV GENERATE_SOURCEMAP=false
+ENV NODE_OPTIONS=--max_old_space_size=2048
 
 WORKDIR /app
-COPY package*.json ./
-RUN yarn config set registry https://registry.npm.taobao.org/
-RUN yarn
-COPY . .
-RUN yarn prisma generate
-RUN yarn build
+COPY dist .
+RUN npm config set registry https://registry.npmmirror.com/
+RUN npm install
+RUN npx prisma generate 
 EXPOSE 8000
-CMD yarn prisma migrate deploy --schema ./prisma/schema.prisma && yarn start
+CMD yarn prisma migrate deploy --schema ./prisma/schema.prisma && npm run start
