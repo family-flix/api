@@ -7,11 +7,11 @@ import { DatabaseStore } from "@/domains/store";
 import { DataStore } from "@/domains/store/types";
 import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 import { parseJSONStr, random_string, r_id } from "@/utils/index";
+import { AuthenticationProviders } from "@/constants";
 
 import { Credentials } from "./services";
 import { prepare, parse_token, compare } from "./utils";
 import { encode_token } from "./jwt";
-import { AuthenticationProviders } from "@/constants";
 import { WeappClient } from "./weapp";
 
 type UserUniqueID = string;

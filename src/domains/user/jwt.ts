@@ -80,5 +80,5 @@ export async function decode_token({ token, secret }: JWTDecodeParams): Promise<
 // }
 
 async function get_derived_encryption_key(secret: Secret) {
-  return await hkdf("sha256", secret, "", "com.funzm Generated Encryption Key", 32);
+  return await hkdf("sha256", secret as any as Uint8Array, "", "com.funzm Generated Encryption Key", 32);
 }

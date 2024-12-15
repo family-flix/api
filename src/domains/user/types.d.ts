@@ -127,7 +127,7 @@ export interface JWTEncodeParams {
   /** The JWT payload. */
   token?: JWT;
   /** The secret used to encode the NextAuth.js issued JWT. */
-  secret: string | Buffer;
+  secret: Secret;
   /**
    * The maximum age of the NextAuth.js issued JWT in seconds.
    * @default 30 * 24 * 30 * 60 // 30 days
@@ -140,12 +140,12 @@ export interface JWTDecodeParams {
   /** The NextAuth.js issued JWT to be decoded */
   token?: string;
   /** The secret used to decode the NextAuth.js issued JWT. */
-  secret: string | Buffer;
+  secret: Secret;
 }
 
 export interface JWTOptions {
   /** The secret used to encode/decode the NextAuth.js issued JWT. */
-  secret: string;
+  secret: Secret;
   /**
    * The maximum age of the NextAuth.js issued JWT in seconds.
    * @default 30 * 24 * 30 * 60 // 30 days

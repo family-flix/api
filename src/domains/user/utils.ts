@@ -424,7 +424,7 @@ export function ulid(): string {
 }
 
 export function randomize(length: number): Uint8Array {
-  return crypto.randomBytes(length);
+  return crypto.randomBytes(length) as any as Uint8Array;
 }
 
 export const Encoder = /*#__PURE__*/ new TextEncoder();

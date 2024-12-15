@@ -55,6 +55,7 @@ export class Application<
       // console.log("__new prisma client");
       this.store = new DatabaseStore(
         new PrismaClient({
+          log: ['query', 'info', 'warn', 'error'],
           datasources: {
             db: {
               url: os.type() !== 'Windows_NT' ?  `file://${this.database_path}` : `file:${this.database_path}`,
