@@ -2,7 +2,7 @@
  * @file 优酷 搜索
  */
 import axios from "axios";
-import cheerio from "cheerio";
+import { load } from "cheerio";
 
 import { Result, resultify, UnpackedResult } from "@/domains/result/index";
 import { Unpacked } from "@/types";
@@ -1118,7 +1118,7 @@ export async function search_media_in_youku(keyword: string, options: RequestCom
   if (error) {
     return Result.Err(error.message);
   }
-  const $ = cheerio.load(data);
+  const $ = load(data);
   const $list = $(".h5-show-card-wrapper");
   // const json_r = /window.__INITIAL_DATA__ {0,1}=([^;]{1,}); /;
   // const json: {} | null = (() => {
