@@ -99,9 +99,9 @@
 
 ```bash
 # Windows
-docker run -d -v ${PWD}:/output -p 3200:8000 --name flix family_flix:2.4.1
+docker run -d -v ${PWD}:/output -p 3000:8000 --name flix ltaoo/family_flix:2.4.1
 # linux
-docker run -d -v $(pwd):/output -p 3200:8000 --name flix family_flix:2.4.1
+docker run -d -v $(pwd):/output -p 3000:8000 --name flix ltaoo/family_flix:2.4.1
 ```
 
 第一次启动必然会因为栈溢出失败，当容器终止后，重新启动容器即可。
@@ -118,7 +118,7 @@ docker logs flix
 
 管理后台
 <br/>
-http://127.0.0.1:3200/admin/home/index
+http://127.0.0.1:3000/admin/home/index
 
 > 如果忘记或没看到密码，可以通过终端修改密码
 
