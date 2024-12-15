@@ -99,10 +99,9 @@
 
 ```bash
 # Windows
-docker run -d -v ${PWD}:/output -p 8000:8000 --name flix family_flix:2.4.1
-
+docker run -d -v ${PWD}:/output -p 3200:8000 --name flix family_flix:2.4.1
 # linux
-docker run -d -v $(pwd):/output -p 8000:8000 --name flix family_flix:2.4.1
+docker run -d -v $(pwd):/output -p 3200:8000 --name flix family_flix:2.4.1
 ```
 
 第一次启动必然会因为栈溢出失败，当容器终止后，重新启动容器即可。
@@ -111,13 +110,17 @@ docker run -d -v $(pwd):/output -p 8000:8000 --name flix family_flix:2.4.1
 docker start flix
 ```
 
-然后查看容器内终端输出，会显示管理员账户与密码
+然后查看容器内终端输出，会显示管理员账户与密码以及网站访问地址
 
 ```bash
 docker logs flix
 ```
 
-如果忘记或没看到密码，可以通过终端修改密码
+管理后台
+<br/>
+http://127.0.0.1:3200/admin/home/index
+
+> 如果忘记或没看到密码，可以通过终端修改密码
 
 ```bash
 docker exec flix node /app/pwd.js new_pwd
@@ -143,15 +146,9 @@ yarn prisma migrate deploy --schema ./prisma/schema.prisma
 yarn start
 ```
 
-在控制台会打印网站访问地址，在浏览器中访问即可。共有三个应用
+首次启动会创建管理员账号，请注意终端信息。之后启动将不再展示管理员账号密码，如遗忘密码则只能修改密码。
 
-- http://127.0.0.1:3200/admin/home/index 管理后台
-- http://127.0.0.1:3200/mobile/home/index 视频播放移动端
-- http://127.0.0.1:3200/pc/home/index 视频播放桌面端
-
-> 首次访问会创建管理员账号，请注意终端信息。之后启动将不再展示管理员账号密码，如遗忘密码则只能修改密码。
-
-![服务器启动](assets/server-start01.jpg)
+访问地址同上
 
 添加云盘、刮削等操作可以参考文档。<a href="https://family-flix.github.io/docs/"><strong>Explore the docs »</strong></a>
 
