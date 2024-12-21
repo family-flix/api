@@ -16,6 +16,8 @@ import {
 } from "@/domains/article";
 import { ModelParam, ModelQuery, DriveRecord, FileRecord, DataStore } from "@/domains/store/types";
 import { walk_model_with_cursor } from "@/domains/store/utils";
+import { DriveClient } from "@/domains/clients/types";
+import { AlipanOpenClient } from "@/domains/clients/alipan_open";
 import { User } from "@/domains/user";
 import { BaseDomain, Handler } from "@/domains/base";
 import { Result, resultify } from "@/domains/result/index";
@@ -89,12 +91,13 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const { drive_id, ...rest } = r.data;
     // console.log("[DOMAIN]drive/index - Get", profile, drive_id, type, drive_token_id);
     const client_res = await (async (): Promise<Result<AliyunDriveClient>> => {
-      const r = await AliyunDriveClient.Get({ unique_id, store });
-      if (r.error) {
-        return Result.Err(r.error.message);
-      }
-      const client = r.data;
-      return Result.Ok(client);
+      // if (type === DriveTypes.AlipanOpenDrive) {
+      //   return AlipanOpenClient.Get({ unique_id, store });
+      // }
+      // if (type === DriveTypes.AliyunBackupDrive || type === DriveTypes.AliyunResourceDrive) {
+      // }
+      return AliyunDriveClient.Get({ unique_id, store });
+      // return Result.Err("未知的 type");
     })();
     if (client_res.error) {
       return Result.Err(client_res.error.message);

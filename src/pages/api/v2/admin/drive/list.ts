@@ -7,6 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user";
 import { ModelQuery } from "@/domains/store/types";
+import { DriveTypes } from "@/domains/drive/constants";
 import { AliyunDriveProfile } from "@/domains/clients/alipan/types";
 import { response_error_factory } from "@/utils/server";
 import { parseJSONStr } from "@/utils/index";
@@ -58,12 +59,13 @@ export default async function v2_admin_drive_list(req: NextApiRequest, res: Next
   const data = [];
   for (let i = 0; i < result.list.length; i += 1) {
     const drive = result.list[i];
-    const { name, avatar, remark, total_size, used_size, root_folder_id, profile } = drive;
+    const { name, type, avatar, remark, total_size, used_size, root_folder_id, profile } = drive;
     const r = await parseJSONStr<AliyunDriveProfile>(profile);
     const payload: {
       id: string;
       name: string;
       avatar: string;
+      type: DriveTypes;
       total_size: number | null;
       used_size: number | null;
       root_folder_id: string | null;
@@ -76,6 +78,7 @@ export default async function v2_admin_drive_list(req: NextApiRequest, res: Next
       total_size,
       used_size,
       root_folder_id,
+      type: type!,
     };
     if (r.data) {
       payload.vip = r.data.vip;

@@ -18,7 +18,14 @@ async function get_drive_client(values: { user: User; store: DataStore }) {
   // 取第一个云盘用来获取分享文件列表，不涉及转存逻辑
   const drive = await store.prisma.drive.findFirst({
     where: {
-      type: DriveTypes.AliyunResourceDrive,
+      OR: [
+        {
+          type: DriveTypes.AliyunBackupDrive,
+        },
+        {
+          type: DriveTypes.AlipanOpenDrive,
+        },
+      ],
       user_id: user.id,
     },
   });

@@ -13,4 +13,6 @@ export enum DriveTypes {
   LocalFolder = 5,
   /** 阿里云盘/开放接口 */
   AlipanOpenDrive = 6,
+  /** 阿里云盘资源盘/开放接口 */
+  AlipanResourceOpenDrive = 7,
 }

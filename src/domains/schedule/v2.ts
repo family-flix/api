@@ -13,6 +13,7 @@ import { Drive } from "@/domains/drive/v2";
 import { Job, TaskTypes } from "@/domains/job";
 import { DriveAnalysis } from "@/domains/analysis/v2";
 import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { MediaSearcher } from "@/domains/searcher/v2";
 import { MediaProfileClient } from "@/domains/media_profile";
 import { normalize_partial_tv } from "@/domains/media_thumbnail/utils";
@@ -181,21 +182,20 @@ export class ScheduleTask {
       text: string[];
     }[] = [];
     await this.walk_drive(async (drive) => {
-      if (drive.type === DriveTypes.AliyunResourceDrive) {
-        return;
-      }
-      const r = await drive.client.checked_in();
-      if (r.error) {
+      if (drive.client instanceof AliyunDriveClient) {
+        const r = await drive.client.checked_in();
+        if (r.error) {
+          results.push({
+            name: drive.name,
+            text: ["签到失败", r.error.message],
+          });
+          return;
+        }
         results.push({
           name: drive.name,
-          text: ["签到失败", r.error.message],
+          text: ["签到成功"],
         });
-        return;
       }
-      results.push({
-        name: drive.name,
-        text: ["签到成功"],
-      });
     });
     return results;
   }

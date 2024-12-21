@@ -49,7 +49,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!id_r) {
     return e(Result.Err("不是合法的资源链接"));
   }
-  const drive = await store.prisma.drive.findFirst({ where: { type: DriveTypes.AliyunBackupDrive, user_id: user.id } });
+  const drive = await store.prisma.drive.findFirst({
+    where: {
+      OR: [
+        {
+          type: DriveTypes.AliyunBackupDrive,
+        },
+        {
+          type: DriveTypes.AlipanOpenDrive,
+        },
+      ],
+      user_id: user.id,
+    },
+  });
   if (!drive) {
     return e(Result.Err("请先添加一个云盘", 10002));
   }

@@ -58,6 +58,9 @@ export default async function v2_drive_file_list(req: NextApiRequest, res: NextA
     if (drive.profile.type === DriveTypes.AlipanOpenDrive) {
       return "root";
     }
+    if (drive.profile.type === DriveTypes.AlipanResourceOpenDrive) {
+      return "root";
+    }
     if (drive.profile.type === DriveTypes.AliyunBackupDrive) {
       return "root";
     }

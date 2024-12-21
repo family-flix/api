@@ -79,7 +79,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         const client = r.data;
         return Result.Ok(client);
       }
-      if (type === DriveTypes.AlipanOpenDrive) {
+      if (type === DriveTypes.AlipanOpenDrive || type === DriveTypes.AlipanResourceOpenDrive) {
         const r = await AlipanOpenClient.Get({ unique_id: drive_record.unique_id, store });
         if (r.error) {
           return Result.Err(r.error.message);
@@ -142,6 +142,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     const created_drive_res = await (() => {
       if (type === DriveTypes.AlipanOpenDrive) {
         return AlipanOpenClient.Create({ payload, store, user });
+      }
+      if (type === DriveTypes.AlipanResourceOpenDrive) {
+        return AlipanOpenClient.CreateResourceDrive({ payload, store, user });
       }
       if (type === DriveTypes.AliyunBackupDrive) {
         return AliyunDriveClient.Create({ payload, skip_ping, store, user });

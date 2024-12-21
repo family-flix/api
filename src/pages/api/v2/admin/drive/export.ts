@@ -34,7 +34,7 @@ export default async function v2_admin_drive_export(req: NextApiRequest, res: Ne
   }
   const { type, profile, avatar, name, root_folder_id, total_size, used_size } = drive_record;
   const r = await (async () => {
-    if (type === DriveTypes.AliyunBackupDrive) {
+    if (type === DriveTypes.AliyunBackupDrive || type === DriveTypes.AlipanOpenDrive) {
       const p_res = parseJSONStr<AliyunDrivePayload>(profile);
       if (p_res.error) {
         return Result.Err(p_res.error);
@@ -69,7 +69,7 @@ export default async function v2_admin_drive_export(req: NextApiRequest, res: Ne
         refresh_token,
       });
     }
-    if (type === DriveTypes.AliyunResourceDrive) {
+    if (type === DriveTypes.AliyunResourceDrive || type === DriveTypes.AlipanResourceOpenDrive) {
       return Result.Err("请先创建备份盘，再创建资源盘");
     }
     return Result.Err("异常云盘信息");

@@ -164,7 +164,14 @@ export default async function v2_admin_sync_task_create(
     }
     const drive = await store.prisma.drive.findFirst({
       where: {
-        type: DriveTypes.AliyunBackupDrive,
+        OR: [
+          {
+            type: DriveTypes.AliyunBackupDrive,
+          },
+          {
+            type: DriveTypes.AlipanOpenDrive,
+          },
+        ],
         user_id: user.id,
       },
     });

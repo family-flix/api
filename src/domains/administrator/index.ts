@@ -307,7 +307,7 @@ export class Administrator extends User {
           return;
         }
         const drive = drive_res.data;
-        if (drive.type === DriveTypes.AliyunBackupDrive) {
+        if (drive.type === DriveTypes.AliyunBackupDrive || drive.type === DriveTypes.AlipanOpenDrive) {
           return;
         }
         const { total_size, used_size } = drive.profile;

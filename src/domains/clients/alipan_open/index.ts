@@ -318,7 +318,7 @@ export class AlipanOpenClient extends BaseDomain<TheTypesOfEvents> implements Dr
         id: drive_record_id,
         name: `资源盘/${name}`,
         avatar,
-        type: DriveTypes.AliyunResourceDrive,
+        type: DriveTypes.AlipanResourceOpenDrive,
         unique_id: String(_resource_drive_id),
         profile: JSON.stringify({
           avatar,
@@ -579,23 +579,21 @@ export class AlipanOpenClient extends BaseDomain<TheTypesOfEvents> implements Dr
     return Result.Ok(null);
   }
   async refresh_profile() {
+    console.log("[DOMAIN]alipan_open - refresh_profile");
     const a = await this.ensure_initialized();
     if (a.error) {
       return Result.Err(a.error);
     }
     const r = await this.request.post<{
-      drive_used_size: number;
-      drive_total_size: number;
-      default_drive_used_size: number;
-      album_drive_used_size: number;
-      share_album_drive_used_size: number;
-      note_drive_used_size: number;
-      sbox_drive_used_size: number;
-    }>(API_HOST + "/adrive/v1/user/driveCapacityDetails");
+      personal_space_info: {
+        used_size: number;
+        total_size: number;
+      };
+    }>(API_HOST + "/adrive/v1.0/user/getSpaceInfo");
     if (r.error) {
       return Result.Err(r.error);
     }
-    const { drive_total_size, drive_used_size } = r.data;
+    const { total_size: drive_total_size, used_size: drive_used_size } = r.data.personal_space_info;
     this.used_size = drive_used_size;
     this.total_size = drive_total_size;
     // if (!this.resource_drive_id) {
@@ -2616,36 +2614,24 @@ export class AlipanOpenClient extends BaseDomain<TheTypesOfEvents> implements Dr
     if (e.error) {
       return Result.Err(e.error.message);
     }
-    const url = "/business/v1.0/users/vip/info";
+    const url = "/business/v1.0/user/getVipInfo";
     const r = await this.request.post<{
       identity: string;
-      level: null;
-      icon: string;
-      mediumIcon: string;
-      status: string;
-      autoRenew: boolean;
-      vipCode: string;
-      vipList: {
-        name: string;
-        code: string;
-        promotedAt: number;
-        expire: number;
-      }[];
+      level: string;
+      expire: number;
     }>(API_HOST + url, {});
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    const { identity, vipList } = r.data;
+    const { level, identity, expire } = r.data;
     return Result.Ok({
       identity,
-      list: vipList.map((vip) => {
-        const { name, expire, promotedAt } = vip;
-        return {
-          name,
-          expired_at: expire,
-          started_at: promotedAt,
-        };
-      }),
+      list: [
+        {
+          name: identity,
+          expired_at: dayjs(expire * 1000).format("YYYY/MM/DD HH:mm:ss"),
+        },
+      ],
     });
   }
   on_transfer_failed(handler: Handler<TheTypesOfEvents[Events.TransferFailed]>) {

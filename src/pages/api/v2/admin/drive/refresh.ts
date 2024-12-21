@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
-import { Drive } from "@/domains/drive/index";
+import { Drive } from "@/domains/drive/v2";
 import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
 import { bytes_to_size } from "@/utils/index";
