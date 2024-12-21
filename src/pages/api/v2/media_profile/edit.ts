@@ -13,10 +13,11 @@ import { response_error_factory } from "@/utils/server";
 export default async function v2_media_profile_edit(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
   const { authorization } = req.headers;
-  const { id, name, alias, source_count, air_date } = req.body as Partial<{
+  const { id, name, alias, overview, source_count, air_date } = req.body as Partial<{
     id: string;
     name: string;
     alias: string;
+    overview: string;
     source_count: number;
     air_date: number;
   }>;
@@ -32,6 +33,7 @@ export default async function v2_media_profile_edit(req: NextApiRequest, res: Ne
     name: string;
     alias: string;
     air_date: string;
+    overview: string;
     source_count: number;
   }> = {};
   if (name) {
@@ -45,6 +47,9 @@ export default async function v2_media_profile_edit(req: NextApiRequest, res: Ne
   }
   if (air_date) {
     payload.air_date = dayjs(air_date).format("YYYY-MM-DD");
+  }
+  if (overview) {
+    payload.overview = overview;
   }
   if (Object.keys(payload).length === 0) {
     return e(Result.Err("没有更新字段"));

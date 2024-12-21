@@ -1,6 +1,6 @@
 {
   "name": "@family-flix/api",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "private": true,
   "scripts": {
     "dev": "tsx watch ./src/index.ts --port 3200",
@@ -24,6 +24,7 @@
     "chalk": "^5.2.0",
     "cheerio": "^1.0.0-rc.12",
     "cron": "^2.2.0",
+    "crypto-es": "^2.1.0",
     "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
     "execa": "^9.1.0",

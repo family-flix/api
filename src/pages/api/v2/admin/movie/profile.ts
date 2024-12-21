@@ -88,6 +88,7 @@ export default async function v2_admin_movie_profile(req: NextApiRequest, res: N
           },
         };
       }),
+      profile_id: profile.id,
     };
   })();
   return res.status(200).json({

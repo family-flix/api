@@ -1,5 +1,6 @@
 export enum TaskStatus {
   Running = 1,
+  /** 主动终止任务 */
   Paused,
   Finished,
 }

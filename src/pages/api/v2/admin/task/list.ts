@@ -50,13 +50,14 @@ export default async function v2_admin_task_list(req: NextApiRequest, res: NextA
     total: count,
     next_marker: result.next_marker,
     list: result.list.map((item) => {
-      const { id, type, desc, status, error, output_id, created, updated } = item;
+      const { id, type, desc, status, error, output_id, created, updated, percent } = item;
       return {
         id,
         desc,
         status,
         type,
         error,
+        percent,
         output_id,
         created,
         updated,

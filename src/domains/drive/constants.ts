@@ -11,4 +11,6 @@ export enum DriveTypes {
   XunleiDrive = 4,
   /** 本地文件 */
   LocalFolder = 5,
+  /** 阿里云盘/开放接口 */
+  AlipanOpenDrive = 6,
 }

@@ -31,6 +31,6 @@ export default async function v2_admin_task_pause(req: NextApiRequest, res: Next
     return e(Result.Err(job_res.error.message));
   }
   const job = job_res.data;
-  await job.pause();
+  await job.pause({ force: force === "1" });
   return res.status(200).json({ code: 0, msg: "中止索引任务成功", data: null });
 }

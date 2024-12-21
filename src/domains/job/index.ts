@@ -343,16 +343,18 @@ export class Job extends BaseDomain<TheTypesOfEvents> {
         status: force ? TaskStatus.Paused : undefined,
       },
     });
-    setTimeout(async () => {
-      const r = await this.store.prisma.async_task.update({
-        where: {
-          id: this.id,
-        },
-        data: {
-          status: TaskStatus.Finished,
-        },
-      });
-    }, 10 * 1000);
+    if (!force) {
+      setTimeout(async () => {
+        const r = await this.store.prisma.async_task.update({
+          where: {
+            id: this.id,
+          },
+          data: {
+            status: TaskStatus.Finished,
+          },
+        });
+      }, 10 * 1000);
+    }
     const output = await this.store.prisma.output.findUnique({
       where: {
         id: this.profile.output_id,

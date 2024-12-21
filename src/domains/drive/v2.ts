@@ -14,6 +14,7 @@ import { ModelQuery, DriveRecord, DataStore } from "@/domains/store/types";
 import { QuarkDriveClient } from "@/domains/clients/quark/index";
 import { LocalFileDriveClient } from "@/domains/clients/local/index";
 import { DriveClient } from "@/domains/clients/types";
+import { AlipanOpenClient } from "@/domains/clients/alipan_open";
 import { DatabaseDriveClient } from "@/domains/clients/database/index";
 import { User } from "@/domains/user/index";
 import { Result, resultify } from "@/domains/result/index";
@@ -78,6 +79,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         const client = r.data;
         return Result.Ok(client);
       }
+      if (type === DriveTypes.AlipanOpenDrive) {
+        const r = await AlipanOpenClient.Get({ unique_id: drive_record.unique_id, store });
+        if (r.error) {
+          return Result.Err(r.error.message);
+        }
+        const client = r.data;
+        return Result.Ok(client);
+      }
       // if (type === DriveTypes.Cloud189Drive) {
       //   const r = await Cloud189DriveClient.Get({ id, store });
       //   if (r.error) {
@@ -131,6 +140,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
   static async Create(body: { type: DriveTypes; payload: unknown; skip_ping?: boolean; user: User; store: DataStore }) {
     const { type, payload, user, store, skip_ping = false } = body;
     const created_drive_res = await (() => {
+      if (type === DriveTypes.AlipanOpenDrive) {
+        return AlipanOpenClient.Create({ payload, store, user });
+      }
       if (type === DriveTypes.AliyunBackupDrive) {
         return AliyunDriveClient.Create({ payload, skip_ping, store, user });
       }

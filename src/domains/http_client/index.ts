@@ -57,6 +57,9 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
         console.log("[DOMAIN]http_client - before fetch", payload);
       }
       const resp = await this.fetch<T>(payload);
+      if (this.debug) {
+        console.log("[DOMAIN]http_client - fetch resp", resp.data);
+      }
       return Result.Ok(resp.data);
     } catch (err) {
       const error = err as Error;
@@ -87,6 +90,9 @@ export class HttpClientCore extends BaseDomain<TheTypesOfEvents> {
         console.log("[DOMAIN]http_client - before fetch", payload);
       }
       const resp = await this.fetch<T>(payload);
+      if (this.debug) {
+        console.log("[DOMAIN]http_client - fetch resp", resp.data);
+      }
       return Result.Ok(resp.data);
     } catch (err) {
       const error = err as Error;

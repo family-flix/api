@@ -186,6 +186,9 @@ import { check_existing } from "./utils/fs";
 import v2_media_profile_set_name from "./pages/api/v2/media_profile/set_name";
 import v2_media_profile_series_profile from "./pages/api/v2/media_profile/series_profile";
 import v2_aliyundrive_refresh from "./pages/api/v2/aliyundrive/refresh";
+import v2_alipan_get_login_status from "./pages/api/v2/alipan/get_login_status";
+import v2_alipan_get_qrcode from "./pages/api/v2/alipan/get_qrcode";
+import v2_alipan_get_access_token from "./pages/api/v2/alipan/get_access_token";
 
 async function main() {
   const server = new Hono<{
@@ -788,6 +791,15 @@ async function main() {
   server.post("/api/v2/aliyundrive/refresh", async (c) => {
     return v2_aliyundrive_refresh(...(await compat_next(c)));
   });
+  server.post("/api/v2/alipan/get_qrcode", async (c) => {
+    return v2_alipan_get_qrcode(...(await compat_next(c)));
+  });
+  server.post("/api/v2/alipan/get_login_status", async (c) => {
+    return v2_alipan_get_login_status(...(await compat_next(c)));
+  });
+  server.post("/api/v2/alipan/get_access_token", async (c) => {
+    return v2_alipan_get_access_token(...(await compat_next(c)));
+  });
   server.get("/api/v2/wechat/proxy", async (c) => {
     return v2_wechat_proxy(...(await compat_next(c)));
   });
@@ -814,9 +826,9 @@ async function main() {
         return;
       }
       console.log("");
-      console.log("管理员账号");
-      console.log("email", email);
-      console.log("password", pwd);
+      console.log("管理员信息");
+      console.log("帐号", email);
+      console.log("密码", pwd);
       console.log("");
     }
   } catch (err) {

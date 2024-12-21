@@ -194,7 +194,7 @@ export interface DriveClient {
   /**
    * ------------------- 分享相关逻辑 end -------------------
    */
-  checked_in(): Promise<Result<unknown>>;
+  // checked_in(): Promise<Result<unknown>>;
   on_print(handler: (v: ArticleLineNode | ArticleSectionNode) => void): () => void;
 }
 
