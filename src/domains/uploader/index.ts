@@ -161,6 +161,22 @@ export class FileManage {
       return Promise.resolve(Result.Err(e.message));
     }
   }
+  download_base64(
+    content: string,
+    key: string,
+    options: Partial<{ is_fullpath: boolean }> = {}
+  ): Promise<Result<string>> {
+    const buffer = Buffer.from(content, "base64");
+    const filepath = options.is_fullpath ? key : path.join(this.root, key);
+    return new Promise((resolve) => {
+      writeFile(filepath, buffer, (err) => {
+        if (err) {
+          return resolve(Result.Err(err));
+        }
+        return resolve(Result.Ok(key));
+      });
+    });
+  }
   /** 删除本地文件 */
   async delete_file(key: string) {
     const filepath = path.join(this.root, key);

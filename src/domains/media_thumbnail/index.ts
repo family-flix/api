@@ -4,8 +4,8 @@
 import { FileManage } from "@/domains/uploader";
 import { DatabaseStore } from "@/domains/store";
 import { Drive } from "@/domains/drive/v2";
-import { r_id } from "@/utils/index";
 import { Result } from "@/domains/result/index";
+import { r_id } from "@/utils/index";
 
 import { format_number_with_3decimals } from "./utils";
 
@@ -36,9 +36,22 @@ export class MediaThumbnail {
     const key = `/poster/${filename}`;
     const r = await this.$upload.download(original_path, key);
     if (r.error) {
-      return Result.Ok({
-        img_path: key,
-      });
+      // return Result.Ok({
+      //   img_path: key,
+      // });
+      return Result.Err(r.error.message);
+    }
+    return Result.Ok({
+      img_path: key,
+    });
+  }
+  async update_base64(payload: { content: string; cur_time: number; filename: (time: string) => string }) {
+    const cur_time = format_number_with_3decimals(payload.cur_time);
+    const name = payload.filename(cur_time);
+    const key = `/thumbnail/${name}.png`;
+    const r = await this.$upload.download_base64(payload.content, key);
+    if (r.error) {
+      return Result.Err(r.error.message);
     }
     return Result.Ok({
       img_path: key,

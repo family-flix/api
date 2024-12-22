@@ -27,11 +27,13 @@ export default async function v2_wechat_history_update(
     source_id,
     current_time = 0,
     duration = 0,
+    thumbnail,
   } = req.body as Partial<{
     media_id: string;
     media_source_id: string;
     source_id: string;
     current_time: number;
+    thumbnail: string;
     duration: number;
     updated: string;
     created: string;
@@ -96,12 +98,13 @@ export default async function v2_wechat_history_update(
   }
   const drive = drive_res.data;
   function create_thumbnail(history_id: string) {
+    if (!thumbnail) {
+      return;
+    }
     thumbnail_creator
-      .snapshot_media({
-        file_id,
+      .update_base64({
+        content: thumbnail,
         cur_time: current_time,
-        drive,
-        store,
         filename(time: string) {
           return `${media_id}-${time}`;
         },
