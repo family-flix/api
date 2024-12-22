@@ -72,25 +72,20 @@
 
 云盘看视频最简单的方案。应用维护方管理云盘和视频；视频观看方在微信里点开链接直接观看，无需下载安装 App、没有广告。
 
-![管理后台首页](assets/admin-home.png)
+![管理后台首页](assets/admin_screenshot1.png)
 
 <!-- [![管理后台首页][assets/admin-home.png]](https://docs.family-flix.github.com)
 [![移动端1][assets/mobile-example1.png]](https://docs.family-flix.github.com)
 [![移动端2][assets/mobile-example2.png]](https://docs.family-flix.github.com) -->
 
-![移动端1](assets/mobile-example1.png)
-![移动端2](assets/mobile-example2.png)
+![移动端1](assets/mobile_screenshot1.png)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 👀 使用前须知
 
-该项目**「不提供影视剧资源」**，使用该项目前，你必须有
+该项目**「不提供影视剧资源」**，使用该项目前，你必须有「存储了影视剧文件的云盘（目前仅支持阿里云盘）」
 
-- 存储了影视剧文件的云盘（目前仅支持阿里云盘）
-- 下面两个二选一
-  - 要求外网可以访问，需要一台可以公网访问的服务器（性能要求低，视频播放直接走阿里云盘不占服务器流量）
-  - 只在家庭范围内使用，一台电脑即可
 
 ## 🖥️ 部署
 
@@ -109,15 +104,18 @@ docker run -d -v $(pwd):/output -p 3000:8000 --name flix ltaoo/family_flix:2.4.1
 docker start flix
 ```
 
-然后查看容器内终端输出，会显示管理员账户与密码以及网站访问地址
+然后查看容器内终端输出，会显示管理员账户与密码
 
 ```bash
 docker logs flix
+# 管理员
+# 帐号 admin@flix.com
+# 密码 <六位字母+数字>
 ```
 
-管理后台
+然后就可以访问管理后台进行操作了
 <br/>
-http://127.0.0.1:3000/admin/home/index
+管理后台地址 http://127.0.0.1:3000/admin/home/index
 
 > 如果忘记或没看到密码，可以通过终端修改密码
 
@@ -129,7 +127,7 @@ docker exec flix node /app/pwd.js new_pwd
 
 > 要求 `NodeJs` 版本大于 `18`。
 
-从 [Release](https://github.com/family-flix/api/releases) 下载 `family-flix@xxx.zip` 名字的压缩包,并解压至本地。
+从 [Release](https://github.com/family-flix/api/releases) 下载 `family_flix_xxx.zip` 名字的压缩包,并解压至本地。
 
 1. 安装依赖并初始化数据库
 
@@ -145,7 +143,7 @@ yarn prisma migrate deploy --schema ./prisma/schema.prisma
 yarn start
 ```
 
-首次启动会创建管理员账号，请注意终端信息。之后启动将不再展示管理员账号密码，如遗忘密码则只能修改密码。
+同样首次启动会创建管理员账号，请注意终端信息。之后启动将不再展示管理员账号密码，如遗忘密码则只能修改密码。
 
 访问地址同上
 
