@@ -1085,27 +1085,90 @@ export class AlipanOpenClient extends BaseDomain<TheTypesOfEvents> implements Dr
   /** 获取一个文件夹的完整路径（包括自身） */
   async fetch_parent_paths(file_id: string) {
     await this.ensure_initialized();
-    const url = "/adrive/v1/file/get_path";
-    const result = await this.request.post<{
-      items: {
-        name: string;
-        file_id: string;
-        parent_file_id: string;
-        type: "file" | "folder";
-      }[];
+    const url = "/adrive/v1.0/openFile/get";
+    const r = await this.request.post<{
+      trashed: boolean;
+      name: string;
+      thumbnail: null;
+      type: "folder" | "file";
+      category: null;
+      hidden: boolean;
+      status: string;
+      description: null;
+      meta: null;
+      url: null;
+      size: null;
+      starred: boolean;
+      location: null;
+      deleted: null;
+      channel: null;
+      user_tags: null;
+      mime_type: null;
+      parent_file_id: string;
+      drive_id: string;
+      file_id: string;
+      file_extension: null;
+      revision_id: string;
+      content_hash: null;
+      content_hash_name: null;
+      encrypt_mode: string;
+      domain_id: string;
+      download_url: null;
+      user_meta: null;
+      content_type: null;
+      created_at: string;
+      updated_at: string;
+      local_created_at: null;
+      local_modified_at: null;
+      trashed_at: null;
+      punish_flag: null;
+      id_path: string;
+      name_path: string;
+      video_media_metadata: null;
+      image_media_metadata: null;
+      video_preview_metadata: null;
+      streams_info: null;
+      play_cursor: null;
     }>(API_HOST + url, {
       drive_id: String(this.unique_id),
+      fields: "id_path,name_path",
       file_id,
     });
-    if (result.error) {
-      return Result.Err(result.error.message);
+    if (r.error) {
+      return Result.Err(r.error.message);
     }
-    return Result.Ok(result.data.items.reverse());
+    const { id_path, name_path } = r.data;
+    const paths: {
+      name: string;
+      file_id: string;
+      parent_file_id: string;
+      type: "file" | "folder";
+    }[] = [];
+    const id_segments = id_path.split("/");
+    const name_segments = name_path.split("/");
+    for (let i = 1; i < id_segments.length; i += 1) {
+      const id = id_segments[i];
+      const name = name_segments[i];
+      paths.push({
+        name,
+        type: (() => {
+          if (i < id_segments.length) {
+            return "folder";
+          }
+          return r.data.type;
+        })(),
+        file_id: id,
+        parent_file_id: (() => {
+          return id_segments[i - 1];
+        })(),
+      });
+    }
+    return Result.Ok(paths);
   }
   /** 根据名称判断一个文件是否已存在 */
   async existing(parent_file_id: string, file_name: string) {
     await this.ensure_initialized();
-    const url = "/adrive/v3/file/search";
+    const url = "/adrive/v1.0/openFile/search";
     const result = await this.request.post<{
       items: AlipanOpenFileResp[];
       next_marker: string;

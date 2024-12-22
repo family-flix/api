@@ -169,6 +169,14 @@ yarn build
 yarn start
 ``` -->
 
+## 开发
+
+### 打包镜像
+
+```bash
+docker build -t ltaoo/family_flix:2.5.0 .
+```
+
 ## API 文档
 
 - [管理后台 API](https://documenter.getpostman.com/view/7312751/2s93sXdEzv)
