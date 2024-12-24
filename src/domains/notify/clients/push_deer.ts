@@ -3,9 +3,9 @@
  * @doc https://www.pushdeer.com/official.html
  */
 import axios from "axios";
-import qs from "qs";
 
 import { Result } from "@/domains/result/index";
+import { query_stringify } from "@/utils/index";
 
 import { SendPayload } from "../types";
 
@@ -27,17 +27,17 @@ export async function pushdeer_send(body: SendPayload, token: string) {
   const search = (() => {
     if (text) {
       query.text = text;
-      return qs.stringify(query);
+      return query_stringify(query);
     }
     if (image) {
       query.text = image;
       query.type = "image";
-      return qs.stringify(query);
+      return query_stringify(query);
     }
     query.text = title;
     query.desp = markdown;
     query.type = "markdown";
-    return qs.stringify(query);
+    return query_stringify(query);
   })();
   // console.log('[DOMAIN]notify/clients/push_deer', search);
   try {
