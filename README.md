@@ -93,9 +93,9 @@
 
 ```bash
 # Windows
-docker run -d -v ${PWD}:/output -p 3000:8000 --name flix ltaoo/family_flix:2.4.1
+docker run -d -v ${PWD}:/output -p 3000:8000 --name flix ltaoo/family_flix:2.5.0
 # linux
-docker run -d -v $(pwd):/output -p 3000:8000 --name flix ltaoo/family_flix:2.4.1
+docker run -d -v $(pwd):/output -p 3000:8000 --name flix ltaoo/family_flix:2.5.0
 ```
 
 第一次启动必然会因为栈溢出失败，当容器终止后，重新启动容器即可。
@@ -171,9 +171,7 @@ yarn start
 
 ### 打包镜像
 
-```bash
-docker build -t ltaoo/family_flix:2.5.0 .
-```
+可以参考该 `action` https://github.com/family-flix/release/blob/main/.github/workflows/ci.yaml
 
 ## API 文档
 
