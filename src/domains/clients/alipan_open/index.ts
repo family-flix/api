@@ -19,7 +19,7 @@ import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource";
 import { build_drive_file, run } from "@/domains/clients/utils";
 import { DriveClient, GenreDriveFile } from "@/domains/clients/types";
 import { Result, resultify } from "@/domains/result/index";
-import { AlipanRefreshTokenProvider } from "~/src/domains/alipan_token_provider";
+import { AlipanRefreshTokenProvider } from "@/domains/alipan_token_provider";
 import { parseJSONStr, query_stringify, r_id, sleep } from "@/utils/index";
 import { MediaResolutionTypes } from "@/constants/index";
 
@@ -454,6 +454,9 @@ export class AlipanOpenClient extends BaseDomain<TheTypesOfEvents> implements Dr
           // console.error(body, headers);
           console.error("POST request failed, because", response?.data, response?.data?.code);
           // console.log(response, message);
+          // if (response?.data?.code === "") {
+          //   await this.refresh_access_token();
+          // }
           if (response?.status === 401) {
             await this.refresh_access_token();
           }

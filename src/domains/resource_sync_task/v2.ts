@@ -10,7 +10,7 @@ import { Folder } from "@/domains/folder/index";
 import { Article, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@/domains/article/index";
 import { User } from "@/domains/user/index";
 import { DatabaseStore } from "@/domains/store/index";
-import { Drive } from "@/domains/drive/index";
+import { Drive } from "@/domains/drive/v2";
 import { DriveClient } from "@/domains/clients/types";
 import { Job, TaskTypes } from "@/domains/job";
 import { Application } from "@/domains/application";
@@ -19,6 +19,8 @@ import { DataStore, ResourceSyncTaskRecord } from "@/domains/store/types";
 import { Result } from "@/domains/result/index";
 import { is_video_file, r_id, sleep } from "@/utils/index";
 import { FileType, ResourceSyncTaskStatus } from "@/constants/index";
+import { AliyunDriveClient } from "@/domains/clients/alipan";
+import { AlipanOpenClient } from "@/domains/clients/alipan_open";
 
 enum Events {
   /** 新增文件 */
@@ -100,6 +102,16 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     // if (drive.profile.root_folder_id === null || drive.profile.root_folder_name === null) {
     //   return Result.Err("请先设置云盘索引根目录");
     // }
+    // console.log("[DOMAIN]clients/aliyun_resource - GET", url);
+    const r = await Drive.Get({ id, user, store });
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    const client = r.data.client;
+    if (!(client instanceof AliyunDriveClient) || !(client instanceof AlipanOpenClient)) {
+      return Result.Err("非阿里云盘");
+    }
+    await client.ensure_initialized();
     const r2 = await AliyunShareResourceClient.Get({
       id: drive_id,
       url,
@@ -133,7 +145,7 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         store,
         wait_complete,
         assets,
-        drive_client: r2.data.client,
+        drive_client: client,
         resource_client: r2.data,
         on_file,
         on_print,
@@ -173,6 +185,9 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     if (!drive.has_root_folder()) {
       return Result.Err("请先为云盘设置索引根目录");
     }
+    if (!(drive.client instanceof AliyunDriveClient)) {
+      return Result.Err("暂时只支持阿里云盘");
+    }
     const exiting_tmp_file = await store.prisma.tmp_file.findFirst({
       where: {
         name: file_name,
@@ -209,6 +224,10 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
     job.output.write_line(["开始转存"]);
     async function run(resource: { name: string; file_id: string; url: string; code?: string | null }) {
       const { url, code, file_id, name } = resource;
+      if (!(drive.client instanceof AliyunDriveClient)) {
+        job.finish();
+        return Result.Err("暂时只支持阿里云盘");
+      }
       drive.client.on_transfer_failed((error) => {
         job.output.write_line(["转存发生错误", error.message]);
       });

@@ -7,7 +7,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { store, BaseApiResp } from "@/store/index";
 import { User } from "@/domains/user/index";
 import { Result } from "@/domains/result";
-import { AlipanRefreshTokenProvider } from "~/src/domains/alipan_token_provider";
+import { AlipanRefreshTokenProvider } from "@/domains/alipan_token_provider";
 import { response_error_factory } from "@/utils/server";
 
 export default async function v2_alipan_get_qrcode(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
@@ -23,7 +23,7 @@ export default async function v2_alipan_get_qrcode(req: NextApiRequest, res: Nex
   if (r.error) {
     return e(r);
   }
-//   console.log("[API]v2/alipan/get_qrcode", r.data);
+  //   console.log("[API]v2/alipan/get_qrcode", r.data);
   return res.status(200).json({
     code: 0,
     msg: "",

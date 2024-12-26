@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
 
-import { data, id } from "~/mock/gong_su";
-import { data as updated_data } from "~/mock/gong_su.updated";
+import { data, id } from "@mock/gong_su";
+import { data as updated_data } from "@mock/gong_su.updated";
 import { FolderDiffer } from "@/domains/folder_differ";
 import { Folder } from "@/domains/folder";
 import { MockFileClient } from "@/domains/clients/json";

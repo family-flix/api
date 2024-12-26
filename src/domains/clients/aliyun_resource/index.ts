@@ -8,11 +8,25 @@ import { Article, ArticleLineNode, ArticleSectionNode, ArticleTextNode } from "@
 import { AliyunDriveClient } from "@/domains/clients/alipan";
 import { DataStore } from "@/domains/store/types";
 import { User } from "@/domains/user";
-import { AliyunDriveFileResp } from "@/domains/clients/alipan/types";
 import { DriveClient } from "@/domains/clients/types";
 import { build_drive_file, run } from "@/domains/clients/utils";
+import { AlipanOpenClient } from "@/domains/clients/alipan_open";
 import { Result } from "@/domains/result/index";
+import { Drive } from "@/domains/drive/v2";
 import { sleep } from "@/utils";
+
+import {
+  create_share_link,
+  download_file,
+  fetch_file,
+  get_share_by_anonymous,
+  get_share_token,
+  list_by_share,
+  query_task_status,
+  search_files,
+  transfer_file_from_resource,
+  transfer_file_from_resource_batch,
+} from "./services";
 
 const API_HOST = "https://api.aliyundrive.com";
 const DEFAULT_ROOT_FOLDER_ID = "root";
@@ -33,7 +47,8 @@ type AliyunShareResourceClientProps = {
   id: string;
   unique_id: string;
   code: string | null;
-  client: AliyunDriveClient;
+  // root_folder: { id: string; name: string } | null;
+  // client: AliyunDriveClient | AlipanOpenClient;
   store: DataStore;
 };
 type AliyunShareResourceClientState = {};
@@ -47,19 +62,8 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
     user?: User;
     store: DataStore;
   }) {
-    const { id, unique_id, url, code = null, user, store } = options;
-    // console.log("[DOMAIN]clients/aliyun_resource - GET", url);
-    const r = await AliyunDriveClient.Get({
-      id,
-      unique_id,
-      user,
-      store,
-    });
-    if (r.error) {
-      return Result.Err(r.error.message);
-    }
-    const client = r.data;
-    await client.ensure_initialized();
+    const { url, code = null, user, store } = options;
+
     const r1 = AliyunShareResourceClient.GetShareId(url);
     if (r1.error) {
       return Result.Err(r1.error.message);
@@ -68,7 +72,6 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       id: r1.data,
       unique_id: url,
       code,
-      client,
       store,
     });
     return Result.Ok(client2);
@@ -98,37 +101,30 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
   size = 10;
 
   $store: DataStore;
-  client: AliyunDriveClient;
+  // client: AliyunDriveClient | AlipanOpenClient;
 
-  get request() {
-    return {
-      get: this.client.request.get.bind(this.client),
-      post: this.client.request.post.bind(this.client),
-    };
-  }
-  get ensure_initialized() {
-    return this.client.ensure_initialized.bind(this.client);
-  }
+  // get ensure_initialized() {
+  //   return this.client.ensure_initialized.bind(this.client);
+  // }
 
   constructor(props: Partial<{ _name: string }> & AliyunShareResourceClientProps) {
     super(props);
 
-    const { id, unique_id, code, client, store } = props;
+    const { id, unique_id, code, store } = props;
 
     this.id = id;
     this.unique_id = unique_id;
-    this.root_folder = client.root_folder;
+    // this.root_folder = root_folder;
     this.url = unique_id;
     this.code = code;
-    this.client = client;
+    // this.client = client;
     this.$store = store;
   }
   /**
    * 获取分享详情（初始化）
    */
   async fetch_share_profile() {
-    // console.log("[DOMAIN]fetch_share_profile", url, options);
-    // const { code, force = false } = options;
+    // console.log("[DOMAIN]clients/aliyun_resource - fetch_share_profile", this.url, this.code);
     const url = this.url;
     const code = this.code;
     const r = AliyunShareResourceClient.GetShareId(url);
@@ -145,33 +141,15 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
         token: this.token,
       });
     }
-    await this.ensure_initialized();
-    const r1 = await this.request.post<{
-      creator_id: string;
-      share_name: string;
-      share_title: string;
-      file_infos: {
-        file_id: string;
-        file_name: string;
-        type: "folder" | "file";
-      }[];
-    }>(API_HOST + "/adrive/v2/share_link/get_share_by_anonymous", {
-      share_id,
-      code,
-    });
+    // await this.ensure_initialized();
+    console.log("[DOMAIN]clients/aliyun_resource - before get_share_by_anonymous");
+    const r1 = await get_share_by_anonymous.run({ share_id, code });
     if (r1.error) {
       return Result.Err(r1.error);
     }
     const token_r = await (async () => {
       if (!this.code) {
-        const r2 = await this.request.post<{
-          share_token: string;
-          expire_time: string;
-          expires_in: number;
-        }>(API_HOST + "/v2/share_link/get_share_token", {
-          share_id,
-          share_pwd: code,
-        });
+        const r2 = await get_share_token.run({ share_id, code });
         if (r2.error) {
           return Result.Err(r2.error);
         }
@@ -186,6 +164,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
         token: this.token,
       });
     })();
+    console.log("[DOMAIN]clients/aliyun_resource - after get_share_token");
     if (token_r.error) {
       return Result.Err(token_r.error);
     }
@@ -213,28 +192,17 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       sort: { field: "name" | "updated_at" | "size"; order: "asc" | "desc" }[];
     }> = {}
   ) {
-    const { marker, page_size = 20 } = options;
-    await this.fetch_share_profile();
-    const r3 = await this.request.post<{
-      items: AliyunDriveFileResp[];
-      next_marker: string;
-    }>(
-      API_HOST + "/adrive/v2/file/list_by_share",
-      {
-        image_thumbnail_process: "image/resize,w_256/format,jpeg",
-        image_url_process: "image/resize,w_1920/format,jpeg/interlace,1",
-        limit: page_size,
-        order_by: "name",
-        order_direction: "DESC",
-        parent_file_id: file_id,
-        marker,
-        share_id: this.id,
-        video_thumbnail_process: "video/snapshot,t_1000,f_jpg,ar_auto,w_256",
-      },
-      {
-        "x-share-token": this.token,
-      }
-    );
+    const r = await this.fetch_share_profile();
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    console.log("[DOMAIN]clients/aliyun_resource - before list_by_share", this.id, this.token);
+    const r3 = await list_by_share.run({
+      file_id,
+      share_id: this.id,
+      token: this.token,
+      options,
+    });
     if (r3.error) {
       return Result.Err(r3.error.message);
     }
@@ -255,45 +223,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
   }
   async fetch_file(file_id: string) {
     await this.fetch_share_profile();
-    const r = await this.request.post<{
-      drive_id: string;
-      domain_id: string;
-      file_id: string;
-      share_id: string;
-      name: string;
-      type: string;
-      created_at: string;
-      updated_at: string;
-      file_extension: string;
-      mime_type: string;
-      mime_extension: string;
-      size: number;
-      parent_file_id: string;
-      thumbnail: string;
-      category: string;
-      video_media_metadata: {
-        width: number;
-        height: number;
-        duration: string;
-      };
-      punish_flag: number;
-      revision_id: string;
-      ex_fields_info: {
-        video_meta_processed: string;
-      };
-    }>(
-      API_HOST + "/adrive/v2/file/get_by_share",
-      {
-        drive_id: "",
-        fields: "*",
-        file_id,
-        image_thumbnail_process: "image/resize,w_1920/format,jpeg",
-        share_id: this.id,
-      },
-      {
-        "x-share-token": this.token,
-      }
-    );
+    const r = await fetch_file.run({ file_id, share_id: this.id, token: this.token });
     if (r.error) {
       return Result.Err(r.error.message);
     }
@@ -317,20 +247,12 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
   ) {
     const { keyword, page_size = 20 } = options;
     await this.fetch_share_profile();
-    const r3 = await this.request.post<{
-      items: AliyunDriveFileResp[];
-    }>(
-      API_HOST + "/recommend/v1/shareLink/search",
-      {
-        keyword,
-        limit: page_size,
-        order_by: "name DESC",
-        share_id: this.id,
-      },
-      {
-        "x-share-token": this.token,
-      }
-    );
+    const r3 = await search_files.run({
+      keyword,
+      page_size,
+      share_id: this.id,
+      token: this.token,
+    });
     if (r3.error) {
       return Result.Err(r3.error.message);
     }
@@ -359,24 +281,19 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
     /** 转存到网盘指定的文件夹 id */
     target_file_id?: string;
   }) {
-    await this.ensure_initialized();
+    // await this.ensure_initialized();
     await this.fetch_share_profile();
     const { file_id, target_file_id = this.root_folder?.id } = options;
     if (!target_file_id) {
       return Result.Err("请指定转存到云盘哪个文件夹");
     }
-    const r2 = await this.request.post(
-      API_HOST + "/v2/file/copy",
-      {
-        share_id: this.id,
-        file_id,
-        to_parent_file_id: target_file_id,
-        to_drive_id: String(this.unique_id),
-      },
-      {
-        "x-share-token": this.token,
-      }
-    );
+    const r2 = await transfer_file_from_resource.run({
+      file_id,
+      target_file_id,
+      unique_id: this.unique_id,
+      share_id: this.id,
+      token: this.token,
+    });
     if (r2.error) {
       return Result.Err(r2.error);
     }
@@ -391,9 +308,12 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
     /** 转存到网盘指定的文件夹 id */
     target_file_id?: string;
   }) {
-    await this.ensure_initialized();
+    if (!options.target_file_id) {
+      return Result.Err("请指定要转存到哪个文件夹");
+    }
+    // await this.ensure_initialized();
     await this.fetch_share_profile();
-    const { files, target_file_id = this.root_folder?.id } = options;
+    const { files, target_file_id } = options;
     // const { share_id, share_title, share_name, files } = r1.data;
     // this.emit(Events.Print, Article.build_line(["获取分享资源详情成功，共有", String(files.length), "个文件"]));
     // console.log("save_multiple_shared_files", share_files);
@@ -418,22 +338,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       }),
       resource: "file",
     };
-    const r2 = await this.request.post<{
-      responses: {
-        body: {
-          code: string;
-          message: string;
-          async_task_id?: string;
-          file_id: string;
-          domain_id: string;
-        };
-        // 其实是 index
-        id: string;
-        status: number;
-      }[];
-    }>(API_HOST + "/adrive/v2/batch", body, {
-      "x-share-token": this.token,
-    });
+    const r2 = await transfer_file_from_resource_batch.run(body, { token: this.token });
     if (r2.error) {
       this.emit(Events.TransferFailed, r2.error);
       return Result.Err(r2.error);
@@ -561,23 +466,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       }),
       resource: "file",
     };
-    const r2 = await this.request.post<{
-      responses: {
-        body: {
-          code: string;
-          message: string;
-          total_process: number;
-          state: "Running" | "PartialSucceed" | "Succeed";
-          async_task_id: string;
-          consumed_process: number;
-          status: "Running" | "PartialSucceed" | "Succeed";
-        };
-        id: string;
-        status: number;
-      }[];
-    }>(API_HOST + "/adrive/v2/batch", body, {
-      // "x-share-token": this.share_token[share_id].token,
-    });
+    const r2 = await query_task_status.run(body);
     if (r2.error) {
       return Result.Err(r2.error);
     }
@@ -602,7 +491,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
   }
   /** 分享文件 */
   async create_shared_resource(file_ids: string[]) {
-    await this.ensure_initialized();
+    // await this.ensure_initialized();
     const body = {
       expiration: dayjs().add(1, "day").toISOString(),
       sync_to_homepage: false,
@@ -611,12 +500,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
       file_id_list: file_ids,
     };
     // console.log("[DOMAIN]AliyunDrive - create_shared_resource", body);
-    const r = await this.request.post<{
-      share_url: string;
-      file_id: string;
-      display_name: string;
-      file_id_list: string[];
-    }>(API_HOST + "/adrive/v2/share_link/create", body);
+    const r = await create_share_link.run(body);
     if (r.error) {
       // console.log("[DOMAIN]AliyunDrive - create_shared_resource failed", r.error.message);
       return Result.Err(r.error);
@@ -653,21 +537,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
   }
   async download(file_id: string) {
     await this.fetch_share_profile();
-    const r2 = await this.request.post<{
-      download_url: string;
-      url: string;
-      thumbnail: string;
-    }>(
-      API_HOST + "/v2/file/get_share_link_download_url",
-      {
-        file_id,
-        // drive_id: String(this.unique_id),
-        share_id: this.id,
-      },
-      {
-        "x-share-token": this.token,
-      }
-    );
+    const r2 = await download_file.run({ file_id, share_id: this.id, token: this.token });
     if (r2.error) {
       return Result.Err(r2.error);
     }

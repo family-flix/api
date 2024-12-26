@@ -4,7 +4,7 @@
 import { describe, test, expect } from "vitest";
 
 // import { fetch_files_factory } from "@/domains/walker/utils";
-import { data, id } from "~/mock/da_song_shao_nian_zhi2";
+import { data, id } from "@mock/da_song_shao_nian_zhi2";
 import { data as updated_data } from "~/mock1/aaa";
 // import { data as updated_data } from "~/mock/da_song_shao_nian_zhi2.updated";
 import { FolderDiffer } from "@/domains/folder_differ";

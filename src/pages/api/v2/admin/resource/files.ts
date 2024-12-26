@@ -57,11 +57,11 @@ export default async function v2_admin_resource_files(req: NextApiRequest, res: 
   if (!url) {
     return e(Result.Err("缺少资源链接"));
   }
-  const id_r = url.match(/\/s\/([0-9a-zA-Z]{11})/);
+  const id_r = AliyunShareResourceClient.GetShareId(url);
   if (!id_r) {
     return e(Result.Err("不是合法的资源链接"));
   }
-  const share_id = id_r[1];
+  const share_id = id_r.data;
   const r = await get_drive_client({ user, store });
   if (r.error) {
     return e(Result.Err(r.error.message));
