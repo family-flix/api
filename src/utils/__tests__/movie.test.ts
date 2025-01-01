@@ -185,10 +185,9 @@ describe("电影", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "十二怒汉",
-      original_name: "",
+      original_name: "12.Angry.Men",
       season: "",
-      // @todo 电视剧和电影合在一起解析，这种就很难避免
-      episode: "E12",
+      episode: "",
     });
   });
   test("007：大破天幕杀机 (2012) DV 2160p DTSHD-MA.mkv", () => {

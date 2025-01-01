@@ -155,6 +155,7 @@ export default async function v2_admin_parsed_media_list(
             },
           };
         }),
+        source_count: _count.parsed_sources,
         has_more_sources: parsed_sources.length < _count.parsed_sources,
       };
     }),

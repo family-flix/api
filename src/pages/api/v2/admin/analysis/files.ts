@@ -42,7 +42,7 @@ export default async function v2_admin_analysis_files(req: NextApiRequest, res: 
     return e(Result.Err(drive_res.error.message));
   }
   const drive = drive_res.data;
-  if (!target_folders && !drive.has_root_folder()) {
+  if (!drive.has_root_folder()) {
     return e(Result.Err("请先设置索引目录", 30001));
   }
   const job_res = await Job.New({

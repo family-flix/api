@@ -746,6 +746,9 @@ export class FolderWalker extends BaseDomain<TheTypesOfEvents> {
                   text: "error3",
                 }),
                 new ArticleTextNode({
+                  text: "/",
+                }),
+                new ArticleTextNode({
                   text: name,
                 }),
                 new ArticleTextNode({

@@ -189,6 +189,8 @@ import v2_aliyundrive_refresh from "./pages/api/v2/aliyundrive/refresh";
 import v2_alipan_get_login_status from "./pages/api/v2/alipan/get_login_status";
 import v2_alipan_get_qrcode from "./pages/api/v2/alipan/get_qrcode";
 import v2_alipan_get_access_token from "./pages/api/v2/alipan/get_access_token";
+import v2_local_file_list from "./pages/api/v2/drive/local_files";
+import v2_admin_parsed_media_set_profile_after_create from "./pages/api/v2/admin/parsed_media/set_profile_after_create";
 
 async function main() {
   const server = new Hono<{
@@ -476,6 +478,9 @@ async function main() {
   server.post("/api/v2/admin/parsed_media/set_profile", async (c) => {
     return v2_admin_parsed_media_set_profile(...(await compat_next(c)));
   });
+  server.post("/api/v2/admin/parsed_media/set_profile_after_create", async (c) => {
+    return v2_admin_parsed_media_set_profile_after_create(...(await compat_next(c)));
+  });
   server.post("/api/v2/admin/parsed_media/set_profile_in_file_id", async (c) => {
     return v2_admin_parsed_media_set_profile_in_file_id(...(await compat_next(c)));
   });
@@ -616,6 +621,9 @@ async function main() {
   });
   server.post("/api/v2/drive/rename_files", async (c) => {
     return v2_drive_rename_files(...(await compat_next(c)));
+  });
+  server.post("/api/v2/local_file/list", async (c) => {
+    return v2_local_file_list(...(await compat_next(c)));
   });
   server.post("/api/v2/media_profile/list", async (c) => {
     return v2_media_profile_list(...(await compat_next(c)));

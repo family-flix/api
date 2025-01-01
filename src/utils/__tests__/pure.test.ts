@@ -129,6 +129,26 @@ describe("番外", () => {
       episode: "E10",
     });
   });
+  test("粤语10.mp4", () => {
+    const name = "粤语10.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E10",
+    });
+  });
+  test("粤语E10.mp4", () => {
+    const name = "粤语E10.mp4";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E10",
+    });
+  });
   test("7.mp4", () => {
     const name = "7.mp4";
     const result = parse_filename_for_video(name);

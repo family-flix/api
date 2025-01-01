@@ -53,7 +53,7 @@ function fix_TMDB_image_path<T extends TMDBImagePaths>(values: T): FixedTMDBImag
   return result as FixedTMDBImagePaths<T>;
 }
 
-const request = request_factory({
+export const request = request_factory({
   hostnames: {
     prod: "https://proxy.f2x.fun/api/tmdb/3",
     // prod: "https://api.themoviedb.org/3",

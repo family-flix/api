@@ -27,6 +27,7 @@ import {
   fetch_persons_of_season_process,
   fetch_episode_profile_process,
   fetch_movie_profile_process,
+  request,
 } from "./services";
 
 export class TMDBClient {
@@ -38,16 +39,19 @@ export class TMDBClient {
 
   constructor(
     options: Partial<{
-      /** tmdb api key */
+      /** tmdb 接口 token */
       token: string;
+      /** tmdb 代理地址 */
+      proxy_url: string;
       /** 语言 */
       language: Language;
     }>
   ) {
-    const { token, language = "zh-CN" } = options;
+    const { token, proxy_url, language = "zh-CN" } = options;
     if (token === undefined) {
       throw new Error("请传入 TMDB_TOKEN");
     }
+    // request.setHostname(proxy_url);
     this.options = {
       token,
       language,
@@ -76,6 +80,9 @@ export class TMDBClient {
       api_key: token,
       language: language || this.options.language,
     });
+    if (r.error) {
+      return r;
+    }
     this.tv_cache[unique_key] = r;
     return r;
   }

@@ -196,7 +196,7 @@ export class AliyunShareResourceClient extends BaseDomain<TheTypesOfEvents> impl
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    console.log("[DOMAIN]clients/aliyun_resource - before list_by_share", this.id, this.token);
+    // console.log("[DOMAIN]clients/aliyun_resource - before list_by_share", this.id, this.token);
     const r3 = await list_by_share.run({
       file_id,
       share_id: this.id,

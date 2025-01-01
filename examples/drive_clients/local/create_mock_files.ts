@@ -4,6 +4,7 @@
  */
 import path from "path";
 import os from "os";
+import env from "dotenv";
 
 import { Application } from "@/domains/application/index";
 import { Folder } from "@/domains/folder/index";
@@ -15,6 +16,7 @@ import { AliyunShareResourceClient } from "@/domains/clients/aliyun_resource/ind
 import { is_img_file, is_nfo_file, is_subtitle_file, is_video_file } from "@/utils/index";
 import { Drive } from "@/domains/drive/v2";
 
+env.config();
 const template_mp4_video = path.resolve(process.cwd(), "public/template_video.mp4");
 const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mkv");
 // const template_img = path.resolve(process.cwd(), "public/template_img.jpg");
@@ -33,25 +35,31 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     root_path: OUTPUT_PATH,
   });
   const store = app.store;
-  const dir = path.resolve(os.homedir(), "Documents/MediaData/mock");
+  const dir = path.resolve(os.homedir(), "Documents/FakeLocalDrive");
   const manage = new FileManage({ root: dir });
-  const r = await LocalFileDriveClient.Get({
-    unique_id: manage.root,
-    store,
-  });
-  if (r.error) {
-    console.log("r.error", r.error.message);
-    return;
-  }
-  const client = r.data;
+  // const r = await LocalFileDriveClient.Get({
+  //   unique_id: manage.root,
+  //   store,
+  // });
+  // if (r.error) {
+  //   console.log("r.error", r.error.message);
+  //   return;
+  // }
+  // const client = r.data;
+  const client = new LocalFileDriveClient({ unique_id: manage.root });
   // const rr = await AliyunDriveClient.Get({ unique_id: "2243978430", store });
   // if (rr.error) {
   //   console.log(rr.error.message);
   //   return;
   // }
   // const client1 = rr.data;
+  const drive_record = await store.prisma.drive.findFirst({});
+  if (!drive_record) {
+    console.log("请先至少添加一个云盘");
+    return;
+  }
   const r4 = await Drive.Get({
-    unique_id: "925747323",
+    unique_id: drive_record.unique_id,
     store,
   });
   if (r4.error) {
@@ -76,12 +84,13 @@ const template_mkv_video = path.resolve(process.cwd(), "public/template_video.mk
     /** 饥饿游戏 */
     jieyouxi: "https://www.alipan.com/s/So5yhYBxTyJ",
     /** 闪灵 */
-    shanling: 'https://www.aliyundrive.com/s/iScJ55YBEjy',
+    shanling: "https://www.aliyundrive.com/s/iScJ55YBEjy",
     /** 哆啦A梦 */
     duolaiameng: "https://www.aliyundrive.com/s/EY63JTaMUZ1",
-    tangchaoguishilu: 'https://www.aliyundrive.com/s/EaYtjKv4B6G',
+    tangchaoguishilu: "https://www.aliyundrive.com/s/EaYtjKv4B6G",
+    yingyuliuji: "https://www.aliyundrive.com/s/6dW7LuF8BUw",
   };
-  const url = SHARE_FOLDER.tangchaoguishilu;
+  const url = SHARE_FOLDER.yingyuliuji;
   const r2 = await AliyunShareResourceClient.Get({ unique_id: drive.profile.drive_id, url, store });
   if (r2.error) {
     console.log("r2.error", r2.error.message, drive.profile.drive_id);

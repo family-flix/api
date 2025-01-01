@@ -1,3 +1,4 @@
+import { FilenameRules } from "./filename_rules";
 import { video_file_type_regexp, remove_str, chinese_num_to_num, padding_zero, season_to_num } from "./index";
 import { get_first_letter } from "./pinyin";
 
@@ -45,7 +46,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("lone")) {
+    if (!filename.includes("仔细阅读")) {
       return;
     }
     // console.log(...args);
@@ -64,9 +65,10 @@ export function parse_filename_for_video(
   const k = has_key_factory(VIDEO_ALL_KEYS);
   let original_filename = filename;
   // 做一些预处理
-  for (let i = 0; i < extra_rules.length; i += 1) {
+  const rules = extra_rules.concat(...FilenameRules);
+  for (let i = 0; i < rules.length; i += 1) {
     (() => {
-      const rule = extra_rules[i];
+      const rule = rules[i];
       const { replace } = rule;
       try {
         // log("before apply parse", replace[0]);
@@ -391,6 +393,21 @@ export function parse_filename_for_video(
       regexp:
         /[英国國粤日][语語配](中字|繁字|无字|内嵌){0,1}版{0,1}|繁体中字|双语中字|中英双字|[国粤韩英日中德]{1,3}[双三][语轨]|双语源码|上海话/,
       placeholder: ".",
+      after(matched_content) {
+        if (!matched_content) {
+          return;
+        }
+        const r1 = new RegExp(`${matched_content}[eE]{0,1}[0-9]{1,}$`);
+        const m1 = cur_filename.match(r1);
+        if (m1) {
+          return;
+        }
+        const r2 = new RegExp(`[^^]${matched_content}[^0-9]{0,}`);
+        const m2 = cur_filename.match(r2);
+        if (!m2) {
+          return { skip: true };
+        }
+      },
     },
     {
       regexp: /中字|双字/,
@@ -964,15 +981,15 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
-      regexp: /[eE][pP]{0,1}[0-9]{1,}-[eE][0-9]{1,}/,
+      regexp: /\b[eE][pP]{0,1}[0-9]{1,}-[eE][0-9]{1,}/,
     },
     {
       key: k("episode"),
-      regexp: /[eE][pP]{0,1}[0-9]{1,}-[0-9]{1,}/,
+      regexp: /\b[eE][pP]{0,1}[0-9]{1,}-[0-9]{1,}/,
     },
     {
       key: k("episode"),
-      regexp: /[eE][pP]{0,1}[0-9]{1,}[eE][0-9]{1,}/,
+      regexp: /\b[eE][pP]{0,1}[0-9]{1,}[eE][0-9]{1,}/,
     },
     {
       key: k("episode"),
@@ -1295,7 +1312,7 @@ export function parse_filename_for_video(
     },
     {
       key: k("episode"),
-      regexp: /([eE][pP]{0,1}[0-9]{1,})/,
+      regexp: /\b([eE][pP]{0,1}[0-9]{1,})/,
     },
     // {
     //   key: k("episode"),

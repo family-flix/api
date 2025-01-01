@@ -21,8 +21,7 @@ describe("影视剧2", () => {
     const result = parse_filename_for_video(name);
     expect(result).toStrictEqual({
       name: "",
-      // @todo 这个没得办法，有些「排行榜」前面会加 10. 这样表示第几，必须去掉
-      original_name: "Broke.Girls",
+      original_name: "2.Broke.Girls",
       season: "",
       episode: "",
     });

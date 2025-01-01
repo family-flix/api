@@ -9,11 +9,11 @@ describe("删除文件夹及子孙文件夹", async () => {
   it("1", async () => {
     await store.prisma.file.deleteMany({});
     const user_res = await (async () => {
-      const exiting_res = await User.Existing({ email: "litaowork@aliyun.com" }, store);
+      const exiting_res = await User.Existing({ email: "xxx@flix.com" }, store);
       if (exiting_res.data) {
         return Result.Ok(exiting_res.data);
       }
-      return User.Create({ email: "litaowork@aliyun.com", password: "Test123456." }, store);
+      return User.Create({ email: "xxx@flix.com", password: "Test123456." }, store);
     })();
     expect(user_res.error).toBe(null);
     if (user_res.error) {
@@ -31,8 +31,8 @@ describe("删除文件夹及子孙文件夹", async () => {
             app_id: "123",
             drive_id: 3123,
             device_id: "123",
-            nick_name: "litao",
-            user_name: "litao",
+            nick_name: "tttt",
+            user_name: "tttt",
             avatar: "",
             refresh_token: "world",
             access_token: "hello",
