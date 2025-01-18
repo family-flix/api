@@ -55,8 +55,8 @@ function fix_TMDB_image_path<T extends TMDBImagePaths>(values: T): FixedTMDBImag
 
 export const request = request_factory({
   hostnames: {
-    prod: "https://proxy.f2x.fun/api/tmdb/3",
-    // prod: "https://api.themoviedb.org/3",
+    // 其实不会用这个，是最后的兜底
+    prod: "https://api.themoviedb.org/3",
   },
 });
 
@@ -240,7 +240,7 @@ export function fetch_tv_profile(
     language?: Language;
   }
 ) {
-  console.log("[SERVICE]/media_profile/tmdb_v2/service - fetch_tv_profile");
+  console.log("[SERVICE]/media_profile/tmdb_v2/service - fetch_tv_profile", request.hostname);
   // if (id === undefined) {
   //   return Result.Err("请传入电视剧 id");
   // }

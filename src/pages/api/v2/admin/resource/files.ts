@@ -12,6 +12,8 @@ import { DataStore } from "@/domains/store/types";
 import { response_error_factory } from "@/utils/server";
 import { Result } from "@/domains/result/index";
 import { r_id } from "@/utils/index";
+import { BOJUDriveClient } from "@/domains/clients/boju_cc";
+import { build_drive_file } from "@/domains/clients/utils";
 
 async function get_drive_client(values: { user: User; store: DataStore }) {
   const { user, store } = values;
@@ -67,6 +69,36 @@ export default async function v2_admin_resource_files(req: NextApiRequest, res: 
     return e(Result.Err(r.error.message));
   }
   const drive = r.data;
+  if (url.match(/www\.boju\.cc/)) {
+    const client = new BOJUDriveClient({ id: "", unique_id: BOJUDriveClient.URL, store });
+    const file_id = url.replace(BOJUDriveClient.URL, "");
+    console.log("[API]v2/admin/resource/files - before fetch_file", file_id, url);
+    if (parent_file_id === "root") {
+      const r = await client.fetch_file(file_id);
+      if (r.error) {
+        return e(Result.Err(r.error.message));
+      }
+      const data = {
+        items: [r.data],
+        next_marker: "",
+      };
+      return res.status(200).json({
+        code: 0,
+        msg: "",
+        data,
+      });
+    }
+    const r = await client.fetch_files(file_id);
+    if (r.error) {
+      return e(Result.Err(r.error.message));
+    }
+    const data = r.data;
+    return res.status(200).json({
+      code: 0,
+      msg: "",
+      data,
+    });
+  }
   // @todo 即使获取一个文件夹内的文件，也会多次调用 fetch_profile 来获取 share_token，怎么尽量复用有效的 share_token？
   const r3 = await AliyunShareResourceClient.Get({
     id: drive.id,

@@ -74,9 +74,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       on_print,
       on_error,
     } = options;
-    if (!user.settings.tmdb_token) {
-      return Result.Err("缺少 TMDB_TOKEN");
-    }
     if (!assets) {
       return Result.Err("缺少静态资源目录");
     }
@@ -153,6 +150,52 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
         on_error,
       })
     );
+  }
+  static async CreatePendingAnalysisTask(payload: {
+    url: string;
+    code?: string | null;
+    file_id: string;
+    name: string;
+    drive: Drive;
+    job: Job;
+    store: DataStore;
+    user: User;
+  }) {
+    const { url, code, file_id, name, drive, user, job, store } = payload;
+    const r = await drive.client.existing(drive.profile.root_folder_id!, name);
+    if (r.error) {
+      job.output.write_line(["搜索已转存文件失败", r.error.message]);
+      return;
+    }
+    if (!r.data) {
+      job.output.write_line(["转存后没有搜索到转存文件"]);
+      return;
+    }
+    await store.prisma.tmp_file.create({
+      data: {
+        id: r_id(),
+        name,
+        file_id: r.data.file_id,
+        parent_paths: drive.profile.root_folder_name ?? "",
+        drive_id: drive.id,
+        user_id: user.id,
+      },
+    });
+    job.output.write_line(["创建同步任务"]);
+    await store.prisma.resource_sync_task.create({
+      data: {
+        id: r_id(),
+        url,
+        pwd: code,
+        file_id,
+        name,
+        status: ResourceSyncTaskStatus.WaitSetProfile,
+        file_name_link_resource: name,
+        file_id_link_resource: r.data.file_id,
+        drive_id: drive.id,
+        user_id: user.id,
+      },
+    });
   }
   /** 转存资源/创建资源同步任务 */
   static async Transfer(
@@ -234,39 +277,15 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       drive.client.on_transfer_finish(async () => {
         job.output.write_line(["添加到待索引文件"]);
         await sleep(5000);
-        const r = await drive.client.existing(drive.profile.root_folder_id!, name);
-        if (r.error) {
-          job.output.write_line(["搜索已转存文件失败", r.error.message]);
-          return;
-        }
-        if (!r.data) {
-          job.output.write_line(["转存后没有搜索到转存文件"]);
-          return;
-        }
-        await store.prisma.tmp_file.create({
-          data: {
-            id: r_id(),
-            name,
-            file_id: r.data.file_id,
-            parent_paths: drive.profile.root_folder_name ?? "",
-            drive_id: drive.id,
-            user_id: user.id,
-          },
-        });
-        job.output.write_line(["创建同步任务"]);
-        await store.prisma.resource_sync_task.create({
-          data: {
-            id: r_id(),
-            url,
-            pwd: code,
-            file_id,
-            name,
-            status: ResourceSyncTaskStatus.WaitSetProfile,
-            file_name_link_resource: name,
-            file_id_link_resource: r.data.file_id,
-            drive_id: drive.id,
-            user_id: user.id,
-          },
+        ResourceSyncTask.CreatePendingAnalysisTask({
+          url,
+          code,
+          file_id,
+          name,
+          drive,
+          user,
+          job,
+          store,
         });
       });
       (async () => {

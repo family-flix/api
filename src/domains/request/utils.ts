@@ -104,6 +104,9 @@ export function request_factory(opt: {
   let _env = "prod";
   let _debug = opt.debug ?? false;
   return {
+    get hostname() {
+      return _hostname;
+    },
     setHostname(hostname: string) {
       if (_debug) {
         console.log("[REQUEST]utils - setHostname", hostname);

@@ -42,9 +42,13 @@ export default async function v2_media_profile_search_tmdb(
     return e(Result.Err("请指定搜索电视剧还是电影"));
   }
   const user = t_res.data;
-  const tmdb = new TMDBClient({
+  const r1 = await TMDBClient.New({
     token: token || user.settings.tmdb_token,
   });
+  if (r1.error) {
+    return e(r1);
+  }
+  const tmdb = r1.data;
   const r = await (async () => {
     if (type === MediaTypes.Season) {
       const r = await tmdb.search_tv(keyword, { page });

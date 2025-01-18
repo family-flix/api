@@ -16,6 +16,7 @@ import { LocalFileDriveClient } from "@/domains/clients/local/index";
 import { DriveClient } from "@/domains/clients/types";
 import { AlipanOpenClient } from "@/domains/clients/alipan_open";
 import { DatabaseDriveClient } from "@/domains/clients/database/index";
+import { BOJUDriveClient } from "@/domains/clients/boju_cc/index";
 import { User } from "@/domains/user/index";
 import { Result, resultify } from "@/domains/result/index";
 import { DatabaseStore } from "@/domains/store/index";
@@ -95,6 +96,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       //   const client = r.data;
       //   return Result.Ok(client);
       // }
+      if (type === DriveTypes.BojuCC) {
+        const r = await BOJUDriveClient.Get({ unique_id: drive_record.unique_id, store });
+        if (r.error) {
+          return Result.Err(r.error.message);
+        }
+        const client = r.data;
+        return Result.Ok(client);
+      }
       if (type === DriveTypes.QuarkDrive) {
         const r = await QuarkDriveClient.Get({ id, store });
         if (r.error) {
@@ -160,6 +169,9 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       // }
       if (type === DriveTypes.LocalFolder) {
         return LocalFileDriveClient.Create({ payload, store, user });
+      }
+      if (type === DriveTypes.BojuCC) {
+        return BOJUDriveClient.Create({ store, user });
       }
       return Result.Err("未知或暂不支持的云盘类型");
     })();
@@ -308,6 +320,11 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     return Result.Ok(null);
   }
   has_root_folder() {
+    if (this.type === DriveTypes.BojuCC) {
+      this.profile.root_folder_id = "root";
+      this.profile.root_folder_name = "root";
+      return true;
+    }
     if (!this.profile.root_folder_id || !this.profile.root_folder_name) {
       return false;
     }

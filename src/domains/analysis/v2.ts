@@ -45,7 +45,7 @@ type DriveAnalysisProps = {
   /** 用来标志一次任务中索引到的所有解析结果 */
   unique_id?: string;
   assets: string;
-  tmdb_token: string;
+  tmdb_token?: string;
   /** 当存在该值时会强制进行搜索 */
   extra_scope?: string[];
   user: User;
@@ -63,9 +63,6 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
     const { unique_id, extra_scope, drive, store, user, assets, on_print, on_finish, on_error } = body;
     if (!user) {
       return Result.Err("缺少用户信息");
-    }
-    if (!user.settings.tmdb_token) {
-      return Result.Err("缺少 tmdb_token");
     }
     if (!assets) {
       return Result.Err("缺少静态资源根路径");
@@ -100,7 +97,6 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
       user,
       walker,
       searcher,
-      tmdb_token: user.settings.tmdb_token,
       assets,
       on_print,
       on_finish,
@@ -110,7 +106,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
   }
 
   unique_id?: string;
-  tmdb_token: string;
+  tmdb_token?: string;
   assets: string;
   extra_scope?: string[];
 

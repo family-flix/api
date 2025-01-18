@@ -30,28 +30,51 @@ import {
   request,
 } from "./services";
 
+const DefaultProps = {
+  // hostname: "https://api.themoviedb.org/3",
+  hostname: "https://proxy.funzm.com/api/tmdb/3",
+  language: "zh-CN" as Language,
+  token: "c2e5d34999e27f8e0ef18421aa5dec38",
+};
+
 export class TMDBClient {
+  static TOKEN = DefaultProps.token;
+  static New(
+    props: Partial<{
+      /** tmdb 接口 token */
+      token: string;
+      /** tmdb 代理地址 */
+      hostname: string;
+      /** 语言 */
+      language?: Language;
+    }>
+  ) {
+    const { token, hostname, language } = props;
+    return Result.Ok(
+      new TMDBClient({
+        token,
+        hostname,
+        language,
+      })
+    );
+  }
+
   options: {
     token: string;
     language: Language;
   };
   client: HttpClientCore;
 
-  constructor(
-    options: Partial<{
-      /** tmdb 接口 token */
-      token: string;
-      /** tmdb 代理地址 */
-      proxy_url: string;
-      /** 语言 */
-      language: Language;
-    }>
-  ) {
-    const { token, proxy_url, language = "zh-CN" } = options;
-    if (token === undefined) {
-      throw new Error("请传入 TMDB_TOKEN");
-    }
-    // request.setHostname(proxy_url);
+  constructor(props: {
+    /** tmdb 接口 token */
+    token?: string;
+    /** tmdb 代理地址 */
+    hostname?: string;
+    /** 语言 */
+    language?: Language;
+  }) {
+    const { hostname = DefaultProps.hostname, token = DefaultProps.token, language = DefaultProps.language } = props;
+    request.setHostname(hostname);
     this.options = {
       token,
       language,

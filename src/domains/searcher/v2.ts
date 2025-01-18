@@ -105,9 +105,6 @@ export class MediaSearcher extends BaseDomain<TheTypesOfEvents> {
     if (!user) {
       return Result.Err("缺少用户信息");
     }
-    if (!user.settings.tmdb_token) {
-      return Result.Err("缺少 TMDB token");
-    }
     if (!assets) {
       return Result.Err("缺少静态资源根路径");
     }

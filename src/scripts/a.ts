@@ -1,5 +1,6 @@
 import { MediaTypes, ResourceSyncTaskStatus } from "@/constants";
 import { Application } from "@/domains/application";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { parseJSONStr } from "@/utils";
 
@@ -16,7 +17,7 @@ async function main() {
   const store = app.store;
   // const profile_client_r = await MediaProfileClient.New({
   //   assets: app.assets,
-  //   token: "c2e5d34999e27f8e0ef18421aa5dec38",
+  //   token: TMDBClient.TOKEN,
   //   store,
   // });
   // if (profile_client_r.error) {

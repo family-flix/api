@@ -25,6 +25,7 @@ export type UserSettings = {
   qiniu_scope?: string;
   /** 影视剧详情相关 */
   tmdb_token?: string;
+  tmdb_hostname?: string;
   third_douban?: {
     hostname: string;
     token: string;
@@ -329,6 +330,7 @@ export class User {
         qiniu_secret_token,
         qiniu_scope,
         tmdb_token,
+        tmdb_hostname,
         push_deer_token,
         telegram_token,
         third_douban,
@@ -339,12 +341,13 @@ export class User {
         no_need_invitation_code,
       } = settings;
       return {
-        qiniu_access_token: qiniu_access_token ?? undefined,
-        qiniu_secret_token: qiniu_secret_token ?? undefined,
-        qiniu_scope: qiniu_scope ?? undefined,
-        tmdb_token: tmdb_token ?? "c2e5d34999e27f8e0ef18421aa5dec38",
-        telegram_token: telegram_token ?? undefined,
-        push_deer_token: push_deer_token ?? undefined,
+        qiniu_access_token: qiniu_access_token,
+        qiniu_secret_token: qiniu_secret_token,
+        qiniu_scope: qiniu_scope,
+        tmdb_token: tmdb_token,
+        tmdb_hostname: tmdb_hostname,
+        telegram_token: telegram_token,
+        push_deer_token: push_deer_token,
         third_douban: (() => {
           if (!third_douban) {
             return undefined;

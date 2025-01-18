@@ -12,7 +12,7 @@ async function walk_tv_profile(store: DatabaseStore) {
     root: app.assets,
   });
   const client = new TMDBClient({
-    token: "c2e5d34999e27f8e0ef18421aa5dec38",
+    token: TMDBClient.TOKEN,
   });
   await walk_records(store.prisma.tv_profile, {}, async (profile) => {
     const { id, unique_id, name, original_name, poster_path, backdrop_path, created } = profile;

@@ -6,8 +6,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { User } from "@/domains/user";
 import { TVProfileWhereInput } from "@/domains/store/types";
-import { BaseApiResp } from "@/types";
 import { response_error_factory } from "@/utils/server";
+import { BaseApiResp } from "@/types";
 import { store } from "@/store";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {

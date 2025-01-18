@@ -76,9 +76,6 @@ export class ResourceSyncTask extends BaseDomain<TheTypesOfEvents> {
       on_print,
       on_error,
     } = options;
-    if (!user.settings.tmdb_token) {
-      return Result.Err("缺少 TMDB_TOKEN");
-    }
     if (!assets) {
       return Result.Err("缺少静态资源目录");
     }

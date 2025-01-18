@@ -1,6 +1,7 @@
 import { MediaTypes } from "@/constants";
 import { Application } from "@/domains/application";
 import { MediaProfileClient } from "@/domains/media_profile";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { parseJSONStr } from "@/utils";
 
@@ -16,7 +17,7 @@ async function main() {
   });
   const store = app.store;
   const profile_client_r = await MediaProfileClient.New({
-    tmdb: { token: "c2e5d34999e27f8e0ef18421aa5dec38" },
+    tmdb: { token: TMDBClient.TOKEN },
     assets: app.assets,
     store,
   });

@@ -9,6 +9,11 @@ import { User } from "@/domains/user/index";
 import { ResourceSyncTask } from "@/domains/resource_sync_task/v2";
 import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
+import { Drive } from "@/domains/drive/v2";
+import { DriveTypes } from "@/domains/drive/constants";
+import { Job, TaskTypes } from "@/domains/job";
+import { BOJUDriveClient } from "@/domains/clients/boju_cc";
+import { FileType } from "@/constants";
 
 export default async function v2_admin_resource_transfer(
   req: NextApiRequest,
@@ -44,6 +49,56 @@ export default async function v2_admin_resource_transfer(
   }
   if (!drive_id) {
     return e(Result.Err("请指定转存到哪个网盘"));
+  }
+  const r1 = await Drive.Get({ id: drive_id, store });
+  if (r1.error) {
+    return e(Result.Err(r1.error.message));
+  }
+  const drive = r1.data;
+  // console.log("[API]v2/admin/resource/transfer - before ", drive.type);
+  if (drive.type === DriveTypes.BojuCC) {
+    await store.prisma.file.create({
+      data: {
+        id: file_id,
+        file_id,
+        name: file_name,
+        type: FileType.Folder,
+        parent_file_id: BOJUDriveClient.ROOT_ID,
+        parent_paths: "root",
+        drive_id,
+        user_id: user.id,
+      },
+    });
+    const job_res = await Job.New({
+      unique_id: file_id,
+      desc: `转存资源「${file_name}」到云盘「${drive.name}」`,
+      type: TaskTypes.Transfer,
+      user_id: user.id,
+      app,
+      store,
+    });
+    if (job_res.error) {
+      return e(Result.Err(job_res.error.message));
+    }
+    const job = job_res.data;
+    await ResourceSyncTask.CreatePendingAnalysisTask({
+      url,
+      code,
+      file_id,
+      name: file_name,
+      drive,
+      user,
+      job,
+      store,
+    });
+    await job.finish();
+    return res.status(200).json({
+      code: 0,
+      msg: "完成",
+      data: {
+        job_id: job.id,
+      },
+    });
   }
   const r = await ResourceSyncTask.Transfer(
     {

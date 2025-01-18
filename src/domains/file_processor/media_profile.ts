@@ -32,7 +32,7 @@ type TheTypesOfEvents = {
 type MediaProfileProcessorProps = {
   task_id?: string;
   /** TMDB token */
-  token: string;
+  token?: string;
   /** 资源目录 */
   assets: string;
   searcher: MediaSearcher;

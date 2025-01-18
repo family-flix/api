@@ -36,9 +36,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(t_res);
   }
   const { id: user_id, settings } = t_res.data;
-  const tmdb = new TMDBClient({
+  const r1 = await TMDBClient.New({
     token: token || settings.tmdb_token,
   });
+  if (r1.error) {
+    return e(r1);
+  }
+  const tmdb = r1.data;
   const page = Number(page_str);
   const page_size = Number(page_size_str);
   const r = await (() => {

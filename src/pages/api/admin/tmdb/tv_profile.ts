@@ -24,9 +24,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return e(Result.Err("缺少电视剧详情 id"));
   }
   const user = t_res.data;
-  const client = new TMDBClient({
+  const r1 = await TMDBClient.New({
     token: user.settings.tmdb_token,
   });
+  if (r1.error) {
+    return e(r1);
+  }
+  const client = r1.data;
   const r = await client.fetch_tv_profile(unique_id);
   if (r.error) {
     return e(Result.Err(r.error.message));

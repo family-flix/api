@@ -15,4 +15,6 @@ export enum DriveTypes {
   AlipanOpenDrive = 6,
   /** 阿里云盘资源盘/开放接口 */
   AlipanResourceOpenDrive = 7,
+  /** https://www.boju.cc/ */
+  BojuCC = 8,
 }

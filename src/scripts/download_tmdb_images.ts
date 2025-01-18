@@ -1,5 +1,6 @@
 import { Application } from "@/domains/application";
 import { MediaProfileClient } from "@/domains/media_profile";
+import { TMDBClient } from "@/domains/media_profile/tmdb";
 import { walk_model_with_cursor } from "@/domains/store/utils";
 import { parseJSONStr, r_id } from "@/utils";
 
@@ -15,7 +16,7 @@ async function main() {
   const store = app.store;
   console.log("Start");
   const profile_r = await MediaProfileClient.New({
-    tmdb: { token: "c2e5d34999e27f8e0ef18421aa5dec38" },
+    tmdb: { token: TMDBClient.TOKEN },
     assets: app.assets,
     store,
   });
@@ -24,7 +25,6 @@ async function main() {
     return;
   }
   const client = profile_r.data;
-  const img_proxy = "https://proxy.f2x.fun/api/tmdb_site";
   await walk_model_with_cursor({
     fn(extra) {
       return store.prisma.media_profile.findMany({

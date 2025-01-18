@@ -26,8 +26,8 @@ import { format_season_name, map_season_number } from "./utils";
 import { ThirdDoubanClient } from "./third_douban";
 
 type MediaProfileSearchProps = {
-  tmdb: {
-    token: string;
+  tmdb?: {
+    token?: string;
   };
   third_douban?: {
     hostname: string;
@@ -50,12 +50,6 @@ export class MediaProfileClient {
     store: DataStore;
   }) {
     const { tmdb, third_douban, assets, store } = props;
-    if (!tmdb) {
-      return Result.Err("缺少 tmdb 配置");
-    }
-    if (!tmdb.token) {
-      return Result.Err("缺少 tmdb token");
-    }
     if (!assets) {
       return Result.Err("缺少静态资源根路径");
     }
@@ -64,7 +58,7 @@ export class MediaProfileClient {
     }
     return Result.Ok(
       new MediaProfileClient({
-        tmdb: { token: tmdb.token },
+        tmdb,
         third_douban,
         store,
         uploader: new FileManage({ root: assets }),
@@ -72,8 +66,8 @@ export class MediaProfileClient {
     );
   }
 
-  tmdb: {
-    token: string;
+  tmdb?: {
+    token?: string;
   };
   third_douban?: {
     hostname: string;
@@ -88,14 +82,14 @@ export class MediaProfileClient {
 
   constructor(props: MediaProfileSearchProps) {
     // super();
-    const { tmdb: token, third_douban, uploader, store } = props;
-    this.tmdb = token;
+    const { tmdb, third_douban, uploader, store } = props;
+    this.tmdb = tmdb;
     this.third_douban = third_douban;
     this.$store = store;
     this.$upload = uploader;
 
     this.$tmdb = new TMDBClient({
-      token: this.tmdb.token,
+      token: this.tmdb?.token,
     });
     this.$douban = new DoubanClient({});
     if (third_douban) {
@@ -621,7 +615,7 @@ export class MediaProfileClient {
       return Result.Err("请传入 keyword");
     }
     const client = new TMDBClient({
-      token: this.tmdb.token,
+      token: this.tmdb?.token,
     });
     const { name, year } = (() => {
       const year_r = /\(([12][0-9][0-9]{2})\)/;

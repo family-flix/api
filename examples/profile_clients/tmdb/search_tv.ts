@@ -3,6 +3,10 @@ require("dotenv").config();
 import { TMDBClient } from "@/domains/media_profile/tmdb/index";
 
 async function main() {
+  if (!process.env.TMDB_TOKEN) {
+    console.log("缺少 TMDB_TOKEN");
+    return;
+  }
   const client = new TMDBClient({
     token: process.env.TMDB_TOKEN,
   });

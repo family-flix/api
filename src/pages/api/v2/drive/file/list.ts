@@ -10,6 +10,7 @@ import { Drive } from "@/domains/drive/v2";
 import { DriveTypes } from "@/domains/drive/constants";
 import { Result } from "@/domains/result/index";
 import { response_error_factory } from "@/utils/server";
+import { BOJUDriveClient } from "@/domains/clients/boju_cc";
 
 export default async function v2_drive_file_list(req: NextApiRequest, res: NextApiResponse<BaseApiResp<unknown>>) {
   const e = response_error_factory(res);
@@ -69,6 +70,9 @@ export default async function v2_drive_file_list(req: NextApiRequest, res: NextA
     }
     if (drive.profile.type === DriveTypes.LocalFolder) {
       return "root";
+    }
+    if (drive.profile.type === DriveTypes.BojuCC) {
+      return BOJUDriveClient.ROOT_ID;
     }
     if (drive.profile.type === DriveTypes.Cloud189Drive) {
       return "-11";

@@ -2,7 +2,7 @@ import { TMDBClient } from "@/domains/media_profile/tmdb";
 
 async function main() {
   const client = new TMDBClient({
-    token: "c2e5d34999e27f8e0ef18421aa5dec38",
+    token: TMDBClient.TOKEN,
   });
   // const profile_res = await client.fetch_movie_profile(844075);
   // if (profile_res.error) {
