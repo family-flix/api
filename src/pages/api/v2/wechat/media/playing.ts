@@ -26,7 +26,7 @@ export default async function v2_wechat_media_playing(req: NextApiRequest, res: 
   const media = r.data;
   const r2 = await media.fetch_playing_info();
   if (r2.error) {
-    return Result.Err(r2.error.message);
+    return e(Result.Err(r2.error.message));
   }
   const data = r2.data;
   return res.status(200).json({ code: 0, msg: "", data });

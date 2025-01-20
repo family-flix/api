@@ -41,7 +41,11 @@ export default async function v2_media_profile_init_season(
     const existing = await store.prisma.media_profile.findFirst({
       where,
       include: {
-        source_profiles: true,
+        source_profiles: {
+          orderBy: {
+            order: "asc",
+          },
+        },
       },
     });
     if (existing && existing.source_profiles.length) {
