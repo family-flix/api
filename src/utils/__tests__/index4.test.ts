@@ -219,4 +219,24 @@ describe("电视剧4", () => {
       episode: "",
     });
   });
+  test("25.ts", () => {
+    const name = "25.ts";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "",
+      original_name: "",
+      season: "",
+      episode: "E25",
+    });
+  });
+  test("✔一起吃晚餐吗2020国语7.2(50g)", () => {
+    const name = "✔一起吃晚餐吗2020国语7.2(50g)";
+    const result = parse_filename_for_video(name);
+    expect(result).toStrictEqual({
+      name: "一起吃晚餐吗2020",
+      original_name: "",
+      season: "",
+      episode: "E07",
+    });
+  });
 });

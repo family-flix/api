@@ -46,7 +46,7 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("仔细阅读")) {
+    if (!filename.includes("一起吃晚餐")) {
       return;
     }
     // console.log(...args);
@@ -123,6 +123,8 @@ export function parse_filename_for_video(
     .replace(/\.[1-9]{1}[+-][1-9]{1,}\./, ".")
     // 移除零宽空格
     .replace(/\u200B/g, "")
+    // 移除奇怪的字符
+    .replace(/✔/, "")
     // 在 小谢尔顿S01E01 这种 S01E01 紧跟着名字后面的场景，前面加一个符号来分割
     .replace(/(?=[sS][0-9]{2}[eE][0-9]{2})([sS][0-9]{2}[eE][0-9]{2})/, ".$1")
     .replace(/_([0-9]{1,3})_/, ".E$1.");
