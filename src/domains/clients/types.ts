@@ -93,6 +93,7 @@ export interface DriveClient {
   /** 获取视频文件播放地址等信息 */
   fetch_video_preview_info(file_id: string): Promise<
     Result<{
+      thumb_url?: string;
       sources: {
         name: string;
         width: number;

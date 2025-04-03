@@ -471,6 +471,7 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         });
         const cur = parents_and_cur[parents_and_cur.length - 1];
         const parents = parents_and_cur.slice(0, -1);
+        // console.log("[DOMAIN]analysis/v2 - run2", cur, parents, file.type);
         if (file.type === FileType.File) {
           const file = new File(cur.file_id, {
             name: cur.name,
@@ -501,9 +502,10 @@ export class DriveAnalysis extends BaseDomain<TheTypesOfEvents> {
         if (file.type === FileType.Folder) {
           const folder = new Folder(cur.file_id, {
             client,
-            name: cur.name,
+            name: cur.name || cur.file_name,
           });
           await folder.profile();
+          // console.log("[DOMAIN]analysis/v2 - run2", folder.name, parents);
           this.emit(Events.Print, Article.build_line(["before await walker.run(folder)"]));
           const r = await walker.run(folder, parents);
           if (r.error) {

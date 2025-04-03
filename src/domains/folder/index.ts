@@ -115,7 +115,7 @@ export class Folder extends BaseDomain<TheTypesOfEvents> {
   /** 获取并设置文件夹详情（名称等信息） */
   async profile() {
     if (this.client === null) {
-      return Result.Err("缺少阿里云盘实例");
+      return Result.Err("缺少云盘实例");
     }
     if (!this.client.fetch_file) {
       return Result.Err("云盘实例缺少 fetch_file 方法");

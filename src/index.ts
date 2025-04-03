@@ -244,6 +244,12 @@ async function main() {
     })
   );
   server.use(
+    "/m3u8/*",
+    static_serve({
+      root: app.assets,
+    })
+  );
+  server.use(
     "/thumbnail/*",
     static_serve({
       root: app.assets,

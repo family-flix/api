@@ -1,3 +1,4 @@
+require("dotenv").config();
 import { Drive115Client } from "@/domains/clients/115/index";
 import { Application } from "@/domains/application/index";
 import { User } from "@/domains/user/index";
@@ -13,23 +14,38 @@ import { User } from "@/domains/user/index";
   });
   const store = app.store;
   const USER_ID = "101824580";
-  const r2 = await Drive115Client.Get({ unique_id: USER_ID, store });
-  if (r2.error) {
-    console.log(r2.error.message);
-    return;
-  }
-  const drive = r2.data;
+  // const r2 = await Drive115Client.Get({ unique_id: USER_ID, store });
+  // if (r2.error) {
+  //   console.log(r2.error.message);
+  //   return;
+  // }
+  // const drive = r2.data;
   // const r3 = await drive.fetch_files();
   // if (r3.error) {
   //   console.log(r3.error.message);
   //   return;
   // }
   // const data = r3.data;
-  const r3 = await drive.fetch_files("2910461134056949475");
-  if (r3.error) {
-    console.log(r3.error.message);
+  const drive = new Drive115Client({
+    id: "115",
+    unique_id: USER_ID,
+    token: "",
+    store,
+  });
+
+  const r4 = await drive.fetch_video_preview_info("2910461134056949475");
+  if (r4.error) {
+    console.log(r4.error.message);
     return;
   }
-  const data = r3.data;
+  const data = r4.data;
   console.log(data);
+
+  // const r3 = await drive.fetch_files("2910461134056949475");
+  // if (r3.error) {
+  //   console.log(r3.error.message);
+  //   return;
+  // }
+  // const data = r3.data;
+  // console.log(data);
 })();

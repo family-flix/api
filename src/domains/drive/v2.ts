@@ -10,13 +10,14 @@ import { AliyunDriveProfile } from "@/domains/clients/alipan/types";
 import { Article, ArticleLineNode, ArticleSectionNode } from "@/domains/article/index";
 import { Folder } from "@/domains/folder/index";
 import { ModelQuery, DriveRecord, DataStore } from "@/domains/store/types";
-// import { Cloud189DriveClient } from "@/domains/clients/cloud189/index";
 import { QuarkDriveClient } from "@/domains/clients/quark/index";
 import { LocalFileDriveClient } from "@/domains/clients/local/index";
 import { DriveClient } from "@/domains/clients/types";
 import { AlipanOpenClient } from "@/domains/clients/alipan_open";
 import { DatabaseDriveClient } from "@/domains/clients/database/index";
 import { BOJUDriveClient } from "@/domains/clients/boju_cc/index";
+import { DriveAlistClient } from "@/domains/clients/alist";
+import { Drive115Client } from "@/domains/clients/115/index";
 import { User } from "@/domains/user/index";
 import { Result, resultify } from "@/domains/result/index";
 import { DatabaseStore } from "@/domains/store/index";
@@ -71,7 +72,8 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       return Result.Err(r.error);
     }
     const { drive_id, ...rest } = r.data;
-    const client_res = await (async () => {
+    // @ts-ignore
+    const client_res: Result<DriveClient> = await (async () => {
       if (type === DriveTypes.AliyunBackupDrive || type === DriveTypes.AliyunResourceDrive) {
         const r = await AliyunDriveClient.Get({ unique_id: drive_record.unique_id, store });
         if (r.error) {
@@ -88,16 +90,16 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
         const client = r.data;
         return Result.Ok(client);
       }
-      // if (type === DriveTypes.Cloud189Drive) {
-      //   const r = await Cloud189DriveClient.Get({ id, store });
-      //   if (r.error) {
-      //     return Result.Err(r.error.message);
-      //   }
-      //   const client = r.data;
-      //   return Result.Ok(client);
-      // }
-      if (type === DriveTypes.BojuCC) {
-        const r = await BOJUDriveClient.Get({ unique_id: drive_record.unique_id, store });
+      if (type === DriveTypes.Drive115) {
+        const r = await Drive115Client.Get({ unique_id: drive_record.unique_id, store });
+        if (r.error) {
+          return Result.Err(r.error.message);
+        }
+        const client = r.data;
+        return Result.Ok(client);
+      }
+      if (type === DriveTypes.Alist) {
+        const r = await DriveAlistClient.Get({ unique_id: drive_record.unique_id, store });
         if (r.error) {
           return Result.Err(r.error.message);
         }
@@ -125,6 +127,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
     if (client_res.error) {
       return Result.Err(client_res.error.message);
     }
+    const client = client_res.data;
     return Result.Ok(
       new Drive({
         id: drive_record.id,
@@ -140,7 +143,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           total_size,
           ...rest,
         },
-        client: client_res.data,
+        client,
         user,
         store,
       })
@@ -161,17 +164,14 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
       if (type === DriveTypes.AliyunResourceDrive) {
         return AliyunDriveClient.CreateResourceDrive({ payload, skip_ping, store, user });
       }
-      // if (type === DriveTypes.Cloud189Drive) {
-      //   return Cloud189DriveClient.Create({ payload, skip_ping, store, user });
-      // }
-      // if (type === DriveTypes.QuarkDrive) {
-      //   return QuarkDriveClient.Create({ payload, skip_ping, store, user });
-      // }
+      if (type === DriveTypes.Drive115) {
+        return Drive115Client.Create({ payload, store, user });
+      }
+      if (type === DriveTypes.Alist) {
+        return DriveAlistClient.Create({ payload, store, user });
+      }
       if (type === DriveTypes.LocalFolder) {
         return LocalFileDriveClient.Create({ payload, store, user });
-      }
-      if (type === DriveTypes.BojuCC) {
-        return BOJUDriveClient.Create({ store, user });
       }
       return Result.Err("未知或暂不支持的云盘类型");
     })();
@@ -200,6 +200,7 @@ export class Drive extends BaseDomain<TheTypesOfEvents> {
           total_size,
           ...json_res.data,
         },
+        // @ts-ignore
         client,
         user,
         store,

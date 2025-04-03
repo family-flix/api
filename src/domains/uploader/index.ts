@@ -122,6 +122,7 @@ export class FileManage {
       skip_existing: boolean;
       /** 传入的 key 是否已经是完整路径 */
       is_fullpath: boolean;
+      headers?: Record<string, number | string>;
     }> = {}
   ): Promise<Result<string>> {
     try {
@@ -141,6 +142,7 @@ export class FileManage {
         method: "GET",
         responseType: "stream",
         timeout: 6000,
+        headers: options.headers,
       });
       // console.log("[DOMAIN]Uploader - download", filepath);
       return new Promise((resolve) => {

@@ -17,4 +17,8 @@ export enum DriveTypes {
   AlipanResourceOpenDrive = 7,
   /** https://www.boju.cc/ */
   BojuCC = 8,
+  /** 115 */
+  Drive115 = 9,
+  /** alist */
+  Alist = 10,
 }

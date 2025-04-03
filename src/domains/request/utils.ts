@@ -113,6 +113,9 @@ export function request_factory(opt: {
       }
       _hostname = hostname;
     },
+    get headers() {
+      return _headers;
+    },
     setHeaders(headers: Record<string, string | number>) {
       if (_debug) {
         console.log("[REQUEST]utils - setHeaders", headers);
@@ -201,3 +204,5 @@ export function request_factory(opt: {
     },
   };
 }
+
+export type RequestFactory = ReturnType<typeof request_factory>;

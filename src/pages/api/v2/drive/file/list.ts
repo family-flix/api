@@ -71,6 +71,12 @@ export default async function v2_drive_file_list(req: NextApiRequest, res: NextA
     if (drive.profile.type === DriveTypes.LocalFolder) {
       return "root";
     }
+    if (drive.profile.type === DriveTypes.Drive115) {
+      return "0";
+    }
+    if (drive.profile.type === DriveTypes.Alist) {
+      return "/";
+    }
     if (drive.profile.type === DriveTypes.BojuCC) {
       return BOJUDriveClient.ROOT_ID;
     }

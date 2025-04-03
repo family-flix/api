@@ -16,20 +16,50 @@ import { Result, resultify } from "@/domains/result/index";
 import { request_factory } from "@/domains/request/utils";
 import { RequestCore } from "@/domains/request/index";
 import { query_stringify, sleep, parseJSONStr, r_id } from "@/utils";
+import { MediaResolutionTypes } from "@/constants";
 
 import { Drive115FileResp, Drive115Profile, Drive115Payload } from "./types";
 
+const proapi = request_factory({
+  hostnames: { prod: "https://proapi.115.com" },
+  process: <T>(r: Result<{ errNo: number; error: string }>): Result<T> => {
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    return Result.Ok(r.data as T);
+  },
+});
 const webapi = request_factory({
   hostnames: { prod: "https://webapi.115.com" },
   process: <T>(r: Result<{ errNo: number; error: string }>): Result<T> => {
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    const { errNo, error, ...rest } = r.data;
-    if (errNo !== 0) {
-      return Result.Err(error, errNo, null);
+    return Result.Ok(r.data as T);
+  },
+});
+const videoapi = request_factory({
+  hostnames: { prod: "https://115vod.com" },
+  headers: {
+    accept: "application/json, text/javascript, */*; q=0.01",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+    priority: "u=1, i",
+    referer: "https://115vod.com/?pickcode=dslekthwuyuyrxi9a&share_id=0",
+    "sec-ch-ua": '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"macOS"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "user-agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+    "x-requested-with": "XMLHttpRequest",
+  },
+  process: <T>(r: Result<{ state: boolean; data: T }>): Result<T> => {
+    if (r.error) {
+      return Result.Err(r.error.message);
     }
-    return Result.Ok(rest as T);
+    return Result.Ok(r.data as T);
   },
 });
 const userapi = request_factory({
@@ -47,15 +77,20 @@ const userapi = request_factory({
   },
 });
 
-// const API_HOST = "https://drive-pc.quark.cn";
 const COMMON_HEADERS = {
-  //   authority: "drive-pc.quark.cn",
-  //   accept: "application/json, text/plain, */*",
-  //   "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
-  //   origin: "https://pan.quark.cn",
-  //   referer: "https://pan.quark.cn/",
-  "user-agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+  Accept: "*/*",
+  "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+  Connection: "keep-alive",
+  Origin: "https://115.com",
+  Referer: "https://115.com/",
+  "Sec-Fetch-Dest": "empty",
+  "Sec-Fetch-Mode": "cors",
+  "Sec-Fetch-Site": "same-site",
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+  "sec-ch-ua": '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
+  "sec-ch-ua-mobile": "?0",
+  "sec-ch-ua-platform": '"macOS"',
 };
 const DEFAULT_ROOT_FOLDER_ID = "0";
 
@@ -180,7 +215,7 @@ export class Drive115Client extends BaseDomain<TheTypesOfEvents> implements Driv
         id: drive_record_id,
         name: user_id,
         avatar: "",
-        type: DriveTypes.QuarkDrive,
+        type: DriveTypes.Drive115,
         unique_id: user_id,
         profile: JSON.stringify({ name: user_id } as Drive115Profile),
         root_folder_id: null,
@@ -312,6 +347,7 @@ export class Drive115Client extends BaseDomain<TheTypesOfEvents> implements Driv
       sort: { field: "name" | "updated_at" | "size"; order: "asc" | "desc" }[];
     }> = {}
   ) {
+    // console.log("[DOMAIN]115 - fetch_files", file_id, options);
     if (file_id === undefined) {
       return Result.Err("请传入要获取的文件夹 file_id");
     }
@@ -595,61 +631,156 @@ export class Drive115Client extends BaseDomain<TheTypesOfEvents> implements Driv
   }) {
     return Result.Err("请实现该方法");
   }
-  async fetch_video_preview_info(file_id: string) {
-    return Result.Err("请实现 fetch_video_preview_info 方法");
+  async fetch_video_preview_info(file_id: string): Promise<
+    Result<{
+      sources: {
+        name: string;
+        width: number;
+        height: number;
+        type: MediaResolutionTypes;
+        url: string;
+        invalid: number;
+      }[];
+      subtitles: { id: string; name: string; url: string; language: "chi" | "chs" | "eng" | "jpn" }[];
+    }>
+  > {
+    function fetch_video_preview_info() {
+      return webapi.post<{
+        state: boolean;
+        inlay_power: number;
+        video_push_state: boolean;
+        download_url: unknown[];
+        file_status: number;
+        thumb_url: string;
+        height: string;
+        width: string;
+        video_url: string;
+        video_url_demo: string;
+        definition_list: {};
+        multitrack_list: unknown[];
+        play_long: string;
+        subtitle_info: {
+          url: string;
+          title: string;
+          sort: number;
+        }[];
+        outline_info: unknown[];
+        pick_code: string;
+        file_name: string;
+        file_size: string;
+        parent_id: string;
+        file_id: string;
+        is_mark: string;
+        sha1: string;
+        audio_list: string;
+        user_def: number;
+        user_rotate: number;
+        user_turn: number;
+      }>("/files/index_info", {
+        pickcode: "dslekthwuyuyrxi9a",
+        pick_code: "dslekthwuyuyrxi9a",
+        share_id: "0",
+        local: "1",
+        cid: file_id,
+      });
+    }
+    const r = await new RequestCore(fetch_video_preview_info, { client: this.request }).run();
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    return Result.Ok({
+      thumb_url: r.data.thumb_url,
+      sources: [
+        {
+          url: r.data.video_url,
+          name: r.data.file_name,
+          width: Number(r.data.width),
+          height: Number(r.data.height),
+          type: MediaResolutionTypes.SD,
+          invalid: 0,
+        },
+      ],
+      subtitles: r.data.subtitle_info.map((subtitle) => {
+        return {
+          id: subtitle.title,
+          name: subtitle.title,
+          url: subtitle.url,
+          language: "chi",
+        };
+      }),
+    });
   }
   async fetch_video_preview_info_for_download() {
     return Result.Err("请实现 fetch_video_preview_info_for_download 方法");
   }
   /** 获取一个文件夹的完整路径（包括自身） */
+  /** @ts-ignore */
   async fetch_parent_paths(file_id: string) {
-    await this.ensure_initialized();
-    const r = await this.request.get<{
-      data: {
-        createTime: number;
-        downloadUrl: string;
-        fileId: string;
-        fileIdDigest: string;
-        fileName: string;
-        fileSize: number;
-        fileType: string;
-        icon: {
-          largeUrl: string;
-          smallUrl: string;
-        };
-        isFolder: boolean;
-        isStarred: boolean;
-        lastOpTime: number;
-        mediaType: number;
-        parentId: string;
-        videoUrl: string;
-      }[];
-      pageNum: number;
-      pageSize: number;
-      path: {
-        fileId: string;
-        fileName: string;
-        isCoShare: number;
-      }[];
-      recordCount: number;
-    }>("/api/portal/listFiles.action", {
-      fileId: file_id,
-    });
+    function fetch_file() {
+      return webapi.get<{
+        count: number;
+        size: string;
+        folder_count: number;
+        play_long: number;
+        show_play_long: number;
+        ptime: string;
+        utime: string;
+        is_share: string;
+        file_name: string;
+        pick_code: string;
+        sha1: string;
+        is_mark: string;
+        fvs: number;
+        open_time: number;
+        score: number;
+        desc: string;
+        file_category: string;
+        paths: {
+          file_id: number;
+          file_name: string;
+        }[];
+      }>("/category/get", {
+        cid: file_id,
+      });
+    }
+    const r = await new RequestCore(fetch_file, { client: this.request }).run();
     if (r.error) {
       return Result.Err(r.error.message);
     }
-    const paths = [];
-    for (let i = 0; i < r.data.path.length; i += 1) {
+    const list = [
+      ...r.data.paths.map((f) => {
+        return {
+          file_category: "0",
+          file_id: String(f.file_id),
+          file_name: f.file_name,
+          sha1: "",
+        };
+      }),
+      {
+        file_id: file_id,
+        file_name: r.data.file_name,
+        sha1: r.data.sha1,
+        file_category: r.data.file_category,
+      },
+    ];
+    const paths: { name: string; file_id: string; parent_file_id: string | null; type: string }[] = [];
+    for (let i = 0; i < list.length; i += 1) {
       (() => {
-        const { fileId, fileName } = r.data.path[i];
-        if (String(fileId) === DEFAULT_ROOT_FOLDER_ID) {
+        const file = list[i];
+        const parent_file_id = list[i - 1]?.file_id;
+        if (parent_file_id === undefined) {
           return;
         }
         paths.push({
-          file_id: fileId,
-          name: fileName,
-          parent_file_id: r.data.path[i - 1]?.fileId,
-          type: "folder",
+          file_id: String(file_id),
+          name: file.file_name,
+          parent_file_id: (() => {
+            if (String(parent_file_id) === "0") {
+              return "root";
+            }
+            return String(parent_file_id);
+          })(),
+          type: file.file_category === "1" ? "file" : "folder",
         });
       })();
     }
