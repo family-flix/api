@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch ./src/index.ts --port 3200",
-    "start": "node server.js",
+    "start": "node dist/server.js",
     "build": "node scripts/build.js",
     "db": "prisma studio",
     "check": "tsc --noEmit",

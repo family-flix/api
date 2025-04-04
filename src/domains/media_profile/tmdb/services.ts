@@ -55,8 +55,7 @@ function fix_TMDB_image_path<T extends TMDBImagePaths>(values: T): FixedTMDBImag
 
 export const request = request_factory({
   hostnames: {
-    // 其实不会用这个，是最后的兜底
-    prod: "https://api.themoviedb.org/3",
+    prod: "https://proxy.funzm.com/api/tmdb/3",
   },
 });
 
