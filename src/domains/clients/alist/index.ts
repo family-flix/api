@@ -187,8 +187,7 @@ export class DriveAlistClient extends BaseDomain<TheTypesOfEvents> implements Dr
     this.request = request_factory({
       hostnames: { prod: unique_id },
       headers: {
-        authorization:
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicHdkX3RzIjoxNzQzNjg1NjIxLCJleHAiOjE3NDM4NTg0MjcsIm5iZiI6MTc0MzY4NTYyNywiaWF0IjoxNzQzNjg1NjI3fQ.MErp3A7PJoPgVN3io12IWJHM01I4mYwE10I593tq8hs",
+        authorization: "",
       },
       process: <T>(r: Result<{ code: number; message: string; data: T }>): Result<T> => {
         if (r.error) {
