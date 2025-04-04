@@ -453,11 +453,11 @@ export class DriveAlistClient extends BaseDomain<TheTypesOfEvents> implements Dr
               Accept: "application/json, text/plain, */*",
               "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
               Authorization:
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicHdkX3RzIjoxNzQzNjg1NjIxLCJleHAiOjE3NDM4NTg0MjcsIm5iZiI6MTc0MzY4NTYyNywiaWF0IjoxNzQzNjg1NjI3fQ.MErp3A7PJoPgVN3io12IWJHM01I4mYwE10I593tq8hs",
+                "",
               Connection: "keep-alive",
               "Content-Type": "application/json;charset=UTF-8",
               Origin: "http://127.0.0.1:5244",
-              Referer: "http://127.0.0.1:5244/115/downloads/%E5%BA%86%E4%BD%99%E5%B9%B4%E7%AC%AC%E4%BA%8C%E5%AD%A3",
+              Referer: "http://127.0.0.1:5244" + encodeURIComponent(file_id),
               "Sec-Fetch-Dest": "empty",
               "Sec-Fetch-Mode": "cors",
               "Sec-Fetch-Site": "same-origin",
@@ -519,9 +519,9 @@ export class DriveAlistClient extends BaseDomain<TheTypesOfEvents> implements Dr
       return Result.Err(r.data.message);
     }
     const file = r.data.data;
-    console.log("file", file);
+    // console.log("file", file);
     const { name, size, is_dir, modified, created, sign, thumb, type, hashinfo, hash_info, raw_url } = file;
-    console.log("raw_url", file_id, raw_url);
+    // console.log("raw_url", file_id, raw_url);
     // console.log("fix_url", url);
     return Result.Ok({
       thumb_url: "",
