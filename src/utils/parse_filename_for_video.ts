@@ -46,9 +46,15 @@ export function parse_filename_for_video(
   }[] = []
 ) {
   function log(...args: unknown[]) {
-    if (!filename.includes("一起吃晚餐")) {
-      return;
-    }
+    // if (filename.includes("知否知否")) {
+    //   console.log(...args);
+    // }
+    // if (!filename.includes("一起吃晚餐")) {
+    //   // console.log(...args);
+    // }
+    // if (filename.includes("The.Lego.Movie.2")) {
+    //   console.log(...args);
+    // }
     // console.log(...args);
   }
   // @ts-ignore
