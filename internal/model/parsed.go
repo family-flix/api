@@ -15,14 +15,8 @@ type ParsedTV struct {
 	UniqueID     *string `json:"unique_id"`
 
 	TVID    *string `gorm:"size:36" json:"tv_id"`
-	TV      *TV     `gorm:"foreignKey:TVID" json:"tv,omitempty"`
 	DriveID string  `gorm:"index;size:36" json:"drive_id"`
-	Drive   *Drive  `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID  string  `gorm:"index;size:36" json:"user_id"`
-	User    *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
-
-	ParsedEpisodes []ParsedEpisode `gorm:"foreignKey:ParsedTVID" json:"parsed_episodes,omitempty"`
-	ParsedSeasons  []ParsedSeason  `gorm:"foreignKey:ParsedTVID" json:"parsed_seasons,omitempty"`
 }
 
 func (ParsedTV) TableName() string {
@@ -39,14 +33,10 @@ type ParsedSeason struct {
 	FileName     *string `json:"file_name"`
 	CanSearch    *int    `gorm:"default:1" json:"can_search"`
 
-	SeasonID   *string   `gorm:"size:36" json:"season_id"`
-	Season     *Season   `gorm:"foreignKey:SeasonID" json:"season,omitempty"`
-	ParsedTVID string    `gorm:"index;size:36" json:"parsed_tv_id"`
-	ParsedTV   *ParsedTV `gorm:"foreignKey:ParsedTVID" json:"parsed_tv,omitempty"`
-	DriveID    string    `gorm:"index;size:36" json:"drive_id"`
-	Drive      *Drive    `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
-	UserID     string    `gorm:"index;size:36" json:"user_id"`
-	User       *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	SeasonID   *string `gorm:"size:36" json:"season_id"`
+	ParsedTVID string  `gorm:"index;size:36" json:"parsed_tv_id"`
+	DriveID    string  `gorm:"index;size:36" json:"drive_id"`
+	UserID     string  `gorm:"index;size:36" json:"user_id"`
 }
 
 func (ParsedSeason) TableName() string {
@@ -70,16 +60,11 @@ type ParsedEpisode struct {
 	MD5           *string  `json:"md5"`
 	CanSearch     *int     `gorm:"default:1" json:"can_search"`
 
-	SeasonID   *string   `gorm:"size:36" json:"season_id"`
-	Season     *Season   `gorm:"foreignKey:SeasonID" json:"season,omitempty"`
-	EpisodeID  *string   `gorm:"size:36" json:"episode_id"`
-	Episode    *Episode  `gorm:"foreignKey:EpisodeID" json:"episode,omitempty"`
-	ParsedTVID string    `gorm:"index;size:36" json:"parsed_tv_id"`
-	ParsedTV   *ParsedTV `gorm:"foreignKey:ParsedTVID" json:"parsed_tv,omitempty"`
-	DriveID    string    `gorm:"index;size:36" json:"drive_id"`
-	Drive      *Drive    `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
-	UserID     string    `gorm:"index;size:36" json:"user_id"`
-	User       *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	SeasonID   *string `gorm:"size:36" json:"season_id"`
+	EpisodeID  *string `gorm:"size:36" json:"episode_id"`
+	ParsedTVID string  `gorm:"index;size:36" json:"parsed_tv_id"`
+	DriveID    string  `gorm:"index;size:36" json:"drive_id"`
+	UserID     string  `gorm:"index;size:36" json:"user_id"`
 }
 
 func (ParsedEpisode) TableName() string {
@@ -104,11 +89,8 @@ type ParsedMovie struct {
 	CanSearch    *int     `gorm:"default:1" json:"can_search"`
 
 	MovieID *string `gorm:"size:36" json:"movie_id"`
-	Movie   *Movie  `gorm:"foreignKey:MovieID" json:"movie,omitempty"`
 	DriveID string  `gorm:"index;size:36" json:"drive_id"`
-	Drive   *Drive  `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID  string  `gorm:"index;size:36" json:"user_id"`
-	User    *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (ParsedMovie) TableName() string {
@@ -130,9 +112,7 @@ type ParsedMedia struct {
 	MediaProfileID *string       `gorm:"size:36" json:"media_profile_id"`
 	MediaProfile   *MediaProfile `gorm:"foreignKey:MediaProfileID" json:"media_profile,omitempty"`
 	DriveID        string        `gorm:"index;size:36" json:"drive_id"`
-	Drive          *Drive        `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID         string        `gorm:"index;size:36" json:"user_id"`
-	User           *User         `gorm:"foreignKey:UserID" json:"user,omitempty"`
 
 	ParsedSources []ParsedMediaSource `gorm:"foreignKey:ParsedMediaID" json:"parsed_sources,omitempty"`
 }
@@ -167,7 +147,6 @@ type ParsedMediaSource struct {
 	DriveID       string       `gorm:"index;size:36" json:"drive_id"`
 	Drive         *Drive       `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID        string       `gorm:"index;size:36" json:"user_id"`
-	User          *User        `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (ParsedMediaSource) TableName() string {

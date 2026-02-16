@@ -9,13 +9,9 @@ type SharedMedia struct {
 	URL string `json:"url"`
 
 	SeasonID       *string `gorm:"size:36" json:"season_id"`
-	Season         *Season `gorm:"foreignKey:SeasonID" json:"season,omitempty"`
 	MovieID        *string `gorm:"size:36" json:"movie_id"`
-	Movie          *Movie  `gorm:"foreignKey:MovieID" json:"movie,omitempty"`
 	MemberFromID   string  `gorm:"size:36" json:"member_from_id"`
-	MemberFrom     *Member `gorm:"foreignKey:MemberFromID" json:"member_from,omitempty"`
 	MemberTargetID string  `gorm:"size:36" json:"member_target_id"`
-	MemberTarget   *Member `gorm:"foreignKey:MemberTargetID" json:"member_target,omitempty"`
 }
 
 func (SharedMedia) TableName() string {
@@ -29,12 +25,9 @@ type SharedMediaV2 struct {
 
 	URL string `json:"url"`
 
-	MediaID        string  `gorm:"index;size:36" json:"media_id"`
-	Media          *Media  `gorm:"foreignKey:MediaID" json:"media,omitempty"`
-	MemberFromID   string  `gorm:"size:36" json:"member_from_id"`
-	MemberFrom     *Member `gorm:"foreignKey:MemberFromID" json:"member_from,omitempty"`
-	MemberTargetID string  `gorm:"size:36" json:"member_target_id"`
-	MemberTarget   *Member `gorm:"foreignKey:MemberTargetID" json:"member_target,omitempty"`
+	MediaID        string `gorm:"index;size:36" json:"media_id"`
+	MemberFromID   string `gorm:"size:36" json:"member_from_id"`
+	MemberTargetID string `gorm:"size:36" json:"member_target_id"`
 }
 
 func (SharedMediaV2) TableName() string {
@@ -51,7 +44,6 @@ type SharedFile struct {
 	PWD   *string `json:"pwd"`
 
 	UserID string `gorm:"index;size:36" json:"user_id"`
-	User   *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (SharedFile) TableName() string {
@@ -71,7 +63,6 @@ type SharedFileInProgress struct {
 	DriveID string `gorm:"index;size:36" json:"drive_id"`
 	Drive   *Drive `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID  string `gorm:"index;size:36" json:"user_id"`
-	User    *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (SharedFileInProgress) TableName() string {

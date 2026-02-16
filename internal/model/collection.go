@@ -18,11 +18,6 @@ type Collection struct {
 	Medias *string `gorm:"type:text" json:"medias"`
 
 	UserID string `gorm:"index;size:36" json:"user_id"`
-	User   *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
-
-	TVs     []TV     `gorm:"many2many:collection_tvs" json:"tvs,omitempty"`
-	Seasons []Season `gorm:"many2many:collection_seasons" json:"seasons,omitempty"`
-	Movies  []Movie  `gorm:"many2many:collection_movies" json:"movies,omitempty"`
 }
 
 func (Collection) TableName() string {
@@ -45,9 +40,8 @@ type CollectionV2 struct {
 	Styles *string `gorm:"type:text" json:"styles"`
 
 	UserID string `gorm:"index;size:36" json:"user_id"`
-	User   *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 
-	Medias []Media `gorm:"foreignKey:CollectionID" json:"medias,omitempty"`
+	Medias []Media `gorm:"many2many:CollectionV2Media" json:"medias,omitempty"`
 }
 
 func (CollectionV2) TableName() string {

@@ -11,14 +11,10 @@ type Subtitle struct {
 	Name     string `json:"name"`
 	Language string `json:"language"`
 
-	MovieID   *string  `gorm:"size:36" json:"movie_id"`
-	Movie     *Movie   `gorm:"foreignKey:MovieID" json:"movie,omitempty"`
-	EpisodeID *string  `gorm:"size:36" json:"episode_id"`
-	Episode   *Episode `gorm:"foreignKey:EpisodeID" json:"episode,omitempty"`
-	DriveID   string   `gorm:"index;size:36" json:"drive_id"`
-	Drive     *Drive   `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
-	UserID    string   `gorm:"index;size:36" json:"user_id"`
-	User      *User    `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	MovieID   *string `gorm:"size:36" json:"movie_id"`
+	EpisodeID *string `gorm:"size:36" json:"episode_id"`
+	DriveID   string  `gorm:"index;size:36" json:"drive_id"`
+	UserID    string  `gorm:"index;size:36" json:"user_id"`
 }
 
 func (Subtitle) TableName() string {
@@ -35,10 +31,9 @@ type SubtitleV2 struct {
 	Name     string `json:"name"`
 	Language string `json:"language"`
 
-	MediaSourceID *string      `gorm:"size:36" json:"media_source_id"`
+	MediaSourceID *string       `gorm:"size:36" json:"media_source_id"`
 	MediaSource   *MediaSource `gorm:"foreignKey:MediaSourceID" json:"media_source,omitempty"`
 	UserID        string       `gorm:"index;size:36" json:"user_id"`
-	User          *User        `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (SubtitleV2) TableName() string {

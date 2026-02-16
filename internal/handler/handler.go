@@ -1,9 +1,14 @@
 package handler
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -12,7 +17,16 @@ import (
 	"github.com/family-flix/api/internal/domain/member"
 	"github.com/family-flix/api/internal/domain/user"
 	"github.com/family-flix/api/internal/model"
+	"github.com/family-flix/api/pkg/drive_client"
+	"github.com/family-flix/api/pkg/drive_client/localdrive"
+	"github.com/family-flix/api/pkg/media_profile/tmdb"
 )
+
+func rid() string {
+	b := make([]byte, 8)
+	rand.Read(b)
+	return hex.EncodeToString(b)[:15]
+}
 
 // authAdmin extracts the Authorization header and returns the authenticated admin user.
 func authAdmin(c Context) (*user.User, error) {
@@ -176,8 +190,83 @@ func AdminDriveList(c Context) error {
 }
 
 func AdminDriveAdd(c Context) error {
-	// TODO: requires drive client to validate credentials
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		Type    *int            `json:"type"`
+		Payload json.RawMessage `json:"payload"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.Type == nil {
+		return fail(c, 400, "请指定云盘类型")
+	}
+	if len(body.Payload) == 0 {
+		return fail(c, 400, "请传入云盘信息")
+	}
+	// 从 payload 中提取 unique_id（如 drive_id、dir 等）
+	var payloadMap map[string]interface{}
+	if err := json.Unmarshal(body.Payload, &payloadMap); err != nil {
+		return fail(c, 400, "payload 格式错误")
+	}
+	uniqueID := ""
+	for _, key := range []string{"drive_id", "dir", "url"} {
+		if v, ok := payloadMap[key]; ok {
+			uniqueID = fmt.Sprintf("%v", v)
+			break
+		}
+	}
+	if uniqueID == "" {
+		uniqueID = rid()
+	}
+	// 检查是否已存在
+	var existing model.Drive
+	if err := c.DB().Where("unique_id = ? AND user_id = ?", uniqueID, u.ID).First(&existing).Error; err == nil {
+		return fail(c, 400, "该云盘已存在")
+	}
+	// 创建 DriveToken
+	tokenID := rid()
+	driveToken := model.DriveToken{
+		ID:   tokenID,
+		Data: string(body.Payload),
+	}
+	if err := c.DB().Create(&driveToken).Error; err != nil {
+		return fail(c, 500, "创建 token 失败")
+	}
+	// 创建 Drive
+	driveName := uniqueID
+	profile := string(body.Payload)
+	var rootFolderID *string
+	var rootFolderName *string
+	// 本地云盘特殊处理
+	if *body.Type == 5 {
+		if dir, ok := payloadMap["dir"].(string); ok {
+			name := filepath.Base(dir)
+			driveName = name
+			rootFolderID = &dir
+			rootFolderName = &name
+			enriched, _ := json.Marshal(map[string]string{"dir": dir, "drive_id": dir, "name": name})
+			profile = string(enriched)
+		}
+	}
+	drive := model.Drive{
+		ID:             rid(),
+		UniqueID:       uniqueID,
+		Type:           body.Type,
+		Name:           driveName,
+		Profile:        profile,
+		RootFolderID:   rootFolderID,
+		RootFolderName: rootFolderName,
+		DriveTokenID:   tokenID,
+		UserID:         u.ID,
+	}
+	if err := c.DB().Create(&drive).Error; err != nil {
+		return fail(c, 500, "新增云盘失败"+err.Error())
+	}
+	return ok(c, "新增云盘成功", nil)
 }
 
 func AdminDriveDelete(c Context) error {
@@ -670,8 +759,68 @@ func AdminMediaDelete(c Context) error {
 }
 
 func AdminMediaSetProfile(c Context) error {
-	// TODO: requires TMDB client for profile resolution
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		MediaID string `json:"media_id"`
+		TMDBID  string `json:"tmdb_id"`
+		Type    int    `json:"type"`
+	}
+	if err := c.Bind(&body); err != nil || body.MediaID == "" || body.TMDBID == "" {
+		return fail(c, 400, "参数错误")
+	}
+	var m model.Media
+	if err := c.DB().Where("id = ? AND user_id = ?", body.MediaID, u.ID).First(&m).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	client := tmdb.NewClient()
+	tmdbID, _ := strconv.Atoi(body.TMDBID)
+	if body.Type == 2 {
+		detail, err := client.FetchMovieProfile(tmdbID)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		var p model.MediaProfile
+		if err := c.DB().Where("tmdb_id = ?", body.TMDBID).First(&p).Error; err != nil {
+			p = model.MediaProfile{
+				ID:           rid(),
+				Type:         2,
+				Name:         detail.Name,
+				OriginalName: &detail.OriginalName,
+				Overview:     &detail.Overview,
+				PosterPath:   &detail.PosterPath,
+				BackdropPath: &detail.BackdropPath,
+				AirDate:      &detail.AirDate,
+				TMDBID:       &body.TMDBID,
+			}
+			c.DB().Create(&p)
+		}
+		c.DB().Model(&m).Update("profile_id", p.ID)
+		return ok(c, "设置成功", R{"id": p.ID})
+	}
+	detail, err := client.FetchTVProfile(tmdbID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	var p model.MediaProfile
+	if err := c.DB().Where("tmdb_id = ?", body.TMDBID).First(&p).Error; err != nil {
+		p = model.MediaProfile{
+			ID:           rid(),
+			Type:         1,
+			Name:         detail.Name,
+			OriginalName: &detail.OriginalName,
+			Overview:     &detail.Overview,
+			PosterPath:   &detail.PosterPath,
+			BackdropPath: &detail.BackdropPath,
+			AirDate:      &detail.FirstAirDate,
+			TMDBID:       &body.TMDBID,
+		}
+		c.DB().Create(&p)
+	}
+	c.DB().Model(&m).Update("profile_id", p.ID)
+	return ok(c, "设置成功", R{"id": p.ID})
 }
 
 func AdminMediaSourceList(c Context) error {
@@ -1150,18 +1299,130 @@ func AdminParsedMediaList(c Context) error {
 }
 
 func AdminParsedMediaSetProfile(c Context) error {
-	// TODO: requires TMDB client for profile resolution
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		ParsedMediaID  string `json:"parsed_media_id"`
+		MediaProfileID string `json:"media_profile_id"`
+	}
+	if err := c.Bind(&body); err != nil || body.ParsedMediaID == "" || body.MediaProfileID == "" {
+		return fail(c, 400, "参数错误")
+	}
+	var pm model.ParsedMedia
+	if err := c.DB().Where("id = ? AND user_id = ?", body.ParsedMediaID, u.ID).First(&pm).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	var p model.MediaProfile
+	if err := c.DB().Where("id = ?", body.MediaProfileID).First(&p).Error; err != nil {
+		return fail(c, 404, "没有匹配的详情")
+	}
+	c.DB().Model(&pm).Update("media_profile_id", p.ID)
+	return ok(c, "设置成功", nil)
 }
 
 func AdminParsedMediaSetProfileAfterCreate(c Context) error {
-	// TODO: requires TMDB client for profile creation
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		ParsedMediaID string `json:"parsed_media_id"`
+		TMDBID        string `json:"tmdb_id"`
+		Type          int    `json:"type"`
+	}
+	if err := c.Bind(&body); err != nil || body.ParsedMediaID == "" || body.TMDBID == "" {
+		return fail(c, 400, "参数错误")
+	}
+	var pm model.ParsedMedia
+	if err := c.DB().Where("id = ? AND user_id = ?", body.ParsedMediaID, u.ID).First(&pm).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	client := tmdb.NewClient()
+	tmdbID, _ := strconv.Atoi(body.TMDBID)
+	var p model.MediaProfile
+	if err := c.DB().Where("tmdb_id = ?", body.TMDBID).First(&p).Error; err == nil {
+		c.DB().Model(&pm).Update("media_profile_id", p.ID)
+		return ok(c, "设置成功", R{"id": p.ID})
+	}
+	if body.Type == 2 {
+		detail, err := client.FetchMovieProfile(tmdbID)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		p = model.MediaProfile{
+			ID: rid(), Type: 2, Name: detail.Name, OriginalName: &detail.OriginalName,
+			Overview: &detail.Overview, PosterPath: &detail.PosterPath, BackdropPath: &detail.BackdropPath,
+			AirDate: &detail.AirDate, TMDBID: &body.TMDBID,
+		}
+	} else {
+		detail, err := client.FetchTVProfile(tmdbID)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		p = model.MediaProfile{
+			ID: rid(), Type: 1, Name: detail.Name, OriginalName: &detail.OriginalName,
+			Overview: &detail.Overview, PosterPath: &detail.PosterPath, BackdropPath: &detail.BackdropPath,
+			AirDate: &detail.FirstAirDate, TMDBID: &body.TMDBID,
+		}
+	}
+	c.DB().Create(&p)
+	c.DB().Model(&pm).Update("media_profile_id", p.ID)
+	return ok(c, "设置成功", R{"id": p.ID})
 }
 
 func AdminParsedMediaSetProfileInFileId(c Context) error {
-	// TODO: requires TMDB client for profile resolution
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		FileID string `json:"file_id"`
+		TMDBID string `json:"tmdb_id"`
+		Type   int    `json:"type"`
+	}
+	if err := c.Bind(&body); err != nil || body.FileID == "" || body.TMDBID == "" {
+		return fail(c, 400, "参数错误")
+	}
+	var ps model.ParsedMediaSource
+	if err := c.DB().Where("file_id = ? AND user_id = ?", body.FileID, u.ID).First(&ps).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	if ps.ParsedMediaID == nil {
+		return fail(c, 400, "没有关联的 parsed_media")
+	}
+	client := tmdb.NewClient()
+	tmdbID, _ := strconv.Atoi(body.TMDBID)
+	var p model.MediaProfile
+	if err := c.DB().Where("tmdb_id = ?", body.TMDBID).First(&p).Error; err == nil {
+		c.DB().Model(&model.ParsedMedia{}).Where("id = ?", *ps.ParsedMediaID).Update("media_profile_id", p.ID)
+		return ok(c, "设置成功", R{"id": p.ID})
+	}
+	if body.Type == 2 {
+		detail, err := client.FetchMovieProfile(tmdbID)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		p = model.MediaProfile{
+			ID: rid(), Type: 2, Name: detail.Name, OriginalName: &detail.OriginalName,
+			Overview: &detail.Overview, PosterPath: &detail.PosterPath, BackdropPath: &detail.BackdropPath,
+			AirDate: &detail.AirDate, TMDBID: &body.TMDBID,
+		}
+	} else {
+		detail, err := client.FetchTVProfile(tmdbID)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		p = model.MediaProfile{
+			ID: rid(), Type: 1, Name: detail.Name, OriginalName: &detail.OriginalName,
+			Overview: &detail.Overview, PosterPath: &detail.PosterPath, BackdropPath: &detail.BackdropPath,
+			AirDate: &detail.FirstAirDate, TMDBID: &body.TMDBID,
+		}
+	}
+	c.DB().Create(&p)
+	c.DB().Model(&model.ParsedMedia{}).Where("id = ?", *ps.ParsedMediaID).Update("media_profile_id", p.ID)
+	return ok(c, "设置成功", R{"id": p.ID})
 }
 
 func AdminParsedMediaDelete(c Context) error {
@@ -2024,34 +2285,223 @@ func AdminParsedMediaMatchProfile(c Context) error {
 	return fail(c, 501, "未实现")
 }
 
+func getDriveClient(c Context, driveID string, userID string) (*model.Drive, drive_client.DriveClient, error) {
+	var d model.Drive
+	if err := c.DB().Where("id = ? AND user_id = ?", driveID, userID).First(&d).Error; err != nil {
+		return nil, nil, fmt.Errorf("云盘不存在")
+	}
+	if d.Type == nil || *d.Type != 5 {
+		return nil, nil, fmt.Errorf("该云盘类型暂不支持")
+	}
+	return &d, localdrive.NewLocalDriveClient(), nil
+}
+
 func DriveFileAdd(c Context) error {
-	// TODO: requires drive client
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID      string `json:"drive_id"`
+		Name         string `json:"name"`
+		ParentFileID string `json:"parent_file_id"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || body.Name == "" {
+		return fail(c, 400, "缺少必要参数")
+	}
+	d, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	parentID := body.ParentFileID
+	if parentID == "" || parentID == "root" {
+		if d.RootFolderID != nil {
+			parentID = *d.RootFolderID
+		} else {
+			return fail(c, 400, "云盘未设置根目录")
+		}
+	}
+	f, err := client.CreateFolder(body.Name, parentID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "创建成功", R{
+		"file_id":        f.FileID,
+		"name":           f.Name,
+		"type":           f.Type,
+		"size":           f.Size,
+		"parent_file_id": f.ParentFileID,
+	})
 }
 
 func DriveFileList(c Context) error {
-	// TODO: requires drive client for remote file listing
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID    string `json:"drive_id"`
+		FileID     string `json:"file_id"`
+		NextMarker string `json:"next_marker"`
+		PageSize   int    `json:"page_size"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" {
+		return fail(c, 400, "请指定云盘")
+	}
+	d, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	fileID := body.FileID
+	if fileID == "" || fileID == "root" {
+		if d.RootFolderID != nil {
+			fileID = *d.RootFolderID
+		} else {
+			return fail(c, 400, "云盘未设置根目录")
+		}
+	}
+	result, err := client.FetchFiles(fileID, drive_client.FetchFilesOptions{
+		PageSize: body.PageSize,
+		Marker:   body.NextMarker,
+	})
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	list := make([]R, 0, len(result.Items))
+	for _, f := range result.Items {
+		list = append(list, R{
+			"file_id":        f.FileID,
+			"name":           f.Name,
+			"type":           f.Type,
+			"size":           f.Size,
+			"parent_file_id": f.ParentFileID,
+			"mime_type":      f.MimeType,
+		})
+	}
+	return ok(c, "", R{"items": list, "next_marker": result.NextMarker})
 }
 
 func DriveFileProfile(c Context) error {
-	// TODO: requires drive client
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID string `json:"drive_id"`
+		FileID  string `json:"file_id"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || body.FileID == "" {
+		return fail(c, 400, "缺少必要参数")
+	}
+	_, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	f, err := client.FetchFile(body.FileID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", R{
+		"file_id":        f.FileID,
+		"name":           f.Name,
+		"type":           f.Type,
+		"size":           f.Size,
+		"parent_file_id": f.ParentFileID,
+		"mime_type":      f.MimeType,
+	})
 }
 
 func DriveFileDelete(c Context) error {
-	// TODO: requires drive client
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID string `json:"drive_id"`
+		FileID  string `json:"file_id"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || body.FileID == "" {
+		return fail(c, 400, "缺少必要参数")
+	}
+	_, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	if err := client.DeleteFile(body.FileID); err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "删除成功", nil)
 }
 
 func DriveFileDownload(c Context) error {
-	// TODO: requires drive client
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID string `json:"drive_id"`
+		FileID  string `json:"file_id"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || body.FileID == "" {
+		return fail(c, 400, "缺少必要参数")
+	}
+	_, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	url, err := client.Download(body.FileID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", R{"url": url})
 }
 
 func DriveFileTransfer(c Context) error {
-	// TODO: requires drive client
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID      string `json:"drive_id"`
+		FileID       string `json:"file_id"`
+		TargetFoldID string `json:"target_folder_id"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || body.FileID == "" || body.TargetFoldID == "" {
+		return fail(c, 400, "缺少必要参数")
+	}
+	_, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	// 获取原文件信息
+	f, err := client.FetchFile(body.FileID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	// 移动 = 在目标目录创建同名，再删除原文件（本地盘直接 rename）
+	newPath := filepath.Join(body.TargetFoldID, f.Name)
+	if err := os.Rename(body.FileID, newPath); err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "移动成功", nil)
 }
 
 func DriveFileToResourceDrive(c Context) error {
@@ -2060,23 +2510,147 @@ func DriveFileToResourceDrive(c Context) error {
 }
 
 func DriveFileSearch(c Context) error {
-	// TODO: requires drive client
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID    string `json:"drive_id"`
+		Name       string `json:"name"`
+		FileType   string `json:"file_type"`
+		NextMarker string `json:"next_marker"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || body.Name == "" {
+		return fail(c, 400, "缺少必要参数")
+	}
+	_, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	result, err := client.SearchFiles(body.Name, body.FileType, body.NextMarker)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	list := make([]R, 0, len(result.Items))
+	for _, f := range result.Items {
+		list = append(list, R{
+			"file_id":        f.FileID,
+			"name":           f.Name,
+			"type":           f.Type,
+			"size":           f.Size,
+			"parent_file_id": f.ParentFileID,
+			"mime_type":      f.MimeType,
+		})
+	}
+	return ok(c, "", R{"items": list, "next_marker": result.NextMarker})
 }
 
 func DriveFileRename(c Context) error {
-	// TODO: requires drive client
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID string `json:"drive_id"`
+		FileID  string `json:"file_id"`
+		Name    string `json:"name"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || body.FileID == "" || body.Name == "" {
+		return fail(c, 400, "缺少必要参数")
+	}
+	_, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	f, err := client.RenameFile(body.FileID, body.Name)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "重命名成功", R{
+		"file_id":        f.FileID,
+		"name":           f.Name,
+		"type":           f.Type,
+		"size":           f.Size,
+		"parent_file_id": f.ParentFileID,
+	})
 }
 
 func DriveRenameFiles(c Context) error {
-	// TODO: requires drive client
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID string `json:"drive_id"`
+		Files   []struct {
+			FileID string `json:"file_id"`
+			Name   string `json:"name"`
+		} `json:"files"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || len(body.Files) == 0 {
+		return fail(c, 400, "缺少必要参数")
+	}
+	_, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	for _, item := range body.Files {
+		if item.FileID == "" || item.Name == "" {
+			continue
+		}
+		client.RenameFile(item.FileID, item.Name)
+	}
+	return ok(c, "重命名成功", nil)
 }
 
 func LocalFileList(c Context) error {
-	// TODO: requires local filesystem access
-	return fail(c, 501, "未实现")
+	_, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		FileId     string `json:"file_id"`
+		NextMarker string `json:"next_marker"`
+		PageSize   int    `json:"page_size"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.FileId == "" || body.FileId == "root" {
+		home_dir, _ := os.UserHomeDir()
+		body.FileId = home_dir
+	}
+
+	client := localdrive.NewLocalDriveClient()
+	result, err := client.FetchFiles(body.FileId, drive_client.FetchFilesOptions{
+		PageSize: body.PageSize,
+		Marker:   body.NextMarker,
+	})
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+
+	list := make([]R, 0, len(result.Items))
+	for _, f := range result.Items {
+		list = append(list, R{
+			"file_id":        f.FileID,
+			"name":           f.Name,
+			"type":           f.Type,
+			"size":           f.Size,
+			"parent_file_id": f.ParentFileID,
+			"mime_type":      f.MimeType,
+		})
+	}
+	return ok(c, "", R{"items": list, "next_marker": result.NextMarker})
 }
 
 func MediaProfileList(c Context) error {
@@ -2138,8 +2712,7 @@ func MediaProfileList(c Context) error {
 }
 
 func MediaProfileSearch(c Context) error {
-	// TODO: requires TMDB client
-	return fail(c, 501, "未实现")
+	return MediaProfileSearchTmdb(c)
 }
 
 func MediaProfilePartial(c Context) error {
@@ -2256,18 +2829,143 @@ func MediaProfileSetName(c Context) error {
 }
 
 func MediaProfileRefresh(c Context) error {
-	// TODO: requires TMDB client
-	return fail(c, 501, "未实现")
+	_, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		ID string `json:"id"`
+	}
+	if err := c.Bind(&body); err != nil || body.ID == "" {
+		return fail(c, 400, "缺少 id")
+	}
+	var p model.MediaProfile
+	if err := c.DB().Where("id = ?", body.ID).First(&p).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	if p.TMDBID == nil {
+		return fail(c, 400, "没有关联的 TMDB ID")
+	}
+	client := tmdb.NewClient()
+	tmdbID, _ := strconv.Atoi(*p.TMDBID)
+	if p.Type == 2 {
+		detail, err := client.FetchMovieProfile(tmdbID)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		c.DB().Model(&p).Updates(map[string]interface{}{
+			"name": detail.Name, "original_name": detail.OriginalName,
+			"overview": detail.Overview, "poster_path": detail.PosterPath,
+			"backdrop_path": detail.BackdropPath, "air_date": detail.AirDate,
+		})
+	} else {
+		detail, err := client.FetchTVProfile(tmdbID)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		c.DB().Model(&p).Updates(map[string]interface{}{
+			"name": detail.Name, "original_name": detail.OriginalName,
+			"overview": detail.Overview, "poster_path": detail.PosterPath,
+			"backdrop_path": detail.BackdropPath, "air_date": detail.FirstAirDate,
+		})
+	}
+	return ok(c, "刷新成功", nil)
 }
 
 func MediaProfileInitSeries(c Context) error {
-	// TODO: requires TMDB client
-	return fail(c, 501, "未实现")
+	_, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		ID string `json:"id"`
+	}
+	if err := c.Bind(&body); err != nil || body.ID == "" {
+		return fail(c, 400, "缺少 id")
+	}
+	var p model.MediaProfile
+	if err := c.DB().Where("id = ?", body.ID).First(&p).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	if p.TMDBID == nil {
+		return fail(c, 400, "没有关联的 TMDB ID")
+	}
+	if p.SeriesID != nil {
+		return ok(c, "已存在", R{"series_id": *p.SeriesID})
+	}
+	client := tmdb.NewClient()
+	tmdbID, _ := strconv.Atoi(*p.TMDBID)
+	detail, err := client.FetchTVProfile(tmdbID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	// Check if series already exists by TMDB ID
+	var series model.MediaSeriesProfile
+	if err := c.DB().Where("tmdb_id = ?", *p.TMDBID).First(&series).Error; err != nil {
+		series = model.MediaSeriesProfile{
+			ID:           rid(),
+			Name:         detail.Name,
+			OriginalName: &detail.OriginalName,
+			Overview:     &detail.Overview,
+			PosterPath:   &detail.PosterPath,
+			BackdropPath: &detail.BackdropPath,
+			AirDate:      &detail.FirstAirDate,
+			TMDBID:       p.TMDBID,
+		}
+		c.DB().Create(&series)
+	}
+	c.DB().Model(&p).Update("series_id", series.ID)
+	return ok(c, "初始化成功", R{"series_id": series.ID})
 }
 
 func MediaProfileInitSeason(c Context) error {
-	// TODO: requires TMDB client
-	return fail(c, 501, "未实现")
+	_, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		ID           string `json:"id"`
+		SeasonNumber int    `json:"season_number"`
+	}
+	if err := c.Bind(&body); err != nil || body.ID == "" {
+		return fail(c, 400, "缺少 id")
+	}
+	var p model.MediaProfile
+	if err := c.DB().Where("id = ?", body.ID).First(&p).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	if p.TMDBID == nil {
+		return fail(c, 400, "没有关联的 TMDB ID")
+	}
+	client := tmdb.NewClient()
+	tmdbID, _ := strconv.Atoi(*p.TMDBID)
+	season, err := client.FetchSeasonProfile(tmdbID, body.SeasonNumber)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	for _, ep := range season.Episodes {
+		epTMDBID := strconv.Itoa(ep.ID)
+		var existing model.MediaSourceProfile
+		if c.DB().Where("tmdb_id = ?", epTMDBID).First(&existing).Error == nil {
+			continue
+		}
+		sp := model.MediaSourceProfile{
+			ID:             rid(),
+			Name:           ep.Name,
+			Overview:       &ep.Overview,
+			AirDate:        &ep.AirDate,
+			StillPath:      &ep.StillPath,
+			Order:          ep.EpisodeNumber,
+			TMDBID:         &epTMDBID,
+			MediaProfileID: p.ID,
+		}
+		if ep.Runtime > 0 {
+			sp.Runtime = &ep.Runtime
+		}
+		c.DB().Create(&sp)
+	}
+	c.DB().Model(&p).Update("source_count", len(season.Episodes))
+	return ok(c, "初始化成功", R{"episode_count": len(season.Episodes)})
 }
 
 func MediaProfileEdit(c Context) error {
@@ -2332,8 +3030,34 @@ func MediaProfileDelete(c Context) error {
 }
 
 func MediaProfileSearchTmdb(c Context) error {
-	// TODO: requires TMDB client
-	return fail(c, 501, "未实现")
+	_, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		Keyword string `json:"keyword"`
+		Page    int    `json:"page"`
+		Type    int    `json:"type"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, err.Error())
+	}
+	if body.Keyword == "" {
+		return fail(c, 400, "缺少 keyword")
+	}
+	client := tmdb.NewClient()
+	if body.Type == 2 {
+		result, err := client.SearchMovie(body.Keyword, body.Page)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		return ok(c, "", R{"list": result.List, "total": result.Total, "page": result.Page})
+	}
+	result, err := client.SearchTV(body.Keyword, body.Page)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", R{"list": result.List, "total": result.Total, "page": result.Page})
 }
 
 func CommonAnalysis(c Context) error {

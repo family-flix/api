@@ -17,7 +17,6 @@ type Credential struct {
 	Verified bool   `gorm:"default:false" json:"verified"`
 	Email    string `gorm:"uniqueIndex;size:255" json:"email"`
 	UserID   string `gorm:"uniqueIndex;size:36" json:"user_id"`
-	User     *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (Credential) TableName() string {
@@ -29,7 +28,6 @@ type Profile struct {
 	Nickname *string `gorm:"size:255" json:"nickname"`
 	Avatar   *string `gorm:"size:500" json:"avatar"`
 	UserID   string  `gorm:"uniqueIndex;size:36" json:"user_id"`
-	User     *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (Profile) TableName() string {
@@ -42,7 +40,6 @@ type Settings struct {
 	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Detail  *string   `gorm:"type:text" json:"detail"`
 	UserID  string    `gorm:"uniqueIndex;size:36" json:"user_id"`
-	User    *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (Settings) TableName() string {
@@ -55,7 +52,6 @@ type Statistics struct {
 	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Data    string    `gorm:"type:text;default:'{}'" json:"data"`
 	UserID  string    `gorm:"uniqueIndex;size:36" json:"user_id"`
-	User    *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (Statistics) TableName() string {
@@ -75,7 +71,6 @@ type Account struct {
 	IDToken           *string `gorm:"type:text" json:"-"`
 	SessionState      *string `json:"session_state"`
 	UserID            string  `gorm:"index;size:36" json:"user_id"`
-	User              *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (Account) TableName() string {
@@ -89,7 +84,6 @@ type Permission struct {
 	Desc    string    `gorm:"size:255" json:"desc"`
 	Code    string    `gorm:"size:255" json:"code"`
 	UserID  string    `gorm:"index;size:36" json:"user_id"`
-	User    *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (Permission) TableName() string {

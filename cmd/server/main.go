@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"crypto/rand"
@@ -22,7 +22,7 @@ import (
 
 var AppVer = "0.1.0"
 
-func main() {
+func Main() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	log.Logger = log.Output(os.Stderr)

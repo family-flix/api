@@ -1,4 +1,4 @@
-package main
+package nfo
 
 import (
 	"encoding/xml"
@@ -21,8 +21,6 @@ import (
 	"github.com/family-flix/api/pkg/types"
 	"github.com/family-flix/api/pkg/walker"
 )
-
-// --- NFO XML structs (Emby/Jellyfin compatible) ---
 
 type NFOActor struct {
 	Name  string `xml:"name"`
@@ -103,10 +101,7 @@ func personsToActors(persons []tmdb.PersonProfileItem) []NFOActor {
 		if p.KnownForDepartment != "Acting" {
 			continue
 		}
-		actors = append(actors, NFOActor{
-			Name:  p.Name,
-			Thumb: p.ProfilePath,
-		})
+		actors = append(actors, NFOActor{Name: p.Name, Thumb: p.ProfilePath})
 	}
 	return actors
 }
@@ -138,7 +133,6 @@ func strPtr(s string) *string {
 	return &s
 }
 
-// downloadImage 下载图片到 dir 目录，返回文件名（相对路径）
 func downloadImage(url, dir, filename string) string {
 	if url == "" {
 		return ""
@@ -163,15 +157,25 @@ func downloadImage(url, dir, filename string) string {
 	return filename
 }
 
-func main() {
-	root_path := "/Users/litao/Documents/FakeLocalDrive"
-	fmt.Printf("Walking: %s\n", root_path)
+func Main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: nfo <directory>")
+		os.Exit(1)
+	}
+	rootPath := os.Args[1]
 
-	// 初始化数据库（与 cmd/server/main.go 共用）
+	info, err := os.Stat(rootPath)
+	if err != nil || !info.IsDir() {
+		fmt.Printf("invalid directory: %s\n", rootPath)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Walking: %s\n", rootPath)
+
 	cfg, err := config.New()
 	if err != nil {
 		fmt.Printf("load config failed: %v\n", err)
-		return
+		os.Exit(1)
 	}
 	datacfg := database.DatabaseConfig{
 		DBType:     cfg.GetString("database.type"),
@@ -185,39 +189,32 @@ func main() {
 	db, err := database.NewDatabase(&datacfg)
 	if err != nil {
 		fmt.Printf("open database failed: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	client := localdrive.NewLocalDriveClient()
 	tmdbClient := tmdb.NewClient()
 
-	// 缓存: key = "tvID:seasonNum" -> season detail
 	seasonCache := map[string]*tmdb.SeasonProfileResult{}
-	// 缓存: key = tmdbID -> 已保存的 MediaProfile ID
 	mediaProfileCache := map[string]string{}
 
-	prevFolder := folder.NewFolder(root_path, client, []folder.ParentFolder{}, nil)
+	prevFolder := folder.NewFolder(rootPath, client, []folder.ParentFolder{}, nil)
 
 	profile, err := prevFolder.Profile()
 	if err != nil {
-		fmt.Printf("fetch folder profile failed %v\n", err)
-		return
+		fmt.Printf("fetch folder profile failed: %v\n", err)
+		os.Exit(1)
 	}
 	fmt.Printf("Folder Profile: %+v\n", profile)
 
 	w := walker.NewFolderWalker()
 
 	w.SetOnEpisode(func(f walker.SearchedEpisode) error {
-		name := f.TV.Name
-		if name == "" {
-			name = f.TV.OriginalName
-		}
-		fmt.Printf("Episode: %s %s %s\n", name, f.Season.SeasonText, f.Episode.EpisodeText)
+		fmt.Printf("Episode: %s %s %s\n", f.TV.Name, f.Season.SeasonText, f.Episode.EpisodeText)
 
 		videoPath := f.Episode.FileID
 		nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
 		seasonNum := parseSeasonNumber(f.Season.SeasonText)
-		// 空字符串说明是第一季
 		if f.Season.SeasonText == "" {
 			seasonNum = 1
 		}
@@ -231,7 +228,6 @@ func main() {
 			OriginalTitle: f.TV.OriginalName,
 		}
 
-		// 搜索 TMDB 获取详细信息
 		searchName := f.TV.Name
 		if f.TV.OriginalName != "" {
 			searchName = f.TV.OriginalName
@@ -245,7 +241,6 @@ func main() {
 			nfo.Rating = fmt.Sprintf("%.1f", tv.VoteAverage)
 			nfo.UniqueID = []NFOUniqueID{{Type: "tmdb", Default: true, Value: tv.ID}}
 
-			// 获取季详情（带缓存）
 			cacheKey := fmt.Sprintf("%d:%d", tvID, seasonNum)
 			seasonDetail, ok := seasonCache[cacheKey]
 			if !ok && tvID > 0 && seasonNum > 0 {
@@ -257,7 +252,6 @@ func main() {
 				}
 			}
 
-			// 从缓存的季详情中查找当前集
 			if seasonDetail != nil {
 				for _, ep := range seasonDetail.Episodes {
 					if ep.EpisodeNumber == episodeNum {
@@ -270,7 +264,6 @@ func main() {
 				}
 			}
 
-			// 获取演员
 			if tvID > 0 && seasonNum > 0 {
 				persons, err := tmdbClient.FetchPersonsOfSeason(tvID, seasonNum)
 				if err == nil {
@@ -278,7 +271,6 @@ func main() {
 				}
 			}
 
-			// 保存 MediaProfile 到数据库 + 下载海报 + 创建 tvshow.nfo（每个 TV 只执行一次）
 			mediaProfileID, saved := mediaProfileCache[tv.ID]
 			if !saved {
 				mediaProfileID = uuid.New().String()
@@ -302,11 +294,18 @@ func main() {
 					fmt.Printf("save MediaProfile failed: %v\n", err)
 				}
 				mediaProfileCache[tv.ID] = mp.ID
-
-				// 在剧集根目录下载海报和创建 tvshow.nfo
-				tvShowDir := f.TV.FileID
-				posterFile := downloadImage(tv.PosterPath, tvShowDir, "poster.jpg")
-				fanartFile := downloadImage(tv.BackdropPath, tvShowDir, "fanart.jpg")
+			}
+			{
+				seasonDir := f.Season.FileID
+				if seasonDir == "" {
+					seasonDir = f.TV.FileID
+				}
+				posterPath := tv.PosterPath
+				if seasonDetail != nil && seasonDetail.PosterPath != "" {
+					posterPath = seasonDetail.PosterPath
+				}
+				downloadImage(posterPath, seasonDir, "poster.jpg")
+				downloadImage(tv.BackdropPath, seasonDir, "fanart.jpg")
 				tvNfo := TVShowNFO{
 					Title:         tv.Name,
 					OriginalTitle: tv.OriginalName,
@@ -316,12 +315,8 @@ func main() {
 					UniqueID:      []NFOUniqueID{{Type: "tmdb", Default: true, Value: tv.ID}},
 					Genres:        genreNames(tv.Genres),
 					Country:       tv.OriginCountry,
-					Poster:        posterFile,
 				}
-				if fanartFile != "" {
-					tvNfo.Fanart = &NFOFanart{Thumb: fanartFile}
-				}
-				tvShowNFOPath := filepath.Join(tvShowDir, "tvshow.nfo")
+				tvShowNFOPath := filepath.Join(seasonDir, "tvshow.nfo")
 				if err := writeNFO(tvShowNFOPath, tvNfo); err != nil {
 					fmt.Printf("write tvshow.nfo failed: %v\n", err)
 				}
@@ -348,7 +343,6 @@ func main() {
 					}
 				}
 			}
-
 		}
 
 		if err := writeNFO(nfoPath, nfo); err != nil {
@@ -403,7 +397,6 @@ func main() {
 					nfo.Year = detail.AirDate[:4]
 				}
 
-				// 保存 MediaProfile
 				mp := model.MediaProfile{
 					ID:           uuid.New().String(),
 					Type:         2,
@@ -441,7 +434,7 @@ func main() {
 	err = w.Run(prevFolder, []string{})
 	if err != nil {
 		fmt.Printf("Walker run failed: %v\n", err)
-		return
+		os.Exit(1)
 	}
 	fmt.Println("Walker finished.")
 }

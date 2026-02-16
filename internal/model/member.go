@@ -13,33 +13,11 @@ type Member struct {
 	Disabled   int       `gorm:"default:0" json:"disabled"`
 	Delete     int       `gorm:"default:0" json:"delete"`
 
-	InviterID    *string       `gorm:"size:36" json:"inviter_id"`
-	Inviter      *Member       `gorm:"foreignKey:InviterID" json:"inviter,omitempty"`
-	FromInviteID *string       `gorm:"size:36" json:"from_invite_id"`
-	FromInvite   *MemberInvite `gorm:"foreignKey:FromInviteID" json:"from_invite,omitempty"`
-	UserID       string        `gorm:"index;size:36" json:"user_id"`
-	User         *User         `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	InviterID    *string `gorm:"size:36" json:"inviter_id"`
+	FromInviteID *string `gorm:"size:36" json:"from_invite_id"`
+	UserID       string  `gorm:"index;size:36" json:"user_id"`
 
-	Setting          *MemberSetting         `gorm:"foreignKey:MemberID" json:"setting,omitempty"`
-	Tokens           []MemberToken          `gorm:"foreignKey:MemberID" json:"tokens,omitempty"`
-	Authentications  []MemberAuthentication `gorm:"foreignKey:MemberID" json:"authentications,omitempty"`
-	Notifications    []MemberNotification   `gorm:"foreignKey:MemberID" json:"notifications,omitempty"`
-	Invitees         []Member               `gorm:"foreignKey:InviterID" json:"invitees,omitempty"`
-	InvitedMembers   []MemberInvite         `gorm:"foreignKey:MemberID" json:"invited_members,omitempty"`
-	CreatedMedias    []SharedMedia          `gorm:"foreignKey:MemberFromID" json:"created_medias,omitempty"`
-	CreatedMediasV2  []SharedMediaV2        `gorm:"foreignKey:MemberFromID" json:"created_medias_v2,omitempty"`
-	ReceivedMedias   []SharedMedia          `gorm:"foreignKey:MemberTargetID" json:"received_medias,omitempty"`
-	ReceivedMediasV2 []SharedMediaV2        `gorm:"foreignKey:MemberTargetID" json:"received_medias_v2,omitempty"`
-	PlayHistories    []PlayHistory          `gorm:"foreignKey:MemberID" json:"play_histories,omitempty"`
-	PlayHistoriesV2  []PlayHistoryV2        `gorm:"foreignKey:MemberID" json:"play_histories_v2,omitempty"`
-	Reports          []Report               `gorm:"foreignKey:MemberID" json:"reports,omitempty"`
-	ReportsV2        []ReportV2             `gorm:"foreignKey:MemberID" json:"reports_v2,omitempty"`
-	Favorites        []MemberFavorite       `gorm:"foreignKey:MemberID" json:"favorites,omitempty"`
-	Diaries          []MemberDiary          `gorm:"foreignKey:MemberID" json:"diaries,omitempty"`
-	InvitationCodes  []InvitationCode       `gorm:"foreignKey:InviterID" json:"invitation_codes,omitempty"`
-	FromCode         *InvitationCode        `gorm:"foreignKey:InviteeID" json:"from_code,omitempty"`
-	AuthCodes        []AuthCode             `gorm:"foreignKey:MemberID" json:"auth_codes,omitempty"`
-	AuthQRCodes      []AuthQRCode           `gorm:"foreignKey:MemberID" json:"auth_qrcodes,omitempty"`
+	Tokens []MemberToken `gorm:"foreignKey:MemberID" json:"tokens,omitempty"`
 }
 
 func (Member) TableName() string {
@@ -56,10 +34,7 @@ type MemberInvite struct {
 	CountLimit *int    `json:"count_limit"`
 	Disabled   int     `gorm:"default:0" json:"disabled"`
 
-	MemberID string  `gorm:"index;size:36" json:"member_id"`
-	Member   *Member `gorm:"foreignKey:MemberID" json:"member,omitempty"`
-
-	InvitedMembers []Member `gorm:"foreignKey:FromInviteID" json:"invited_members,omitempty"`
+	MemberID string `gorm:"index;size:36" json:"member_id"`
 }
 
 func (MemberInvite) TableName() string {
@@ -76,8 +51,7 @@ type MemberAuthentication struct {
 	ProviderArg1 *string `json:"provider_arg1"`
 	ProviderArg2 *string `json:"provider_arg2"`
 
-	MemberID string  `gorm:"index;size:36" json:"member_id"`
-	Member   *Member `gorm:"foreignKey:MemberID" json:"member,omitempty"`
+	MemberID string `gorm:"index;size:36" json:"member_id"`
 }
 
 func (MemberAuthentication) TableName() string {
@@ -94,8 +68,7 @@ type MemberToken struct {
 	ExpiredAt *string  `json:"expired_at"`
 	Invalid   int      `gorm:"default:0" json:"invalid"`
 
-	MemberID string  `gorm:"index;size:36" json:"member_id"`
-	Member   *Member `gorm:"foreignKey:MemberID" json:"member,omitempty"`
+	MemberID string `gorm:"index;size:36" json:"member_id"`
 }
 
 func (MemberToken) TableName() string {
@@ -109,10 +82,8 @@ type MemberFavorite struct {
 
 	Type int `json:"type"`
 
-	MediaID  string  `gorm:"index;size:36" json:"media_id"`
-	Media    *Media  `gorm:"foreignKey:MediaID" json:"media,omitempty"`
-	MemberID string  `gorm:"index;size:36" json:"member_id"`
-	Member   *Member `gorm:"foreignKey:MemberID" json:"member,omitempty"`
+	MediaID  string `gorm:"index;size:36" json:"media_id"`
+	MemberID string `gorm:"index;size:36" json:"member_id"`
 }
 
 func (MemberFavorite) TableName() string {
@@ -131,7 +102,6 @@ type MemberDiary struct {
 	MediaSourceID string       `gorm:"index;size:36" json:"media_source_id"`
 	MediaSource   *MediaSource `gorm:"foreignKey:MediaSourceID" json:"media_source,omitempty"`
 	MemberID      string       `gorm:"index;size:36" json:"member_id"`
-	Member        *Member      `gorm:"foreignKey:MemberID" json:"member,omitempty"`
 }
 
 func (MemberDiary) TableName() string {
@@ -145,8 +115,7 @@ type MemberSetting struct {
 
 	Data string `gorm:"type:text" json:"data"`
 
-	MemberID string  `gorm:"uniqueIndex;size:36" json:"member_id"`
-	Member   *Member `gorm:"foreignKey:MemberID" json:"member,omitempty"`
+	MemberID string `gorm:"uniqueIndex;size:36" json:"member_id"`
 }
 
 func (MemberSetting) TableName() string {
@@ -164,8 +133,7 @@ type MemberNotification struct {
 	Status   int     `gorm:"default:1" json:"status"`
 	IsDelete int     `gorm:"default:0" json:"is_delete"`
 
-	MemberID string  `gorm:"index;size:36" json:"member_id"`
-	Member   *Member `gorm:"foreignKey:MemberID" json:"member,omitempty"`
+	MemberID string `gorm:"index;size:36" json:"member_id"`
 }
 
 func (MemberNotification) TableName() string {

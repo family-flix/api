@@ -8,17 +8,8 @@ type Movie struct {
 
 	Tip *string `json:"tip"`
 
-	ProfileID string        `gorm:"size:36" json:"profile_id"`
-	Profile   *MovieProfile `gorm:"foreignKey:ProfileID" json:"profile,omitempty"`
-	UserID    string        `gorm:"index;size:36" json:"user_id"`
-	User      *User         `gorm:"foreignKey:UserID" json:"user,omitempty"`
-
-	PlayHistories []PlayHistory `gorm:"foreignKey:MovieID" json:"play_histories,omitempty"`
-	ParsedMovies  []ParsedMovie `gorm:"foreignKey:MovieID" json:"parsed_movies,omitempty"`
-	Reports       []Report      `gorm:"foreignKey:MovieID" json:"reports,omitempty"`
-	Subtitles     []Subtitle    `gorm:"foreignKey:MovieID" json:"subtitles,omitempty"`
-	Collections   []Collection  `gorm:"foreignKey:MovieID" json:"collections,omitempty"`
-	SharedMedias  []SharedMedia `gorm:"foreignKey:MovieID" json:"shared_medias,omitempty"`
+	ProfileID string `gorm:"size:36" json:"profile_id"`
+	UserID    string `gorm:"index;size:36" json:"user_id"`
 }
 
 func (Movie) TableName() string {
@@ -47,8 +38,6 @@ type MovieProfile struct {
 	OriginCountry    *string  `gorm:"default:''" json:"origin_country"`
 	Genres           *string  `gorm:"default:''" json:"genres"`
 	Runtime          *int     `gorm:"default:0" json:"runtime"`
-
-	Movies []Movie `gorm:"foreignKey:ProfileID" json:"movies,omitempty"`
 }
 
 func (MovieProfile) TableName() string {

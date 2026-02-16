@@ -13,7 +13,12 @@ import (
 var Logger zerolog.Logger
 
 func init() {
-	Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+	f, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+		return
+	}
+	Logger = zerolog.New(f).With().Timestamp().Logger()
 }
 
 // ParsedVideoInfo matches the structure in types.go

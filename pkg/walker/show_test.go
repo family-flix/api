@@ -1131,4 +1131,14 @@ func TestParseFilenameForVideoShow(t *testing.T) {
 		want := ParsedVideoInfo{Name: "春色JI情REN", OriginalName: "", Season: "", Episode: ""}
 		AssertEqual(t, got, want)
 	})
+	t.Run("Blue Lights", func(t *testing.T) {
+		got := ParseFilenameForVideo("Blue Lights.s02e05.Where I Want to Be.strm")
+		want := ParsedVideoInfo{Name: "", OriginalName: "Blue.Lights", Season: "S02", Episode: "E05"}
+		AssertEqual(t, got, want)
+	})
+	t.Run("Fallout", func(t *testing.T) {
+		got := ParseFilenameForVideo("Fallout.S02E08.The.Strip.2160p.AMZN.WEB-DL.DDP5.1.DoVi.H.265.strm")
+		want := ParsedVideoInfo{Name: "", OriginalName: "Fallout", Season: "S02", Episode: "E08"}
+		AssertEqual(t, got, want)
+	})
 }

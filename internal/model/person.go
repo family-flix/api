@@ -17,8 +17,6 @@ type PersonProfile struct {
 	TMDBID             *string `gorm:"uniqueIndex" json:"tmdb_id"`
 	DoubanID           *string `gorm:"uniqueIndex" json:"douban_id"`
 	IMDBID             *string `gorm:"uniqueIndex" json:"imdb_id"`
-
-	PersonsInMedia []PersonInMedia `gorm:"foreignKey:ProfileID" json:"persons_in_media,omitempty"`
 }
 
 func (PersonProfile) TableName() string {
@@ -37,7 +35,6 @@ type PersonInMedia struct {
 	ProfileID string         `gorm:"index;size:36" json:"profile_id"`
 	Profile   *PersonProfile `gorm:"foreignKey:ProfileID" json:"profile,omitempty"`
 	MediaID   string         `gorm:"index;size:36" json:"media_id"`
-	Media     *MediaProfile  `gorm:"foreignKey:MediaID" json:"media,omitempty"`
 }
 
 func (PersonInMedia) TableName() string {

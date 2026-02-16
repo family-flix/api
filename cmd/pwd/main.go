@@ -1,4 +1,4 @@
-package main
+package pwd
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func main() {
+func Main() {
 	cfg, err := config.New()
 	if err != nil {
 		fmt.Printf("ERROR 加载配置文件失败: %v\n", err.Error())

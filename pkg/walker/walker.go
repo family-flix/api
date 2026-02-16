@@ -3,6 +3,7 @@ package walker
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -197,6 +198,13 @@ func (w *FolderWalker) walk(data interface{}, parents []ParentFolderInfo) error 
 	if isFolder {
 		f := data.(*folder.Folder)
 		parsedInfo := ParseFilenameForVideo(f.Name)
+
+		// Handle "Season X" folder names that the parser doesn't recognize as seasons
+		if parsedInfo.Season == "" {
+			if m := regexp.MustCompile(`(?i)^season\s*(\d+)$`).FindStringSubmatch(f.Name); len(m) > 1 {
+				parsedInfo.Season = formatSeasonNumber("S" + m[1])
+			}
+		}
 
 		for {
 			if w.Delay > 0 {

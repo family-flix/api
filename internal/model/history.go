@@ -11,16 +11,11 @@ type PlayHistory struct {
 	Thumbnail   *string  `json:"thumbnail"`
 	FileID      *string  `json:"file_id"`
 
-	TVID      *string  `gorm:"size:36" json:"tv_id"`
-	TV        *TV      `gorm:"foreignKey:TVID" json:"tv,omitempty"`
-	SeasonID  *string  `gorm:"size:36" json:"season_id"`
-	Season    *Season  `gorm:"foreignKey:SeasonID" json:"season,omitempty"`
-	EpisodeID *string  `gorm:"size:36" json:"episode_id"`
-	Episode   *Episode `gorm:"foreignKey:EpisodeID" json:"episode,omitempty"`
-	MovieID   *string  `gorm:"size:36" json:"movie_id"`
-	Movie     *Movie   `gorm:"foreignKey:MovieID" json:"movie,omitempty"`
-	MemberID  string   `gorm:"index;size:36" json:"member_id"`
-	Member    *Member  `gorm:"foreignKey:MemberID" json:"member,omitempty"`
+	TVID      *string `gorm:"size:36" json:"tv_id"`
+	SeasonID  *string `gorm:"size:36" json:"season_id"`
+	EpisodeID *string `gorm:"size:36" json:"episode_id"`
+	MovieID   *string `gorm:"size:36" json:"movie_id"`
+	MemberID  string  `gorm:"index;size:36" json:"member_id"`
 }
 
 func (PlayHistory) TableName() string {

@@ -33,7 +33,7 @@ func IsNfoFile(filename string) bool {
 func IsVideoFile(filename string) bool {
 	ext := strings.ToLower(filepath.Ext(filename))
 	switch ext {
-	case ".mp4", ".mkv", ".avi", ".mov", ".rmvb", ".wmv", ".flv", ".webm", ".iso", ".m2ts", ".ts":
+	case ".mp4", ".mkv", ".avi", ".mov", ".rmvb", ".wmv", ".flv", ".webm", ".iso", ".m2ts", ".ts", ".strm":
 		return true
 	}
 	return false

@@ -1,7 +1,0 @@
-{"level":"fatal","error":"failed to run migrations: first .: file does not exist","time":"2026-02-16T12:14:10.379389+08:00","message":"Failed to run migrations"}
-{"level":"fatal","error":"failed to create migrator: failed to open source, \"file:////Users/litao/Documents/workspace/family_flix/api/migrations\": open .: no such file or directory","time":"2026-02-16T12:28:54.246046+08:00","message":"Failed to run migrations"}
-{"level":"info","addr":":8081","time":"2026-02-16T12:29:20.770723+08:00","message":"Starting server"}
-{"level":"info","addr":":3200","time":"2026-02-16T13:00:53.739144+08:00","message":"Starting server"}
-{"level":"info","addr":":3200","time":"2026-02-16T13:34:07.846873+08:00","message":"Starting server"}
-{"level":"info","addr":":3200","time":"2026-02-16T13:34:42.566777+08:00","message":"Starting server"}
-{"level":"info","addr":":3200","time":"2026-02-16T13:58:40.288179+08:00","message":"Starting server"}

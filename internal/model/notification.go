@@ -13,7 +13,6 @@ type Notification struct {
 	IsDelete int     `gorm:"default:0" json:"is_delete"`
 
 	UserID string `gorm:"index;size:36" json:"user_id"`
-	User   *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (Notification) TableName() string {

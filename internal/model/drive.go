@@ -21,24 +21,8 @@ type Drive struct {
 	RootFolderName *string    `json:"root_folder_name"`
 	RootFolderID   *string    `json:"root_folder_id"`
 
-	DriveTokenID string      `gorm:"size:36" json:"drive_token_id"`
-	DriveToken   *DriveToken `gorm:"foreignKey:DriveTokenID" json:"drive_token,omitempty"`
-	UserID       string      `gorm:"index;size:36" json:"user_id"`
-	User         *User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
-
-	ParsedTVs             []ParsedTV             `gorm:"foreignKey:DriveID" json:"parsed_tvs,omitempty"`
-	ParsedSeasons         []ParsedSeason         `gorm:"foreignKey:DriveID" json:"parsed_seasons,omitempty"`
-	ParsedEpisodes        []ParsedEpisode        `gorm:"foreignKey:DriveID" json:"parsed_episodes,omitempty"`
-	DriveCheckIns         []DriveCheckIn         `gorm:"foreignKey:DriveID" json:"drive_check_ins,omitempty"`
-	Files                 []File                 `gorm:"foreignKey:DriveID" json:"files,omitempty"`
-	TmpFiles              []TmpFile              `gorm:"foreignKey:DriveID" json:"tmp_files,omitempty"`
-	ParsedMovies          []ParsedMovie          `gorm:"foreignKey:DriveID" json:"parsed_movies,omitempty"`
-	SharedFilesInProgress []SharedFileInProgress `gorm:"foreignKey:DriveID" json:"shared_files_in_progress,omitempty"`
-	Subtitles             []Subtitle             `gorm:"foreignKey:DriveID" json:"subtitles,omitempty"`
-	SyncTasks             []BindForParsedTV      `gorm:"foreignKey:DriveID" json:"sync_tasks,omitempty"`
-	ResourceSyncTasks     []ResourceSyncTask     `gorm:"foreignKey:DriveID" json:"resource_sync_tasks,omitempty"`
-	ParsedMedias          []ParsedMedia          `gorm:"foreignKey:DriveID" json:"parsed_medias,omitempty"`
-	ParsedSources         []ParsedMediaSource    `gorm:"foreignKey:DriveID" json:"parsed_sources,omitempty"`
+	DriveTokenID string `gorm:"size:36" json:"drive_token_id"`
+	UserID       string `gorm:"index;size:36" json:"user_id"`
 }
 
 func (Drive) TableName() string {
@@ -52,8 +36,6 @@ type DriveToken struct {
 
 	Data      string  `gorm:"type:text" json:"data"`
 	ExpiredAt float64 `json:"expired_at"`
-
-	Drives []Drive `gorm:"foreignKey:DriveTokenID" json:"drives,omitempty"`
 }
 
 func (DriveToken) TableName() string {
@@ -67,7 +49,6 @@ type DriveCheckIn struct {
 	CheckedAt *LocalTime `json:"checked_at"`
 
 	DriveID string `gorm:"index;size:36" json:"drive_id"`
-	Drive   *Drive `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 }
 
 func (DriveCheckIn) TableName() string {
@@ -82,7 +63,6 @@ type DriveStatistics struct {
 	Data    string    `gorm:"type:text;default:'{}'" json:"data"`
 
 	UserID string `gorm:"index;size:36" json:"user_id"`
-	User   *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (DriveStatistics) TableName() string {
@@ -105,7 +85,6 @@ type File struct {
 	DriveID string `gorm:"index;size:36" json:"drive_id"`
 	Drive   *Drive `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID  string `gorm:"index;size:36" json:"user_id"`
-	User    *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (File) TableName() string {
@@ -123,9 +102,7 @@ type TmpFile struct {
 	ParentPaths string  `json:"parent_paths"`
 
 	DriveID string `gorm:"index;size:36" json:"drive_id"`
-	Drive   *Drive `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID  string `gorm:"index;size:36" json:"user_id"`
-	User    *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (TmpFile) TableName() string {

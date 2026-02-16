@@ -15,7 +15,6 @@ type TVLive struct {
 	Hidden    int     `gorm:"default:0" json:"hidden"`
 
 	UserID string `gorm:"index;size:36" json:"user_id"`
-	User   *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (TVLive) TableName() string {
@@ -28,8 +27,7 @@ type TVProfileQuick struct {
 	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Name    string    `gorm:"uniqueIndex" json:"name"`
 
-	TVProfileID string     `gorm:"size:36" json:"tv_profile_id"`
-	TVProfile   *TVProfile `gorm:"foreignKey:TVProfileID" json:"tv_profile,omitempty"`
+	TVProfileID string `gorm:"size:36" json:"tv_profile_id"`
 }
 
 func (TVProfileQuick) TableName() string {
@@ -47,9 +45,9 @@ type InvitationCode struct {
 	ExpiredAt *LocalTime `json:"expired_at"`
 
 	InviterID string  `gorm:"index;size:36" json:"inviter_id"`
-	Inviter   *Member `gorm:"foreignKey:InviterID" json:"inviter,omitempty"`
 	InviteeID *string `gorm:"uniqueIndex;size:36" json:"invitee_id"`
-	Invitee   *Member `gorm:"foreignKey:InviteeID" json:"invitee,omitempty"`
+
+	Member *Member `gorm:"foreignKey:InviterID;references:ID" json:"member,omitempty"`
 }
 
 func (InvitationCode) TableName() string {
@@ -66,9 +64,7 @@ type AuthCode struct {
 	Text    *string   `json:"text"`
 
 	MemberID *string `gorm:"size:36" json:"member_id"`
-	Member   *Member `gorm:"foreignKey:MemberID" json:"member,omitempty"`
 	UserID   string  `gorm:"index;size:36" json:"user_id"`
-	User     *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (AuthCode) TableName() string {
@@ -85,9 +81,7 @@ type AuthQRCode struct {
 	Text    *string   `json:"text"`
 
 	MemberID *string `gorm:"size:36" json:"member_id"`
-	Member   *Member `gorm:"foreignKey:MemberID" json:"member,omitempty"`
 	UserID   string  `gorm:"index;size:36" json:"user_id"`
-	User     *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (AuthQRCode) TableName() string {

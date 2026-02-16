@@ -8,17 +8,8 @@ type TV struct {
 
 	Hidden *int `gorm:"default:0" json:"hidden"`
 
-	ProfileID string     `gorm:"size:36" json:"profile_id"`
-	Profile   *TVProfile `gorm:"foreignKey:ProfileID" json:"profile,omitempty"`
-	UserID    string     `gorm:"index;size:36" json:"user_id"`
-	User      *User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
-
-	Seasons       []Season      `gorm:"foreignKey:TVID" json:"seasons,omitempty"`
-	Episodes      []Episode     `gorm:"foreignKey:TVID" json:"episodes,omitempty"`
-	PlayHistories []PlayHistory `gorm:"foreignKey:TVID" json:"play_histories,omitempty"`
-	ParsedTVs     []ParsedTV    `gorm:"foreignKey:TVID" json:"parsed_tvs,omitempty"`
-	Reports       []Report      `gorm:"foreignKey:TVID" json:"reports,omitempty"`
-	Collections   []Collection  `gorm:"foreignKey:TVID" json:"collections,omitempty"`
+	ProfileID string `gorm:"size:36" json:"profile_id"`
+	UserID    string `gorm:"index;size:36" json:"user_id"`
 }
 
 func (TV) TableName() string {
@@ -50,9 +41,6 @@ type TVProfile struct {
 	SeasonCount      *int     `gorm:"default:0" json:"season_count"`
 	Status           *string  `json:"status"`
 	InProduction     *int     `gorm:"default:0" json:"in_production"`
-
-	TVs       []TV             `gorm:"foreignKey:ProfileID" json:"tvs,omitempty"`
-	Snapshots []TVProfileQuick `gorm:"foreignKey:TVProfileID" json:"snapshots,omitempty"`
 }
 
 func (TVProfile) TableName() string {
@@ -68,21 +56,9 @@ type Season struct {
 	SeasonNumber int     `json:"season_number"`
 	Tip          *string `json:"tip"`
 
-	ProfileID string         `gorm:"size:36" json:"profile_id"`
-	Profile   *SeasonProfile `gorm:"foreignKey:ProfileID" json:"profile,omitempty"`
-	TVID      string         `gorm:"index;size:36" json:"tv_id"`
-	TV        *TV            `gorm:"foreignKey:TVID" json:"tv,omitempty"`
-	UserID    string         `gorm:"index;size:36" json:"user_id"`
-	User      *User          `gorm:"foreignKey:UserID" json:"user,omitempty"`
-
-	ParsedSeasons  []ParsedSeason    `gorm:"foreignKey:SeasonID" json:"parsed_seasons,omitempty"`
-	ParsedEpisodes []ParsedEpisode   `gorm:"foreignKey:SeasonID" json:"parsed_episodes,omitempty"`
-	PlayHistories  []PlayHistory     `gorm:"foreignKey:SeasonID" json:"play_histories,omitempty"`
-	Episodes       []Episode         `gorm:"foreignKey:SeasonID" json:"episodes,omitempty"`
-	Reports        []Report          `gorm:"foreignKey:SeasonID" json:"reports,omitempty"`
-	SyncTasks      []BindForParsedTV `gorm:"foreignKey:SeasonID" json:"sync_tasks,omitempty"`
-	Collections    []Collection      `gorm:"foreignKey:SeasonID" json:"collections,omitempty"`
-	SharedMedias   []SharedMedia     `gorm:"foreignKey:SeasonID" json:"shared_medias,omitempty"`
+	ProfileID string `gorm:"size:36" json:"profile_id"`
+	TVID      string `gorm:"index;size:36" json:"tv_id"`
+	UserID    string `gorm:"index;size:36" json:"user_id"`
 }
 
 func (Season) TableName() string {
@@ -104,8 +80,6 @@ type SeasonProfile struct {
 	AirDate      *string  `json:"air_date"`
 	EpisodeCount *int     `gorm:"default:0" json:"episode_count"`
 	VoteAverage  *float64 `gorm:"default:0" json:"vote_average"`
-
-	Seasons []Season `gorm:"foreignKey:ProfileID" json:"seasons,omitempty"`
 }
 
 func (SeasonProfile) TableName() string {
@@ -122,19 +96,10 @@ type Episode struct {
 	EpisodeNumber int     `json:"episode_number"`
 	Tip           *string `json:"tip"`
 
-	ProfileID string          `gorm:"size:36" json:"profile_id"`
-	Profile   *EpisodeProfile `gorm:"foreignKey:ProfileID" json:"profile,omitempty"`
-	TVID      string          `gorm:"index;size:36" json:"tv_id"`
-	TV        *TV             `gorm:"foreignKey:TVID" json:"tv,omitempty"`
-	SeasonID  string          `gorm:"index;size:36" json:"season_id"`
-	Season    *Season         `gorm:"foreignKey:SeasonID" json:"season,omitempty"`
-	UserID    string          `gorm:"index;size:36" json:"user_id"`
-	User      *User           `gorm:"foreignKey:UserID" json:"user,omitempty"`
-
-	ParsedEpisodes []ParsedEpisode `gorm:"foreignKey:EpisodeID" json:"parsed_episodes,omitempty"`
-	PlayHistories  []PlayHistory   `gorm:"foreignKey:EpisodeID" json:"play_histories,omitempty"`
-	Reports        []Report        `gorm:"foreignKey:EpisodeID" json:"reports,omitempty"`
-	Subtitles      []Subtitle      `gorm:"foreignKey:EpisodeID" json:"subtitles,omitempty"`
+	ProfileID string `gorm:"size:36" json:"profile_id"`
+	TVID      string `gorm:"index;size:36" json:"tv_id"`
+	SeasonID  string `gorm:"index;size:36" json:"season_id"`
+	UserID    string `gorm:"index;size:36" json:"user_id"`
 }
 
 func (Episode) TableName() string {
@@ -155,8 +120,6 @@ type EpisodeProfile struct {
 	Runtime       *int    `gorm:"default:0" json:"runtime"`
 	EpisodeNumber *int    `json:"episode_number"`
 	SeasonNumber  *int    `json:"season_number"`
-
-	Episodes []Episode `gorm:"foreignKey:ProfileID" json:"episodes,omitempty"`
 }
 
 func (EpisodeProfile) TableName() string {

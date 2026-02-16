@@ -178,6 +178,25 @@ yarn start
 - [管理后台 API](https://documenter.getpostman.com/view/7312751/2s93sXdEzv)
 - [视频播放 API](https://documenter.getpostman.com/view/7312751/2s93sXdF5R)
 
+## 跨平台打包
+
+```bash
+# Linux amd64
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o flixapi ./main.go
+
+# Linux arm64
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o flixapi ./cmd/server
+
+# macOS amd64 (Intel)
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o flixapi-darwin-amd64 ./cmd/server
+
+# macOS arm64 (Apple Silicon)
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o flixapi-darwin-arm64 ./cmd/server
+
+# Windows amd64
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o flixapi-windows-amd64.exe ./cmd/server
+```
+
 ## 相关项目
 
 - [视频播放移动端](https://github.com/family-flix/mobile1)

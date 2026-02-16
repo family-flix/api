@@ -18,7 +18,6 @@ type AsyncTask struct {
 	OutputID string  `gorm:"uniqueIndex;size:36" json:"output_id"`
 	Output   *Output `gorm:"foreignKey:OutputID" json:"output,omitempty"`
 	UserID   string  `gorm:"index;size:36" json:"user_id"`
-	User     *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (AsyncTask) TableName() string {
@@ -33,10 +32,8 @@ type Output struct {
 	Filepath *string `json:"filepath"`
 
 	UserID string `gorm:"index;size:36" json:"user_id"`
-	User   *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
 
-	AsyncTask *AsyncTask   `gorm:"foreignKey:OutputID" json:"async_task,omitempty"`
-	Lines     []OutputLine `gorm:"foreignKey:OutputID" json:"lines,omitempty"`
+	Lines []OutputLine `gorm:"foreignKey:OutputID" json:"lines,omitempty"`
 }
 
 func (Output) TableName() string {
@@ -51,7 +48,6 @@ type OutputLine struct {
 	Content string `gorm:"type:text" json:"content"`
 
 	OutputID *string `gorm:"index;size:36" json:"output_id"`
-	Output   *Output `gorm:"foreignKey:OutputID" json:"output,omitempty"`
 }
 
 func (OutputLine) TableName() string {
@@ -77,7 +73,6 @@ type ResourceSyncTask struct {
 	DriveID string  `gorm:"index;size:36" json:"drive_id"`
 	Drive   *Drive  `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID  string  `gorm:"index;size:36" json:"user_id"`
-	User    *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (ResourceSyncTask) TableName() string {
@@ -98,11 +93,8 @@ type BindForParsedTV struct {
 	Invalid              *int   `gorm:"default:0" json:"invalid"`
 
 	SeasonID *string `gorm:"size:36" json:"season_id"`
-	Season   *Season `gorm:"foreignKey:SeasonID" json:"season,omitempty"`
 	DriveID  string  `gorm:"index;size:36" json:"drive_id"`
-	Drive    *Drive  `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
 	UserID   string  `gorm:"index;size:36" json:"user_id"`
-	User     *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (BindForParsedTV) TableName() string {
