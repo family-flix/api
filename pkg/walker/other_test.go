@@ -5,404 +5,376 @@ import (
 )
 
 func TestParseFilenameForVideoOther(t *testing.T) {
-	tests := []struct {
-		name     string
-		filename string
-		want     ParsedVideoInfo
-	}{
-		{
-			name:     "第一部",
-			filename: "第一部",
-			want: ParsedVideoInfo{
-				Name: "第一部",
-			},
-		},
-		{
-			name:     "Season 1",
-			filename: "Season 1",
-			want: ParsedVideoInfo{
-				Season: "S01",
-			},
-		},
-		{
-			name:     "S02 1080P  (52集)",
-			filename: "S02 1080P  (52集)",
-			want: ParsedVideoInfo{
-				Season:  "S02",
-				Episode: "E52",
-			},
-		},
-		{
-			name:     "36.mp4",
-			filename: "36.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E36",
-			},
-		},
-		{
-			name:     "【22222abc.com】30.mkv",
-			filename: "【22222abc.com】30.mkv",
-			want: ParsedVideoInfo{
-				Episode: "E30",
-			},
-		},
-		{
-			name:     "15(2).mp4",
-			filename: "15(2).mp4",
-			want: ParsedVideoInfo{
-				Episode: "E15",
-			},
-		},
-		{
-			name:     "28(1).mp4",
-			filename: "28(1).mp4",
-			want: ParsedVideoInfo{
-				Episode: "E28",
-			},
-		},
-		{
-			name:     "15_2.mp4",
-			filename: "15_2.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E15",
-			},
-		},
-		{
-			name:     "01国语.mp4",
-			filename: "01国语.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E01",
-			},
-		},
-		{
-			name:     "【百度云盘下载】35.mp4",
-			filename: "【百度云盘下载】35.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E35",
-			},
-		},
-		{
-			name:     "粤语10",
-			filename: "粤语10",
-			want: ParsedVideoInfo{
-				Episode: "E10",
-			},
-		},
-		{
-			name:     "粤语10.mp4",
-			filename: "粤语10.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E10",
-			},
-		},
-		{
-			name:     "粤语E10.mp4",
-			filename: "粤语E10.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E10",
-			},
-		},
-		{
-			name:     "7.mp4",
-			filename: "7.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E07",
-			},
-		},
-		{
-			name:     "【04】 .mp4",
-			filename: "【04】 .mp4",
-			want: ParsedVideoInfo{
-				Episode: "E04",
-			},
-		},
-		{
-			name:     "08-4K.mp4",
-			filename: "08-4K.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E08",
-			},
-		},
-		{
-			name:     "外挂字幕",
-			filename: "外挂字幕",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "1080P国粤双语",
-			filename: "1080P国粤双语",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "1080P.外挂简中",
-			filename: "1080P.外挂简中",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "1080P官中压制",
-			filename: "1080P官中压制",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "1080P官中",
-			filename: "1080P官中",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "1080P超前完结",
-			filename: "1080P超前完结",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "1080P超前点映",
-			filename: "1080P超前点映",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "连续剧版",
-			filename: "连续剧版",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "4K高码率[单集6GB]",
-			filename: "4K高码率[单集6GB]",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "4K B站logo",
-			filename: "4K B站logo",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "4khq60fps.mp4",
-			filename: "4khq60fps.mp4",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "______.2013.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1.mkv",
-			filename: "______.2013.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1.mkv",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "前5季",
-			filename: "前5季",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "PART.1",
-			filename: "PART.1",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "2023.HD1080P.英语中字.mp4",
-			filename: "2023.HD1080P.英语中字.mp4",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "B站S3",
-			filename: "B站S3",
-			want: ParsedVideoInfo{
-				Season: "S03",
-			},
-		},
-		{
-			name:     "轻音少女高内存版",
-			filename: "轻音少女高内存版",
-			want: ParsedVideoInfo{
-				Name: "轻音少女",
-			},
-		},
-		{
-			name:     "NCOP.mp4",
-			filename: "NCOP.mp4",
-			want: ParsedVideoInfo{
-				Season:  "其他",
-				Episode: "NCOP",
-			},
-		},
-		{
-			name:     "[VCB-Studio] Kakegurui×× [NCOP][Ma10p_1080p][x265_flac].mkv",
-			filename: "[VCB-Studio] Kakegurui×× [NCOP][Ma10p_1080p][x265_flac].mkv",
-			want: ParsedVideoInfo{
-				OriginalName: "Kakegurui",
-				Season:       "其他",
-				Episode:      "NCOP",
-			},
-		},
-		{
-			name:     "[官中 简体][1-12集全]",
-			filename: "[官中 简体][1-12集全]",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "干物妹！小埋R 8 小埋与小光.flv",
-			filename: "干物妹！小埋R 8 小埋与小光.flv",
-			want: ParsedVideoInfo{
-				Name:    "干物妹！小埋R",
-				Episode: "E08",
-			},
-		},
-		{
-			name:     "【海绵宝宝】.SpongeBob CCTV Version",
-			filename: "【海绵宝宝】.SpongeBob CCTV Version",
-			want: ParsedVideoInfo{
-				OriginalName: "SpongeBob",
-			},
-		},
-		{
-			name:     "79.官中简体.mp4",
-			filename: "79.官中简体.mp4",
-			want: ParsedVideoInfo{
-				Episode: "E79",
-			},
-		},
-		{
-			name:     "79​.rmvb",
-			filename: "79​.rmvb",
-			want: ParsedVideoInfo{
-				Episode: "E79",
-			},
-		},
-		{
-			name:     "第10季",
-			filename: "第10季",
-			want: ParsedVideoInfo{
-				Season: "S10",
-			},
-		},
-		{
-			name:     "4K&HDR&60FPS&Dolby&国日双语.mkv",
-			filename: "4K&HDR&60FPS&Dolby&国日双语.mkv",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "001-100",
-			filename: "001-100",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "901-1000",
-			filename: "901-1000",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "1001-1004",
-			filename: "1001-1004",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "1080P俄版流媒体中字.mkv",
-			filename: "1080P俄版流媒体中字.mkv",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "4K高码杜比音效和AAC双音轨.mkv",
-			filename: "4K高码杜比音效和AAC双音轨.mkv",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "4K超前26集完结",
-			filename: "4K超前26集完结",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "超前35-40",
-			filename: "超前35-40",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "超前点播",
-			filename: "超前点播",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "备份",
-			filename: "备份",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "春节限定",
-			filename: "春节限定",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "4K 高码等版本",
-			filename: "4K 高码等版本",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "4KHQ60FPS",
-			filename: "4KHQ60FPS",
-			want:     ParsedVideoInfo{},
-		},
-		{
-			name:     "20230326期：马晓东周志刚师徒进退两难.TS",
-			filename: "20230326期：马晓东周志刚师徒进退两难.TS",
-			want: ParsedVideoInfo{
-				Episode: "20230326",
-			},
-		},
-		{
-			name:     "20230326：马晓东周志刚师徒进退两难.TS",
-			filename: "20230326：马晓东周志刚师徒进退两难.TS",
-			want: ParsedVideoInfo{
-				Episode: "20230326",
-			},
-		},
-		{
-			name:     "[ENG] [090520] [TSKS] Cinderella Man E11.rmvb",
-			filename: "[ENG] [090520] [TSKS] Cinderella Man E11.rmvb",
-			want: ParsedVideoInfo{
-				Name:    "Cinderella Man",
-				Episode: "E11",
-			},
-		},
-		{
-			name:     "Cinderella Man E11.rmvb",
-			filename: "Cinderella Man E11.rmvb",
-			want: ParsedVideoInfo{
-				Name:    "Cinderella Man",
-				Episode: "E11",
-			},
-		},
-		{
-			name:     "Cinderella.Man.E11.rmvb",
-			filename: "Cinderella.Man.E11.rmvb",
-			want: ParsedVideoInfo{
-				Name:    "Cinderella.Man",
-				Episode: "E11",
-			},
-		},
-		{
-			name:     "[S01] [090520] [TSKS] Cinderella Man E11.rmvb",
-			filename: "[S01] [090520] [TSKS] Cinderella Man E11.rmvb",
-			want: ParsedVideoInfo{
-				Name:    "Cinderella Man",
-				Season:  "S01",
-				Episode: "E11",
-			},
-		},
-		{
-			name:     "S01E11.rmvb",
-			filename: "S01E11.rmvb",
-			want: ParsedVideoInfo{
-				Season:  "S01",
-				Episode: "E11",
-			},
-		},
-		{
-			name:     "S01E11",
-			filename: "S01E11",
-			want: ParsedVideoInfo{
-				Season:  "S01",
-				Episode: "E11",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := ParseFilenameForVideo(tt.filename)
-			AssertEqual(t, got, tt.want)
-		})
-	}
+	t.Run("第一部", func(t *testing.T) {
+		got := ParseFilenameForVideo("第一部")
+		want := ParsedVideoInfo{Name: "第一部", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("Season 1", func(t *testing.T) {
+		got := ParseFilenameForVideo("Season 1")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "S01", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("S02 1080P  (52集)", func(t *testing.T) {
+		got := ParseFilenameForVideo("S02 1080P  (52集)")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "S02", Episode: "E52"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("36.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("36.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E36"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("【22222abc.com】30.mkv", func(t *testing.T) {
+		got := ParseFilenameForVideo("【22222abc.com】30.mkv")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E30"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("15(2).mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("15(2).mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E15"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("28(1).mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("28(1).mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E28"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("15_2.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("15_2.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E15"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("01国语.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("01国语.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E01"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("【百度云盘下载】35.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("【百度云盘下载】35.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E35"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("粤语10", func(t *testing.T) {
+		got := ParseFilenameForVideo("粤语10")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E10"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("粤语10.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("粤语10.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E10"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("粤语E10.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("粤语E10.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E10"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("7.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("7.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E07"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("【04】 .mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("【04】 .mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E04"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("08-4K.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("08-4K.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E08"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("外挂字幕", func(t *testing.T) {
+		got := ParseFilenameForVideo("外挂字幕")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("1080P国粤双语", func(t *testing.T) {
+		got := ParseFilenameForVideo("1080P国粤双语")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("1080P.外挂简中", func(t *testing.T) {
+		got := ParseFilenameForVideo("1080P.外挂简中")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("1080P官中压制", func(t *testing.T) {
+		got := ParseFilenameForVideo("1080P官中压制")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("1080P官中", func(t *testing.T) {
+		got := ParseFilenameForVideo("1080P官中")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("1080P超前完结", func(t *testing.T) {
+		got := ParseFilenameForVideo("1080P超前完结")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("1080P超前点映", func(t *testing.T) {
+		got := ParseFilenameForVideo("1080P超前点映")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("连续剧版", func(t *testing.T) {
+		got := ParseFilenameForVideo("连续剧版")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("4K高码率[单集6GB]", func(t *testing.T) {
+		got := ParseFilenameForVideo("4K高码率[单集6GB]")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("4K B站logo", func(t *testing.T) {
+		got := ParseFilenameForVideo("4K B站logo")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("4khq60fps.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("4khq60fps.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("______.2013.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1.mkv", func(t *testing.T) {
+		got := ParseFilenameForVideo("______.2013.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1.mkv")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("前5季", func(t *testing.T) {
+		got := ParseFilenameForVideo("前5季")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("PART.1", func(t *testing.T) {
+		got := ParseFilenameForVideo("PART.1")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("2023.HD1080P.英语中字.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("2023.HD1080P.英语中字.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("B站S3", func(t *testing.T) {
+		got := ParseFilenameForVideo("B站S3")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "S03", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("轻音少女高内存版", func(t *testing.T) {
+		got := ParseFilenameForVideo("轻音少女高内存版")
+		want := ParsedVideoInfo{Name: "轻音少女", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("NCOP.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("NCOP.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "其他", Episode: "NCOP"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("[VCB-Studio] Kakegurui×× [NCOP][Ma10p_1080p][x265_flac].mkv", func(t *testing.T) {
+		got := ParseFilenameForVideo("[VCB-Studio] Kakegurui×× [NCOP][Ma10p_1080p][x265_flac].mkv")
+		want := ParsedVideoInfo{Name: "", OriginalName: "Kakegurui", Season: "其他", Episode: "NCOP"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("[官中 简体][1-12集全]", func(t *testing.T) {
+		got := ParseFilenameForVideo("[官中 简体][1-12集全]")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("干物妹！小埋R 8 小埋与小光.flv", func(t *testing.T) {
+		got := ParseFilenameForVideo("干物妹！小埋R 8 小埋与小光.flv")
+		want := ParsedVideoInfo{Name: "干物妹！小埋R", OriginalName: "", Season: "", Episode: "E08"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("【海绵宝宝】.SpongeBob CCTV Version", func(t *testing.T) {
+		got := ParseFilenameForVideo("【海绵宝宝】.SpongeBob CCTV Version")
+		want := ParsedVideoInfo{Name: "", OriginalName: "SpongeBob", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("79.官中简体.mp4", func(t *testing.T) {
+		got := ParseFilenameForVideo("79.官中简体.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E79"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("79​.rmvb", func(t *testing.T) {
+		got := ParseFilenameForVideo("79​.rmvb")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "E79"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("第10季", func(t *testing.T) {
+		got := ParseFilenameForVideo("第10季")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "S10", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("4K&HDR&60FPS&Dolby&国日双语.mkv", func(t *testing.T) {
+		got := ParseFilenameForVideo("4K&HDR&60FPS&Dolby&国日双语.mkv")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("001-100", func(t *testing.T) {
+		got := ParseFilenameForVideo("001-100")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("901-1000", func(t *testing.T) {
+		got := ParseFilenameForVideo("901-1000")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("1001-1004", func(t *testing.T) {
+		got := ParseFilenameForVideo("1001-1004")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("1080P俄版流媒体中字.mkv", func(t *testing.T) {
+		got := ParseFilenameForVideo("1080P俄版流媒体中字.mkv")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("4K高码杜比音效和AAC双音轨.mkv", func(t *testing.T) {
+		got := ParseFilenameForVideo("4K高码杜比音效和AAC双音轨.mkv")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("4K超前26集完结", func(t *testing.T) {
+		got := ParseFilenameForVideo("4K超前26集完结")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("超前35-40", func(t *testing.T) {
+		got := ParseFilenameForVideo("超前35-40")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("超前点播", func(t *testing.T) {
+		got := ParseFilenameForVideo("超前点播")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("备份", func(t *testing.T) {
+		got := ParseFilenameForVideo("备份")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("春节限定", func(t *testing.T) {
+		got := ParseFilenameForVideo("春节限定")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("4K 高码等版本", func(t *testing.T) {
+		got := ParseFilenameForVideo("4K 高码等版本")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("4KHQ60FPS", func(t *testing.T) {
+		got := ParseFilenameForVideo("4KHQ60FPS")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("20230326期：马晓东周志刚师徒进退两难.TS", func(t *testing.T) {
+		got := ParseFilenameForVideo("20230326期：马晓东周志刚师徒进退两难.TS")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "20230326"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("20230326：马晓东周志刚师徒进退两难.TS", func(t *testing.T) {
+		got := ParseFilenameForVideo("20230326：马晓东周志刚师徒进退两难.TS")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "20230326"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("[ENG] [090520] [TSKS] Cinderella Man E11.rmvb", func(t *testing.T) {
+		got := ParseFilenameForVideo("[ENG] [090520] [TSKS] Cinderella Man E11.rmvb")
+		want := ParsedVideoInfo{Name: "Cinderella Man", OriginalName: "", Season: "", Episode: "E11"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("Cinderella Man E11.rmvb", func(t *testing.T) {
+		got := ParseFilenameForVideo("Cinderella Man E11.rmvb")
+		want := ParsedVideoInfo{Name: "Cinderella Man", OriginalName: "", Season: "", Episode: "E11"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("Cinderella.Man.E11.rmvb", func(t *testing.T) {
+		got := ParseFilenameForVideo("Cinderella.Man.E11.rmvb")
+		want := ParsedVideoInfo{Name: "Cinderella.Man", OriginalName: "", Season: "", Episode: "E11"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("[S01] [090520] [TSKS] Cinderella Man E11.rmvb", func(t *testing.T) {
+		got := ParseFilenameForVideo("[S01] [090520] [TSKS] Cinderella Man E11.rmvb")
+		want := ParsedVideoInfo{Name: "Cinderella Man", OriginalName: "", Season: "S01", Episode: "E11"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("S01E11.rmvb", func(t *testing.T) {
+		got := ParseFilenameForVideo("S01E11.rmvb")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "S01", Episode: "E11"}
+		AssertEqual(t, got, want)
+	})
+
+	t.Run("S01E11", func(t *testing.T) {
+		got := ParseFilenameForVideo("S01E11")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "S01", Episode: "E11"}
+		AssertEqual(t, got, want)
+	})
+
 }

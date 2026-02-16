@@ -1,6 +1,7 @@
 package localdrive
 
 import (
+	"fmt"
 	"mime"
 	"os"
 	"path/filepath"
@@ -106,6 +107,43 @@ func (c *LocalDriveClient) FetchFiles(id string, options drive_client.FetchFiles
 		Items:      items,
 		NextMarker: nextMarker,
 	}, nil
+}
+
+func (c *LocalDriveClient) RefreshProfile() (*drive_client.ProfileInfo, error) {
+	return &drive_client.ProfileInfo{}, nil
+}
+
+func (c *LocalDriveClient) RenameFile(fileID string, name string) (*drive_client.DriveFile, error) {
+	dir := filepath.Dir(fileID)
+	newPath := filepath.Join(dir, name)
+	if err := os.Rename(fileID, newPath); err != nil {
+		return nil, err
+	}
+	return c.FetchFile(newPath)
+}
+
+func (c *LocalDriveClient) DeleteFile(fileID string) error {
+	return os.RemoveAll(fileID)
+}
+
+func (c *LocalDriveClient) CreateFolder(name string, parentFileID string) (*drive_client.DriveFile, error) {
+	p := filepath.Join(parentFileID, name)
+	if err := os.MkdirAll(p, 0755); err != nil {
+		return nil, err
+	}
+	return c.FetchFile(p)
+}
+
+func (c *LocalDriveClient) SearchFiles(name string, fileType string, marker string) (*drive_client.FetchFilesResult, error) {
+	return &drive_client.FetchFilesResult{}, nil
+}
+
+func (c *LocalDriveClient) Download(fileID string) (string, error) {
+	return fileID, nil
+}
+
+func (c *LocalDriveClient) FetchVideoPreviewInfo(fileID string) (*drive_client.VideoPreviewInfo, error) {
+	return nil, fmt.Errorf("local drive does not support video preview")
 }
 
 func (c *LocalDriveClient) fileInfoToDriveFile(path string, info os.FileInfo) *drive_client.DriveFile {

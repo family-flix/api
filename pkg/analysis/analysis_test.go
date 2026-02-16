@@ -3,6 +3,8 @@ package analysis
 import (
 	"context"
 	"testing"
+
+	"github.com/family-flix/api/pkg/types"
 )
 
 // Mocks
@@ -30,7 +32,7 @@ type MockWalker struct {
 	OnEpisode func(parsed any) error
 	OnMovie   func(parsed any) error
 	OnProfile func(profile any) error
-	Filter    func(curFile FileInfo) (bool, error)
+	Filter    func(curFile types.FileInfo) (bool, error)
 	RunCalled bool
 }
 
@@ -39,7 +41,7 @@ func (m *MockWalker) SetOnFile(f func(file File) error)      { m.OnFile = f }
 func (m *MockWalker) SetOnEpisode(f func(parsed any) error)  { m.OnEpisode = f }
 func (m *MockWalker) SetOnMovie(f func(parsed any) error)    { m.OnMovie = f }
 func (m *MockWalker) SetOnProfile(f func(profile any) error) { m.OnProfile = f }
-func (m *MockWalker) SetFilter(f func(curFile FileInfo) (bool, error)) {
+func (m *MockWalker) SetFilter(f func(curFile types.FileInfo) (bool, error)) {
 	m.Filter = f
 }
 func (m *MockWalker) Run(folder any, paths []string) error {
@@ -58,6 +60,12 @@ func (m *MockSearcher) OnPercent(f func(percent float64)) {}
 type MockStore struct {
 	CreatedFiles []FileData
 }
+
+func (m *MockStore) ParsedMediaSource() types.ParsedMediaSourceRepository { return nil }
+func (m *MockStore) ParsedTV() types.ParsedTVRepository                   { return nil }
+func (m *MockStore) ParsedSeason() types.ParsedSeasonRepository           { return nil }
+func (m *MockStore) ParsedEpisode() types.ParsedEpisodeRepository         { return nil }
+func (m *MockStore) ParsedMovie() types.ParsedMovieRepository             { return nil }
 
 func (m *MockStore) FindFile(ctx context.Context, fileID, userID, driveID string) (*FileRecord, error) {
 	return nil, nil // Not found
@@ -99,14 +107,13 @@ func TestDriveAnalysis_Run(t *testing.T) {
 	mockWalker := &MockWalker{}
 	
 	props := DriveAnalysisProps{
-		UniqueID:         "test_run",
-		Assets:           "/tmp",
-		User:             &MockUser{},
-		Drive:            &MockDrive{HasRoot: true},
-		Store:            mockStore,
-		Walker:           mockWalker,
-		Searcher:         &MockSearcher{},
-		ProcessorFactory: &MockProcessorFactory{},
+		UniqueID: "test_run",
+		Assets:   "/tmp",
+		User:     &MockUser{},
+		Drive:    &MockDrive{HasRoot: true},
+		Store:    mockStore,
+		Walker:   mockWalker,
+		Searcher: &MockSearcher{},
 		FolderFactory: func(id string, client any) any {
 			return "mock_folder"
 		},
@@ -137,14 +144,13 @@ func TestDriveAnalysis_Run(t *testing.T) {
 
 func TestDriveAnalysis_Run_NoRoot(t *testing.T) {
 	props := DriveAnalysisProps{
-		UniqueID:         "test_no_root",
-		Assets:           "/tmp",
-		User:             &MockUser{},
-		Drive:            &MockDrive{HasRoot: false},
-		Store:            &MockStore{},
-		Walker:           &MockWalker{},
-		Searcher:         &MockSearcher{},
-		ProcessorFactory: &MockProcessorFactory{},
+		UniqueID: "test_no_root",
+		Assets:   "/tmp",
+		User:     &MockUser{},
+		Drive:    &MockDrive{HasRoot: false},
+		Store:    &MockStore{},
+		Walker:   &MockWalker{},
+		Searcher: &MockSearcher{},
 	}
 
 	da, err := NewDriveAnalysis(props)

@@ -32,6 +32,9 @@ var (
 		{Replace: [2]string{"100.Percent.Wolf", "ORIGINAL_NAME"}},
 		{Replace: [2]string{"20.Days.in.Mariupol", "ORIGINAL_NAME"}},
 		{Replace: [2]string{"100.Yen.Love", "ORIGINAL_NAME"}},
+		{Replace: [2]string{"^24\\.", "ORIGINAL_NAME"}},
+		{Replace: [2]string{"The\\.Story\\.of\\.Ming\\.Lan", ""}},
+		{Replace: [2]string{"1080\\.1080", "1080"}},
 		{Replace: [2]string{"大军师司马懿之军师联盟", "大军师司马懿.S01."}},
 		{Replace: [2]string{"大军师司马懿之虎啸龙吟", "大军师司马懿.S02."}},
 		{Replace: [2]string{"西行纪之集结篇", "西行纪.S02."}},
@@ -821,7 +824,8 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 	// TS 1036: English + Chinese
 	extra_rules = append(extra_rules, ExtraRule{
 		Key:    "name",
-		Regexp: regexp.MustCompile(`\b[a-zA-Z]{1,}(\.[a-zA-Z]{1,}){0,}[\p{Han}]{1,}`),
+		Regexp: regexp.MustCompile(`(?:^|\.)([a-zA-Z]{1,}(?:\.[a-zA-Z]{1,}){0,}[\p{Han}]{1,})`),
+		Pick:   []int{1},
 	})
 
 	// TS 1050: Japanese
@@ -911,6 +915,11 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 			if r1.MatchString(cur_filename) {
 				cur_filename = r1.ReplaceAllString(cur_filename, "$2.$1")
 			}
+			// Handle BURN-E.电焊工波力 -> 电焊工波力.BURN-E
+			r1b := regexp.MustCompile(`^([a-zA-Z][a-zA-Z-]{1,}\.)([\p{Han}]{1,})`)
+			if r1b.MatchString(cur_filename) {
+				cur_filename = r1b.ReplaceAllString(cur_filename, "$2.$1")
+			}
 			// TS: Handle NameS02 -> Name.S02
 			r2 := regexp.MustCompile(`^([\p{Han}]{1,})([sS][0-9]{1,})`)
 			if r2.MatchString(cur_filename) {
@@ -966,7 +975,7 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 	// TS 1184: Chinese Name 4 (Number Start)
 	extra_rules = append(extra_rules, ExtraRule{
 		Key:      "original_name",
-		Regexp:   regexp.MustCompile(`^([a-zA-Z-!]{1,}\.{1}){1,}[a-zA-Z-!]{1,}(\.|$)`),
+		Regexp:   regexp.MustCompile(`^([a-zA-Z-!]{1,}\.{1}){0,}[a-zA-Z-!]{1,}(\.[0-9]{1,2}){0,1}(\.|$)`),
 		Priority: -1,
 		Before: func() *BeforeResult {
 			cur_filename = strings.TrimSuffix(cur_filename, "`")
@@ -981,7 +990,7 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 				return nil
 			}
 			// Skip if the matched content ends with suffix like -IMAX, -WEB, etc.
-			if regexp.MustCompile(`-[A-Z]+$`).MatchString(matchedContent) {
+			if regexp.MustCompile(`-[A-Z]{2,}$`).MatchString(matchedContent) {
 				return &AfterResult{Skip: true}
 			}
 			originalNameIndex := strings.Index(original_filename, matchedContent)
@@ -1123,6 +1132,13 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 		Key:    "episode",
 		Regexp: regexp.MustCompile(`^\.([0-9]{1,})\.`),
 		Pick:   []int{1},
+		Before: func() *BeforeResult {
+			// Skip if episode was already captured from SxxExx pattern
+			if result.Episode != "" && result.Season != "" {
+				return &BeforeResult{Skip: true}
+			}
+			return nil
+		},
 		After: func(matchedContent string) *AfterResult {
 			// fmt.Printf("[debug] After hook checking: %s\n", matchedContent)
 			if regexp.MustCompile(`^\.?([0-9]{3,4})\.?$`).MatchString(matchedContent) {
@@ -1227,13 +1243,17 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 
 	extra_rules = append(extra_rules, ExtraRule{
 		Key:      "original_name",
-		Regexp:   regexp.MustCompile(`^([a-zA-Z-!]{1,}\.{1}){1,}[a-zA-Z-!]{1,}(\.|$)`),
+		Regexp:   regexp.MustCompile(`^([a-zA-Z-!]{1,}\.{1}){0,}[a-zA-Z-!]{1,}(\.[0-9]{1,2}){0,1}(\.|$)`),
 		Priority: -1,
 		Before: func() *BeforeResult {
 			cur_filename = strings.TrimSuffix(cur_filename, "`")
 			// Trim leading dots, spaces, dashes, backticks from the current filename
 			// This handles cases like "`The.Legend" after year extraction
 			cur_filename = regexp.MustCompile("^[.\\- `]+").ReplaceAllString(cur_filename, "")
+			// Skip if Chinese name already captured and original has year pattern
+			if result.Name != "" && regexp.MustCompile(`\.[12][0-9]{3}\.[a-zA-Z]`).MatchString(original_filename) {
+				return &BeforeResult{Skip: true}
+			}
 			return nil
 		},
 		After: func(matchedContent string) *AfterResult {
@@ -1241,7 +1261,7 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 				return nil
 			}
 			// Skip if the matched content ends with suffix like -IMAX, -WEB, etc.
-			if regexp.MustCompile(`-[A-Z]+$`).MatchString(matchedContent) {
+			if regexp.MustCompile(`-[A-Z]{2,}$`).MatchString(matchedContent) {
 				return &AfterResult{Skip: true}
 			}
 			originalNameIndex := strings.Index(original_filename, matchedContent)
@@ -1467,7 +1487,7 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 	}
 
 	if result.OriginalName != "" {
-		result.OriginalName = strings.TrimSuffix(result.OriginalName, ".")
+		result.OriginalName = strings.TrimRight(result.OriginalName, "-.")
 	}
 
 	if result.Season != "" && result.Episode == "" && result.Type != "" {
@@ -1943,6 +1963,9 @@ func preprocess_filename(filename string) string {
 	// replace(/(第 ){0,1}([2][0-3][0-9]{2})-{0,1}([0-2][0-9])-{0,1}([0-3][0-9]) 期/, "$2$3$4期")
 	s = regexp.MustCompile(`(第 ){0,1}([2][0-3][0-9]{2})-{0,1}([0-2][0-9])-{0,1}([0-3][0-9]) 期`).ReplaceAllString(s, "$2$3$4期")
 
+	// Handle YYYY.MM.DD期 -> YYYYMMDD期
+	s = regexp.MustCompile(`([2][0-3][0-9]{2})\.([0-2][0-9])\.([0-3][0-9])期`).ReplaceAllString(s, "${1}${2}${3}期")
+
 	// replace(/^\[[a-zA-Z0-9&-]{1,}\]/, ".")
 	s = regexp.MustCompile(`^\[[a-zA-Z0-9&-]{1,}\]`).ReplaceAllString(s, ".")
 
@@ -2012,6 +2035,10 @@ func preprocess_filename(filename string) string {
 
 	// replace(/^\./, "")
 	s = regexp.MustCompile(`^\.`).ReplaceAllString(s, "")
+
+	// replace 10.04期-下 pattern with 1004期-下 (e.g. 10.04期-下 -> 1004期-下)
+	// This handles cases where two episode numbers are separated by a dot
+	s = regexp.MustCompile(`([0-9]{2})\.([0-9]{2})期-([上下])`).ReplaceAllString(s, "${1}${2}期-${3}")
 
 	// replace(/^\(([0-9]{1,})\)/, "E$1.")
 	s = regexp.MustCompile(`^\(([0-9]{1,})\)`).ReplaceAllString(s, "E$1.")

@@ -337,7 +337,7 @@ func TestParseFilenameForVideoMovie(t *testing.T) {
 
 	t.Run("BURN-E", func(t *testing.T) {
 		got := ParseFilenameForVideo("2008.BURN-E.电焊工波力.HR-HDTV.AC3.1024X576.x264-人人影视制作.mkv")
-		want := ParsedVideoInfo{Name: "BURN-", OriginalName: "", Season: "", Episode: ""}
+		want := ParsedVideoInfo{Name: "电焊工波力", OriginalName: "BURN-E", Season: "", Episode: ""}
 		AssertEqual(t, got, want)
 	})
 }
