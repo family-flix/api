@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type PlayHistory struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Duration    *float64 `gorm:"default:0" json:"duration"`
 	CurrentTime *float64 `gorm:"default:0" json:"current_time"`
@@ -30,8 +29,8 @@ func (PlayHistory) TableName() string {
 
 type PlayHistoryV2 struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Text          string  `json:"text"`
 	Duration      float64 `gorm:"default:0" json:"duration"`

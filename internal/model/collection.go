@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type Collection struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Title  string  `json:"title"`
 	Desc   *string `json:"desc"`
@@ -32,8 +31,8 @@ func (Collection) TableName() string {
 
 type CollectionV2 struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Title  string  `json:"title"`
 	Desc   *string `json:"desc"`

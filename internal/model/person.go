@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type PersonProfile struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Name               string  `json:"name"`
 	Alias              *string `json:"alias"`
@@ -28,8 +27,8 @@ func (PersonProfile) TableName() string {
 
 type PersonInMedia struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Name               string  `json:"name"`
 	Order              int     `json:"order"`

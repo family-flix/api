@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type Member struct {
 	ID         string    `gorm:"primaryKey;size:36" json:"id"`
-	Created    time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated    time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created    LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated    LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Email      *string   `json:"email"`
 	Name       *string   `json:"name"`
 	Avatar     *string   `json:"avatar"`
@@ -49,8 +48,8 @@ func (Member) TableName() string {
 
 type MemberInvite struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Content    *string `json:"content"`
 	ExpiredAt  string  `json:"expired_at"`
@@ -69,8 +68,8 @@ func (MemberInvite) TableName() string {
 
 type MemberAuthentication struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Provider     string  `json:"provider"`
 	ProviderID   string  `json:"provider_id"`
@@ -87,8 +86,8 @@ func (MemberAuthentication) TableName() string {
 
 type MemberToken struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Token     string   `json:"token"`
 	Used      *float64 `gorm:"default:0" json:"used"`
@@ -105,8 +104,8 @@ func (MemberToken) TableName() string {
 
 type MemberFavorite struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type int `json:"type"`
 
@@ -122,8 +121,8 @@ func (MemberFavorite) TableName() string {
 
 type MemberDiary struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Day     string  `json:"day"`
 	Content *string `gorm:"type:text" json:"content"`
@@ -141,8 +140,8 @@ func (MemberDiary) TableName() string {
 
 type MemberSetting struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Data string `gorm:"type:text" json:"data"`
 
@@ -156,8 +155,8 @@ func (MemberSetting) TableName() string {
 
 type MemberNotification struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	UniqueID string  `json:"unique_id"`
 	Content  *string `gorm:"type:text" json:"content"`

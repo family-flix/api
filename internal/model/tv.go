@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type TV struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Hidden *int `gorm:"default:0" json:"hidden"`
 
@@ -28,8 +27,8 @@ func (TV) TableName() string {
 
 type TVProfile struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	UniqueID         string   `gorm:"uniqueIndex" json:"unique_id"`
 	Source           *int     `gorm:"default:0" json:"source"`
@@ -62,8 +61,8 @@ func (TVProfile) TableName() string {
 
 type Season struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	SeasonText   string  `json:"season_text"`
 	SeasonNumber int     `json:"season_number"`
@@ -92,8 +91,8 @@ func (Season) TableName() string {
 
 type SeasonProfile struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	UniqueID     string   `gorm:"uniqueIndex" json:"unique_id"`
 	Source       *int     `gorm:"default:0" json:"source"`
@@ -115,8 +114,8 @@ func (SeasonProfile) TableName() string {
 
 type Episode struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	EpisodeText   string  `json:"episode_text"`
 	SeasonText    string  `json:"season_text"`
@@ -144,8 +143,8 @@ func (Episode) TableName() string {
 
 type EpisodeProfile struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	UniqueID      string  `gorm:"uniqueIndex" json:"unique_id"`
 	Source        *int    `gorm:"default:0" json:"source"`

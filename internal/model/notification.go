@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type Notification struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	UniqueID string  `json:"unique_id"`
 	Content  *string `gorm:"type:text" json:"content"`

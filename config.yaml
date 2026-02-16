@@ -1,0 +1,7 @@
+database:
+  type: sqlite
+  path: data/family_flix.db
+  migrations_path: migrations
+
+server:
+  port: 3200

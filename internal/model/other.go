@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type TVLive struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Name      string  `json:"name"`
 	URL       string  `json:"url"`
@@ -25,8 +24,8 @@ func (TVLive) TableName() string {
 
 type TVProfileQuick struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Name    string    `gorm:"uniqueIndex" json:"name"`
 
 	TVProfileID string     `gorm:"size:36" json:"tv_profile_id"`
@@ -39,13 +38,13 @@ func (TVProfileQuick) TableName() string {
 
 type InvitationCode struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Text      string     `json:"text"`
 	Used      int        `gorm:"default:0" json:"used"`
-	UsedAt    *time.Time `json:"used_at"`
-	ExpiredAt *time.Time `json:"expired_at"`
+	UsedAt    *LocalTime `json:"used_at"`
+	ExpiredAt *LocalTime `json:"expired_at"`
 
 	InviterID string  `gorm:"index;size:36" json:"inviter_id"`
 	Inviter   *Member `gorm:"foreignKey:InviterID" json:"inviter,omitempty"`
@@ -59,11 +58,11 @@ func (InvitationCode) TableName() string {
 
 type AuthCode struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Step    int       `json:"step"`
-	Expires time.Time `json:"expires"`
+	Expires LocalTime `json:"expires"`
 	Text    *string   `json:"text"`
 
 	MemberID *string `gorm:"size:36" json:"member_id"`
@@ -78,11 +77,11 @@ func (AuthCode) TableName() string {
 
 type AuthQRCode struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Step    int       `json:"step"`
-	Expires time.Time `json:"expires"`
+	Expires LocalTime `json:"expires"`
 	Text    *string   `json:"text"`
 
 	MemberID *string `gorm:"size:36" json:"member_id"`
@@ -97,8 +96,8 @@ func (AuthQRCode) TableName() string {
 
 type Log struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Title string `json:"title"`
 }

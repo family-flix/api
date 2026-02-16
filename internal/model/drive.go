@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type Drive struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	UniqueID       string     `gorm:"uniqueIndex:idx_user_unique" json:"unique_id"`
 	Type           *int       `gorm:"default:0" json:"type"`
@@ -18,7 +17,7 @@ type Drive struct {
 	Invalid        *int       `gorm:"default:0" json:"invalid"`
 	Hidden         *int       `gorm:"default:0" json:"hidden"`
 	Sort           *int       `gorm:"default:0" json:"sort"`
-	LatestAnalysis *time.Time `json:"latest_analysis"`
+	LatestAnalysis *LocalTime `json:"latest_analysis"`
 	RootFolderName *string    `json:"root_folder_name"`
 	RootFolderID   *string    `json:"root_folder_id"`
 
@@ -48,8 +47,8 @@ func (Drive) TableName() string {
 
 type DriveToken struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Data      string  `gorm:"type:text" json:"data"`
 	ExpiredAt float64 `json:"expired_at"`
@@ -63,9 +62,9 @@ func (DriveToken) TableName() string {
 
 type DriveCheckIn struct {
 	ID        string     `gorm:"primaryKey;size:36" json:"id"`
-	Created   time.Time  `gorm:"autoCreateTime" json:"created"`
-	Updated   time.Time  `gorm:"autoUpdateTime" json:"updated"`
-	CheckedAt *time.Time `json:"checked_at"`
+	Created   LocalTime  `gorm:"autoCreateTime" json:"created"`
+	Updated   LocalTime  `gorm:"autoUpdateTime" json:"updated"`
+	CheckedAt *LocalTime `json:"checked_at"`
 
 	DriveID string `gorm:"index;size:36" json:"drive_id"`
 	Drive   *Drive `gorm:"foreignKey:DriveID" json:"drive,omitempty"`
@@ -77,8 +76,8 @@ func (DriveCheckIn) TableName() string {
 
 type DriveStatistics struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Date    string    `gorm:"size:50" json:"date"`
 	Data    string    `gorm:"type:text;default:'{}'" json:"data"`
 
@@ -92,8 +91,8 @@ func (DriveStatistics) TableName() string {
 
 type File struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	FileID       string  `json:"file_id"`
 	Name         string  `json:"name"`
@@ -115,8 +114,8 @@ func (File) TableName() string {
 
 type TmpFile struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type        float64 `gorm:"default:2" json:"type"`
 	Name        string  `json:"name"`

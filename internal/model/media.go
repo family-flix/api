@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type Media struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type int    `gorm:"default:1" json:"type"`
 	Text string `gorm:"type:text" json:"text"`
@@ -32,8 +31,8 @@ func (Media) TableName() string {
 
 type MediaSource struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type int    `gorm:"default:1" json:"type"`
 	Text string `gorm:"type:text" json:"text"`
@@ -59,8 +58,8 @@ func (MediaSource) TableName() string {
 
 type MediaSeriesProfile struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type            int            `gorm:"default:1" json:"type"`
 	Name            string         `json:"name"`
@@ -83,8 +82,8 @@ func (MediaSeriesProfile) TableName() string {
 
 type MediaProfile struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type         int     `gorm:"default:1" json:"type"`
 	Name         string  `json:"name"`
@@ -120,8 +119,8 @@ func (MediaProfile) TableName() string {
 
 type MediaSourceProfile struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type         int     `gorm:"default:1" json:"type"`
 	Name         string  `json:"name"`

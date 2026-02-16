@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
 	"github.com/family-flix/api/internal/domain/member"
@@ -278,16 +279,16 @@ func AdminDriveExport(c Context) error {
 	var profileData map[string]interface{}
 	json.Unmarshal([]byte(d.Profile), &profileData)
 	result := R{
-		"name":            d.Name,
-		"avatar":          d.Avatar,
-		"root_folder_id":  d.RootFolderID,
-		"total_size":      d.TotalSize,
-		"used_size":       d.UsedSize,
-		"refresh_token":   tokenData["refresh_token"],
-		"access_token":    tokenData["access_token"],
-		"drive_id":        profileData["drive_id"],
-		"device_id":       profileData["device_id"],
-		"app_id":          profileData["app_id"],
+		"name":           d.Name,
+		"avatar":         d.Avatar,
+		"root_folder_id": d.RootFolderID,
+		"total_size":     d.TotalSize,
+		"used_size":      d.UsedSize,
+		"refresh_token":  tokenData["refresh_token"],
+		"access_token":   tokenData["access_token"],
+		"drive_id":       profileData["drive_id"],
+		"device_id":      profileData["device_id"],
+		"app_id":         profileData["app_id"],
 	}
 	return ok(c, "", result)
 }
@@ -1717,20 +1718,20 @@ func AdminSyncTaskPartial(c Context) error {
 		return fail(c, 404, "没有匹配的记录")
 	}
 	item := R{
-		"id":                     t.ID,
-		"url":                    t.URL,
-		"file_id":                t.FileID,
-		"name":                   t.Name,
-		"file_id_link_resource":  t.FileIDLinkResource,
+		"id":                      t.ID,
+		"url":                     t.URL,
+		"file_id":                 t.FileID,
+		"name":                    t.Name,
+		"file_id_link_resource":   t.FileIDLinkResource,
 		"file_name_link_resource": t.FileNameLinkResource,
-		"invalid":                t.Invalid,
+		"invalid":                 t.Invalid,
 	}
 	if t.Media != nil && t.Media.Profile != nil {
 		item["season"] = R{
-			"id":                t.Media.ID,
-			"name":              t.Media.Profile.Name,
-			"poster_path":       t.Media.Profile.PosterPath,
-			"episode_count":     t.Media.Profile.SourceCount,
+			"id":            t.Media.ID,
+			"name":          t.Media.Profile.Name,
+			"poster_path":   t.Media.Profile.PosterPath,
+			"episode_count": t.Media.Profile.SourceCount,
 		}
 	}
 	if t.Drive != nil {
@@ -1777,13 +1778,13 @@ func AdminSyncTaskList(c Context) error {
 	var nextMarker string
 	for _, t := range tasks {
 		item := R{
-			"id":                     t.ID,
-			"url":                    t.URL,
-			"file_id":                t.FileID,
-			"name":                   t.Name,
-			"file_id_link_resource":  t.FileIDLinkResource,
+			"id":                      t.ID,
+			"url":                     t.URL,
+			"file_id":                 t.FileID,
+			"name":                    t.Name,
+			"file_id_link_resource":   t.FileIDLinkResource,
 			"file_name_link_resource": t.FileNameLinkResource,
-			"invalid":                t.Invalid,
+			"invalid":                 t.Invalid,
 		}
 		if t.Media != nil && t.Media.Profile != nil {
 			item["season"] = R{
@@ -2671,7 +2672,7 @@ func WechatAuthCodeCreate(c Context) error {
 	code := model.AuthQRCode{
 		ID:      member.Rid(),
 		Step:    1,
-		Expires: time.Now().Add(3 * time.Minute),
+		Expires: model.LocalTime{Time: time.Now().Add(3 * time.Minute)},
 		UserID:  adminUser.ID,
 	}
 	if err := c.DB().Create(&code).Error; err != nil {
@@ -2691,7 +2692,7 @@ func WechatAuthCodeCheck(c Context) error {
 	if err := c.DB().Preload("Member").Where("id = ?", body.Code).First(&code).Error; err != nil {
 		return fail(c, 404, "无效的二维码")
 	}
-	if time.Now().After(code.Expires) {
+	if time.Now().After(code.Expires.Time) {
 		return ok(c, "", R{"step": 4}) // Expired
 	}
 	if code.Step == 3 && code.MemberID != nil {
@@ -2727,7 +2728,7 @@ func WechatAuthCodeConfirm(c Context) error {
 	if err := c.DB().Where("id = ?", body.Code).First(&code).Error; err != nil {
 		return fail(c, 404, "无效的二维码")
 	}
-	if time.Now().After(code.Expires) {
+	if time.Now().After(code.Expires.Time) {
 		return fail(c, 900, "二维码已过期")
 	}
 	updates := map[string]interface{}{"step": body.Status}
@@ -3914,4 +3915,197 @@ func AdminAnalysisFiles(c Context) error {
 func AdminAnalysisNewFiles(c Context) error {
 	// TODO: requires drive client for analysis
 	return fail(c, 501, "未实现")
+}
+
+func SetupRouter(e *echo.Echo, db *gorm.DB) {
+	w := func(h HandlerFunc) echo.HandlerFunc {
+		return WrapEcho(db, h)
+	}
+
+	e.GET("/api/ping", w(Ping))
+	e.GET("/api/proxy", w(Proxy))
+
+	e.POST("/api/admin/user/login", w(AdminUserLogin))
+	e.POST("/api/admin/user/register", w(AdminUserRegister))
+	e.POST("/api/admin/user/logout", w(AdminUserLogout))
+	e.POST("/api/admin/user/profile", w(AdminUserProfile))
+	e.POST("/api/admin/user/validate", w(AdminUserValidate))
+	e.GET("/api/admin/user/existing", w(AdminUserExisting))
+	e.POST("/api/admin/parse", w(AdminParse))
+	e.POST("/api/admin/drive/list", w(AdminDriveList))
+	e.POST("/api/admin/person/list", w(AdminPersonList))
+	e.POST("/api/admin/shared_file/check_same_name", w(AdminSharedFileCheckSameName))
+	e.POST("/api/admin/shared_file/search", w(AdminSharedFileSearch))
+	e.GET("/api/admin/shared_file_save/list", w(AdminSharedFileSaveList))
+	e.GET("/api/admin/short_link", w(AdminShortLink))
+	e.GET("/api/admin/tv/list", w(AdminTvList))
+	e.POST("/api/admin/member/list", w(AdminMemberList))
+	e.POST("/api/admin/member/add", w(AdminMemberAdd))
+	e.POST("/api/admin/member/token/add", w(AdminMemberTokenAdd))
+	e.POST("/api/admin/permission/list", w(AdminPermissionList))
+	e.POST("/api/admin/permission/add", w(AdminPermissionAdd))
+	e.POST("/api/admin/settings", w(AdminSettingsProfile))
+
+	e.POST("/api/v1/drive/find_first", w(V1DriveFindFirst))
+	e.POST("/api/v1/drive/update", w(V1DriveUpdate))
+	e.POST("/api/v1/drive_token/update", w(V1DriveTokenUpdate))
+	e.POST("/api/v1/user/find_first", w(V1UserFindFirst))
+
+	e.POST("/api/v2/admin/dashboard", w(AdminDashboard))
+	e.POST("/api/v2/admin/dashboard/refresh", w(AdminDashboardRefresh))
+	e.POST("/api/v2/admin/dashboard/added_media", w(AdminDashboardAddedMedia))
+	e.POST("/api/v2/admin/analysis", w(AdminAnalysis))
+	e.POST("/api/v2/admin/analysis/files", w(AdminAnalysisFiles))
+	e.POST("/api/v2/admin/analysis/new_files", w(AdminAnalysisNewFiles))
+	e.POST("/api/v2/admin/drive/list", w(AdminDriveList))
+	e.POST("/api/v2/admin/drive/add", w(AdminDriveAdd))
+	e.POST("/api/v2/admin/drive/delete", w(AdminDriveDelete))
+	e.POST("/api/v2/admin/drive/profile", w(AdminDriveProfile))
+	e.POST("/api/v2/admin/drive/refresh", w(AdminDriveRefresh))
+	e.POST("/api/v2/admin/drive/set_token", w(AdminDriveSetToken))
+	e.POST("/api/v2/admin/drive/set_root_folder", w(AdminDriveSetRootFolder))
+	e.POST("/api/v2/admin/drive/export", w(AdminDriveExport))
+	e.POST("/api/v2/admin/drive/check_in", w(AdminDriveCheckIn))
+	e.POST("/api/v2/admin/drive/receive_rewards", w(AdminDriveReceiveRewards))
+	e.POST("/api/v2/admin/drive/update", w(AdminDriveUpdate))
+	e.POST("/api/v2/admin/resource/files", w(AdminResourceFiles))
+	e.POST("/api/v2/admin/resource/transfer", w(AdminResourceTransfer))
+	e.POST("/api/v2/admin/task/list", w(AdminTaskList))
+	e.POST("/api/v2/admin/task/status", w(AdminTaskStatus))
+	e.POST("/api/v2/admin/task/pause", w(AdminTaskPause))
+	e.POST("/api/v2/admin/task/profile", w(AdminTaskProfile))
+	e.POST("/api/v2/admin/media/transfer", w(AdminMediaTransfer))
+	e.POST("/api/v2/admin/media/archive/list", w(AdminMediaArchiveList))
+	e.POST("/api/v2/admin/media/archive/partial", w(AdminMediaArchivePartial))
+	e.POST("/api/v2/admin/media/to_resource_drive", w(AdminMediaToResourceDrive))
+	e.POST("/api/v2/admin/media/refresh_profile", w(AdminMediaRefreshProfile))
+	e.POST("/api/v2/admin/media/invalid", w(AdminMediaInvalid))
+	e.POST("/api/v2/admin/media/delete", w(AdminMediaDelete))
+	e.POST("/api/v2/admin/media/set_profile", w(AdminMediaSetProfile))
+	e.POST("/api/v2/admin/media_source/list", w(AdminMediaSourceList))
+	e.POST("/api/v2/admin/season/list", w(AdminSeasonList))
+	e.POST("/api/v2/admin/season/profile", w(AdminSeasonProfile))
+	e.POST("/api/v2/admin/season/partial", w(AdminSeasonPartial))
+	e.POST("/api/v2/admin/movie/list", w(AdminMovieList))
+	e.POST("/api/v2/admin/movie/profile", w(AdminMovieProfile))
+	e.POST("/api/v2/admin/subtitle/list", w(AdminSubtitleList))
+	e.POST("/api/v2/admin/subtitle/parse", w(AdminSubtitleParse))
+	e.POST("/api/v2/admin/subtitle/batch_create", w(AdminSubtitleBatchCreate))
+	e.POST("/api/v2/admin/subtitle/delete", w(AdminSubtitleDelete))
+	e.POST("/api/v2/admin/parsed_media/list", w(AdminParsedMediaList))
+	e.POST("/api/v2/admin/parsed_media/set_profile", w(AdminParsedMediaSetProfile))
+	e.POST("/api/v2/admin/parsed_media/set_profile_after_create", w(AdminParsedMediaSetProfileAfterCreate))
+	e.POST("/api/v2/admin/parsed_media/set_profile_in_file_id", w(AdminParsedMediaSetProfileInFileId))
+	e.POST("/api/v2/admin/parsed_media/delete", w(AdminParsedMediaDelete))
+	e.POST("/api/v2/admin/parsed_media_source/list", w(AdminParsedMediaSourceList))
+	e.POST("/api/v2/admin/parsed_media_source/set_profile", w(AdminParsedMediaSourceSetProfile))
+	e.POST("/api/v2/admin/parsed_media_source/delete", w(AdminParsedMediaSourceDelete))
+	e.POST("/api/v2/admin/parsed_media_source/preview", w(AdminParsedMediaSourcePreview))
+	e.POST("/api/v2/admin/member/list", w(AdminMemberList))
+	e.POST("/api/v2/admin/member/add", w(AdminMemberAdd))
+	e.POST("/api/v2/admin/member/profile", w(AdminMemberProfile))
+	e.POST("/api/v2/admin/member/delete", w(AdminMemberDelete))
+	e.POST("/api/v2/admin/member/update_permission", w(AdminMemberUpdatePermission))
+	e.POST("/api/v2/admin/member/add_token", w(AdminMemberAddToken))
+	e.POST("/api/v2/admin/member/histories", w(AdminMemberHistories))
+	e.POST("/api/v2/admin/clear_thumbnails", w(AdminClearThumbnails))
+	e.POST("/api/v2/admin/collection/list", w(AdminCollectionList))
+	e.POST("/api/v2/admin/collection/create", w(AdminCollectionCreate))
+	e.POST("/api/v2/admin/collection/edit", w(AdminCollectionEdit))
+	e.POST("/api/v2/admin/collection/delete", w(AdminCollectionDelete))
+	e.POST("/api/v2/admin/collection/profile", w(AdminCollectionProfile))
+	e.POST("/api/v2/admin/collection/refresh_media_rank", w(AdminCollectionRefreshMediaRank))
+	e.POST("/api/v2/admin/sync_task/complete", w(AdminSyncTaskComplete))
+	e.POST("/api/v2/admin/sync_task/run", w(AdminSyncTaskRun))
+	e.POST("/api/v2/admin/sync_task/update", w(AdminSyncTaskUpdate))
+	e.POST("/api/v2/admin/sync_task/partial", w(AdminSyncTaskPartial))
+	e.POST("/api/v2/admin/sync_task/list", w(AdminSyncTaskList))
+	e.POST("/api/v2/admin/sync_task/create", w(AdminSyncTaskCreate))
+	e.POST("/api/v2/admin/sync_task/delete", w(AdminSyncTaskDelete))
+	e.POST("/api/v2/admin/sync_task/override", w(AdminSyncTaskOverride))
+	e.POST("/api/v2/admin/sync_task/transfer_history", w(AdminSyncTaskTransferHistory))
+	e.POST("/api/v2/admin/sync_task/search_history", w(AdminSyncTaskSearchHistory))
+	e.POST("/api/v2/admin/report/list", w(AdminReportList))
+	e.POST("/api/v2/admin/report/reply", w(AdminReportReply))
+	e.POST("/api/v2/admin/settings/profile", w(AdminSettingsProfile))
+	e.POST("/api/v2/admin/settings/update", w(AdminSettingsUpdate))
+	e.POST("/api/v2/parsed_media/match_profile", w(AdminParsedMediaMatchProfile))
+
+	e.POST("/api/v2/drive/file/add", w(DriveFileAdd))
+	e.POST("/api/v2/drive/file/list", w(DriveFileList))
+	e.POST("/api/v2/drive/file/profile", w(DriveFileProfile))
+	e.POST("/api/v2/drive/file/delete", w(DriveFileDelete))
+	e.POST("/api/v2/drive/file/download", w(DriveFileDownload))
+	e.POST("/api/v2/drive/file/transfer", w(DriveFileTransfer))
+	e.POST("/api/v2/drive/file/to_resource_drive", w(DriveFileToResourceDrive))
+	e.POST("/api/v2/drive/file/search", w(DriveFileSearch))
+	e.POST("/api/v2/drive/file/rename", w(DriveFileRename))
+	e.POST("/api/v2/drive/rename_files", w(DriveRenameFiles))
+	e.POST("/api/v2/local_file/list", w(LocalFileList))
+
+	e.POST("/api/v2/media_profile/list", w(MediaProfileList))
+	e.POST("/api/v2/media_profile/search", w(MediaProfileSearch))
+	e.POST("/api/v2/media_profile/partial", w(MediaProfilePartial))
+	e.POST("/api/v2/media_profile/profile", w(MediaProfileProfile))
+	e.POST("/api/v2/media_profile/series_profile", w(MediaProfileSeriesProfile))
+	e.POST("/api/v2/media_profile/set_name", w(MediaProfileSetName))
+	e.POST("/api/v2/media_profile/refresh", w(MediaProfileRefresh))
+	e.POST("/api/v2/media_profile/init_series", w(MediaProfileInitSeries))
+	e.POST("/api/v2/media_profile/init_season", w(MediaProfileInitSeason))
+	e.POST("/api/v2/media_profile/edit", w(MediaProfileEdit))
+	e.POST("/api/v2/media_profile/delete", w(MediaProfileDelete))
+	e.POST("/api/v2/media_profile/search_tmdb", w(MediaProfileSearchTmdb))
+
+	e.POST("/api/v2/common/analysis", w(CommonAnalysis))
+
+	e.GET("/api/history", w(HistoryList))
+	e.GET("/api/history/list", w(HistoryList))
+	e.POST("/api/history/update", w(HistoryUpdate))
+	e.POST("/api/invitee/add", w(InviteeAdd))
+	e.GET("/api/invitee/list", w(InviteeList))
+	e.GET("/api/info", w(Info))
+	e.POST("/api/account/merge", w(AccountMerge))
+	e.POST("/api/collection/list", w(CollectionList))
+	e.POST("/api/validate", w(Validate))
+
+	e.POST("/api/v2/wechat/auth/login", w(WechatAuthLogin))
+	e.POST("/api/v2/wechat/auth/register", w(WechatAuthRegister))
+	e.POST("/api/v2/wechat/auth/code/create", w(WechatAuthCodeCreate))
+	e.POST("/api/v2/wechat/auth/code/check", w(WechatAuthCodeCheck))
+	e.POST("/api/v2/wechat/auth/code/confirm", w(WechatAuthCodeConfirm))
+	e.POST("/api/v2/wechat/auth/weapp", w(WechatAuthWeapp))
+	e.POST("/api/v2/wechat/mine/update_email", w(WechatMineUpdateEmail))
+	e.POST("/api/v2/wechat/mine/update_pwd", w(WechatMineUpdatePwd))
+	e.POST("/api/v2/wechat/mine/profile", w(WechatMineProfile))
+	e.POST("/api/v2/wechat/mine/bind_weapp", w(WechatMineBindWeapp))
+	e.POST("/api/v2/wechat/collection/list", w(WechatCollectionList))
+	e.POST("/api/v2/wechat/history/delete", w(WechatHistoryDelete))
+	e.POST("/api/v2/wechat/history/list", w(WechatHistoryList))
+	e.POST("/api/v2/wechat/history/update", w(WechatHistoryUpdate))
+	e.POST("/api/v2/wechat/history/updated", w(WechatHistoryUpdated))
+	e.POST("/api/v2/wechat/media/episode", w(WechatMediaEpisode))
+	e.POST("/api/v2/wechat/media/profile", w(WechatMediaProfile))
+	e.POST("/api/v2/wechat/media/list", w(WechatMediaList))
+	e.POST("/api/v2/wechat/media/playing", w(WechatMediaPlaying))
+	e.POST("/api/v2/wechat/media/series", w(WechatMediaSeries))
+	e.POST("/api/v2/wechat/member/token", w(WechatMemberToken))
+	e.POST("/api/v2/wechat/invitation_code/list", w(WechatInvitationCodeList))
+	e.POST("/api/v2/wechat/invitation_code/create", w(WechatInvitationCodeCreate))
+	e.POST("/api/v2/wechat/notification/list", w(WechatNotificationList))
+	e.POST("/api/v2/wechat/notification/read_all", w(WechatNotificationReadAll))
+	e.POST("/api/v2/wechat/notification/read", w(WechatNotificationRead))
+	e.POST("/api/v2/wechat/report/create", w(WechatReportCreate))
+	e.POST("/api/v2/wechat/report/hide", w(WechatReportHide))
+	e.POST("/api/v2/wechat/report/list", w(WechatReportList))
+	e.POST("/api/v2/wechat/season/list", w(WechatSeasonList))
+	e.POST("/api/v2/wechat/source", w(WechatSource))
+	e.POST("/api/v2/wechat/rank", w(WechatRank))
+	e.POST("/api/v2/wechat/diary/list", w(WechatDiaryList))
+	e.POST("/api/v2/wechat/live/list", w(WechatLiveList))
+
+	e.POST("/api/v2/aliyundrive/refresh", w(AliyundriveRefresh))
+	e.POST("/api/v2/alipan/get_qrcode", w(AlipanGetQrcode))
+	e.POST("/api/v2/alipan/get_login_status", w(AlipanGetLoginStatus))
+	e.POST("/api/v2/alipan/get_access_token", w(AlipanGetAccessToken))
+	e.GET("/api/v2/wechat/proxy", w(WechatProxy))
 }

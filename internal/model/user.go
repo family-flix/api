@@ -1,11 +1,9 @@
 package model
 
-import "time"
-
 type User struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 }
 
 func (User) TableName() string {
@@ -40,8 +38,8 @@ func (Profile) TableName() string {
 
 type Settings struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Detail  *string   `gorm:"type:text" json:"detail"`
 	UserID  string    `gorm:"uniqueIndex;size:36" json:"user_id"`
 	User    *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
@@ -53,8 +51,8 @@ func (Settings) TableName() string {
 
 type Statistics struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Data    string    `gorm:"type:text;default:'{}'" json:"data"`
 	UserID  string    `gorm:"uniqueIndex;size:36" json:"user_id"`
 	User    *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
@@ -86,8 +84,8 @@ func (Account) TableName() string {
 
 type Permission struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 	Desc    string    `gorm:"size:255" json:"desc"`
 	Code    string    `gorm:"size:255" json:"code"`
 	UserID  string    `gorm:"index;size:36" json:"user_id"`

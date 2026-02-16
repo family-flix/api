@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type ParsedTV struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Name         *string `json:"name"`
 	OriginalName *string `json:"original_name"`
@@ -32,8 +31,8 @@ func (ParsedTV) TableName() string {
 
 type ParsedSeason struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	SeasonNumber string  `json:"season_number"`
 	FileID       *string `json:"file_id"`
@@ -56,8 +55,8 @@ func (ParsedSeason) TableName() string {
 
 type ParsedEpisode struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	EpisodeNumber string   `json:"episode_number"`
 	SeasonNumber  string   `json:"season_number"`
@@ -89,8 +88,8 @@ func (ParsedEpisode) TableName() string {
 
 type ParsedMovie struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Source       *int     `gorm:"default:0" json:"source"`
 	UniqueID     *string  `json:"unique_id"`
@@ -118,8 +117,8 @@ func (ParsedMovie) TableName() string {
 
 type ParsedMedia struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type         int     `gorm:"default:1" json:"type"`
 	Name         string  `json:"name"`
@@ -144,8 +143,8 @@ func (ParsedMedia) TableName() string {
 
 type ParsedMediaSource struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type         int     `gorm:"default:1" json:"type"`
 	Name         string  `json:"name"`

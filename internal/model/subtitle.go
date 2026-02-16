@@ -1,11 +1,10 @@
 package model
 
-import "time"
 
 type Subtitle struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type     int    `gorm:"default:1" json:"type"`
 	FileID   string `json:"file_id"`
@@ -28,8 +27,8 @@ func (Subtitle) TableName() string {
 
 type SubtitleV2 struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
-	Created time.Time `gorm:"autoCreateTime" json:"created"`
-	Updated time.Time `gorm:"autoUpdateTime" json:"updated"`
+	Created LocalTime `gorm:"autoCreateTime" json:"created"`
+	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	Type     int    `gorm:"default:1" json:"type"`
 	UniqueID string `json:"unique_id"`
