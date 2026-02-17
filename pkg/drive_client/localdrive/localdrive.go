@@ -1,12 +1,19 @@
 package localdrive
 
 import (
+	"archive/zip"
 	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"mime"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/family-flix/api/pkg/drive_client"
+	"github.com/family-flix/api/pkg/ffmpeg"
 	"github.com/family-flix/api/pkg/types"
 )
 
@@ -143,7 +150,93 @@ func (c *LocalDriveClient) Download(fileID string) (string, error) {
 }
 
 func (c *LocalDriveClient) FetchVideoPreviewInfo(fileID string) (*drive_client.VideoPreviewInfo, error) {
-	return nil, fmt.Errorf("local drive does not support video preview")
+	if _, err := os.Stat(fileID); err != nil {
+		return nil, err
+	}
+	mimeType := mime.TypeByExtension(filepath.Ext(fileID))
+	if strings.HasPrefix(mimeType, "video/") {
+		return &drive_client.VideoPreviewInfo{
+			Sources: []drive_client.VideoSource{
+				{Name: filepath.Base(fileID), URL: fileID, Type: mimeType},
+			},
+		}, nil
+	}
+	if strings.HasPrefix(mimeType, "image/") {
+		return &drive_client.VideoPreviewInfo{
+			ThumbURL: fileID,
+		}, nil
+	}
+	return nil, fmt.Errorf("unsupported file type: %s", mimeType)
+}
+
+func (c *LocalDriveClient) Preview(fileID string) (*drive_client.PreviewInfo, error) {
+	if _, err := os.Stat(fileID); err != nil {
+		return nil, err
+	}
+	mimeType := mime.TypeByExtension(filepath.Ext(fileID))
+	url := "/api/v2/preview?path=" + fileID
+
+	switch {
+	case strings.HasPrefix(mimeType, "video/"):
+		hash := ffmpeg.CacheKey(fileID)
+		return &drive_client.PreviewInfo{
+			ID:       fileID,
+			FileType: "video",
+			URL:      url,
+			Type:     "SD",
+			Other: []drive_client.PreviewResolution{
+				{URL: "/api/v2/hls/" + hash + "/index.m3u8", Type: "HLS"},
+			},
+		}, nil
+
+	case strings.HasPrefix(mimeType, "image/"):
+		var w, h int
+		if f, err := os.Open(fileID); err == nil {
+			if cfg, _, err := image.DecodeConfig(f); err == nil {
+				w, h = cfg.Width, cfg.Height
+			}
+			f.Close()
+		}
+		return &drive_client.PreviewInfo{
+			ID:        fileID,
+			FileType:  "image",
+			URL:       url,
+			Width:     w,
+			Height:    h,
+			Thumbnail: url,
+			Other:     []drive_client.PreviewResolution{},
+		}, nil
+
+	case mimeType == "application/zip" || filepath.Ext(fileID) == ".zip":
+		zr, err := zip.OpenReader(fileID)
+		if err != nil {
+			return nil, fmt.Errorf("无法读取压缩包: %w", err)
+		}
+		defer zr.Close()
+		files := make([]drive_client.PreviewFileInfo, 0, len(zr.File))
+		for _, f := range zr.File {
+			files = append(files, drive_client.PreviewFileInfo{
+				Name:  f.Name,
+				Size:  f.UncompressedSize64,
+				IsDir: f.FileInfo().IsDir(),
+			})
+		}
+		return &drive_client.PreviewInfo{
+			ID:       fileID,
+			FileType: "archive",
+			URL:      url,
+			Files:    files,
+			Other:    []drive_client.PreviewResolution{},
+		}, nil
+
+	default:
+		return &drive_client.PreviewInfo{
+			ID:       fileID,
+			FileType: "unknown",
+			URL:      url,
+			Other:    []drive_client.PreviewResolution{},
+		}, nil
+	}
 }
 
 func (c *LocalDriveClient) fileInfoToDriveFile(path string, info os.FileInfo) *drive_client.DriveFile {

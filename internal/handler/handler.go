@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,11 +18,13 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
+	"github.com/family-flix/api/frontend"
 	"github.com/family-flix/api/internal/domain/member"
 	"github.com/family-flix/api/internal/domain/user"
 	"github.com/family-flix/api/internal/model"
 	"github.com/family-flix/api/pkg/drive_client"
 	"github.com/family-flix/api/pkg/drive_client/localdrive"
+	"github.com/family-flix/api/pkg/ffmpeg"
 	"github.com/family-flix/api/pkg/folder"
 	"github.com/family-flix/api/pkg/media_profile/javbus"
 	"github.com/family-flix/api/pkg/media_profile/tmdb"
@@ -40,6 +43,14 @@ func rid() string {
 	b := make([]byte, 8)
 	rand.Read(b)
 	return hex.EncodeToString(b)[:15]
+}
+
+var videoExts = map[string]bool{
+	".mp4": true, ".mkv": true, ".avi": true, ".mov": true, ".wmv": true, ".flv": true, ".webm": true, ".m4v": true,
+}
+
+func isVideo(path string) bool {
+	return videoExts[strings.ToLower(filepath.Ext(path))]
 }
 
 // authAdmin extracts the Authorization header and returns the authenticated admin user.
@@ -80,6 +91,34 @@ func Ping(c Context) error {
 
 func Proxy(c Context) error {
 	return nil
+}
+
+func ProxyJavbus(c Context) error {
+	url := c.QueryParam("url")
+	if url == "" {
+		return fail(c, 400, "缺少 url 参数")
+	}
+	jc := javbus.NewJavBusClient("")
+	_ = jc.LoadCookie()
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fail(c, 500, "构建请求失败")
+	}
+	req.Header.Set("Referer", "https://www.javbus.com/")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36")
+	if cookie := jc.GetCookie(); cookie != "" {
+		req.Header.Set("Cookie", cookie)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fail(c, 500, "请求图片失败")
+	}
+	defer resp.Body.Close()
+	contentType := resp.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "image/jpeg"
+	}
+	return c.Stream(resp.StatusCode, contentType, resp.Body)
 }
 
 func AdminUserLogin(c Context) error {
@@ -739,8 +778,11 @@ func AdminMediaInvalid(c Context) error {
 	var nextMarker string
 	for _, inv := range invalids {
 		item := R{"id": inv.ID, "type": inv.Type}
-		var tips []string
+		tips := make([]string, 0)
 		json.Unmarshal([]byte(inv.Profile), &tips)
+		if tips == nil {
+			tips = []string{}
+		}
 		item["tips"] = tips
 		if inv.Media != nil {
 			media := R{"id": inv.Media.ID, "type": inv.Media.Type}
@@ -954,7 +996,7 @@ func AdminSeasonList(c Context) error {
 				countries = append(countries, c.ID)
 			}
 			item["origin_country"] = countries
-			var tips []string
+			tips := make([]string, 0)
 			if len(m.MediaSources) == 0 {
 				tips = append(tips, "关联的剧集数为 0")
 			}
@@ -1131,7 +1173,7 @@ func AdminMovieList(c Context) error {
 			}
 			item["origin_country"] = countries
 		}
-		var tips []string
+		tips := make([]string, 0)
 		if len(m.MediaSources) == 0 {
 			tips = append(tips, "没有可播放的源")
 		}
@@ -1180,7 +1222,7 @@ func AdminAVList(c Context) error {
 			item["air_date"] = m.Profile.AirDate
 			item["poster_path"] = m.Profile.PosterPath
 		}
-		var tips []string
+		tips := make([]string, 0)
 		if len(m.MediaSources) == 0 {
 			tips = append(tips, "没有可播放的源")
 		}
@@ -1238,6 +1280,75 @@ func AdminMovieProfile(c Context) error {
 			}
 		}
 		sources = append(sources, src)
+	}
+	item["sources"] = sources
+	return ok(c, "", item)
+}
+
+func AdminAVProfile(c Context) error {
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		MediaID string `json:"media_id"`
+	}
+	if err := c.Bind(&body); err != nil || body.MediaID == "" {
+		return fail(c, 400, "缺少 media_id")
+	}
+	var m model.Media
+	if err := c.DB().Preload("Profile.Genres").Preload("Profile.OriginCountries").Preload("MediaSources.Profile").Preload("MediaSources.Files.Drive").
+		Where("id = ? AND user_id = ? AND type = 3", body.MediaID, u.ID).First(&m).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	item := R{"id": m.ID, "profile_id": m.ProfileID}
+	if m.Profile != nil {
+		item["name"] = m.Profile.Name
+		item["overview"] = m.Profile.Overview
+		item["poster_path"] = m.Profile.PosterPath
+		item["backdrop_path"] = m.Profile.BackdropPath
+		item["air_date"] = m.Profile.AirDate
+		item["tmdb_id"] = m.Profile.TMDBID
+		item["imdb_id"] = m.Profile.IMDBID
+		item["douban_id"] = m.Profile.DoubanID
+		item["jav_code"] = m.Profile.JavCode
+		genres := make([]string, 0)
+		for _, g := range m.Profile.Genres {
+			genres = append(genres, g.Text)
+		}
+		item["genres"] = genres
+		countries := make([]string, 0)
+		for _, c := range m.Profile.OriginCountries {
+			countries = append(countries, c.Text)
+		}
+		item["origin_country"] = countries
+	}
+	sources := make([]R, 0)
+	if len(m.MediaSources) > 0 {
+		for _, s := range m.MediaSources {
+			src := R{"id": s.ID}
+			for _, f := range s.Files {
+				src["file_id"] = f.FileID
+				src["file_name"] = f.FileName
+				src["parent_paths"] = f.ParentPaths
+				src["size"] = f.Size
+				if f.Drive != nil {
+					src["drive"] = R{"id": f.Drive.ID, "name": f.Drive.Name}
+				}
+			}
+			sources = append(sources, src)
+		}
+	} else if m.ProfileID != "" {
+		var files []model.ParsedMediaSource
+		c.DB().Preload("Drive").Joins("JOIN \"ParsedMedia\" ON \"ParsedMedia\".id = \"ParsedSource\".parsed_media_id").
+			Where("\"ParsedMedia\".media_profile_id = ? AND \"ParsedSource\".user_id = ?", m.ProfileID, u.ID).Find(&files)
+		for _, f := range files {
+			src := R{"id": f.ID, "file_id": f.FileID, "file_name": f.FileName, "parent_paths": f.ParentPaths, "size": f.Size}
+			if f.Drive != nil {
+				src["drive"] = R{"id": f.Drive.ID, "name": f.Drive.Name}
+			}
+			sources = append(sources, src)
+		}
 	}
 	item["sources"] = sources
 	return ok(c, "", item)
@@ -1394,8 +1505,13 @@ func AdminParsedMediaSetProfile(c Context) error {
 	var body struct {
 		ParsedMediaID  string `json:"parsed_media_id"`
 		MediaProfileID string `json:"media_profile_id"`
+		MediaProfile   *struct {
+			ID   string `json:"id"`
+			Type string `json:"type"`
+			Name string `json:"name"`
+		} `json:"media_profile"`
 	}
-	if err := c.Bind(&body); err != nil || body.ParsedMediaID == "" || body.MediaProfileID == "" {
+	if err := c.Bind(&body); err != nil || body.ParsedMediaID == "" {
 		return fail(c, 400, "参数错误")
 	}
 	var pm model.ParsedMedia
@@ -1403,10 +1519,45 @@ func AdminParsedMediaSetProfile(c Context) error {
 		return fail(c, 404, "没有匹配的记录")
 	}
 	var p model.MediaProfile
-	if err := c.DB().Where("id = ?", body.MediaProfileID).First(&p).Error; err != nil {
-		return fail(c, 404, "没有匹配的详情")
+	if body.MediaProfile != nil && body.MediaProfile.Type == "av" {
+		code := body.MediaProfile.ID
+		jc := javbus.NewJavBusClient("")
+		detail, err := jc.GetMovieDetail(code)
+		if err != nil {
+			return fail(c, 500, err.Error())
+		}
+		if err := c.DB().Where("jav_code = ?", code).First(&p).Error; err != nil {
+			p = model.MediaProfile{
+				ID: rid(), Type: 3, Name: detail.Title, PosterPath: &detail.Cover,
+				BackdropPath: &detail.Backdrop, AirDate: &detail.ReleaseDate, JavCode: &code,
+			}
+			c.DB().Create(&p)
+		} else {
+			c.DB().Model(&p).Updates(map[string]interface{}{
+				"name": detail.Title, "poster_path": detail.Cover,
+				"backdrop_path": detail.Backdrop, "air_date": detail.ReleaseDate,
+			})
+		}
+	} else {
+		profileID := body.MediaProfileID
+		if body.MediaProfile != nil {
+			profileID = body.MediaProfile.ID
+		}
+		if profileID == "" {
+			return fail(c, 400, "参数错误")
+		}
+		if err := c.DB().Where("id = ?", profileID).First(&p).Error; err != nil {
+			return fail(c, 404, "没有匹配的详情")
+		}
 	}
 	c.DB().Model(&pm).Update("media_profile_id", p.ID)
+	if body.MediaProfile != nil && body.MediaProfile.Type == "av" {
+		var media model.Media
+		if err := c.DB().Where("profile_id = ? AND user_id = ?", p.ID, u.ID).First(&media).Error; err != nil {
+			media = model.Media{ID: rid(), Type: 3, Text: *p.JavCode, ProfileID: p.ID, UserID: u.ID}
+			c.DB().Create(&media)
+		}
+	}
 	return ok(c, "设置成功", nil)
 }
 
@@ -1427,32 +1578,49 @@ func AdminParsedMediaSetProfileAfterCreate(c Context) error {
 	if err := c.DB().Where("id = ? AND user_id = ?", body.ParsedMediaID, u.ID).First(&pm).Error; err != nil {
 		return fail(c, 404, "没有匹配的记录")
 	}
-	client := tmdb.NewClient()
-	tmdbID, _ := strconv.Atoi(body.TMDBID)
 	var p model.MediaProfile
-	if err := c.DB().Where("tmdb_id = ?", body.TMDBID).First(&p).Error; err == nil {
-		c.DB().Model(&pm).Update("media_profile_id", p.ID)
-		return ok(c, "设置成功", R{"id": p.ID})
-	}
-	if body.Type == 2 {
-		detail, err := client.FetchMovieProfile(tmdbID)
+	if body.Type == 3 {
+		if err := c.DB().Where("jav_code = ?", body.TMDBID).First(&p).Error; err == nil {
+			c.DB().Model(&pm).Update("media_profile_id", p.ID)
+			return ok(c, "设置成功", R{"id": p.ID})
+		}
+		jc := javbus.NewJavBusClient("")
+		detail, err := jc.GetMovieDetail(body.TMDBID)
 		if err != nil {
 			return fail(c, 500, err.Error())
 		}
+		code := detail.Code
 		p = model.MediaProfile{
-			ID: rid(), Type: 2, Name: detail.Name, OriginalName: &detail.OriginalName,
-			Overview: &detail.Overview, PosterPath: &detail.PosterPath, BackdropPath: &detail.BackdropPath,
-			AirDate: &detail.AirDate, TMDBID: &body.TMDBID,
+			ID: rid(), Type: 3, Name: detail.Title, PosterPath: &detail.Cover,
+			BackdropPath: &detail.Backdrop, AirDate: &detail.ReleaseDate, JavCode: &code,
 		}
 	} else {
-		detail, err := client.FetchTVProfile(tmdbID)
-		if err != nil {
-			return fail(c, 500, err.Error())
+		if err := c.DB().Where("tmdb_id = ?", body.TMDBID).First(&p).Error; err == nil {
+			c.DB().Model(&pm).Update("media_profile_id", p.ID)
+			return ok(c, "设置成功", R{"id": p.ID})
 		}
-		p = model.MediaProfile{
-			ID: rid(), Type: 1, Name: detail.Name, OriginalName: &detail.OriginalName,
-			Overview: &detail.Overview, PosterPath: &detail.PosterPath, BackdropPath: &detail.BackdropPath,
-			AirDate: &detail.FirstAirDate, TMDBID: &body.TMDBID,
+		client := tmdb.NewClient()
+		tmdbID, _ := strconv.Atoi(body.TMDBID)
+		if body.Type == 2 {
+			detail, err := client.FetchMovieProfile(tmdbID)
+			if err != nil {
+				return fail(c, 500, err.Error())
+			}
+			p = model.MediaProfile{
+				ID: rid(), Type: 2, Name: detail.Name, OriginalName: &detail.OriginalName,
+				Overview: &detail.Overview, PosterPath: &detail.PosterPath, BackdropPath: &detail.BackdropPath,
+				AirDate: &detail.AirDate, TMDBID: &body.TMDBID,
+			}
+		} else {
+			detail, err := client.FetchTVProfile(tmdbID)
+			if err != nil {
+				return fail(c, 500, err.Error())
+			}
+			p = model.MediaProfile{
+				ID: rid(), Type: 1, Name: detail.Name, OriginalName: &detail.OriginalName,
+				Overview: &detail.Overview, PosterPath: &detail.PosterPath, BackdropPath: &detail.BackdropPath,
+				AirDate: &detail.FirstAirDate, TMDBID: &body.TMDBID,
+			}
 		}
 	}
 	c.DB().Create(&p)
@@ -1620,8 +1788,29 @@ func AdminParsedMediaSourceDelete(c Context) error {
 }
 
 func AdminParsedMediaSourcePreview(c Context) error {
-	// TODO: requires drive client for video preview
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		ParsedMediaSourceID string `json:"parsed_media_source_id"`
+	}
+	if err := c.Bind(&body); err != nil || body.ParsedMediaSourceID == "" {
+		return fail(c, 400, "缺少 parsed_media_source_id")
+	}
+	var ps model.ParsedMediaSource
+	if err := c.DB().Where("id = ? AND user_id = ?", body.ParsedMediaSourceID, u.ID).First(&ps).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	_, client, err := getDriveClient(c, ps.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	info, err := client.Preview(ps.FileID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", info)
 }
 
 func AdminMemberList(c Context) error {
@@ -2636,6 +2825,32 @@ func DriveFileSearch(c Context) error {
 	return ok(c, "", R{"items": list, "next_marker": result.NextMarker})
 }
 
+func FilePreview(c Context) error {
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID string `json:"drive_id"`
+		FileID  string `json:"file_id"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.DriveID == "" || body.FileID == "" {
+		return fail(c, 400, "缺少必要参数")
+	}
+	_, client, err := getDriveClient(c, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	info, err := client.Preview(body.FileID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", info)
+}
+
 func DriveFileRename(c Context) error {
 	u, err := authAdmin(c)
 	if err != nil {
@@ -2846,7 +3061,7 @@ func MediaProfileProfile(c Context) error {
 		return fail(c, 400, "缺少 id")
 	}
 	var p model.MediaProfile
-	if err := c.DB().Preload("Genres").Preload("OriginCountries").Preload("Series").Preload("SourceProfiles").
+	if err := c.DB().Preload("Genres").Preload("OriginCountries").Preload("Series").Preload("SourceProfiles").Preload("Persons").Preload("Persons.Profile").
 		Where("id = ?", body.ID).First(&p).Error; err != nil {
 		return fail(c, 404, "没有匹配的记录")
 	}
@@ -2862,11 +3077,26 @@ func MediaProfileProfile(c Context) error {
 	for _, sp := range p.SourceProfiles {
 		episodes = append(episodes, R{"id": sp.ID, "name": sp.Name, "order": sp.Order, "air_date": sp.AirDate, "runtime": sp.Runtime})
 	}
+	persons := make([]R, 0)
+	for _, pe := range p.Persons {
+		pr := R{"id": pe.ID, "name": pe.Name, "order": pe.Order}
+		if pe.Profile != nil {
+			pr["profile_path"] = pe.Profile.ProfilePath
+		}
+		persons = append(persons, pr)
+	}
 	item := R{
 		"id": p.ID, "type": p.Type, "name": p.Name, "original_name": p.OriginalName,
 		"poster_path": p.PosterPath, "backdrop_path": p.BackdropPath, "air_date": p.AirDate,
 		"vote_average": p.VoteAverage, "source_count": p.SourceCount, "overview": p.Overview,
-		"genres": genres, "origin_country": countries, "episodes": episodes,
+		"genres": genres, "origin_country": countries, "episodes": episodes, "persons": persons,
+		"tmdb_id": p.TMDBID, "imdb_id": p.IMDBID, "douban_id": p.DoubanID, "jav_code": p.JavCode,
+	}
+	if p.Tips != nil {
+		var tips R
+		if json.Unmarshal([]byte(*p.Tips), &tips) == nil {
+			item["tips"] = tips
+		}
 	}
 	if p.Series != nil {
 		item["series"] = R{"id": p.Series.ID, "name": p.Series.Name}
@@ -2931,31 +3161,70 @@ func MediaProfileRefresh(c Context) error {
 	if err := c.DB().Where("id = ?", body.ID).First(&p).Error; err != nil {
 		return fail(c, 404, "没有匹配的记录")
 	}
-	if p.TMDBID == nil {
-		return fail(c, 400, "没有关联的 TMDB ID")
-	}
-	client := tmdb.NewClient()
-	tmdbID, _ := strconv.Atoi(*p.TMDBID)
-	if p.Type == 2 {
-		detail, err := client.FetchMovieProfile(tmdbID)
+	if p.Type == 3 {
+		if p.JavCode == nil {
+			return fail(c, 400, "没有关联的 JavCode")
+		}
+		jc := javbus.NewJavBusClient("")
+		detail, err := jc.GetMovieDetail(*p.JavCode)
 		if err != nil {
 			return fail(c, 500, err.Error())
 		}
+		tips, _ := json.Marshal(R{"director": detail.Director, "studio": detail.Studio, "label": detail.Label, "length": detail.Length})
+		tipsStr := string(tips)
 		c.DB().Model(&p).Updates(map[string]interface{}{
-			"name": detail.Name, "original_name": detail.OriginalName,
-			"overview": detail.Overview, "poster_path": detail.PosterPath,
-			"backdrop_path": detail.BackdropPath, "air_date": detail.AirDate,
+			"name": detail.Title, "poster_path": detail.Cover, "backdrop_path": detail.Backdrop, "air_date": detail.ReleaseDate, "tips": tipsStr,
 		})
+		// genres
+		for _, g := range detail.Genres {
+			var genre model.MediaGenre
+			if err := c.DB().Where("text = ?", g).First(&genre).Error; err != nil {
+				genre = model.MediaGenre{Text: g}
+				c.DB().Create(&genre)
+			}
+			c.DB().Exec(`INSERT OR IGNORE INTO "_MediaGenreToMediaProfile" ("A","B") VALUES (?,?)`, genre.ID, p.ID)
+		}
+		// actors
+		c.DB().Where("media_id = ?", p.ID).Delete(&model.PersonInMedia{})
+		for i, actor := range detail.Actors {
+			var pp model.PersonProfile
+			if err := c.DB().Where("name = ?", actor.Name).First(&pp).Error; err != nil {
+				pp = model.PersonProfile{ID: rid(), Name: actor.Name, ProfilePath: &actor.Avatar}
+				c.DB().Create(&pp)
+			} else if pp.ProfilePath == nil || *pp.ProfilePath == "" {
+				c.DB().Model(&pp).Update("profile_path", actor.Avatar)
+			}
+			c.DB().Create(&model.PersonInMedia{
+				ID: rid(), Name: actor.Name, Order: i, ProfileID: pp.ID, MediaID: p.ID,
+			})
+		}
 	} else {
-		detail, err := client.FetchTVProfile(tmdbID)
-		if err != nil {
-			return fail(c, 500, err.Error())
+		if p.TMDBID == nil {
+			return fail(c, 400, "没有关联的 TMDB ID")
 		}
-		c.DB().Model(&p).Updates(map[string]interface{}{
-			"name": detail.Name, "original_name": detail.OriginalName,
-			"overview": detail.Overview, "poster_path": detail.PosterPath,
-			"backdrop_path": detail.BackdropPath, "air_date": detail.FirstAirDate,
-		})
+		client := tmdb.NewClient()
+		tmdbID, _ := strconv.Atoi(*p.TMDBID)
+		if p.Type == 2 {
+			detail, err := client.FetchMovieProfile(tmdbID)
+			if err != nil {
+				return fail(c, 500, err.Error())
+			}
+			c.DB().Model(&p).Updates(map[string]interface{}{
+				"name": detail.Name, "original_name": detail.OriginalName,
+				"overview": detail.Overview, "poster_path": detail.PosterPath,
+				"backdrop_path": detail.BackdropPath, "air_date": detail.AirDate,
+			})
+		} else {
+			detail, err := client.FetchTVProfile(tmdbID)
+			if err != nil {
+				return fail(c, 500, err.Error())
+			}
+			c.DB().Model(&p).Updates(map[string]interface{}{
+				"name": detail.Name, "original_name": detail.OriginalName,
+				"overview": detail.Overview, "poster_path": detail.PosterPath,
+				"backdrop_path": detail.BackdropPath, "air_date": detail.FirstAirDate,
+			})
+		}
 	}
 	return ok(c, "刷新成功", nil)
 }
@@ -3166,38 +3435,16 @@ func MediaProfileSearchJavbus(c Context) error {
 	if body.Page < 1 {
 		body.Page = 1
 	}
-	// client := javbus.NewJavBusClient(filepath.Join(c.LogDir(), "javbus.cookie"))
-	// result, err := client.Search(body.Keyword, body.Page)
-	// if err != nil {
-	// 	return fail(c, 500, "解析失败: "+err.Error())
-	// }
 	list := make([]types.MovieProfile, 0)
 	client := javbus.NewJavBusClient("")
-	if err := client.Verify(); err != nil {
-		return fail(c, 500, "失败1: "+err.Error())
-	}
-	fmt.Println("Auth OK")
-
-	var allMovies []javbus.Movie
-	// fmt.Printf("Search: %s\n", keyword)
-	p := 1
-	resp, err := client.Search(body.Keyword, p)
+	resp, err := client.Search(body.Keyword, body.Page)
 	if err != nil {
-		// log.Printf("Failed to fetch page %d: %v", p, err)
-		// return
-		return fail(c, 500, "2: "+err.Error())
+		return fail(c, 500, "搜索失败: "+err.Error())
 	}
-	fmt.Printf("P%d: %d\n", p, len(resp.Data))
 	if len(resp.Data) == 0 {
-		// return
-		return fail(c, 500, "result is empty "+err.Error())
+		return ok(c, "", R{"list": list, "total": 0, "page": body.Page})
 	}
-	allMovies = append(allMovies, resp.Data...)
-	// fmt.Printf("Found: %d\n", len(allMovies))
-	// for _, m := range allMovies {
-	// 	fmt.Printf("{c:%s t:%s v:%s l:%s}\n", m.Code, m.Title, m.Cover, m.Link)
-	// }
-	for _, m := range allMovies {
+	for _, m := range resp.Data {
 		// 如果数据库中不存在，就保存该记录
 		var profile model.MediaProfile
 		code := m.Code
@@ -3222,14 +3469,12 @@ func MediaProfileSearchJavbus(c Context) error {
 			ID:         m.Code,
 			Name:       m.Title,
 			PosterPath: m.Cover,
-			Type:       "movie",
+			AirDate:    m.AirDate,
+			Type:       "av",
 			Source:     "javbus",
 		})
 	}
 	total := len(list)
-	// if result.NextPage {
-	// 	total = -1
-	// }
 	return ok(c, "", R{"list": list, "total": total, "page": body.Page})
 }
 
@@ -4020,8 +4265,33 @@ func WechatMediaList(c Context) error {
 }
 
 func WechatMediaPlaying(c Context) error {
-	// TODO: requires drive client for video preview
-	return fail(c, 501, "未实现")
+	m, _, err := authMember(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		MediaSourceID string `json:"media_source_id"`
+	}
+	if err := c.Bind(&body); err != nil || body.MediaSourceID == "" {
+		return fail(c, 400, "缺少 media_source_id")
+	}
+	var ms model.MediaSource
+	if err := c.DB().Preload("Files").Where("id = ? AND user_id = ?", body.MediaSourceID, m.UserID).First(&ms).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	if len(ms.Files) == 0 {
+		return fail(c, 404, "没有可播放的文件")
+	}
+	file := ms.Files[0]
+	_, client, err := getDriveClient(c, file.DriveID, m.UserID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	info, err := client.Preview(file.FileID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", info)
 }
 
 func WechatMediaSeries(c Context) error {
@@ -4314,8 +4584,33 @@ func WechatSeasonList(c Context) error {
 }
 
 func WechatSource(c Context) error {
-	// TODO: requires drive client for video preview
-	return fail(c, 501, "未实现")
+	m, _, err := authMember(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		MediaSourceID string `json:"media_source_id"`
+	}
+	if err := c.Bind(&body); err != nil || body.MediaSourceID == "" {
+		return fail(c, 400, "缺少 media_source_id")
+	}
+	var ms model.MediaSource
+	if err := c.DB().Preload("Files").Where("id = ? AND user_id = ?", body.MediaSourceID, m.UserID).First(&ms).Error; err != nil {
+		return fail(c, 404, "没有匹配的记录")
+	}
+	if len(ms.Files) == 0 {
+		return fail(c, 404, "没有可播放的文件")
+	}
+	file := ms.Files[0]
+	_, client, err := getDriveClient(c, file.DriveID, m.UserID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	info, err := client.Preview(file.FileID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", info)
 }
 
 func WechatRank(c Context) error {
@@ -5005,6 +5300,7 @@ func runDriveAnalysis(db *gorm.DB, d *model.Drive, userID, taskID, logFile strin
 					Name:         detail.Title,
 					OriginalName: &detail.Title,
 					PosterPath:   &detail.Cover,
+					BackdropPath: &detail.Backdrop,
 					AirDate:      &detail.ReleaseDate,
 					JavCode:      &code,
 				}
@@ -5526,13 +5822,14 @@ func AdminAnalysisNewFiles(c Context) error {
 	return ok(c, "开始索引", R{"job_id": taskID})
 }
 
-func SetupRouter(e *echo.Echo, db *gorm.DB, logDir string) {
+func SetupRouter(e *echo.Echo, db *gorm.DB, logDir, cacheDir, ffmpegBin string) {
 	w := func(h HandlerFunc) echo.HandlerFunc {
-		return WrapEcho(db, logDir, h)
+		return WrapEcho(db, logDir, cacheDir, ffmpegBin, h)
 	}
 
 	e.GET("/api/ping", w(Ping))
 	e.GET("/api/proxy", w(Proxy))
+	e.GET("/api/proxy/javbus", w(ProxyJavbus))
 
 	e.POST("/api/admin/user/login", w(AdminUserLogin))
 	e.POST("/api/admin/user/register", w(AdminUserRegister))
@@ -5597,6 +5894,7 @@ func SetupRouter(e *echo.Echo, db *gorm.DB, logDir string) {
 	e.POST("/api/v2/admin/season/partial", w(AdminSeasonPartial))
 	e.POST("/api/v2/admin/movie/list", w(AdminMovieList))
 	e.POST("/api/v2/admin/av/list", w(AdminAVList))
+	e.POST("/api/v2/admin/av/profile", w(AdminAVProfile))
 	e.POST("/api/v2/admin/movie/profile", w(AdminMovieProfile))
 	e.POST("/api/v2/admin/subtitle/list", w(AdminSubtitleList))
 	e.POST("/api/v2/admin/subtitle/parse", w(AdminSubtitleParse))
@@ -5649,6 +5947,7 @@ func SetupRouter(e *echo.Echo, db *gorm.DB, logDir string) {
 	e.POST("/api/v2/drive/file/transfer", w(DriveFileTransfer))
 	e.POST("/api/v2/drive/file/to_resource_drive", w(DriveFileToResourceDrive))
 	e.POST("/api/v2/drive/file/search", w(DriveFileSearch))
+	e.POST("/api/v2/drive/file/preview", w(FilePreview))
 	e.POST("/api/v2/drive/file/rename", w(DriveFileRename))
 	e.POST("/api/v2/drive/rename_files", w(DriveRenameFiles))
 	e.POST("/api/v2/local_file/list", w(LocalFileList))
@@ -5719,4 +6018,45 @@ func SetupRouter(e *echo.Echo, db *gorm.DB, logDir string) {
 	e.POST("/api/v2/alipan/get_login_status", w(AlipanGetLoginStatus))
 	e.POST("/api/v2/alipan/get_access_token", w(AlipanGetAccessToken))
 	e.GET("/api/v2/wechat/proxy", w(WechatProxy))
+
+	ff := ffmpeg.New(ffmpegBin, cacheDir)
+
+	e.GET("/api/v2/preview", func(c echo.Context) error {
+		filePath := c.QueryParam("path")
+		if filePath == "" {
+			return c.JSON(400, R{"code": 400, "msg": "missing path"})
+		}
+		if ff.Available() && isVideo(filePath) && !ffmpeg.CheckMoovPosition(filePath) {
+			cached := ff.FaststartPath(filePath)
+			if _, err := os.Stat(cached); err != nil {
+				if err := ff.FixFaststart(filePath, cached); err == nil {
+					filePath = cached
+				}
+			} else {
+				filePath = cached
+			}
+		}
+		http.ServeFile(c.Response(), c.Request(), filePath)
+		return nil
+	})
+
+	e.GET("/api/v2/hls/:hash/*", func(c echo.Context) error {
+		hash := c.Param("hash")
+		rest := c.Param("*")
+		if hash == "" || rest == "" {
+			return c.JSON(400, R{"code": 400, "msg": "invalid path"})
+		}
+		hlsDir := filepath.Join(cacheDir, "hls", hash)
+		target := filepath.Join(hlsDir, rest)
+		http.ServeFile(c.Response(), c.Request(), target)
+		return nil
+	})
+
+	distFS, _ := fs.Sub(frontend.FS, "dist")
+	assetsFS, _ := fs.Sub(distFS, "assets")
+	e.GET("/admin/assets/*", echo.WrapHandler(http.StripPrefix("/admin/assets/", http.FileServer(http.FS(assetsFS)))))
+	e.GET("/admin*", func(c echo.Context) error {
+		index, _ := fs.ReadFile(distFS, "index.html")
+		return c.HTMLBlob(http.StatusOK, index)
+	})
 }

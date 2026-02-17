@@ -10,6 +10,10 @@
 /mock
 **/*/mock
 domains/__tests__/output
+flixapi*
+*.log
+*.pid
+frontend/dist
 
 # next.js
 /.next/

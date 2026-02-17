@@ -182,7 +182,7 @@ yarn start
 
 ```bash
 # Linux amd64
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o flixapi ./main.go
+CC=x86_64-linux-musl-gcc CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o flixapi -trimpath -ldflags "-extldflags -static" ./main.go
 
 # Linux arm64
 CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o flixapi ./cmd/server

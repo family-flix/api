@@ -3,23 +3,22 @@ package database
 import (
 	"fmt"
 
+	"github.com/family-flix/api/migrations"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/rs/zerolog/log"
 )
 
 // Migrator 处理数据库迁移
 type Migrator struct {
-	config         *DatabaseConfig
-	migrationsPath string
+	config *DatabaseConfig
 }
 
 // NewMigrator 创建新的迁移器
 func NewMigrator(cfg *DatabaseConfig) *Migrator {
 	return &Migrator{
-		config:         cfg,
-		migrationsPath: cfg.MigrationsPath,
+		config: cfg,
 	}
 }
 
@@ -57,7 +56,6 @@ func (m *Migrator) MigrateDown() error {
 		sourceErr, dbErr := migrator.Close()
 		if sourceErr != nil {
 			log.Error().Err(sourceErr).Msg("Error closing migration source")
-
 		}
 		if dbErr != nil {
 			log.Error().Err(dbErr).Msg("Error closing migration database")
@@ -117,14 +115,13 @@ func (m *Migrator) createMigrator() (*migrate.Migrate, error) {
 		return nil, fmt.Errorf("unsupported database type: %s", m.config.DBType)
 	}
 
-	log.Info().Str("path", m.config.MigrationsPath).Str("dsn", dsn).Msg("Creating migrator")
-
-	migrator, err := migrate.New(
-		fmt.Sprintf("file:///%s", m.config.MigrationsPath),
-		fmt.Sprintf("%s://%s", driver, dsn),
-	)
+	source, err := iofs.New(migrations.FS, ".")
 	if err != nil {
-		log.Error().Str("path", m.config.MigrationsPath).Str("dsn", dsn).Err(err).Msg("failed to create migrator")
+		return nil, fmt.Errorf("failed to create migration source: %w", err)
+	}
+
+	migrator, err := migrate.NewWithSourceInstance("iofs", source, fmt.Sprintf("%s://%s", driver, dsn))
+	if err != nil {
 		return nil, fmt.Errorf("failed to create migrator: %w", err)
 	}
 

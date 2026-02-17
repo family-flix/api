@@ -7,3 +7,18 @@ server:
   port: 3200
 
 proxy: http://127.0.0.1:7891
+
+javbus:                                                                                                                                                                                 
+  proxy: https://proxy.fithub.top
+
+ffmpeg:
+  bin: ffmpeg
+  cache_dir: data/cache
+
+cloudflare:
+  accountId: "13ca31f4970253df1202e534bf8309be"
+  apiToken: "pscKuPH4gqndJQiHddGD6hAZeHvlbnw3vjKIIXy8"
+  refreshToken: "123"
+  adminToken: "litao"
+  workerName: "mp-rss-api"
+  d1Name: "mp-rss-db"

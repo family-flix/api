@@ -60,6 +60,32 @@ type ProfileInfo struct {
 	UsedSize  float64
 }
 
+type PreviewFileInfo struct {
+	Name  string `json:"name"`
+	Size  uint64 `json:"size"`
+	IsDir bool   `json:"is_dir"`
+}
+
+type PreviewResolution struct {
+	URL       string `json:"url"`
+	Thumbnail string `json:"thumbnail"`
+	Type      string `json:"type"`
+	Width     int    `json:"width"`
+	Height    int    `json:"height"`
+}
+
+type PreviewInfo struct {
+	ID        string              `json:"id"`
+	FileType  string              `json:"file_type"` // "video" | "image" | "archive" | "unknown"
+	URL       string              `json:"url"`
+	Thumbnail string              `json:"thumbnail"`
+	Type      string              `json:"type"`
+	Width     int                 `json:"width"`
+	Height    int                 `json:"height"`
+	Other     []PreviewResolution `json:"other"`
+	Files     []PreviewFileInfo   `json:"files,omitempty"`
+}
+
 // DriveClient 云盘客户端接口
 type DriveClient interface {
 	// FetchFile 获取单个文件/文件夹详情
@@ -80,4 +106,6 @@ type DriveClient interface {
 	Download(fileID string) (string, error)
 	// FetchVideoPreviewInfo 获取视频文件播放地址等信息
 	FetchVideoPreviewInfo(fileID string) (*VideoPreviewInfo, error)
+	// Preview 获取文件预览信息
+	Preview(fileID string) (*PreviewInfo, error)
 }

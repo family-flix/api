@@ -588,7 +588,7 @@ func Main() {
 			Studio:        detail.Studio,
 		}
 		for _, a := range detail.Actors {
-			nfo.Actors = append(nfo.Actors, NFOActor{Name: a})
+			nfo.Actors = append(nfo.Actors, NFOActor{Name: a.Name})
 		}
 		if err := writeNFO(filepath.Join(javDir, jav.Code+".nfo"), nfo); err != nil {
 			return fmt.Errorf("write nfo for %s failed: %w", jav.Code, err)

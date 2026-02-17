@@ -17,10 +17,13 @@ type Context interface {
 
 	// Response
 	JSON(code int, v interface{}) error
+	Stream(code int, contentType string, body io.Reader) error
 
 	// Services
 	DB() *gorm.DB
 	LogDir() string
+	CacheDir() string
+	FFmpegBin() string
 }
 
 // HandlerFunc is the handler signature used throughout the app.

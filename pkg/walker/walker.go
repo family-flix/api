@@ -180,6 +180,11 @@ func (w *FolderWalker) walk(data interface{}, parents []ParentFolderInfo) error 
 	}
 	parentPathsStr := strings.Join(parentPaths, "/")
 
+	// Skip @eaDir (Synology thumbnail folders) and .DS_Store (macOS)
+	if fileInfo.Name == "@eaDir" || fileInfo.Name == ".DS_Store" {
+		return nil
+	}
+
 	// Filter
 	if w.Filter != nil && fileInfo.ID != w.StartFolderID {
 		skip, err := w.Filter(fileInfo)

@@ -2,39 +2,42 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"net/url"
 
-	"github.com/family-flix/api/pkg/media_profile/javbus"
+	"github.com/family-flix/api/internal/config"
+	"github.com/spf13/viper"
 )
 
 func main() {
-	keyword := "SSNI"
-	client := javbus.NewJavBusClient("")
-	err := client.Verify()
+	_, err := config.New()
 	if err != nil {
-		log.Fatalf("Verification failed: %v", err)
-	}
-	fmt.Println("Auth OK")
-
-	var allMovies []javbus.Movie
-	if keyword == "" {
-		return
-	}
-	fmt.Printf("Search: %s\n", keyword)
-	p := 1
-	resp, err := client.Search(keyword, p)
-	if err != nil {
-		log.Printf("Failed to fetch page %d: %v", p, err)
-		return
+		log.Fatalf("加载配置失败: %v", err)
 	}
 
-	fmt.Printf("P%d: %d\n", p, len(resp.Data))
-	if len(resp.Data) == 0 {
-		return
+	proxy := viper.GetString("javbus.proxy")
+	fmt.Printf("proxy: %s\n", proxy)
+
+	// 直接测试 proxy 转发
+	target := "https://www.javbus.com/search/SSNI"
+	reqURL := proxy + "/api/proxy/?u=" + url.QueryEscape(target)
+	fmt.Printf("request: %s\n", reqURL)
+
+	resp, err := http.Get(reqURL)
+	if err != nil {
+		log.Fatalf("请求失败: %v", err)
 	}
-	allMovies = append(allMovies, resp.Data...)
-	fmt.Printf("Found: %d\n", len(allMovies))
-	for _, m := range allMovies {
-		fmt.Printf("{c:%s t:%s v:%s l:%s}\n", m.Code, m.Title, m.Cover, m.Link)
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Printf("status: %d\n", resp.StatusCode)
+	fmt.Printf("body length: %d\n", len(body))
+	// 打印前 2000 字符
+	s := string(body)
+	if len(s) > 2000 {
+		s = s[:2000]
 	}
+	fmt.Println(s)
 }

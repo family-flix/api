@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	client := javbus.NewJavBusClient("", "")
+	client := javbus.NewJavBusClient("")
 
 	// 1. Verification Step (Handled internally with persistence)
 	// err := client.Verify()

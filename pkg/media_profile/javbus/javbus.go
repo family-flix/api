@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 const (
@@ -19,22 +21,30 @@ const (
 )
 
 type Movie struct {
-	Code  string
-	Title string
-	Cover string
-	Link  string
+	Code    string
+	Title   string
+	Cover   string
+	Link    string
+	AirDate string
+}
+
+type Actor struct {
+	Name   string
+	Avatar string
 }
 
 type MovieDetail struct {
 	Code         string
 	Title        string
 	Cover        string
+	Backdrop     string
 	ReleaseDate  string
 	Length       string
 	Director     string
 	Studio       string
+	Label        string
 	Genres       []string
-	Actors       []string
+	Actors       []Actor
 	SampleImages []string
 }
 
@@ -42,6 +52,7 @@ type JavBusClient struct {
 	client     *http.Client
 	cookie     string
 	cookieFile string
+	proxyHost  string // Cloudflare Worker URL, e.g. "https://xxx.workers.dev"
 }
 
 func NewJavBusClient(cookieFile string) *JavBusClient {
@@ -62,7 +73,24 @@ func NewJavBusClient(cookieFile string) *JavBusClient {
 			},
 		},
 		cookieFile: cookieFile,
+		proxyHost:  strings.TrimRight(getProxy(), "/"),
 	}
+}
+
+// proxyURL wraps targetURL through the Cloudflare Worker proxy if configured.
+// e.g. https://worker.dev/api/proxy/?u=<encoded_target>
+func getProxy() string {
+	if v := os.Getenv("JAVBUS_PROXY"); v != "" {
+		return v
+	}
+	return viper.GetString("javbus.proxy")
+}
+
+func (c *JavBusClient) proxyURL(targetURL string) string {
+	if c.proxyHost != "" {
+		return c.proxyHost + "/api/proxy/?u=" + url.QueryEscape(targetURL)
+	}
+	return targetURL
 }
 
 type JavBusSearchResp struct {
@@ -85,11 +113,15 @@ func (c *JavBusClient) SaveCookie() error {
 	return os.WriteFile(c.cookieFile, []byte(c.cookie), 0644)
 }
 
+func (c *JavBusClient) GetCookie() string {
+	return c.cookie
+}
+
 func (c *JavBusClient) Verify() error {
 	vp := host + "/doc/driver-verify?referer=https%3A%2F%2Fwww.javbus.com%2F"
 
 	// Step 1: GET to get PHPSESSID
-	req1, _ := http.NewRequest("GET", vp, nil)
+	req1, _ := http.NewRequest("GET", c.proxyURL(vp), nil)
 	req1.Header.Set("User-Agent", ua)
 	req1.Header.Set("Accept", "text/html")
 
@@ -112,7 +144,7 @@ func (c *JavBusClient) Verify() error {
 	data := url.Values{}
 	data.Set("Submit", "確認")
 
-	req2, _ := http.NewRequest("POST", vp, strings.NewReader(data.Encode()))
+	req2, _ := http.NewRequest("POST", c.proxyURL(vp), strings.NewReader(data.Encode()))
 	req2.Header.Set("User-Agent", ua)
 	req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req2.Header.Set("Cookie", "PHPSESSID="+sid)
@@ -208,7 +240,7 @@ func (c *JavBusClient) GetMovieDetail(code string) (*MovieDetail, error) {
 }
 
 func (c *JavBusClient) fetch(urlStr string, headers map[string]string) (string, error) {
-	req, err := http.NewRequest("GET", urlStr, nil)
+	req, err := http.NewRequest("GET", c.proxyURL(urlStr), nil)
 	if err != nil {
 		return "", err
 	}
@@ -254,17 +286,23 @@ func (c *JavBusClient) parse(html string) []Movie {
 			title = titleM[1]
 		}
 
-		date := ""
-		if dateM := reDate.FindStringSubmatch(content); len(dateM) > 1 {
-			date = strings.TrimSpace(dateM[1])
+		code := ""
+		airDate := ""
+		dateMatches := reDate.FindAllStringSubmatch(content, -1)
+		if len(dateMatches) > 0 {
+			code = strings.TrimSpace(dateMatches[0][1])
+		}
+		if len(dateMatches) > 1 {
+			airDate = strings.TrimSpace(dateMatches[1][1])
 		}
 
-		if date != "" {
+		if code != "" {
 			movies = append(movies, Movie{
-				Code:  date,
-				Title: title,
-				Cover: cover,
-				Link:  link,
+				Code:    code,
+				Title:   title,
+				Cover:   fullURL(cover),
+				Link:    link,
+				AirDate: airDate,
 			})
 		}
 	}
@@ -288,10 +326,11 @@ func (c *JavBusClient) parseDetail(code, html string) *MovieDetail {
 		}
 	}
 
-	// Cover
-	reCover := regexp.MustCompile(`(?i)<a class="bigImage" href="([^"]*)"`)
-	if m := reCover.FindStringSubmatch(html); len(m) > 1 {
-		detail.Cover = m[1]
+	// Cover & Backdrop
+	reCover := regexp.MustCompile(`(?i)<a class="bigImage" href="([^"]*)"[^>]*>\s*<img src="([^"]*)"`)
+	if m := reCover.FindStringSubmatch(html); len(m) > 2 {
+		detail.Backdrop = fullURL(m[1])
+		detail.Cover = fullURL(m[2])
 	}
 
 	// Release Date
@@ -318,6 +357,12 @@ func (c *JavBusClient) parseDetail(code, html string) *MovieDetail {
 		detail.Studio = strings.TrimSpace(m[1])
 	}
 
+	// Label
+	reLabel := regexp.MustCompile(`(?i)<span class="header">發行商:</span>\s*<a[^>]*>([^<]*)</a>`)
+	if m := reLabel.FindStringSubmatch(html); len(m) > 1 {
+		detail.Label = strings.TrimSpace(m[1])
+	}
+
 	// Genres
 	reGenre := regexp.MustCompile(`(?i)<span class="genre"><label><input[^>]*><a[^>]*>([^<]*)</a></label></span>`)
 	genreMatches := reGenre.FindAllStringSubmatch(html, -1)
@@ -326,22 +371,36 @@ func (c *JavBusClient) parseDetail(code, html string) *MovieDetail {
 	}
 
 	// Actors
-	reActor := regexp.MustCompile(`(?i)<div class="star-name"><a[^>]*title="([^"]*)"`)
+	reActor := regexp.MustCompile(`(?i)<a[^>]*href="https?://www\.javbus\.com/star/([^"]*)"[^>]*>([^<]*)</a>`)
 	actorMatches := reActor.FindAllStringSubmatch(html, -1)
+	seen := make(map[string]bool)
 	for _, m := range actorMatches {
-		detail.Actors = append(detail.Actors, strings.TrimSpace(m[1]))
+		name := strings.TrimSpace(m[2])
+		if name == "" || seen[name] {
+			continue
+		}
+		seen[name] = true
+		detail.Actors = append(detail.Actors, Actor{
+			Name:   name,
+			Avatar: host + "/pics/actress/" + m[1] + "_a.jpg",
+		})
 	}
-	// Deduplicate actors if any
-	detail.Actors = uniqueStrings(detail.Actors)
 
 	// Sample Images
 	reSample := regexp.MustCompile(`(?i)<a class="sample-box" href="([^"]*)"`)
 	sampleMatches := reSample.FindAllStringSubmatch(html, -1)
 	for _, m := range sampleMatches {
-		detail.SampleImages = append(detail.SampleImages, m[1])
+		detail.SampleImages = append(detail.SampleImages, fullURL(m[1]))
 	}
 
 	return detail
+}
+
+func fullURL(s string) string {
+	if s != "" && strings.HasPrefix(s, "/") {
+		return host + s
+	}
+	return s
 }
 
 func uniqueStrings(slice []string) []string {

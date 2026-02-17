@@ -428,7 +428,7 @@ func main() {
 	// 	}
 	// 	return nil
 	// })
-	javClient := javbus.NewJavBusClient("", "")
+	javClient := javbus.NewJavBusClient("")
 	w.SetOnJav(func(parsed any) error {
 		jav := parsed.(walker.SearchedJAV)
 		fmt.Printf("JAV: %s (%s)\n", jav.Code, jav.FileName)

@@ -12,6 +12,4 @@ type DatabaseConfig struct {
 	DBName     string
 	DBPath     string // 用于SQLite
 
-	// 迁移配置
-	MigrationsPath string
 }

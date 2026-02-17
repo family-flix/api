@@ -339,6 +339,9 @@ func (c *DatabaseDriveClient) Download(fileID string) (string, error) {
 func (c *DatabaseDriveClient) FetchVideoPreviewInfo(fileID string) (*drive_client.VideoPreviewInfo, error) {
 	return nil, fmt.Errorf("not supported")
 }
+func (c *DatabaseDriveClient) Preview(fileID string) (*drive_client.PreviewInfo, error) {
+	return nil, fmt.Errorf("not supported")
+}
 
 // DeleteFolder 删除一个文件夹及其所有子文件记录
 func (d *Drive) DeleteFolder(fileID, name, driveID string) error {

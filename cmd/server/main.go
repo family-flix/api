@@ -3,9 +3,13 @@ package server
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/family-flix/api/internal/config"
@@ -22,7 +26,23 @@ import (
 
 var AppVer = "0.1.0"
 
+func pidFile(baseDir string) string {
+	return filepath.Join(baseDir, "server.pid")
+}
+
 func Main() {
+	if len(os.Args) > 1 && os.Args[1] == "stop" {
+		stopDaemon()
+		return
+	}
+
+	daemon := flag.Bool("d", false, "以守护进程模式运行")
+	flag.Parse()
+
+	if *daemon {
+		startDaemon()
+		return
+	}
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	log.Logger = log.Output(os.Stderr)
@@ -56,7 +76,6 @@ func Main() {
 		DBPassword:     cfg.GetString("database.password"),
 		DBName:         cfg.GetString("database.name"),
 		DBPath:         filepath.Join(cfg.BaseDir, cfg.GetString("database.path")),
-		MigrationsPath: filepath.Join(cfg.BaseDir, cfg.GetString("database.migrations_path")),
 	}
 	db, err := database.NewDatabase(&datacfg)
 	if err != nil {
@@ -78,7 +97,9 @@ func Main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	handler.SetupRouter(e, db, cfg.BaseDir)
+	ffmpegBin := cfg.GetString("ffmpeg.bin")
+	cacheDir := filepath.Join(cfg.BaseDir, cfg.GetString("ffmpeg.cache_dir"))
+	handler.SetupRouter(e, db, cfg.BaseDir, cacheDir, ffmpegBin)
 
 	port := cfg.GetInt("server.port")
 	addr := fmt.Sprintf(":%d", port)
@@ -98,10 +119,56 @@ func Main() {
 	fmt.Printf("http://localhost:%d/pc/home/index\n", port)
 	fmt.Println()
 
+	// 写入 PID 文件
+	pidPath := pidFile(cfg.BaseDir)
+	os.WriteFile(pidPath, []byte(strconv.Itoa(os.Getpid())), 0644)
+	defer os.Remove(pidPath)
+
 	if err := e.Start(addr); err != nil {
 		logger.Fatal().Err(err).Msg("Server failed")
 		os.Exit(1)
 	}
+}
+
+func startDaemon() {
+	exe, _ := os.Executable()
+	cmd := exec.Command(exe, "server")
+	cmd.Stdout = nil
+	cmd.Stderr = nil
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("启动守护进程失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("守护进程已启动, PID: %d\n", cmd.Process.Pid)
+	cmd.Process.Release()
+}
+
+func stopDaemon() {
+	cfg, err := config.New()
+	if err != nil {
+		fmt.Printf("加载配置失败: %v\n", err)
+		os.Exit(1)
+	}
+	pidPath := pidFile(cfg.BaseDir)
+	data, err := os.ReadFile(pidPath)
+	if err != nil {
+		fmt.Println("未找到运行中的服务")
+		os.Exit(1)
+	}
+	pid, _ := strconv.Atoi(string(data))
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		fmt.Println("未找到进程")
+		os.Remove(pidPath)
+		os.Exit(1)
+	}
+	if err := proc.Signal(syscall.SIGTERM); err != nil {
+		fmt.Printf("停止服务失败: %v\n", err)
+		os.Exit(1)
+	}
+	os.Remove(pidPath)
+	fmt.Printf("服务已停止 (PID: %d)\n", pid)
 }
 
 func ensureAdmin(db *gorm.DB) {

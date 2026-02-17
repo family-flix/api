@@ -27,11 +27,9 @@ func Main() {
 		DBPassword:     cfg.GetString("database.password"),
 		DBName:         cfg.GetString("database.name"),
 		DBPath:         cfg.GetString("database.path"),
-		MigrationsPath: cfg.GetString("database.migrations_path"),
 	}
 	if cfg.BaseDir != "" {
 		datacfg.DBPath = cfg.BaseDir + "/" + cfg.GetString("database.path")
-		datacfg.MigrationsPath = cfg.BaseDir + "/" + cfg.GetString("database.migrations_path")
 	}
 
 	db, err := database.NewDatabase(&datacfg)
