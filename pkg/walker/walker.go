@@ -38,6 +38,7 @@ type FolderWalker struct {
 	OnSubtitle func(subtitle SearchedSubtitle) error
 	OnImg      func(img SearchedImg) error
 	OnNFO      func(nfo SearchedNFO) error
+	OnJAV      func(jav SearchedJAV) error
 	OnWarning  func(warning SearchedWarning)
 	OnError    func(file folder.File)
 	OnStop     func()
@@ -57,6 +58,7 @@ func NewFolderWalker() *FolderWalker {
 		OnSubtitle: func(s SearchedSubtitle) error { return nil },
 		OnImg:      func(i SearchedImg) error { return nil },
 		OnNFO:      func(n SearchedNFO) error { return nil },
+		OnJAV:      func(j SearchedJAV) error { return nil },
 		OnWarning:  func(w SearchedWarning) {},
 		OnError:    func(f folder.File) {},
 		OnStop:     func() {},
@@ -81,6 +83,11 @@ func (w *FolderWalker) SetOnEpisode(f func(e SearchedEpisode) error) {
 // SetOnMovie sets movie handler
 func (w *FolderWalker) SetOnMovie(f func(parsed any) error) {
 	w.OnMovie = func(m SearchedMovie) error {
+		return f(m)
+	}
+}
+func (w *FolderWalker) SetOnJav(f func(parsed any) error) {
+	w.OnJAV = func(m SearchedJAV) error {
 		return f(m)
 	}
 }
@@ -294,14 +301,27 @@ func (w *FolderWalker) walk(data interface{}, parents []ParentFolderInfo) error 
 						tvInfo = parents[n-2]
 						foundTv = true
 					}
-				} else {
-					// Maybe it's TV folder?
+				} else if last.Name != "" || last.OriginalName != "" {
+					// It's a TV folder only if it has a parsed name
 					tvInfo = last
 					foundTv = true
 				}
 			}
 
-			if foundTv {
+			// Try JAV first, regardless of parent folder
+			javCode := ParseFilenameForJAV(fileInfo.Name)
+			if javCode != "" {
+				if err := w.OnJAV(SearchedJAV{
+					FileID:      fileInfo.ID,
+					FileName:    fileInfo.Name,
+					Code:        javCode,
+					ParentPaths: parentPathsStr,
+					Size:        fileInfo.Size,
+					MD5:         fileInfo.MD5,
+				}); err != nil {
+					return err
+				}
+			} else if foundTv {
 				// It's an episode
 				ep := SearchedEpisode{}
 				ep.TV.Name = tvInfo.Name
@@ -313,10 +333,6 @@ func (w *FolderWalker) walk(data interface{}, parents []ParentFolderInfo) error 
 					ep.Season.SeasonText = seasonInfo.Season
 					ep.Season.FileID = seasonInfo.FileID
 					ep.Season.FileName = seasonInfo.FileName
-				} else {
-					// Use default season if not found in parents but implied?
-					// TS logic handles this with "normal2", "normal4" etc.
-					// For now we leave it empty or user handles it.
 				}
 
 				ep.Episode.FileID = fileInfo.ID
@@ -327,8 +343,6 @@ func (w *FolderWalker) walk(data interface{}, parents []ParentFolderInfo) error 
 				ep.Episode.EpisodeText = parsed.Episode
 				ep.Episode.Year = parsed.Year
 
-				// Basic warning check: if parsed name differs significantly from TV name
-				// This is a simplified version of TS logic
 				if parsed.Name != "" && tvInfo.Name != "" && !strings.Contains(strings.ToLower(tvInfo.Name), strings.ToLower(parsed.Name)) {
 					w.OnWarning(SearchedWarning{
 						FileID:      fileInfo.ID,
@@ -339,7 +353,6 @@ func (w *FolderWalker) walk(data interface{}, parents []ParentFolderInfo) error 
 					})
 				}
 
-				// Call OnEpisode
 				if err := w.OnEpisode(ep); err != nil {
 					return err
 				}

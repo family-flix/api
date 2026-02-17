@@ -8,7 +8,16 @@ import (
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 )
+
+type namer struct {
+	schema.NamingStrategy
+}
+
+func (n namer) JoinTableName(joinTable string) string {
+	return joinTable
+}
 
 // NewDatabase 创建数据库连接
 func NewDatabase(cfg *DatabaseConfig) (*gorm.DB, error) {
@@ -31,6 +40,7 @@ func NewDatabase(cfg *DatabaseConfig) (*gorm.DB, error) {
 
 	// 配置GORM
 	gormConfig := &gorm.Config{
+		NamingStrategy: namer{schema.NamingStrategy{}},
 		Logger:                                   logger.Default.LogMode(logger.Info),
 		DisableForeignKeyConstraintWhenMigrating: true,
 	}

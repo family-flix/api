@@ -17,6 +17,7 @@ import (
 	"github.com/family-flix/api/pkg/database"
 	"github.com/family-flix/api/pkg/drive_client/localdrive"
 	"github.com/family-flix/api/pkg/folder"
+	"github.com/family-flix/api/pkg/media_profile/javbus"
 	"github.com/family-flix/api/pkg/media_profile/tmdb"
 	"github.com/family-flix/api/pkg/types"
 	"github.com/family-flix/api/pkg/walker"
@@ -80,6 +81,8 @@ type MovieNFO struct {
 	UniqueID      []NFOUniqueID `xml:"uniqueid,omitempty"`
 	Genres        []string      `xml:"genre,omitempty"`
 	Country       []string      `xml:"country,omitempty"`
+	Director      string        `xml:"director,omitempty"`
+	Studio        string        `xml:"studio,omitempty"`
 	Poster        string        `xml:"thumb,omitempty"`
 	Fanart        *NFOFanart    `xml:"fanart,omitempty"`
 	Actors        []NFOActor    `xml:"actor,omitempty"`
@@ -133,17 +136,25 @@ func strPtr(s string) *string {
 	return &s
 }
 
-func downloadImage(url, dir, filename string) string {
-	if url == "" {
+func downloadImage(imgURL, dir, filename string) string {
+	if imgURL == "" {
 		return ""
 	}
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", imgURL, nil)
+	if err != nil {
+		fmt.Printf("download image failed: %v\n", err)
+		return ""
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
+	req.Header.Set("Referer", "https://www.javbus.com/")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fmt.Printf("download image failed: %v\n", err)
 		return ""
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("download image %s status: %d\n", imgURL, resp.StatusCode)
 		return ""
 	}
 	dst := filepath.Join(dir, filename)
@@ -157,20 +168,90 @@ func downloadImage(url, dir, filename string) string {
 	return filename
 }
 
+// sanitizeDot replaces spaces with dots and removes characters unsafe for folder names.
+func sanitizeDot(s string) string {
+	s = strings.ReplaceAll(s, " ", ".")
+	s = strings.ReplaceAll(s, "/", ".")
+	s = strings.ReplaceAll(s, "\\", ".")
+	s = strings.ReplaceAll(s, ":", ".")
+	return s
+}
+
+func joinNonEmpty(sep string, parts ...string) string {
+	filtered := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p != "" {
+			filtered = append(filtered, p)
+		}
+	}
+	return strings.Join(filtered, sep)
+}
+
+func buildTVFolderName(name, originalName, season, year string) string {
+	n := sanitizeDot(name)
+	o := sanitizeDot(originalName)
+	if o == n {
+		o = ""
+	}
+	return joinNonEmpty(".", n, o, season, year)
+}
+
+func buildMovieFolderName(name, originalName, year string) string {
+	n := sanitizeDot(name)
+	o := sanitizeDot(originalName)
+	if o == n {
+		o = ""
+	}
+	return joinNonEmpty(".", n, o, year)
+}
+
+func buildJAVFolderName(code, title, year string) string {
+	return joinNonEmpty(".", code, sanitizeDot(title), year)
+}
+
+func writeStrm(dir, basename, videoPath string) {
+	strmPath := filepath.Join(dir, basename+".strm")
+	if err := os.WriteFile(strmPath, []byte(videoPath), 0644); err != nil {
+		fmt.Printf("write strm failed: %v\n", err)
+	}
+}
+
 func Main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: nfo <directory>")
+	strmDir := ""
+	args := []string{}
+	for i := 1; i < len(os.Args); i++ {
+		a := os.Args[i]
+		if a == "--strm" {
+			if i+1 < len(os.Args) {
+				i++
+				strmDir = os.Args[i]
+			} else {
+				fmt.Println("--strm requires an absolute path argument")
+				os.Exit(1)
+			}
+		} else {
+			args = append(args, a)
+		}
+	}
+	if len(args) < 1 && strmDir == "" {
+		fmt.Println("Usage: nfo [--strm /absolute/path] [directory]")
 		os.Exit(1)
 	}
-	rootPath := os.Args[1]
-
-	info, err := os.Stat(rootPath)
-	if err != nil || !info.IsDir() {
-		fmt.Printf("invalid directory: %s\n", rootPath)
+	if strmDir != "" && !filepath.IsAbs(strmDir) {
+		fmt.Printf("--strm path must be absolute: %s\n", strmDir)
 		os.Exit(1)
 	}
-
-	fmt.Printf("Walking: %s\n", rootPath)
+	rootPaths := args
+	if len(rootPaths) == 0 {
+		rootPaths = []string{strmDir}
+	}
+	for _, rp := range rootPaths {
+		info, err := os.Stat(rp)
+		if err != nil || !info.IsDir() {
+			fmt.Printf("invalid directory: %s\n", rp)
+			os.Exit(1)
+		}
+	}
 
 	cfg, err := config.New()
 	if err != nil {
@@ -198,22 +279,12 @@ func Main() {
 	seasonCache := map[string]*tmdb.SeasonProfileResult{}
 	mediaProfileCache := map[string]string{}
 
-	prevFolder := folder.NewFolder(rootPath, client, []folder.ParentFolder{}, nil)
-
-	profile, err := prevFolder.Profile()
-	if err != nil {
-		fmt.Printf("fetch folder profile failed: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("Folder Profile: %+v\n", profile)
-
 	w := walker.NewFolderWalker()
 
 	w.SetOnEpisode(func(f walker.SearchedEpisode) error {
 		fmt.Printf("Episode: %s %s %s\n", f.TV.Name, f.Season.SeasonText, f.Episode.EpisodeText)
 
 		videoPath := f.Episode.FileID
-		nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
 		seasonNum := parseSeasonNumber(f.Season.SeasonText)
 		if f.Season.SeasonText == "" {
 			seasonNum = 1
@@ -228,6 +299,11 @@ func Main() {
 			OriginalTitle: f.TV.OriginalName,
 		}
 
+		// Determine output directory
+		tvName := f.TV.Name
+		tvOriginalName := f.TV.OriginalName
+		tvYear := ""
+
 		searchName := f.TV.Name
 		if f.TV.OriginalName != "" {
 			searchName = f.TV.OriginalName
@@ -236,6 +312,12 @@ func Main() {
 		if err == nil && len(result.List) > 0 {
 			tv := result.List[0]
 			tvID, _ := strconv.Atoi(tv.ID)
+
+			tvName = tv.Name
+			tvOriginalName = tv.OriginalName
+			if tv.FirstAirDate != "" && len(tv.FirstAirDate) >= 4 {
+				tvYear = tv.FirstAirDate[:4]
+			}
 
 			nfo.ShowTitle = tv.Name
 			nfo.Rating = fmt.Sprintf("%.1f", tv.VoteAverage)
@@ -295,32 +377,41 @@ func Main() {
 				}
 				mediaProfileCache[tv.ID] = mp.ID
 			}
-			{
-				seasonDir := f.Season.FileID
-				if seasonDir == "" {
-					seasonDir = f.TV.FileID
-				}
-				posterPath := tv.PosterPath
-				if seasonDetail != nil && seasonDetail.PosterPath != "" {
-					posterPath = seasonDetail.PosterPath
-				}
-				downloadImage(posterPath, seasonDir, "poster.jpg")
-				downloadImage(tv.BackdropPath, seasonDir, "fanart.jpg")
-				tvNfo := TVShowNFO{
-					Title:         tv.Name,
-					OriginalTitle: tv.OriginalName,
-					Plot:          tv.Overview,
-					Premiered:     tv.FirstAirDate,
-					Rating:        fmt.Sprintf("%.1f", tv.VoteAverage),
-					UniqueID:      []NFOUniqueID{{Type: "tmdb", Default: true, Value: tv.ID}},
-					Genres:        genreNames(tv.Genres),
-					Country:       tv.OriginCountry,
-				}
-				tvShowNFOPath := filepath.Join(seasonDir, "tvshow.nfo")
-				if err := writeNFO(tvShowNFOPath, tvNfo); err != nil {
-					fmt.Printf("write tvshow.nfo failed: %v\n", err)
-				}
+
+			// Determine the directory for tvshow.nfo / poster / fanart
+			seasonDir := f.Season.FileID
+			if seasonDir == "" {
+				seasonDir = f.TV.FileID
 			}
+			if strmDir != "" {
+				seasonText := f.Season.SeasonText
+				if seasonText == "" {
+					seasonText = "S01"
+				}
+				seasonDir = filepath.Join(strmDir, buildTVFolderName(tvName, tvOriginalName, seasonText, tvYear))
+				os.MkdirAll(seasonDir, 0755)
+			}
+
+			posterPath := tv.PosterPath
+			if seasonDetail != nil && seasonDetail.PosterPath != "" {
+				posterPath = seasonDetail.PosterPath
+			}
+			downloadImage(posterPath, seasonDir, "poster.jpg")
+			downloadImage(tv.BackdropPath, seasonDir, "fanart.jpg")
+			tvNfo := TVShowNFO{
+				Title:         tv.Name,
+				OriginalTitle: tv.OriginalName,
+				Plot:          tv.Overview,
+				Premiered:     tv.FirstAirDate,
+				Rating:        fmt.Sprintf("%.1f", tv.VoteAverage),
+				UniqueID:      []NFOUniqueID{{Type: "tmdb", Default: true, Value: tv.ID}},
+				Genres:        genreNames(tv.Genres),
+				Country:       tv.OriginCountry,
+			}
+			if err := writeNFO(filepath.Join(seasonDir, "tvshow.nfo"), tvNfo); err != nil {
+				fmt.Printf("write tvshow.nfo failed: %v\n", err)
+			}
+
 			if seasonDetail != nil {
 				for _, ep := range seasonDetail.Episodes {
 					if ep.EpisodeNumber == episodeNum {
@@ -345,8 +436,24 @@ func Main() {
 			}
 		}
 
-		if err := writeNFO(nfoPath, nfo); err != nil {
-			fmt.Printf("write episode nfo failed: %v\n", err)
+		if strmDir != "" {
+			seasonText := f.Season.SeasonText
+			if seasonText == "" {
+				seasonText = "S01"
+			}
+			outDir := filepath.Join(strmDir, buildTVFolderName(tvName, tvOriginalName, seasonText, tvYear))
+			os.MkdirAll(outDir, 0755)
+			basename := strings.TrimSuffix(f.Episode.FileName, filepath.Ext(f.Episode.FileName))
+			writeStrm(outDir, basename, videoPath)
+			nfoPath := filepath.Join(outDir, basename+".nfo")
+			if err := writeNFO(nfoPath, nfo); err != nil {
+				fmt.Printf("write episode nfo failed: %v\n", err)
+			}
+		} else {
+			nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
+			if err := writeNFO(nfoPath, nfo); err != nil {
+				fmt.Printf("write episode nfo failed: %v\n", err)
+			}
 		}
 		return nil
 	})
@@ -356,7 +463,9 @@ func Main() {
 		fmt.Printf("Movie: %s (%s)\n", f.Name, f.Year)
 
 		videoPath := f.FileID
-		nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
+		movieName := f.Name
+		movieOriginalName := f.OriginalName
+		movieYear := f.Year
 
 		nfo := MovieNFO{
 			Title:         f.Name,
@@ -375,7 +484,17 @@ func Main() {
 
 			detail, err := tmdbClient.FetchMovieProfile(movieID)
 			if err == nil {
+				movieName = detail.Name
+				movieOriginalName = detail.OriginalName
+				if detail.AirDate != "" && len(detail.AirDate) >= 4 {
+					movieYear = detail.AirDate[:4]
+				}
+
 				movieDir := filepath.Dir(videoPath)
+				if strmDir != "" {
+					movieDir = filepath.Join(strmDir, buildMovieFolderName(movieName, movieOriginalName, movieYear))
+					os.MkdirAll(movieDir, 0755)
+				}
 				posterFile := downloadImage(detail.PosterPath, movieDir, "poster.jpg")
 				fanartFile := downloadImage(detail.BackdropPath, movieDir, "fanart.jpg")
 				nfo.Title = detail.Name
@@ -393,9 +512,7 @@ func Main() {
 				if fanartFile != "" {
 					nfo.Fanart = &NFOFanart{Thumb: fanartFile}
 				}
-				if detail.AirDate != "" && len(detail.AirDate) >= 4 {
-					nfo.Year = detail.AirDate[:4]
-				}
+				nfo.Year = movieYear
 
 				mp := model.MediaProfile{
 					ID:           uuid.New().String(),
@@ -420,21 +537,85 @@ func Main() {
 			}
 		}
 
-		if err := writeNFO(nfoPath, nfo); err != nil {
-			fmt.Printf("write movie nfo failed: %v\n", err)
+		if strmDir != "" {
+			outDir := filepath.Join(strmDir, buildMovieFolderName(movieName, movieOriginalName, movieYear))
+			os.MkdirAll(outDir, 0755)
+			basename := strings.TrimSuffix(f.FileName, filepath.Ext(f.FileName))
+			writeStrm(outDir, basename, videoPath)
+			if err := writeNFO(filepath.Join(outDir, basename+".nfo"), nfo); err != nil {
+				fmt.Printf("write movie nfo failed: %v\n", err)
+			}
+		} else {
+			nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
+			if err := writeNFO(nfoPath, nfo); err != nil {
+				fmt.Printf("write movie nfo failed: %v\n", err)
+			}
 		}
 		return nil
 	})
+
+	javClient := javbus.NewJavBusClient("")
+	w.OnJAV = func(jav walker.SearchedJAV) error {
+		fmt.Printf("JAV: %s (%s)\n", jav.Code, jav.FileName)
+
+		detail, err := javClient.GetMovieDetail(jav.Code)
+		if err != nil {
+			fmt.Printf("skip %s: %v\n", jav.Code, err)
+			return nil
+		}
+
+		javYear := ""
+		if detail.ReleaseDate != "" && len(detail.ReleaseDate) >= 4 {
+			javYear = detail.ReleaseDate[:4]
+		}
+
+		javDir := filepath.Dir(jav.FileID)
+		if strmDir != "" {
+			javDir = filepath.Join(strmDir, buildJAVFolderName(jav.Code, detail.Title, javYear))
+			if err := os.MkdirAll(javDir, 0755); err != nil {
+				return fmt.Errorf("create jav dir failed: %w", err)
+			}
+			writeStrm(javDir, jav.Code, jav.FileID)
+		}
+
+		nfo := MovieNFO{
+			Title:         detail.Title,
+			OriginalTitle: detail.Code,
+			Premiered:     detail.ReleaseDate,
+			Year:          javYear,
+			Genres:        detail.Genres,
+			Director:      detail.Director,
+			Studio:        detail.Studio,
+		}
+		for _, a := range detail.Actors {
+			nfo.Actors = append(nfo.Actors, NFOActor{Name: a})
+		}
+		if err := writeNFO(filepath.Join(javDir, jav.Code+".nfo"), nfo); err != nil {
+			return fmt.Errorf("write nfo for %s failed: %w", jav.Code, err)
+		}
+
+		downloadImage(detail.Cover, javDir, "poster.jpg")
+		if len(detail.SampleImages) > 0 {
+			downloadImage(detail.SampleImages[0], javDir, "fanart.jpg")
+		}
+		return nil
+	}
 
 	w.SetOnError(func(f folder.File) {
 		fmt.Printf("Error processing %s\n", f.Name)
 	})
 
 	fmt.Println("Starting walker...")
-	err = w.Run(prevFolder, []string{})
-	if err != nil {
-		fmt.Printf("Walker run failed: %v\n", err)
-		os.Exit(1)
+	for _, rootPath := range rootPaths {
+		fmt.Printf("Walking: %s\n", rootPath)
+		prevFolder := folder.NewFolder(rootPath, client, []folder.ParentFolder{}, nil)
+		if _, err := prevFolder.Profile(); err != nil {
+			fmt.Printf("fetch folder profile failed: %v\n", err)
+			continue
+		}
+		if err := w.Run(prevFolder, []string{}); err != nil {
+			fmt.Printf("Walker run failed for %s: %v\n", rootPath, err)
+		}
 	}
 	fmt.Println("Walker finished.")
 }

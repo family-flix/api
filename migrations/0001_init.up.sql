@@ -381,6 +381,7 @@ CREATE TABLE IF NOT EXISTS "MediaProfile" (
     "tmdb_id" TEXT UNIQUE,
     "douban_id" TEXT UNIQUE,
     "imdb_id" TEXT UNIQUE,
+    "jav_code" TEXT UNIQUE,
     "series_id" TEXT,
     CONSTRAINT "MediaProfile_series_id_fkey" FOREIGN KEY ("series_id") REFERENCES "MediaSeriesProfile"("id")
 );

@@ -78,7 +78,7 @@ func Main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	handler.SetupRouter(e, db)
+	handler.SetupRouter(e, db, cfg.BaseDir)
 
 	port := cfg.GetInt("server.port")
 	addr := fmt.Sprintf(":%d", port)

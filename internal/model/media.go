@@ -86,13 +86,14 @@ type MediaProfile struct {
 	TMDBID       *string `gorm:"uniqueIndex" json:"tmdb_id"`
 	DoubanID     *string `gorm:"uniqueIndex" json:"douban_id"`
 	IMDBID       *string `gorm:"uniqueIndex" json:"imdb_id"`
+	JavCode      *string `gorm:"uniqueIndex" json:"jav_code"`
 
 	SeriesID *string             `gorm:"size:36" json:"series_id"`
 	Series   *MediaSeriesProfile `gorm:"foreignKey:SeriesID" json:"series,omitempty"`
 
 	SourceProfiles  []MediaSourceProfile `gorm:"foreignKey:MediaProfileID" json:"source_profiles,omitempty"`
-	Genres          []MediaGenre         `gorm:"many2many:media_profile_genres" json:"genres,omitempty"`
-	OriginCountries []MediaCountry       `gorm:"many2many:media_profile_countries" json:"origin_country,omitempty"`
+	Genres          []MediaGenre         `gorm:"many2many:_MediaGenreToMediaProfile;joinForeignKey:B;joinReferences:A" json:"genres,omitempty"`
+	OriginCountries []MediaCountry       `gorm:"many2many:_MediaCountryToMediaProfile;joinForeignKey:B;joinReferences:A" json:"origin_country,omitempty"`
 	Persons         []PersonInMedia      `gorm:"foreignKey:MediaID" json:"persons,omitempty"`
 }
 

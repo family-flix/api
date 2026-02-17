@@ -79,6 +79,15 @@ type SearchedNFO struct {
 	Name   string
 }
 
+type SearchedJAV struct {
+	FileID      string
+	FileName    string
+	Code        string // 番号, e.g. ABC-123, FC2-PPV-1234567
+	ParentPaths string
+	Size        int64
+	MD5         string
+}
+
 type SearchedWarning struct {
 	FileID      string
 	Name        string

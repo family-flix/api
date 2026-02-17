@@ -1,0 +1,989 @@
+{"level":"info","key":"original_name","extracted":"aaa","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:38:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"medias","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:39:01+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:39:01+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T20:39:01+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T20:39:01+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:39:01+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T20:39:07+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T20:39:07+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:39:07+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T20:39:10+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:39:10+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T20:39:12+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T20:39:12+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:39:12+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T20:39:15+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:39:15+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"春色JI情REN","rule":"chinese name3","time":"2026-02-16T20:39:17+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:17+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:21+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:23+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:25+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:27+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:30+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:32+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:34+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:36+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:38+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:41+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:43+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:45+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:47+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:50+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:52+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:54+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:56+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:39:59+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:01+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T20:40:03+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T20:40:03+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T20:40:03+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T20:40:03+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:40:03+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T20:40:03+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T20:40:03+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T20:40:03+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T20:40:03+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:40:03+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"英语六级CET6全程班","rule":"chinese name3","time":"2026-02-16T20:40:03+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:03+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E24","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:04+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"吞噬星空","rule":"chinese name3","time":"2026-02-16T20:40:04+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:40:04+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:40:07+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:40:09+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:40:12+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:40:14+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"唐朝诡事录之西行","rule":"chinese name3","time":"2026-02-16T20:40:17+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:17+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:20+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:22+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:24+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:27+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:29+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:31+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:34+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:36+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:38+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:40+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:43+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:45+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:47+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:49+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:52+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:54+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:56+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:40:59+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:01+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:03+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:05+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:08+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:13+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:16+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:18+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:21+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:23+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:25+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:27+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:30+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:32+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:34+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E35","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:37+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E36","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:39+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E37","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:41+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E38","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:43+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E39","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:46+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E40","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:48+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"警之光","rule":"chinese name3","time":"2026-02-16T20:41:50+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"Season.2","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:41:50+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"s02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T20:41:50+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"e05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T20:41:50+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Blue.Lights.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:41:50+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:45:25+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T20:45:25+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T20:45:25+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:45:25+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T20:45:30+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T20:45:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:45:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:48:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T20:48:30+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T20:48:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:48:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:07:42+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:07:42+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:07:42+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:07:42+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:07:47+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:07:47+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:07:47+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:07:49+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:07:49+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:07:50+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:07:50+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:07:50+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:07:52+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:07:52+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:10:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:10:30+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:10:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:10:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:10:30+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:10:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:10:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:10:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:10:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:10:30+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:10:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:10:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:10:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:10:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:14:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:14:24+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:14:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:14:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:14:24+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:14:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:14:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:14:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:14:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:14:24+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:14:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:14:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:14:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:14:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:14:37+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:14:37+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:14:37+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:14:37+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:14:37+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:14:37+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:14:37+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:14:37+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:14:37+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:14:37+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:14:37+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:14:37+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:14:37+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:14:37+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:14:55+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:15:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:15:24+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:15:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:15:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:15:24+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:15:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:15:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:15:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:15:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:15:24+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:15:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:15:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:15:24+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:15:24+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:16:26+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:16:26+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:16:26+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:16:26+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:16:26+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:16:26+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:16:26+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:16:26+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:16:26+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:16:27+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:16:27+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:16:27+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:16:27+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:16:27+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:18:38+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:18:38+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:18:38+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:18:38+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:19:08+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:19:08+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:19:08+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:19:38+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:19:38+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:20:08+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:20:08+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:20:08+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:20:38+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:20:38+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:25:06+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:25:06+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:25:06+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:25:06+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:25:11+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:25:11+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:25:11+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:25:16+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:25:16+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:25:21+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:25:21+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:25:21+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:25:26+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:25:26+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:25:52+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:25:52+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:25:52+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:25:52+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:25:57+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:25:57+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:25:57+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:26:02+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:26:02+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:26:07+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:26:07+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:26:07+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:26:12+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:26:12+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:30:13+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:30:13+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:30:13+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:30:13+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:30:18+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:30:18+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:30:18+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:30:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:30:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:30:28+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:30:28+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:30:28+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:30:33+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:30:33+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:31:54+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:31:54+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:31:54+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:31:54+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:32:12+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:32:12+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:32:12+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:32:12+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:36:55+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:36:55+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:36:55+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:36:55+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:37:00+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:37:00+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:37:00+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:37:05+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:37:05+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:37:10+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:37:10+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:37:10+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:37:15+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:37:15+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:42:54+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:42:54+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:42:54+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:42:54+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:42:59+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:42:59+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:42:59+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:43:04+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:43:04+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:43:09+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:43:09+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:43:09+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:43:14+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:43:14+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:47:41+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:47:41+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:47:41+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:47:41+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:48:11+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:48:11+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:48:11+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:48:41+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:48:41+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:49:11+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:49:11+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:49:11+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:49:41+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:49:41+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:52:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:52:30+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:52:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:52:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:52:35+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:52:35+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:52:35+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:52:40+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:52:40+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:52:45+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:52:45+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:52:45+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:52:50+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:52:50+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:54:07+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:54:07+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:54:07+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:54:07+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:54:12+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:54:12+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:54:12+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:54:17+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:54:17+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:54:22+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:54:22+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:54:22+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:54:27+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:54:27+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:55:50+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:55:50+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:55:50+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:55:50+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:55:55+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:55:55+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:55:55+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:56:00+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:56:00+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:56:05+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:56:05+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:56:05+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:56:10+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:56:10+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:59:43+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:59:43+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:59:43+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:59:43+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T21:59:48+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:59:48+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:59:48+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:59:53+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:59:53+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:59:58+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:59:58+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:59:58+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T22:00:03+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:00:03+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:00:51+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:00:51+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:00:51+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:00:51+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T22:00:56+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:00:56+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:00:56+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:02:37+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:02:37+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:02:37+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:02:37+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T22:02:42+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:02:42+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:02:42+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:02:47+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:02:47+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:05:03+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:05:03+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:05:03+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:05:03+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:05:16+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:05:16+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:05:16+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:05:16+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T22:05:16+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:05:16+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:05:16+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:05:17+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:05:17+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T22:05:17+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:05:17+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:05:17+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T22:05:18+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:05:18+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:07:44+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:07:44+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:07:44+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:07:44+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T22:07:45+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:07:45+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:07:45+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:07:45+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:07:45+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T22:07:48+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:07:48+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:07:48+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T22:07:51+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:07:51+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:11:13+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:11:13+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:11:13+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:11:13+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T22:11:13+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:11:13+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:11:13+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:11:14+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:11:14+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T22:11:16+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:11:16+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:11:16+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T22:11:17+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:11:17+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:15:16+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:15:16+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:15:16+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:15:16+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T22:15:21+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:15:21+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:15:21+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:15:26+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:15:26+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T22:15:31+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:15:31+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:15:31+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T22:15:36+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:15:36+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:22:29+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:22:29+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:22:29+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:22:29+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T22:22:30+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:22:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:22:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:22:30+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:22:30+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T22:22:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:22:32+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:22:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T22:22:33+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:22:33+08:00","message":"Captured original_name"}
+{"level":"info","addr":":3200","time":"2026-02-16T22:26:03.548874+08:00","message":"Starting server"}
+{"level":"fatal","error":"listen tcp :3200: bind: address already in use","time":"2026-02-16T22:26:03.549398+08:00","message":"Server failed"}
+{"level":"info","addr":":3200","time":"2026-02-16T22:26:32.012135+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-16T22:57:49.645085+08:00","message":"Starting server"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:57:54.704398+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T22:57:54.707753+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:57:54.707934+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:57:54.708029+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T22:57:54.712466+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:57:54.712587+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:57:54.712684+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:57:54.715096+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:57:54.715205+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T22:57:54.717901+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T22:57:54.718017+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T22:57:54.718063+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T22:57:54.719932+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T22:57:54.719959+08:00","message":"Captured original_name"}
+{"level":"info","addr":":3200","time":"2026-02-16T23:00:33.133828+08:00","message":"Starting server"}
+{"level":"info","key":"original_name","extracted":"FakeLocalDrive","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.296152+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.301138+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T23:01:16.302665+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:01:16.302874+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:01:16.302996+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T23:01:16.304812+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:01:16.304977+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:01:16.305125+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:01:16.307734+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.307828+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:01:16.309138+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:01:16.309225+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.309265+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:01:16.311435+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:01:16.311486+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"aaa","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.313239+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"あなたが","rule":"japanese original name","time":"2026-02-16T23:01:16.316442+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:01:16.316511+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-888","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:01:16.316574+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"-888","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:01:16.318695+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:01:16.318718+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2021","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:01:16.32139+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-001","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:01:16.321462+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.321491+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-001","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:01:16.324738+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:01:16.324775+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2021","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:01:16.326827+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:01:16.326942+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.326973+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:01:16.330379+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:01:16.330412+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"medias","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.333107+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"春色JI情REN","rule":"chinese name3","time":"2026-02-16T23:01:16.335696+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.338595+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.340578+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.342081+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.343872+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.344978+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.346364+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.347366+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.349771+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.351281+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.352266+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.353797+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.355148+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.356556+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.358477+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.36027+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.361371+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.362508+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.363519+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.366532+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.367554+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:01:16.368861+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T23:01:16.368903+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:01:16.369009+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T23:01:16.369021+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:01:16.36905+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:01:16.371458+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T23:01:16.371504+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:01:16.371607+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T23:01:16.371619+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:01:16.371648+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"英语六级CET6全程班","rule":"chinese name3","time":"2026-02-16T23:01:16.37377+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.376019+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.377248+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.378299+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.379846+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.382071+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.383841+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.384837+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.38659+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.388244+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.389564+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.391975+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.392996+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.394584+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.395696+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.399308+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.400396+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.402535+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.403649+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.405356+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.407707+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.409403+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.410567+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.411615+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E24","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.41436+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.41624+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.418196+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.419561+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.420645+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.423326+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.424626+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.42593+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.427076+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.428023+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.431294+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"吞噬星空","rule":"chinese name3","time":"2026-02-16T23:01:16.432686+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.435075+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.436247+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.437154+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.438607+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.440896+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"唐朝诡事录之西行","rule":"chinese name3","time":"2026-02-16T23:01:16.442826+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.445174+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.446158+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.44706+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.448935+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.450625+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.451718+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.452758+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.45361+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.455537+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.457181+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.458171+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.459577+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.461069+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.461964+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.463347+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.464163+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.466447+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.467635+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.468683+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.469698+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.471021+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.47253+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.473589+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.476623+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.478249+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.479123+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.480397+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.482438+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.483368+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.484681+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.485656+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.487174+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.48856+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E35","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.489843+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E36","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.490753+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E37","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.492502+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E38","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.493519+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E39","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.494389+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E40","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.495602+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"警之光","rule":"chinese name3","time":"2026-02-16T23:01:16.497809+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"Season.2","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.499155+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"s02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T23:01:16.500899+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"e05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:01:16.500929+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Blue.Lights.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:01:16.500968+08:00","message":"Captured original_name"}
+{"level":"info","addr":":3200","time":"2026-02-16T23:08:39.34538+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-16T23:23:50.921236+08:00","message":"Starting server"}
+{"level":"info","key":"original_name","extracted":"FakeLocalDrive","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:00.896266+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:00.900715+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T23:24:00.904176+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:24:00.904335+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:24:00.904431+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T23:24:00.907715+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:24:00.907921+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:24:00.908082+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:24:00.910448+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:00.910506+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:24:00.911777+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:24:00.911893+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:00.911949+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:24:00.9133+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:24:00.913326+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"aaa","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:00.916341+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"あなたが","rule":"japanese original name","time":"2026-02-16T23:24:00.918507+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:24:00.918575+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-888","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:24:00.918636+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"-888","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:24:00.921379+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:24:00.92141+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2021","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:24:00.923492+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-001","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:24:00.923568+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:00.923597+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-001","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:24:00.92676+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:24:00.9268+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2021","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:24:00.928945+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:24:00.929007+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:00.929032+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:24:00.931943+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:24:00.931987+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"medias","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:00.93387+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"春色JI情REN","rule":"chinese name3","time":"2026-02-16T23:24:00.935724+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.937259+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.938194+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.939829+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.941465+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.942733+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.943769+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.944538+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.945901+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.947298+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.948413+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.950086+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.950988+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.952725+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.953495+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.954741+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.955793+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.957641+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.958923+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.959629+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.960762+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:24:00.962477+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T23:24:00.962527+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:24:00.96264+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T23:24:00.962652+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:24:00.962683+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:24:00.964205+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T23:24:00.964351+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:24:00.964501+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T23:24:00.964518+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:24:00.964558+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"英语六级CET6全程班","rule":"chinese name3","time":"2026-02-16T23:24:00.966185+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.967607+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.968383+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.969628+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.970353+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.971233+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.973034+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.974233+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.975873+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.976975+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.978388+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.97922+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.980435+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.98172+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.982941+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.984153+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.984994+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.985753+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.987013+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.98826+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.989829+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.990732+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.991539+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.992731+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E24","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.994071+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.994849+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.99618+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.997008+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:00.998491+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.00009+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.000945+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.002129+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.002908+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.003767+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.005534+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"吞噬星空","rule":"chinese name3","time":"2026-02-16T23:24:01.007112+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:01.008747+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:01.009461+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:01.010612+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:01.011668+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:01.012355+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"唐朝诡事录之西行","rule":"chinese name3","time":"2026-02-16T23:24:01.013157+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.014577+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.015951+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.016729+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.01775+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.018413+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.019012+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.02041+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.021032+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.021627+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.02308+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.023894+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.02456+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.02579+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.026446+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.027594+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.028222+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.028932+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.029986+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.031067+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.032558+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.033276+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.033903+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.034954+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.036667+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.038163+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.038953+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.039914+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.041291+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.042069+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.042891+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.043681+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.044285+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.045055+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E35","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.045905+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E36","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.046514+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E37","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.048359+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E38","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.049241+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E39","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.049874+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E40","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.050693+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"警之光","rule":"chinese name3","time":"2026-02-16T23:24:01.051756+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"Season.2","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:01.052862+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"s02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T23:24:01.054043+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"e05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:24:01.054077+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Blue.Lights.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:24:01.054117+08:00","message":"Captured original_name"}
+{"level":"info","addr":":3200","time":"2026-02-16T23:34:01.85987+08:00","message":"Starting server"}
+{"level":"info","key":"original_name","extracted":"FakeLocalDrive","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.484346+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.489888+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T23:34:04.493211+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:34:04.493337+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:34:04.493402+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-16T23:34:04.494919+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:34:04.494982+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:34:04.49504+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:34:04.496513+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.496557+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:34:04.499007+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T23:34:04.499115+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.499162+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:34:04.500904+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:34:04.500939+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"aaa","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.502493+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"あなたが","rule":"japanese original name","time":"2026-02-16T23:34:04.503807+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:34:04.503852+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-888","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:34:04.503892+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"-888","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:34:04.506686+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:34:04.506808+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2021","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:34:04.50892+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-001","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:34:04.508983+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.509006+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-001","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:34:04.510421+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:34:04.510448+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2021","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:34:04.512074+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:34:04.512112+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.51213+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T23:34:04.512991+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.strm","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:34:04.513005+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"medias","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.513861+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"春色JI情REN","rule":"chinese name3","time":"2026-02-16T23:34:04.516555+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.517433+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.521691+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.525016+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.526013+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.527486+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.528838+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.529518+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.531549+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.53264+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.534589+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.536551+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.53745+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.538722+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.540765+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.542243+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.544867+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.549748+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.552123+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.555371+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.55929+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:34:04.561776+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T23:34:04.561826+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:34:04.562023+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T23:34:04.562077+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:34:04.562188+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T23:34:04.566456+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T23:34:04.566983+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T23:34:04.567914+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T23:34:04.568036+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T23:34:04.568269+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"英语六级CET6全程班","rule":"chinese name3","time":"2026-02-16T23:34:04.570939+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.572413+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.577215+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.578695+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.582033+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.586122+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.587409+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.590323+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.591794+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.593405+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.594762+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.59567+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.597961+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.601442+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.602978+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.603944+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.604785+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.607952+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.609619+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.611068+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.612051+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.61297+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.616254+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.61793+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E24","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.620119+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.621322+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.623732+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.626487+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.627441+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.628258+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.630205+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.632008+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.634339+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.635593+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.63696+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"吞噬星空","rule":"chinese name3","time":"2026-02-16T23:34:04.637755+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.639537+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.641139+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.642258+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.643166+08:00","message":"Captured original_name"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.643837+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"唐朝诡事录之西行","rule":"chinese name3","time":"2026-02-16T23:34:04.645293+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.646653+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.647958+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.649688+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.650367+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.651354+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.652545+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.653302+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.654001+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.655156+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.656868+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.657913+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.65878+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.659415+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.660619+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.66184+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.662497+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.663696+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.665293+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.666318+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.668009+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.66909+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.670312+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.673359+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.675134+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.677096+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.678787+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.680272+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.682847+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.683956+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.685193+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.686437+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.687427+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.689072+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E35","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.690708+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E36","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.692003+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E37","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.693351+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E38","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.694049+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E39","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.694689+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"E40","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.696192+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"警之光","rule":"chinese name3","time":"2026-02-16T23:34:04.69944+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"Season.2","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.700347+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"s02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T23:34:04.702584+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"e05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T23:34:04.702633+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Blue.Lights.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T23:34:04.702686+08:00","message":"Captured original_name"}
+{"level":"info","addr":":3200","time":"2026-02-16T23:41:57.480678+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T00:13:06.14632+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T00:29:05.443886+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T00:33:55.181811+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T00:38:47.917843+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T00:51:19.001293+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T00:57:04.41822+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:01:21.736705+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:01:33.583457+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:07:34.264847+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:09:01.698507+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:11:16.150306+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:13:37.513241+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:24:03.146289+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:29:58.922528+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:30:28.741098+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:35:27.720343+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:50:50.073433+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:53:54.707612+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:57:10.712115+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:58:17.251807+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T01:58:46.930789+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:04:42.714953+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:06:01.584071+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:07:40.174967+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:08:45.662172+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:12:00.532884+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:15:55.986238+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:18:42.466952+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:20:40.392482+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:21:42.632872+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:28:06.434701+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:29:14.219521+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:30:04.282968+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T02:31:36.200117+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T10:32:03.112416+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T10:32:36.950311+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T10:33:11.91463+08:00","message":"Starting server"}
+{"level":"info","addr":":3200","time":"2026-02-17T10:53:03.191075+08:00","message":"Starting server"}

@@ -9,12 +9,13 @@ import (
 
 // EchoContext wraps echo.Context to implement the Context interface.
 type EchoContext struct {
-	ec echo.Context
-	db *gorm.DB
+	ec     echo.Context
+	db     *gorm.DB
+	logDir string
 }
 
-func NewEchoContext(ec echo.Context, db *gorm.DB) *EchoContext {
-	return &EchoContext{ec: ec, db: db}
+func NewEchoContext(ec echo.Context, db *gorm.DB, logDir string) *EchoContext {
+	return &EchoContext{ec: ec, db: db, logDir: logDir}
 }
 
 func (c *EchoContext) Param(name string) string          { return c.ec.Param(name) }
@@ -23,11 +24,12 @@ func (c *EchoContext) Header(name string) string         { return c.ec.Request()
 func (c *EchoContext) Bind(v interface{}) error           { return c.ec.Bind(v) }
 func (c *EchoContext) Body() io.ReadCloser               { return c.ec.Request().Body }
 func (c *EchoContext) JSON(code int, v interface{}) error { return c.ec.JSON(code, v) }
-func (c *EchoContext) DB() *gorm.DB                      { return c.db }
+func (c *EchoContext) DB() *gorm.DB                      { return c.db.Session(&gorm.Session{NewDB: true}) }
+func (c *EchoContext) LogDir() string                     { return c.logDir }
 
 // WrapEcho converts a HandlerFunc into an echo.HandlerFunc.
-func WrapEcho(db *gorm.DB, h HandlerFunc) echo.HandlerFunc {
+func WrapEcho(db *gorm.DB, logDir string, h HandlerFunc) echo.HandlerFunc {
 	return func(ec echo.Context) error {
-		return h(NewEchoContext(ec, db))
+		return h(NewEchoContext(ec, db, logDir))
 	}
 }

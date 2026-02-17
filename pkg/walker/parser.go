@@ -13,12 +13,12 @@ import (
 var Logger zerolog.Logger
 
 func init() {
-	f, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
-		return
-	}
-	Logger = zerolog.New(f).With().Timestamp().Logger()
+	Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+}
+
+// SetLogOutput redirects the package-level Logger to the given writer.
+func SetLogOutput(w *os.File) {
+	Logger = zerolog.New(w).With().Timestamp().Logger()
 }
 
 // ParsedVideoInfo matches the structure in types.go
@@ -1960,6 +1960,58 @@ func formatEpisodeNumber(n string) string {
 	}
 
 	return number
+}
+
+// javNoiseRegexps are common noise patterns in JAV filenames
+var javNoiseRegexps = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)\.(mp4|mkv|avi|wmv|flv|rmvb|mov|ts|iso|m2ts)$`),
+	regexp.MustCompile(`(?i)(1080[pP]|720[pP]|4[kK]|2160[pP]|480[pP])`),
+	regexp.MustCompile(`(?i)(x26[45]|h\.?26[45]|hevc|avc|aac|mp3|flac|dts)`),
+	regexp.MustCompile(`(?i)(uncensored|censored|leaked|reduced|mosaic|hack|crack)`),
+	regexp.MustCompile(`(?i)(subtitle|sub|字幕|中文|无码|有码|破解|流出|减码)`),
+	regexp.MustCompile(`(?i)\b(fhd|hd|sd|uhd|blu-?ray|web-?dl|bdrip|remux)\b`),
+	regexp.MustCompile(`(?i)(www\.)?[a-zA-Z0-9]+\.(com|net|org|cc|me|xyz|club|top|info)\b`),
+	regexp.MustCompile(`(?i)(hhd800\.com|1pon|10musume|carib|paco|gachi|heyzo)`),
+	regexp.MustCompile(`\([^)]*\)`),
+	regexp.MustCompile(`\[[^\]]*\]`),
+	regexp.MustCompile(`【[^】]*】`),
+	regexp.MustCompile(`(?i)(-c|-uc|_uncensored|_leaked)$`),
+}
+
+var javSuffixRegexp = regexp.MustCompile(`(?i)-(C|UC|U|SD|CD\d+)$`)
+var javTrailingNoiseRegexp = regexp.MustCompile(`(?i)(\d)(ch|uc|c|u)(\s|$)`)
+
+// javCodeRegexp matches common JAV product codes:
+// FC2-PPV-1234567, ABC-123, T28-001, 259LUXU-1234, etc.
+var javCodeRegexp = regexp.MustCompile(`(?i)\b(FC2-PPV-\d{5,7}|\d{3,6}[A-Z]{2,10}-\d{2,8}|[A-Z]{1,10}\d{0,4}-\d{2,8})\b`)
+
+// ParseFilenameForJAV extracts the JAV product code (番号) from a filename.
+func ParseFilenameForJAV(filename string) string {
+	s := filename
+	// Remove file extension
+	s = javNoiseRegexps[0].ReplaceAllString(s, "")
+	// Replace separators with spaces for easier matching
+	s = strings.NewReplacer("_", " ", ".", " ", "@", " ").Replace(s)
+	// Remove noise
+	for _, re := range javNoiseRegexps[1:] {
+		s = re.ReplaceAllString(s, " ")
+	}
+	s = strings.TrimSpace(s)
+	// Strip trailing noise glued to digits (e.g. "775ch" -> "775 ")
+	s = javTrailingNoiseRegexp.ReplaceAllString(s, "$1$3")
+
+	m := javCodeRegexp.FindString(s)
+	if m == "" {
+		return ""
+	}
+	m = strings.ToUpper(m)
+	// Strip trailing suffixes: -C(中文), -UC(无码中文), -U(无码), -SD, -CD1, etc.
+	m = javSuffixRegexp.ReplaceAllString(m, "")
+	// A valid JAV code must have a hyphen
+	if !strings.Contains(m, "-") {
+		return ""
+	}
+	return m
 }
 
 func preprocess_filename(filename string) string {

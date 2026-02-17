@@ -20,6 +20,7 @@ type Context interface {
 
 	// Services
 	DB() *gorm.DB
+	LogDir() string
 }
 
 // HandlerFunc is the handler signature used throughout the app.

@@ -1,0 +1,673 @@
+[2026-02-17 10:53:42] 开始索引云盘「FakeLocalDrive」
+{"level":"info","parent_paths":"","name":"FakeLocalDrive","time":"2026-02-17T10:53:42.94248+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"FakeLocalDrive","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:53:42.94765+08:00","message":"Captured original_name"}
+{"level":"info","parent_paths":"FakeLocalDrive","name":".DS_Store","time":"2026-02-17T10:53:42.947997+08:00","message":"Walking"}
+[2026-02-17 10:53:42] 警告 .DS_Store: Unknown file type (FakeLocalDrive)
+{"level":"info","parent_paths":"FakeLocalDrive","name":"AV","time":"2026-02-17T10:53:42.950295+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"AV","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:53:42.953073+08:00","message":"Captured original_name"}
+{"level":"info","parent_paths":"FakeLocalDrive/AV","name":"259LUXU-1234_4K.mp4","time":"2026-02-17T10:53:42.953464+08:00","message":"Walking"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-17T10:53:42.959231+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"1234","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-17T10:53:42.959522+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"259LUXU","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-17T10:53:42.959688+08:00","message":"Captured original_name"}
+[2026-02-17 10:53:42] 解析文件 259LUXU-1234_4K.mp4 => AV code=259LUXU-1234
+[2026-02-17 10:53:52]   JavBus 获取失败: Get "https://www.javbus.com/259LUXU-1234": dial tcp 104.16.252.55:443: i/o timeout
+[2026-02-17 10:53:52]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/AV","name":"FC2-PPV-1234567.mp4","time":"2026-02-17T10:53:52.963949+08:00","message":"Walking"}
+{"level":"info","key":"season","extracted":"PV","rule":"special season1","time":"2026-02-17T10:53:52.965483+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"1234567","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-17T10:53:52.965553+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"FC2-P","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-17T10:53:52.965623+08:00","message":"Captured original_name"}
+[2026-02-17 10:53:52] 解析文件 FC2-PPV-1234567.mp4 => AV code=FC2-PPV-1234567
+[2026-02-17 10:54:02]   JavBus 获取失败: Get "https://www.javbus.com/FC2-PPV-1234567": dial tcp 104.16.252.55:443: i/o timeout
+[2026-02-17 10:54:02]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/AV","name":"IPX-888.中文字幕.mkv","time":"2026-02-17T10:54:02.971191+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"888","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-17T10:54:02.976703+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"IPX.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:02.976834+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:02] 解析文件 IPX-888.中文字幕.mkv => AV code=IPX-888
+[2026-02-17 10:54:12]   JavBus 获取失败: Get "https://www.javbus.com/IPX-888": dial tcp 104.16.252.55:443: i/o timeout
+[2026-02-17 10:54:12]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/AV","name":"SSIS-001.1080p.mp4","time":"2026-02-17T10:54:12.983168+08:00","message":"Walking"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-17T10:54:12.987254+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-17T10:54:12.987518+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:12.987625+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:12] 解析文件 SSIS-001.1080p.mp4 => AV code=SSIS-001
+[2026-02-17 10:54:22]   JavBus 获取失败: Get "https://www.javbus.com/SSIS-001": dial tcp 104.16.252.55:443: i/o timeout
+[2026-02-17 10:54:22]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/AV","name":"[hhd800.com]STARS-456.uncensored.mp4","time":"2026-02-17T10:54:22.993888+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-17T10:54:22.998763+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-17T10:54:22.998863+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:22] 解析文件 [hhd800.com]STARS-456.uncensored.mp4 => AV code=STARS-456
+[2026-02-17 10:54:33]   JavBus 获取失败: Get "https://www.javbus.com/STARS-456": dial tcp 104.16.252.55:443: i/o timeout
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive","name":"medias","time":"2026-02-17T10:54:33.003476+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"medias","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:33.00541+08:00","message":"Captured original_name"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias","name":".DS_Store","time":"2026-02-17T10:54:33.006419+08:00","message":"Walking"}
+[2026-02-17 10:54:33] 警告 .DS_Store: Unknown file type (FakeLocalDrive/medias)
+{"level":"info","parent_paths":"FakeLocalDrive/medias","name":"C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","time":"2026-02-17T10:54:33.007187+08:00","message":"Walking"}
+{"level":"info","key":"name","extracted":"春色JI情REN","rule":"chinese name3","time":"2026-02-17T10:54:33.008835+08:00","message":"Captured name"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"01.mkv","time":"2026-02-17T10:54:33.010561+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.013266+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 01.mkv => 剧集 name=春色JI情REN original_name=  E01
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"01.nfo","time":"2026-02-17T10:54:33.014196+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"02.mkv","time":"2026-02-17T10:54:33.014708+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.015868+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 02.mkv => 剧集 name=春色JI情REN original_name=  E02
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"02.nfo","time":"2026-02-17T10:54:33.01705+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"03.mkv","time":"2026-02-17T10:54:33.017719+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.019023+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 03.mkv => 剧集 name=春色JI情REN original_name=  E03
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"03.nfo","time":"2026-02-17T10:54:33.019557+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"04.mkv","time":"2026-02-17T10:54:33.020409+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.021887+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 04.mkv => 剧集 name=春色JI情REN original_name=  E04
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"04.nfo","time":"2026-02-17T10:54:33.022854+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"05.mkv","time":"2026-02-17T10:54:33.023347+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.024432+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 05.mkv => 剧集 name=春色JI情REN original_name=  E05
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"05.nfo","time":"2026-02-17T10:54:33.024943+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"06.mkv","time":"2026-02-17T10:54:33.025411+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.026506+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 06.mkv => 剧集 name=春色JI情REN original_name=  E06
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"06.nfo","time":"2026-02-17T10:54:33.02697+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"07.mp4","time":"2026-02-17T10:54:33.02736+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.028964+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 07.mp4 => 剧集 name=春色JI情REN original_name=  E07
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"07.nfo","time":"2026-02-17T10:54:33.030353+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"08.mp4","time":"2026-02-17T10:54:33.030839+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.031803+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 08.mp4 => 剧集 name=春色JI情REN original_name=  E08
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"08.nfo","time":"2026-02-17T10:54:33.032256+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"09.mkv","time":"2026-02-17T10:54:33.032655+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.033539+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 09.mkv => 剧集 name=春色JI情REN original_name=  E09
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"09.nfo","time":"2026-02-17T10:54:33.033933+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"10.mkv","time":"2026-02-17T10:54:33.034307+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.035354+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 10.mkv => 剧集 name=春色JI情REN original_name=  E10
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"10.nfo","time":"2026-02-17T10:54:33.036277+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"11.mkv","time":"2026-02-17T10:54:33.036925+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.038103+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 11.mkv => 剧集 name=春色JI情REN original_name=  E11
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"11.nfo","time":"2026-02-17T10:54:33.038888+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"12.mkv","time":"2026-02-17T10:54:33.039282+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.040139+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 12.mkv => 剧集 name=春色JI情REN original_name=  E12
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"12.nfo","time":"2026-02-17T10:54:33.040569+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"13.mkv","time":"2026-02-17T10:54:33.040979+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.042485+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 13.mkv => 剧集 name=春色JI情REN original_name=  E13
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"13.nfo","time":"2026-02-17T10:54:33.043097+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"14.mkv","time":"2026-02-17T10:54:33.043465+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.044326+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 14.mkv => 剧集 name=春色JI情REN original_name=  E14
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"14.nfo","time":"2026-02-17T10:54:33.04472+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"15.mkv","time":"2026-02-17T10:54:33.04524+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.046764+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 15.mkv => 剧集 name=春色JI情REN original_name=  E15
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"15.nfo","time":"2026-02-17T10:54:33.04724+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"16.mkv","time":"2026-02-17T10:54:33.047611+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.048882+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 16.mkv => 剧集 name=春色JI情REN original_name=  E16
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"16.nfo","time":"2026-02-17T10:54:33.049308+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"17.mkv","time":"2026-02-17T10:54:33.04967+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.0505+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 17.mkv => 剧集 name=春色JI情REN original_name=  E17
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"17.nfo","time":"2026-02-17T10:54:33.050871+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"19.mkv","time":"2026-02-17T10:54:33.05127+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.052032+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 19.mkv => 剧集 name=春色JI情REN original_name=  E19
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"19.nfo","time":"2026-02-17T10:54:33.052673+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"20.mkv","time":"2026-02-17T10:54:33.05302+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.054922+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 20.mkv => 剧集 name=春色JI情REN original_name=  E20
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"20.nfo","time":"2026-02-17T10:54:33.055402+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"21.mkv","time":"2026-02-17T10:54:33.05576+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.056542+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 21.mkv => 剧集 name=春色JI情REN original_name=  E21
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"21.nfo","time":"2026-02-17T10:54:33.056895+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"fanart.jpg","time":"2026-02-17T10:54:33.0576+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"poster.jpg","time":"2026-02-17T10:54:33.057975+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/C 春色JI情REN (2024)[剧情 爱情][李现 周雨彤]21集全","name":"tvshow.nfo","time":"2026-02-17T10:54:33.058385+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias","name":"Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru","time":"2026-02-17T10:54:33.058836+08:00","message":"Walking"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-17T10:54:33.059692+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-17T10:54:33.059732+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-17T10:54:33.059836+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-17T10:54:33.059846+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-17T10:54:33.059875+08:00","message":"Captured original_name"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru","name":"Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru.md5&sha1.txt","time":"2026-02-17T10:54:33.059971+08:00","message":"Walking"}
+[2026-02-17 10:54:33] 警告 Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru.md5&sha1.txt: Unknown file type (FakeLocalDrive/medias/Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru)
+{"level":"info","parent_paths":"FakeLocalDrive/medias/Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru","name":"Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru.mkv","time":"2026-02-17T10:54:33.060334+08:00","message":"Walking"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-17T10:54:33.061956+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-17T10:54:33.062042+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-17T10:54:33.062186+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-17T10:54:33.062199+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Robot.Dreams","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-17T10:54:33.062226+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:33] 解析文件 Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru.mkv => 剧集 name= original_name=Robot.Dreams  
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru","name":"Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru.nfo","time":"2026-02-17T10:54:33.062984+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru","name":"p2909289839.jpg","time":"2026-02-17T10:54:33.063389+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru","name":"新建文本文档.txt","time":"2026-02-17T10:54:33.063763+08:00","message":"Walking"}
+[2026-02-17 10:54:33] 警告 新建文本文档.txt: Unknown file type (FakeLocalDrive/medias/Robot.Dreams.2023.BluRay.1080p.DD5.1.x264-BMDru)
+{"level":"info","parent_paths":"FakeLocalDrive/medias","name":"【B站】英语六级CET6全程班","time":"2026-02-17T10:54:33.064091+08:00","message":"Walking"}
+{"level":"info","key":"name","extracted":"英语六级CET6全程班","rule":"chinese name3","time":"2026-02-17T10:54:33.065242+08:00","message":"Captured name"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E01.六级导学课.mp4","time":"2026-02-17T10:54:33.066721+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.067557+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E01.六级导学课.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E01
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E01.六级导学课.nfo","time":"2026-02-17T10:54:33.068515+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E02.六级核心词汇1.mp4","time":"2026-02-17T10:54:33.068945+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.069757+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E02.六级核心词汇1.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E02
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E02.六级核心词汇1.nfo","time":"2026-02-17T10:54:33.070678+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E03.六级核心词汇2.mp4","time":"2026-02-17T10:54:33.071008+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.071816+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E03.六级核心词汇2.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E03
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E03.六级核心词汇2.nfo","time":"2026-02-17T10:54:33.072224+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E04.六级核心词汇3.mp4","time":"2026-02-17T10:54:33.072529+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.073703+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E04.六级核心词汇3.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E04
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E04.六级核心词汇3.nfo","time":"2026-02-17T10:54:33.074378+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E05.六级核心词汇4.mp4","time":"2026-02-17T10:54:33.07498+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.075987+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E05.六级核心词汇4.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E05
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E05.六级核心词汇4.nfo","time":"2026-02-17T10:54:33.076392+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E06.六级核心词汇5.mp4","time":"2026-02-17T10:54:33.076992+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.07804+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E06.六级核心词汇5.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E06
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E06.六级核心词汇5.nfo","time":"2026-02-17T10:54:33.079043+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E07.六级核心词汇6.mp4","time":"2026-02-17T10:54:33.079972+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.080826+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E07.六级核心词汇6.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E07
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E07.六级核心词汇6.nfo","time":"2026-02-17T10:54:33.081269+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E08.六级核心词汇7.mp4","time":"2026-02-17T10:54:33.081675+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.082526+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E08.六级核心词汇7.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E08
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E08.六级核心词汇7.nfo","time":"2026-02-17T10:54:33.08296+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E09.六级核心词汇8.mp4","time":"2026-02-17T10:54:33.083371+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.084706+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E09.六级核心词汇8.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E09
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E09.六级核心词汇8.nfo","time":"2026-02-17T10:54:33.085385+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E10.六级核心词汇9.mp4","time":"2026-02-17T10:54:33.085774+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.086866+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E10.六级核心词汇9.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E10
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E10.六级核心词汇9.nfo","time":"2026-02-17T10:54:33.087573+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E11.六级语法导学课.mp4","time":"2026-02-17T10:54:33.088195+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.08963+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E11.六级语法导学课.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E11
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E11.六级语法导学课.nfo","time":"2026-02-17T10:54:33.090119+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E12.六级语法精讲1：句子结构.mp4","time":"2026-02-17T10:54:33.090695+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.091665+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E12.六级语法精讲1：句子结构.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E12
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E12.六级语法精讲1：句子结构.nfo","time":"2026-02-17T10:54:33.092105+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E13.六级语法精讲2：句子成分.mp4","time":"2026-02-17T10:54:33.09245+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.093269+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E13.六级语法精讲2：句子成分.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E13
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E13.六级语法精讲2：句子成分.nfo","time":"2026-02-17T10:54:33.093667+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E14.六级语法精讲3：搞定长难句.mp4","time":"2026-02-17T10:54:33.094023+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.09569+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E14.六级语法精讲3：搞定长难句.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E14
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E14.六级语法精讲3：搞定长难句.nfo","time":"2026-02-17T10:54:33.096717+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E15.六级.语法精讲4：主宾表从句.mp4","time":"2026-02-17T10:54:33.097106+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.097979+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E15.六级.语法精讲4：主宾表从句.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E15
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E15.六级.语法精讲4：主宾表从句.nfo","time":"2026-02-17T10:54:33.098465+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E16.六级语法精讲5：定状同从句.mp4","time":"2026-02-17T10:54:33.098791+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.100019+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E16.六级语法精讲5：定状同从句.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E16
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E16.六级语法精讲5：定状同从句.nfo","time":"2026-02-17T10:54:33.100425+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E17.六级语法精讲6：长难句特训.mp4","time":"2026-02-17T10:54:33.100731+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.101782+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E17.六级语法精讲6：长难句特训.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E17
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E17.六级语法精讲6：长难句特训.nfo","time":"2026-02-17T10:54:33.10226+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E18.听力核心技巧1：核心应试技巧＋答疑.mp4","time":"2026-02-17T10:54:33.102597+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.103873+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E18.听力核心技巧1：核心应试技巧＋答疑.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E18
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E18.听力核心技巧1：核心应试技巧＋答疑.nfo","time":"2026-02-17T10:54:33.104439+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E19.听力核心技巧2：读题方法与做题节奏＋答疑.mp4","time":"2026-02-17T10:54:33.104781+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.106027+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E19.听力核心技巧2：读题方法与做题节奏＋答疑.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E19
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E19.听力核心技巧2：读题方法与做题节奏＋答疑.nfo","time":"2026-02-17T10:54:33.106929+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E20.听力核心技巧3：长对话解题技巧＋答疑.mp4","time":"2026-02-17T10:54:33.107263+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.108106+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E20.听力核心技巧3：长对话解题技巧＋答疑.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E20
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E20.听力核心技巧3：长对话解题技巧＋答疑.nfo","time":"2026-02-17T10:54:33.108635+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E21.听力带练1：长对话专项训练一.mp4","time":"2026-02-17T10:54:33.109154+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.11025+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E21.听力带练1：长对话专项训练一.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E21
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E21.听力带练1：长对话专项训练一.nfo","time":"2026-02-17T10:54:33.11082+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E22.听力带练2：长对话专项训练二.mp4","time":"2026-02-17T10:54:33.111133+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.112443+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E22.听力带练2：长对话专项训练二.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E22
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E22.听力带练2：长对话专项训练二.nfo","time":"2026-02-17T10:54:33.113287+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E23.阅读技巧1：连连看方法.mp4","time":"2026-02-17T10:54:33.113817+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.114729+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E23.阅读技巧1：连连看方法.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E23
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E23.阅读技巧1：连连看方法.nfo","time":"2026-02-17T10:54:33.115153+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E24.阅读技巧2：定位词、比较考点、段落主旨.mp4","time":"2026-02-17T10:54:33.115473+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E24","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.116831+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E24.阅读技巧2：定位词、比较考点、段落主旨.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E24
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E24.阅读技巧2：定位词、比较考点、段落主旨.nfo","time":"2026-02-17T10:54:33.11727+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E25.仔细阅读passage6解析.mp4","time":"2026-02-17T10:54:33.117714+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.119139+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E25.仔细阅读passage6解析.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E25
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E25.仔细阅读passage6解析.nfo","time":"2026-02-17T10:54:33.119837+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E26.仔细阅读passage7解析.mp4","time":"2026-02-17T10:54:33.121087+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.122172+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E26.仔细阅读passage7解析.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E26
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E26.仔细阅读passage7解析.nfo","time":"2026-02-17T10:54:33.122591+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E27.翻译1：动态三步法+荷花＋答疑.mp4","time":"2026-02-17T10:54:33.122906+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.124518+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E27.翻译1：动态三步法+荷花＋答疑.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E27
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E27.翻译1：动态三步法+荷花＋答疑.nfo","time":"2026-02-17T10:54:33.125005+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E28.翻译2：常考高频语法点及重点句式＋答疑.mp4","time":"2026-02-17T10:54:33.125345+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.126233+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E28.翻译2：常考高频语法点及重点句式＋答疑.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E28
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E28.翻译2：常考高频语法点及重点句式＋答疑.nfo","time":"2026-02-17T10:54:33.126668+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E29.翻译实训1：西游记.mp4","time":"2026-02-17T10:54:33.126992+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.128433+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E29.翻译实训1：西游记.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E29
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E29.翻译实训1：西游记.nfo","time":"2026-02-17T10:54:33.129729+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E30.翻译实训2：港珠澳大桥.mp4","time":"2026-02-17T10:54:33.130111+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.131002+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E30.翻译实训2：港珠澳大桥.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E30
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E30.翻译实训2：港珠澳大桥.nfo","time":"2026-02-17T10:54:33.131434+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E31.写作1：立体化审题+救命作文1＋答疑.mp4","time":"2026-02-17T10:54:33.131741+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.132737+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E31.写作1：立体化审题+救命作文1＋答疑.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E31
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E31.写作1：立体化审题+救命作文1＋答疑.nfo","time":"2026-02-17T10:54:33.133372+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E32.写作2：救命作文2＋答疑.mp4","time":"2026-02-17T10:54:33.133707+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.134833+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E32.写作2：救命作文2＋答疑.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E32
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E32.写作2：救命作文2＋答疑.nfo","time":"2026-02-17T10:54:33.135415+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E33.写作实训1：名言评论.mp4","time":"2026-02-17T10:54:33.135802+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.136735+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E33.写作实训1：名言评论.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E33
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E33.写作实训1：名言评论.nfo","time":"2026-02-17T10:54:33.137566+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E34.写作实训2：意义阐述.mp4","time":"2026-02-17T10:54:33.137927+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.139401+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 E34.写作实训2：意义阐述.mp4 => 剧集 name=英语六级CET6全程班 original_name=  E34
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/【B站】英语六级CET6全程班","name":"E34.写作实训2：意义阐述.nfo","time":"2026-02-17T10:54:33.140094+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias","name":"吞噬星空","time":"2026-02-17T10:54:33.140412+08:00","message":"Walking"}
+{"level":"info","key":"name","extracted":"吞噬星空","rule":"chinese name3","time":"2026-02-17T10:54:33.141184+08:00","message":"Captured name"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":".DS_Store","time":"2026-02-17T10:54:33.141849+08:00","message":"Walking"}
+[2026-02-17 10:54:33] 警告 .DS_Store: Unknown file type (FakeLocalDrive/medias/吞噬星空)
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"01.nfo","time":"2026-02-17T10:54:33.142188+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"01.strm","time":"2026-02-17T10:54:33.142549+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:33.143518+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:33] 解析文件 01.strm => 剧集 name=吞噬星空 original_name=  
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"02.nfo","time":"2026-02-17T10:54:33.143942+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"02.strm","time":"2026-02-17T10:54:33.145069+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:33.14626+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:33] 解析文件 02.strm => 剧集 name=吞噬星空 original_name=  
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"03.nfo","time":"2026-02-17T10:54:33.146676+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"03.strm","time":"2026-02-17T10:54:33.14706+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:33.147915+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:33] 解析文件 03.strm => 剧集 name=吞噬星空 original_name=  
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"04.nfo","time":"2026-02-17T10:54:33.148288+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"04.strm","time":"2026-02-17T10:54:33.148607+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:33.150036+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:33] 解析文件 04.strm => 剧集 name=吞噬星空 original_name=  
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"05.nfo","time":"2026-02-17T10:54:33.150467+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"05.strm","time":"2026-02-17T10:54:33.150822+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"strm","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:33.151639+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:33] 解析文件 05.strm => 剧集 name=吞噬星空 original_name=  
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"fanart.jpg","time":"2026-02-17T10:54:33.15201+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"poster.jpg","time":"2026-02-17T10:54:33.152407+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/吞噬星空","name":"tvshow.nfo","time":"2026-02-17T10:54:33.152894+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias","name":"唐朝诡事录之西行","time":"2026-02-17T10:54:33.153199+08:00","message":"Walking"}
+{"level":"info","key":"name","extracted":"唐朝诡事录之西行","rule":"chinese name3","time":"2026-02-17T10:54:33.154354+08:00","message":"Captured name"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"01.mp4","time":"2026-02-17T10:54:33.155761+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.157077+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 01.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E01
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"01.nfo","time":"2026-02-17T10:54:33.157464+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"02.mp4","time":"2026-02-17T10:54:33.157772+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.158527+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 02.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E02
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"02.nfo","time":"2026-02-17T10:54:33.158951+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"03.mp4","time":"2026-02-17T10:54:33.159345+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.160152+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 03.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E03
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"03.nfo","time":"2026-02-17T10:54:33.160494+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"04.mp4","time":"2026-02-17T10:54:33.160794+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.163001+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 04.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E04
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"04.nfo","time":"2026-02-17T10:54:33.163592+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"05.mp4","time":"2026-02-17T10:54:33.163952+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.164715+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 05.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E05
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"05.nfo","time":"2026-02-17T10:54:33.165065+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"06.mp4","time":"2026-02-17T10:54:33.165458+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.166262+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 06.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E06
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"06.nfo","time":"2026-02-17T10:54:33.167036+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"07.mp4","time":"2026-02-17T10:54:33.167572+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E07","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.168405+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 07.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E07
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"07.nfo","time":"2026-02-17T10:54:33.168751+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"08.mp4","time":"2026-02-17T10:54:33.169064+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E08","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.169922+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 08.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E08
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"08.nfo","time":"2026-02-17T10:54:33.170292+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"09.mp4","time":"2026-02-17T10:54:33.170637+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E09","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.172054+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 09.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E09
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"09.nfo","time":"2026-02-17T10:54:33.172531+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"10.mp4","time":"2026-02-17T10:54:33.172977+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.173764+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 10.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E10
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"10.nfo","time":"2026-02-17T10:54:33.174146+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"11.mp4","time":"2026-02-17T10:54:33.174521+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.175317+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 11.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E11
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"11.nfo","time":"2026-02-17T10:54:33.175662+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"12.mp4","time":"2026-02-17T10:54:33.175983+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E12","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.177242+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 12.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E12
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"12.nfo","time":"2026-02-17T10:54:33.178535+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"13.mp4","time":"2026-02-17T10:54:33.179011+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.179831+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 13.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E13
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"13.nfo","time":"2026-02-17T10:54:33.180263+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"14.mp4","time":"2026-02-17T10:54:33.180745+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E14","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.182207+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 14.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E14
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"14.nfo","time":"2026-02-17T10:54:33.182538+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"15.mp4","time":"2026-02-17T10:54:33.182868+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E15","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.183948+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 15.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E15
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"15.nfo","time":"2026-02-17T10:54:33.184356+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"16.mp4","time":"2026-02-17T10:54:33.184729+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E16","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.18548+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 16.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E16
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"16.nfo","time":"2026-02-17T10:54:33.185843+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"17.mp4","time":"2026-02-17T10:54:33.186169+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E17","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.187732+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 17.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E17
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"17.nfo","time":"2026-02-17T10:54:33.188601+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"18.mp4","time":"2026-02-17T10:54:33.189019+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E18","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.189796+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 18.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E18
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"18.nfo","time":"2026-02-17T10:54:33.190173+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"19.mp4","time":"2026-02-17T10:54:33.190494+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E19","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.191223+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 19.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E19
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"19.nfo","time":"2026-02-17T10:54:33.191582+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"20.mp4","time":"2026-02-17T10:54:33.19194+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.193156+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 20.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E20
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"20.nfo","time":"2026-02-17T10:54:33.193779+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"21.mp4","time":"2026-02-17T10:54:33.194295+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E21","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.195346+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 21.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E21
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"21.nfo","time":"2026-02-17T10:54:33.195828+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"22.mp4","time":"2026-02-17T10:54:33.196159+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.197049+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 22.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E22
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"22.nfo","time":"2026-02-17T10:54:33.197516+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"23.mp4","time":"2026-02-17T10:54:33.197853+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E23","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.198888+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 23.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E23
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"23.nfo","time":"2026-02-17T10:54:33.199247+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"24.mp4","time":"2026-02-17T10:54:33.199562+08:00","message":"Walking"}
+[2026-02-17 10:54:33] 解析文件 24.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"24.nfo","time":"2026-02-17T10:54:33.200703+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"25.mp4","time":"2026-02-17T10:54:33.201018+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.202146+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 25.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E25
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"25.nfo","time":"2026-02-17T10:54:33.202822+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"26.mp4","time":"2026-02-17T10:54:33.204112+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E26","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.205076+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 26.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E26
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"26.nfo","time":"2026-02-17T10:54:33.205463+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"27.mp4","time":"2026-02-17T10:54:33.205784+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E27","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.206536+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 27.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E27
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"27.nfo","time":"2026-02-17T10:54:33.206878+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"28.mp4","time":"2026-02-17T10:54:33.207186+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E28","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.208337+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 28.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E28
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"28.nfo","time":"2026-02-17T10:54:33.209249+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"29.mp4","time":"2026-02-17T10:54:33.209615+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E29","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.210353+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 29.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E29
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"29.nfo","time":"2026-02-17T10:54:33.210693+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"30.mp4","time":"2026-02-17T10:54:33.211013+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E30","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.211758+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 30.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E30
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"30.nfo","time":"2026-02-17T10:54:33.212249+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"31.mp4","time":"2026-02-17T10:54:33.212852+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.214043+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 31.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E31
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"31.nfo","time":"2026-02-17T10:54:33.214837+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"32.mp4","time":"2026-02-17T10:54:33.215209+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E32","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.216004+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 32.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E32
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"32.nfo","time":"2026-02-17T10:54:33.216382+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"33.mkv","time":"2026-02-17T10:54:33.216711+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E33","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.217431+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 33.mkv => 剧集 name=唐朝诡事录之西行 original_name=  E33
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"33.nfo","time":"2026-02-17T10:54:33.217776+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"34.mkv","time":"2026-02-17T10:54:33.218113+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.219279+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 34.mkv => 剧集 name=唐朝诡事录之西行 original_name=  E34
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"34.nfo","time":"2026-02-17T10:54:33.220266+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"35.mp4","time":"2026-02-17T10:54:33.220934+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E35","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.221868+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 35.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E35
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"35.nfo","time":"2026-02-17T10:54:33.222286+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"36.mp4","time":"2026-02-17T10:54:33.222609+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E36","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.223362+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 36.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E36
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"36.nfo","time":"2026-02-17T10:54:33.22373+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"37.mp4","time":"2026-02-17T10:54:33.224287+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E37","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.225499+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 37.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E37
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"37.nfo","time":"2026-02-17T10:54:33.226112+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"38.mp4","time":"2026-02-17T10:54:33.22648+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E38","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.227313+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 38.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E38
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"38.nfo","time":"2026-02-17T10:54:33.227662+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"39.mp4","time":"2026-02-17T10:54:33.228023+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E39","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.22891+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 39.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E39
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"39.nfo","time":"2026-02-17T10:54:33.229518+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"40.mp4","time":"2026-02-17T10:54:33.229853+08:00","message":"Walking"}
+{"level":"info","key":"episode","extracted":"E40","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.230994+08:00","message":"Captured episode"}
+[2026-02-17 10:54:33] 解析文件 40.mp4 => 剧集 name=唐朝诡事录之西行 original_name=  E40
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"40.nfo","time":"2026-02-17T10:54:33.231574+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"fanart.jpg","time":"2026-02-17T10:54:33.23196+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"poster.jpg","time":"2026-02-17T10:54:33.232311+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/唐朝诡事录之西行","name":"tvshow.nfo","time":"2026-02-17T10:54:33.232638+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias","name":"警之光（2023）","time":"2026-02-17T10:54:33.232967+08:00","message":"Walking"}
+{"level":"info","key":"name","extracted":"警之光","rule":"chinese name3","time":"2026-02-17T10:54:33.233825+08:00","message":"Captured name"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/警之光（2023）","name":".DS_Store","time":"2026-02-17T10:54:33.234189+08:00","message":"Walking"}
+[2026-02-17 10:54:33] 警告 .DS_Store: Unknown file type (FakeLocalDrive/medias/警之光（2023）)
+{"level":"info","parent_paths":"FakeLocalDrive/medias/警之光（2023）","name":"Season 2","time":"2026-02-17T10:54:33.234562+08:00","message":"Walking"}
+{"level":"info","key":"original_name","extracted":"Season.2","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:33.235549+08:00","message":"Captured original_name"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/警之光（2023）/Season 2","name":".DS_Store","time":"2026-02-17T10:54:33.235841+08:00","message":"Walking"}
+[2026-02-17 10:54:33] 警告 .DS_Store: Unknown file type (FakeLocalDrive/medias/警之光（2023）/Season 2)
+{"level":"info","parent_paths":"FakeLocalDrive/medias/警之光（2023）/Season 2","name":"Blue Lights.s02e05.Where I Want to Be.nfo","time":"2026-02-17T10:54:33.236513+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/警之光（2023）/Season 2","name":"Blue Lights.s02e05.Where I Want to Be.strm","time":"2026-02-17T10:54:33.237265+08:00","message":"Walking"}
+{"level":"info","key":"season","extracted":"s02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-17T10:54:33.238219+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"e05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-17T10:54:33.238246+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Blue.Lights.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-17T10:54:33.238283+08:00","message":"Captured original_name"}
+[2026-02-17 10:54:33] 解析文件 Blue Lights.s02e05.Where I Want to Be.strm => 剧集 name=警之光 original_name= S02 E05
+[2026-02-17 10:54:33]   新增
+{"level":"info","parent_paths":"FakeLocalDrive/medias/警之光（2023）/Season 2","name":"fanart.jpg","time":"2026-02-17T10:54:33.238732+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/警之光（2023）/Season 2","name":"poster.jpg","time":"2026-02-17T10:54:33.239111+08:00","message":"Walking"}
+{"level":"info","parent_paths":"FakeLocalDrive/medias/警之光（2023）/Season 2","name":"tvshow.nfo","time":"2026-02-17T10:54:33.239439+08:00","message":"Walking"}
+[2026-02-17 10:54:33] 索引完成，共找到 101 个剧集，0 个电影，5 个 AV
+[2026-02-17 10:54:33] 开始搜索影视剧信息
+[2026-02-17 10:54:33] 共 101 条待搜索记录
+[2026-02-17 10:54:33] 搜索剧集「吞噬星空」
+[2026-02-17 10:54:33]   匹配到「吞噬星空」(TMDB:101172)
+[2026-02-17 10:54:34]   获取详情失败: json: cannot unmarshal object into Go struct field tvDetailResp.next_episode_to_air of type string
+[2026-02-17 10:54:34] 搜索剧集「唐朝诡事录之西行」
+[2026-02-17 10:54:34]   匹配到「唐朝诡事录」(TMDB:211089)
+[2026-02-17 10:54:35]   01.mp4 => E01 匹配成功
+[2026-02-17 10:54:35]   02.mp4 => E02 匹配成功
+[2026-02-17 10:54:35]   03.mp4 => E03 匹配成功
+[2026-02-17 10:54:35]   04.mp4 => E04 匹配成功
+[2026-02-17 10:54:35]   05.mp4 => E05 匹配成功
+[2026-02-17 10:54:35]   06.mp4 => E06 匹配成功
+[2026-02-17 10:54:35]   07.mp4 => E07 匹配成功
+[2026-02-17 10:54:35]   08.mp4 => E08 匹配成功
+[2026-02-17 10:54:35]   09.mp4 => E09 匹配成功
+[2026-02-17 10:54:35]   10.mp4 => E10 匹配成功
+[2026-02-17 10:54:35]   11.mp4 => E11 匹配成功
+[2026-02-17 10:54:35]   12.mp4 => E12 匹配成功
+[2026-02-17 10:54:35]   13.mp4 => E13 匹配成功
+[2026-02-17 10:54:35]   14.mp4 => E14 匹配成功
+[2026-02-17 10:54:35]   15.mp4 => E15 匹配成功
+[2026-02-17 10:54:35]   16.mp4 => E16 匹配成功
+[2026-02-17 10:54:35]   17.mp4 => E17 匹配成功
+[2026-02-17 10:54:35]   18.mp4 => E18 匹配成功
+[2026-02-17 10:54:35]   19.mp4 => E19 匹配成功
+[2026-02-17 10:54:35]   20.mp4 => E20 匹配成功
+[2026-02-17 10:54:35]   21.mp4 => E21 匹配成功
+[2026-02-17 10:54:35]   22.mp4 => E22 匹配成功
+[2026-02-17 10:54:35]   23.mp4 => E23 匹配成功
+[2026-02-17 10:54:35]   24.mp4 未匹配到集
+[2026-02-17 10:54:35]   25.mp4 => E25 匹配成功
+[2026-02-17 10:54:35]   26.mp4 => E26 匹配成功
+[2026-02-17 10:54:35]   27.mp4 => E27 匹配成功
+[2026-02-17 10:54:35]   28.mp4 => E28 匹配成功
+[2026-02-17 10:54:35]   29.mp4 => E29 匹配成功
+[2026-02-17 10:54:35]   30.mp4 => E30 匹配成功
+[2026-02-17 10:54:35]   31.mp4 => E31 匹配成功
+[2026-02-17 10:54:35]   32.mp4 => E32 匹配成功
+[2026-02-17 10:54:35]   33.mkv => E33 匹配成功
+[2026-02-17 10:54:35]   34.mkv => E34 匹配成功
+[2026-02-17 10:54:35]   35.mp4 => E35 匹配成功
+[2026-02-17 10:54:35]   36.mp4 => E36 匹配成功
+[2026-02-17 10:54:35]   37.mp4 未匹配到集
+[2026-02-17 10:54:35]   38.mp4 未匹配到集
+[2026-02-17 10:54:35]   39.mp4 未匹配到集
+[2026-02-17 10:54:35]   40.mp4 未匹配到集
+[2026-02-17 10:54:35] 搜索剧集「警之光」S02
+[2026-02-17 10:54:35]   匹配到「警之光」(TMDB:218344)
+[2026-02-17 10:54:36]   Blue Lights.s02e05.Where I Want to Be.strm => E05 匹配成功
+[2026-02-17 10:54:36] 搜索剧集「春色JI情REN」
+[2026-02-17 10:54:36]   匹配到「春色寄情人」(TMDB:244621)
+[2026-02-17 10:54:37]   01.mkv => E01 匹配成功
+[2026-02-17 10:54:37]   02.mkv => E02 匹配成功
+[2026-02-17 10:54:37]   03.mkv => E03 匹配成功
+[2026-02-17 10:54:37]   04.mkv => E04 匹配成功
+[2026-02-17 10:54:37]   05.mkv => E05 匹配成功
+[2026-02-17 10:54:37]   06.mkv => E06 匹配成功
+[2026-02-17 10:54:37]   07.mp4 => E07 匹配成功
+[2026-02-17 10:54:37]   08.mp4 => E08 匹配成功
+[2026-02-17 10:54:37]   09.mkv => E09 匹配成功
+[2026-02-17 10:54:37]   10.mkv => E10 匹配成功
+[2026-02-17 10:54:37]   11.mkv => E11 匹配成功
+[2026-02-17 10:54:37]   12.mkv => E12 匹配成功
+[2026-02-17 10:54:37]   13.mkv => E13 匹配成功
+[2026-02-17 10:54:37]   14.mkv => E14 匹配成功
+[2026-02-17 10:54:37]   15.mkv => E15 匹配成功
+[2026-02-17 10:54:37]   16.mkv => E16 匹配成功
+[2026-02-17 10:54:37]   17.mkv => E17 匹配成功
+[2026-02-17 10:54:37]   19.mkv => E19 匹配成功
+[2026-02-17 10:54:37]   20.mkv => E20 匹配成功
+[2026-02-17 10:54:37]   21.mkv => E21 匹配成功
+[2026-02-17 10:54:37] 搜索剧集「」
+[2026-02-17 10:54:37]   未找到匹配
+[2026-02-17 10:54:37] 搜索剧集「英语六级CET6全程班」
+[2026-02-17 10:54:38]   未找到匹配
+[2026-02-17 10:54:38] 搜索影视剧信息完成

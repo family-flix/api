@@ -10,13 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/uuid"
-
-	"github.com/family-flix/api/internal/config"
-	"github.com/family-flix/api/internal/model"
-	"github.com/family-flix/api/pkg/database"
 	"github.com/family-flix/api/pkg/drive_client/localdrive"
 	"github.com/family-flix/api/pkg/folder"
+	"github.com/family-flix/api/pkg/media_profile/javbus"
 	"github.com/family-flix/api/pkg/media_profile/tmdb"
 	"github.com/family-flix/api/pkg/types"
 	"github.com/family-flix/api/pkg/walker"
@@ -164,37 +160,37 @@ func downloadImage(url, dir, filename string) string {
 }
 
 func main() {
-	root_path := "/Users/litao/Documents/FakeLocalDrive"
+	root_path := "/Users/litao/Documents/FakeLocalDrive/AV"
 	fmt.Printf("Walking: %s\n", root_path)
 
 	// 初始化数据库（与 cmd/server/main.go 共用）
-	cfg, err := config.New()
-	if err != nil {
-		fmt.Printf("load config failed: %v\n", err)
-		return
-	}
-	datacfg := database.DatabaseConfig{
-		DBType:     cfg.GetString("database.type"),
-		DBHost:     cfg.GetString("database.host"),
-		DBPort:     cfg.GetString("database.port"),
-		DBUser:     cfg.GetString("database.user"),
-		DBPassword: cfg.GetString("database.password"),
-		DBName:     cfg.GetString("database.name"),
-		DBPath:     filepath.Join(cfg.BaseDir, cfg.GetString("database.path")),
-	}
-	db, err := database.NewDatabase(&datacfg)
-	if err != nil {
-		fmt.Printf("open database failed: %v\n", err)
-		return
-	}
+	// cfg, err := config.New()
+	// if err != nil {
+	// 	fmt.Printf("load config failed: %v\n", err)
+	// 	return
+	// }
+	// datacfg := database.DatabaseConfig{
+	// 	DBType:     cfg.GetString("database.type"),
+	// 	DBHost:     cfg.GetString("database.host"),
+	// 	DBPort:     cfg.GetString("database.port"),
+	// 	DBUser:     cfg.GetString("database.user"),
+	// 	DBPassword: cfg.GetString("database.password"),
+	// 	DBName:     cfg.GetString("database.name"),
+	// 	DBPath:     filepath.Join(cfg.BaseDir, cfg.GetString("database.path")),
+	// }
+	// db, err := database.NewDatabase(&datacfg)
+	// if err != nil {
+	// 	fmt.Printf("open database failed: %v\n", err)
+	// 	return
+	// }
 
 	client := localdrive.NewLocalDriveClient()
-	tmdbClient := tmdb.NewClient()
+	// tmdbClient := tmdb.NewClient()
 
 	// 缓存: key = "tvID:seasonNum" -> season detail
-	seasonCache := map[string]*tmdb.SeasonProfileResult{}
+	// seasonCache := map[string]*tmdb.SeasonProfileResult{}
 	// 缓存: key = tmdbID -> 已保存的 MediaProfile ID
-	mediaProfileCache := map[string]string{}
+	// mediaProfileCache := map[string]string{}
 
 	prevFolder := folder.NewFolder(root_path, client, []folder.ParentFolder{}, nil)
 
@@ -207,229 +203,261 @@ func main() {
 
 	w := walker.NewFolderWalker()
 
-	w.SetOnEpisode(func(f walker.SearchedEpisode) error {
-		name := f.TV.Name
-		if name == "" {
-			name = f.TV.OriginalName
+	// w.SetOnEpisode(func(f walker.SearchedEpisode) error {
+	// 	name := f.TV.Name
+	// 	if name == "" {
+	// 		name = f.TV.OriginalName
+	// 	}
+	// 	fmt.Printf("Episode: %s %s %s\n", name, f.Season.SeasonText, f.Episode.EpisodeText)
+
+	// 	videoPath := f.Episode.FileID
+	// 	nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
+	// 	seasonNum := parseSeasonNumber(f.Season.SeasonText)
+	// 	// 空字符串说明是第一季
+	// 	if f.Season.SeasonText == "" {
+	// 		seasonNum = 1
+	// 	}
+	// 	episodeNum := parseEpisodeNumber(f.Episode.EpisodeText)
+
+	// 	nfo := EpisodeNFO{
+	// 		Title:         f.TV.Name + " " + f.Episode.EpisodeText,
+	// 		ShowTitle:     f.TV.Name,
+	// 		Season:        seasonNum,
+	// 		Episode:       episodeNum,
+	// 		OriginalTitle: f.TV.OriginalName,
+	// 	}
+
+	// 	// 搜索 TMDB 获取详细信息
+	// 	searchName := f.TV.Name
+	// 	if f.TV.OriginalName != "" {
+	// 		searchName = f.TV.OriginalName
+	// 	}
+	// 	result, err := tmdbClient.SearchTV(searchName, 1)
+	// 	if err == nil && len(result.List) > 0 {
+	// 		tv := result.List[0]
+	// 		tvID, _ := strconv.Atoi(tv.ID)
+
+	// 		nfo.ShowTitle = tv.Name
+	// 		nfo.Rating = fmt.Sprintf("%.1f", tv.VoteAverage)
+	// 		nfo.UniqueID = []NFOUniqueID{{Type: "tmdb", Default: true, Value: tv.ID}}
+
+	// 		// 获取季详情（带缓存）
+	// 		cacheKey := fmt.Sprintf("%d:%d", tvID, seasonNum)
+	// 		seasonDetail, ok := seasonCache[cacheKey]
+	// 		if !ok && tvID > 0 && seasonNum > 0 {
+	// 			seasonDetail, err = tmdbClient.FetchSeasonProfile(tvID, seasonNum)
+	// 			if err != nil {
+	// 				fmt.Printf("fetch season profile failed: %v\n", err)
+	// 			} else {
+	// 				seasonCache[cacheKey] = seasonDetail
+	// 			}
+	// 		}
+
+	// 		// 从缓存的季详情中查找当前集
+	// 		if seasonDetail != nil {
+	// 			for _, ep := range seasonDetail.Episodes {
+	// 				if ep.EpisodeNumber == episodeNum {
+	// 					nfo.Title = ep.Name
+	// 					nfo.Plot = ep.Overview
+	// 					nfo.Aired = ep.AirDate
+	// 					nfo.Runtime = ep.Runtime
+	// 					break
+	// 				}
+	// 			}
+	// 		}
+
+	// 		// 获取演员
+	// 		if tvID > 0 && seasonNum > 0 {
+	// 			persons, err := tmdbClient.FetchPersonsOfSeason(tvID, seasonNum)
+	// 			if err == nil {
+	// 				nfo.Actors = personsToActors(persons)
+	// 			}
+	// 		}
+
+	// 		// 保存 MediaProfile 到数据库 + 下载海报 + 创建 tvshow.nfo（每个 TV 只执行一次）
+	// 		mediaProfileID, saved := mediaProfileCache[tv.ID]
+	// 		if !saved {
+	// 			mediaProfileID = uuid.New().String()
+	// 			mp := model.MediaProfile{
+	// 				ID:           mediaProfileID,
+	// 				Type:         1,
+	// 				Name:         tv.Name,
+	// 				OriginalName: strPtr(tv.OriginalName),
+	// 				Overview:     strPtr(tv.Overview),
+	// 				PosterPath:   strPtr(tv.PosterPath),
+	// 				BackdropPath: strPtr(tv.BackdropPath),
+	// 				AirDate:      strPtr(tv.FirstAirDate),
+	// 				VoteAverage:  tv.VoteAverage,
+	// 				TMDBID:       strPtr(tv.ID),
+	// 				SourceCount:  tv.NumberOfEpisodes,
+	// 			}
+	// 			if tv.InProduction {
+	// 				mp.InProduction = 1
+	// 			}
+	// 			if err := db.Where("tmdb_id = ?", tv.ID).FirstOrCreate(&mp).Error; err != nil {
+	// 				fmt.Printf("save MediaProfile failed: %v\n", err)
+	// 			}
+	// 			mediaProfileCache[tv.ID] = mp.ID
+
+	// 			// 在剧集根目录下载海报和创建 tvshow.nfo
+	// 			tvShowDir := f.TV.FileID
+	// 			posterFile := downloadImage(tv.PosterPath, tvShowDir, "poster.jpg")
+	// 			fanartFile := downloadImage(tv.BackdropPath, tvShowDir, "fanart.jpg")
+	// 			tvNfo := TVShowNFO{
+	// 				Title:         tv.Name,
+	// 				OriginalTitle: tv.OriginalName,
+	// 				Plot:          tv.Overview,
+	// 				Premiered:     tv.FirstAirDate,
+	// 				Rating:        fmt.Sprintf("%.1f", tv.VoteAverage),
+	// 				UniqueID:      []NFOUniqueID{{Type: "tmdb", Default: true, Value: tv.ID}},
+	// 				Genres:        genreNames(tv.Genres),
+	// 				Country:       tv.OriginCountry,
+	// 				Poster:        posterFile,
+	// 			}
+	// 			if fanartFile != "" {
+	// 				tvNfo.Fanart = &NFOFanart{Thumb: fanartFile}
+	// 			}
+	// 			tvShowNFOPath := filepath.Join(tvShowDir, "tvshow.nfo")
+	// 			if err := writeNFO(tvShowNFOPath, tvNfo); err != nil {
+	// 				fmt.Printf("write tvshow.nfo failed: %v\n", err)
+	// 			}
+	// 		}
+	// 		if seasonDetail != nil {
+	// 			for _, ep := range seasonDetail.Episodes {
+	// 				if ep.EpisodeNumber == episodeNum {
+	// 					epTmdbID := strconv.Itoa(ep.ID)
+	// 					msp := model.MediaSourceProfile{
+	// 						ID:             uuid.New().String(),
+	// 						Name:           ep.Name,
+	// 						Overview:       strPtr(ep.Overview),
+	// 						AirDate:        strPtr(ep.AirDate),
+	// 						StillPath:      strPtr(ep.StillPath),
+	// 						Order:          ep.EpisodeNumber,
+	// 						Runtime:        &ep.Runtime,
+	// 						TMDBID:         &epTmdbID,
+	// 						MediaProfileID: mediaProfileID,
+	// 					}
+	// 					if err := db.Where("tmdb_id = ?", epTmdbID).FirstOrCreate(&msp).Error; err != nil {
+	// 						fmt.Printf("save MediaSourceProfile failed: %v\n", err)
+	// 					}
+	// 					break
+	// 				}
+	// 			}
+	// 		}
+
+	// 	}
+
+	// 	if err := writeNFO(nfoPath, nfo); err != nil {
+	// 		fmt.Printf("write episode nfo failed: %v\n", err)
+	// 	}
+	// 	return nil
+	// })
+
+	// w.SetOnMovie(func(parsed any) error {
+	// 	f := parsed.(walker.SearchedMovie)
+	// 	fmt.Printf("Movie: %s (%s)\n", f.Name, f.Year)
+
+	// 	videoPath := f.FileID
+	// 	nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
+
+	// 	nfo := MovieNFO{
+	// 		Title:         f.Name,
+	// 		OriginalTitle: f.OriginalName,
+	// 		Year:          f.Year,
+	// 	}
+
+	// 	searchName := f.Name
+	// 	if f.OriginalName != "" {
+	// 		searchName = f.OriginalName
+	// 	}
+	// 	result, err := tmdbClient.SearchMovie(searchName, 1)
+	// 	if err == nil && len(result.List) > 0 {
+	// 		movie := result.List[0]
+	// 		movieID, _ := strconv.Atoi(movie.ID)
+
+	// 		detail, err := tmdbClient.FetchMovieProfile(movieID)
+	// 		if err == nil {
+	// 			movieDir := filepath.Dir(videoPath)
+	// 			posterFile := downloadImage(detail.PosterPath, movieDir, "poster.jpg")
+	// 			fanartFile := downloadImage(detail.BackdropPath, movieDir, "fanart.jpg")
+	// 			nfo.Title = detail.Name
+	// 			nfo.OriginalTitle = detail.OriginalName
+	// 			nfo.Plot = detail.Overview
+	// 			nfo.Premiered = detail.AirDate
+	// 			nfo.Rating = fmt.Sprintf("%.1f", detail.VoteAverage)
+	// 			nfo.Genres = genreNames(detail.Genres)
+	// 			nfo.Country = detail.OriginCountry
+	// 			nfo.Poster = posterFile
+	// 			nfo.UniqueID = []NFOUniqueID{{Type: "tmdb", Default: true, Value: detail.ID}}
+	// 			if detail.Runtime != nil {
+	// 				nfo.Runtime = *detail.Runtime
+	// 			}
+	// 			if fanartFile != "" {
+	// 				nfo.Fanart = &NFOFanart{Thumb: fanartFile}
+	// 			}
+	// 			if detail.AirDate != "" && len(detail.AirDate) >= 4 {
+	// 				nfo.Year = detail.AirDate[:4]
+	// 			}
+
+	// 			// 保存 MediaProfile
+	// 			mp := model.MediaProfile{
+	// 				ID:           uuid.New().String(),
+	// 				Type:         2,
+	// 				Name:         detail.Name,
+	// 				OriginalName: strPtr(detail.OriginalName),
+	// 				Overview:     strPtr(detail.Overview),
+	// 				PosterPath:   strPtr(detail.PosterPath),
+	// 				BackdropPath: strPtr(detail.BackdropPath),
+	// 				AirDate:      strPtr(detail.AirDate),
+	// 				VoteAverage:  detail.VoteAverage,
+	// 				TMDBID:       strPtr(detail.ID),
+	// 			}
+	// 			if err := db.Where("tmdb_id = ?", detail.ID).FirstOrCreate(&mp).Error; err != nil {
+	// 				fmt.Printf("save movie MediaProfile failed: %v\n", err)
+	// 			}
+	// 		}
+
+	// 		persons, err := tmdbClient.FetchPersonsOfMovie(movieID)
+	// 		if err == nil {
+	// 			nfo.Actors = personsToActors(persons)
+	// 		}
+	// 	}
+
+	// 	if err := writeNFO(nfoPath, nfo); err != nil {
+	// 		fmt.Printf("write movie nfo failed: %v\n", err)
+	// 	}
+	// 	return nil
+	// })
+	javClient := javbus.NewJavBusClient("", "")
+	w.SetOnJav(func(parsed any) error {
+		jav := parsed.(walker.SearchedJAV)
+		fmt.Printf("JAV: %s (%s)\n", jav.Code, jav.FileName)
+
+		detail, err := javClient.GetMovieDetail(jav.Code)
+		if err != nil {
+			fmt.Printf("skip %s: %v\n", jav.Code, err)
+			return nil
 		}
-		fmt.Printf("Episode: %s %s %s\n", name, f.Season.SeasonText, f.Episode.EpisodeText)
 
-		videoPath := f.Episode.FileID
-		nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
-		seasonNum := parseSeasonNumber(f.Season.SeasonText)
-		// 空字符串说明是第一季
-		if f.Season.SeasonText == "" {
-			seasonNum = 1
-		}
-		episodeNum := parseEpisodeNumber(f.Episode.EpisodeText)
-
-		nfo := EpisodeNFO{
-			Title:         f.TV.Name + " " + f.Episode.EpisodeText,
-			ShowTitle:     f.TV.Name,
-			Season:        seasonNum,
-			Episode:       episodeNum,
-			OriginalTitle: f.TV.OriginalName,
+		javYear := ""
+		if detail.ReleaseDate != "" && len(detail.ReleaseDate) >= 4 {
+			javYear = detail.ReleaseDate[:4]
 		}
 
-		// 搜索 TMDB 获取详细信息
-		searchName := f.TV.Name
-		if f.TV.OriginalName != "" {
-			searchName = f.TV.OriginalName
-		}
-		result, err := tmdbClient.SearchTV(searchName, 1)
-		if err == nil && len(result.List) > 0 {
-			tv := result.List[0]
-			tvID, _ := strconv.Atoi(tv.ID)
-
-			nfo.ShowTitle = tv.Name
-			nfo.Rating = fmt.Sprintf("%.1f", tv.VoteAverage)
-			nfo.UniqueID = []NFOUniqueID{{Type: "tmdb", Default: true, Value: tv.ID}}
-
-			// 获取季详情（带缓存）
-			cacheKey := fmt.Sprintf("%d:%d", tvID, seasonNum)
-			seasonDetail, ok := seasonCache[cacheKey]
-			if !ok && tvID > 0 && seasonNum > 0 {
-				seasonDetail, err = tmdbClient.FetchSeasonProfile(tvID, seasonNum)
-				if err != nil {
-					fmt.Printf("fetch season profile failed: %v\n", err)
-				} else {
-					seasonCache[cacheKey] = seasonDetail
-				}
-			}
-
-			// 从缓存的季详情中查找当前集
-			if seasonDetail != nil {
-				for _, ep := range seasonDetail.Episodes {
-					if ep.EpisodeNumber == episodeNum {
-						nfo.Title = ep.Name
-						nfo.Plot = ep.Overview
-						nfo.Aired = ep.AirDate
-						nfo.Runtime = ep.Runtime
-						break
-					}
-				}
-			}
-
-			// 获取演员
-			if tvID > 0 && seasonNum > 0 {
-				persons, err := tmdbClient.FetchPersonsOfSeason(tvID, seasonNum)
-				if err == nil {
-					nfo.Actors = personsToActors(persons)
-				}
-			}
-
-			// 保存 MediaProfile 到数据库 + 下载海报 + 创建 tvshow.nfo（每个 TV 只执行一次）
-			mediaProfileID, saved := mediaProfileCache[tv.ID]
-			if !saved {
-				mediaProfileID = uuid.New().String()
-				mp := model.MediaProfile{
-					ID:           mediaProfileID,
-					Type:         1,
-					Name:         tv.Name,
-					OriginalName: strPtr(tv.OriginalName),
-					Overview:     strPtr(tv.Overview),
-					PosterPath:   strPtr(tv.PosterPath),
-					BackdropPath: strPtr(tv.BackdropPath),
-					AirDate:      strPtr(tv.FirstAirDate),
-					VoteAverage:  tv.VoteAverage,
-					TMDBID:       strPtr(tv.ID),
-					SourceCount:  tv.NumberOfEpisodes,
-				}
-				if tv.InProduction {
-					mp.InProduction = 1
-				}
-				if err := db.Where("tmdb_id = ?", tv.ID).FirstOrCreate(&mp).Error; err != nil {
-					fmt.Printf("save MediaProfile failed: %v\n", err)
-				}
-				mediaProfileCache[tv.ID] = mp.ID
-
-				// 在剧集根目录下载海报和创建 tvshow.nfo
-				tvShowDir := f.TV.FileID
-				posterFile := downloadImage(tv.PosterPath, tvShowDir, "poster.jpg")
-				fanartFile := downloadImage(tv.BackdropPath, tvShowDir, "fanart.jpg")
-				tvNfo := TVShowNFO{
-					Title:         tv.Name,
-					OriginalTitle: tv.OriginalName,
-					Plot:          tv.Overview,
-					Premiered:     tv.FirstAirDate,
-					Rating:        fmt.Sprintf("%.1f", tv.VoteAverage),
-					UniqueID:      []NFOUniqueID{{Type: "tmdb", Default: true, Value: tv.ID}},
-					Genres:        genreNames(tv.Genres),
-					Country:       tv.OriginCountry,
-					Poster:        posterFile,
-				}
-				if fanartFile != "" {
-					tvNfo.Fanart = &NFOFanart{Thumb: fanartFile}
-				}
-				tvShowNFOPath := filepath.Join(tvShowDir, "tvshow.nfo")
-				if err := writeNFO(tvShowNFOPath, tvNfo); err != nil {
-					fmt.Printf("write tvshow.nfo failed: %v\n", err)
-				}
-			}
-			if seasonDetail != nil {
-				for _, ep := range seasonDetail.Episodes {
-					if ep.EpisodeNumber == episodeNum {
-						epTmdbID := strconv.Itoa(ep.ID)
-						msp := model.MediaSourceProfile{
-							ID:             uuid.New().String(),
-							Name:           ep.Name,
-							Overview:       strPtr(ep.Overview),
-							AirDate:        strPtr(ep.AirDate),
-							StillPath:      strPtr(ep.StillPath),
-							Order:          ep.EpisodeNumber,
-							Runtime:        &ep.Runtime,
-							TMDBID:         &epTmdbID,
-							MediaProfileID: mediaProfileID,
-						}
-						if err := db.Where("tmdb_id = ?", epTmdbID).FirstOrCreate(&msp).Error; err != nil {
-							fmt.Printf("save MediaSourceProfile failed: %v\n", err)
-						}
-						break
-					}
-				}
-			}
-
-		}
-
-		if err := writeNFO(nfoPath, nfo); err != nil {
-			fmt.Printf("write episode nfo failed: %v\n", err)
-		}
-		return nil
-	})
-
-	w.SetOnMovie(func(parsed any) error {
-		f := parsed.(walker.SearchedMovie)
-		fmt.Printf("Movie: %s (%s)\n", f.Name, f.Year)
-
-		videoPath := f.FileID
-		nfoPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".nfo"
-
+		javDir := filepath.Dir(jav.FileID)
 		nfo := MovieNFO{
-			Title:         f.Name,
-			OriginalTitle: f.OriginalName,
-			Year:          f.Year,
+			Title:         detail.Title,
+			OriginalTitle: detail.Code,
+			Premiered:     detail.ReleaseDate,
+			Year:          javYear,
+			Genres:        detail.Genres,
 		}
-
-		searchName := f.Name
-		if f.OriginalName != "" {
-			searchName = f.OriginalName
-		}
-		result, err := tmdbClient.SearchMovie(searchName, 1)
-		if err == nil && len(result.List) > 0 {
-			movie := result.List[0]
-			movieID, _ := strconv.Atoi(movie.ID)
-
-			detail, err := tmdbClient.FetchMovieProfile(movieID)
-			if err == nil {
-				movieDir := filepath.Dir(videoPath)
-				posterFile := downloadImage(detail.PosterPath, movieDir, "poster.jpg")
-				fanartFile := downloadImage(detail.BackdropPath, movieDir, "fanart.jpg")
-				nfo.Title = detail.Name
-				nfo.OriginalTitle = detail.OriginalName
-				nfo.Plot = detail.Overview
-				nfo.Premiered = detail.AirDate
-				nfo.Rating = fmt.Sprintf("%.1f", detail.VoteAverage)
-				nfo.Genres = genreNames(detail.Genres)
-				nfo.Country = detail.OriginCountry
-				nfo.Poster = posterFile
-				nfo.UniqueID = []NFOUniqueID{{Type: "tmdb", Default: true, Value: detail.ID}}
-				if detail.Runtime != nil {
-					nfo.Runtime = *detail.Runtime
-				}
-				if fanartFile != "" {
-					nfo.Fanart = &NFOFanart{Thumb: fanartFile}
-				}
-				if detail.AirDate != "" && len(detail.AirDate) >= 4 {
-					nfo.Year = detail.AirDate[:4]
-				}
-
-				// 保存 MediaProfile
-				mp := model.MediaProfile{
-					ID:           uuid.New().String(),
-					Type:         2,
-					Name:         detail.Name,
-					OriginalName: strPtr(detail.OriginalName),
-					Overview:     strPtr(detail.Overview),
-					PosterPath:   strPtr(detail.PosterPath),
-					BackdropPath: strPtr(detail.BackdropPath),
-					AirDate:      strPtr(detail.AirDate),
-					VoteAverage:  detail.VoteAverage,
-					TMDBID:       strPtr(detail.ID),
-				}
-				if err := db.Where("tmdb_id = ?", detail.ID).FirstOrCreate(&mp).Error; err != nil {
-					fmt.Printf("save movie MediaProfile failed: %v\n", err)
-				}
-			}
-
-			persons, err := tmdbClient.FetchPersonsOfMovie(movieID)
-			if err == nil {
-				nfo.Actors = personsToActors(persons)
-			}
-		}
-
+		nfoPath := filepath.Join(javDir, jav.Code+".nfo")
 		if err := writeNFO(nfoPath, nfo); err != nil {
-			fmt.Printf("write movie nfo failed: %v\n", err)
+			return fmt.Errorf("write nfo for %s failed: %w", jav.Code, err)
 		}
+
+		downloadImage(detail.Cover, javDir, "poster.jpg")
 		return nil
 	})
 

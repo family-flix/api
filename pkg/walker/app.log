@@ -1,0 +1,505 @@
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T20:49:47+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T20:49:47+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T20:49:47+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T20:49:47+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T20:49:47+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"第18话","rule":"第{0,1}[0-9]{1,}[集話话期局场]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"斗破苍穹年番","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"凡人风起天南10","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E11","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"第264话","rule":"第{0,1}[0-9]{1,}[集話话期局场]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"斗罗大陆","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"name","extracted":"殭屍100～","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Baha","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x265","rule":"[xX]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"encode","extracted":"HEVC","rule":"[hH][eE][vV][cC]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"episode","extracted":"OAD.3","rule":"续集|特辑|OAD\\.{0,1}[0-9]{1,}|彩蛋[0-9]{0,}|花絮[0-9]{0,}|番外[0-9]{0,}|BONUS|[pP][rR][0-9]{0,}[\\.$]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Tensei.Shitara.Slime.Datta.Ken.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"640×480","rule":"([hHbB][dD]){0,1}\\.{0,1}[0-9]{3,4}\\.{0,1}[xX×]\\.{0,1}[0-9]{3,4}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"season","extracted":"本篇","rule":"special season1","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"167话","rule":"第{0,1}[0-9]{1,}[集話话期局场]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"犬夜叉","rule":"japanese name","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"season","extracted":"本篇","rule":"special season1","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"第001话","rule":"第{0,1}[0-9]{1,}[集話话期局场]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"犬夜叉","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1920×1080","rule":"([hHbB][dD]){0,1}\\.{0,1}[0-9]{3,4}\\.{0,1}[xX×]\\.{0,1}[0-9]{3,4}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"season","extracted":"OVA","rule":"special season1","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"2010-01-29","rule":"[123][0-9]{1,3}[-.][01][0-9][-.][0-3][0-9]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"犬夜叉","rule":"japanese name","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"season","extracted":"SP","rule":"special season3","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"犬夜叉","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"season","extracted":"OVA","rule":"special season1","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"第2集","rule":"第{0,1}[0-9]{1,}[集話话期局场]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"第17集","rule":"第{0,1}[0-9]{1,}[集話话期局场]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"キケンがグルグル!","rule":"japanese original name","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"E49","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"さらばヌメモン","rule":"japanese original name","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"灌篮高手","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"AVC","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"星辰变","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"师兄啊师兄","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"season","extracted":"OVA","rule":"special season1","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"魔动王","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"1989","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"双语版","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"数码宝贝大冒险","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"720P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"E13","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Made.in.Abyss.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H.265","rule":"[xX×]{0,1}[hH]{0,1}[dD]{0,1}\\.26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"encode","extracted":"HEVC","rule":"[hH][eE][vV][cC]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"第4季","rule":"第[0-9]{1,}[季]","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"15906431","rule":"第{0,1}[123][0-9]{7}\\.{0,1}[上下]{0,1}[期局场]{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"2023-03-14","rule":"[123][0-9]{1,3}[-.][01][0-9][-.][0-3][0-9]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"第36集","rule":"第{0,1}[0-9]{1,}[集話话期局场]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"武G纪","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"总第150集","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"九尾狐传9","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E098","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"灌篮高手","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"三少爷的剑","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2001","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"E31","rule":"\\b([eE][pP]{0,1}[0-9]{1,})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H264","rule":"[hH]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"encode","extracted":"HEVC","rule":"[hH][eE][vV][cC]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"好先生","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E112","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"第八号当铺","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"EP22","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"天道","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"晓敏家","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"season","extracted":"S1","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"打工吧！魔王大人","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"season","extracted":"第1季","rule":"第[0-9]{1,}[季]","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"咒术回战","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"第15.","rule":"第[0-9]{1,}[\\.$]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"少年白马醉春风","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"财阀家的小儿子","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"万li","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"720p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H264","rule":"[hH]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"S02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E8","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"The.Story.of.HongMao.and.LanTu.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2008","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"name","extracted":"付岩洞复仇者们付岩洞复仇者们","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"心灵内科医生","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"HD1080P","rule":"HD(360|720|1080|2160)[pP]{0,1}(×265){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"X264","rule":"[xX]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"V1.Nope","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"01","rule":"[\\p{Han}]{1,}(0[1-9]{1,2})\\.","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"三国演义","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E1","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"episode","extracted":"11话","rule":"第{0,1}[0-9]{1,}[集話话期局场]","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"第10","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"-.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"name","extracted":"暴食狂戰士","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Baha","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"season","extracted":"II","rule":"\\bVI{1,3}\\b|\\bIX|\\bIV|\\bIII|Ⅱ|\\bII","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"哥布林殺手","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"AVC","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"voice_encode","extracted":"AC3","rule":"[aA][cC]3","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"season","extracted":"SE2","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Qins.Moon.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"source","extracted":"DVDRip","rule":"([bB][dD]|[wW][eE][bB]|[dD][vV][dD])-{0,1}[rR][iI][pP]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"voice_encode","extracted":"AC3","rule":"[aA][cC]3","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"season","extracted":"S03","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E34","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"秦时明月","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"source","extracted":"DVDRip","rule":"([bB][dD]|[wW][eE][bB]|[dD][vV][dD])-{0,1}[rR][iI][pP]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DDP5.1","rule":"[dD][dD][pP]5\\.1","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H265","rule":"[hH]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"year","extracted":"2024","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Atmos","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"S02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SPY×FAMILY","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"season","extracted":"S2","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"season","extracted":"S310","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"original_name","extracted":"Unforgettable","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E012","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"season","extracted":"S02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"h264","rule":"[hH]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"s01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"e04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"the.company.you.keep.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"source","extracted":"web","rule":"(HMAX){0,1}[wW][eE][bB](-IMAX){0,1}(-HR){0,1}([Rr][i][p]){0,1}(-{0,1}[dD][lL]){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"name","extracted":"风味人间","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"-","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H.265","rule":"[xX×]{0,1}[hH]{0,1}[dD]{0,1}\\.26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"III","rule":"\\bVI{1,3}\\b|\\bIX|\\bIV|\\bIII|Ⅱ|\\bII","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E04","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Planet.Earth.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"name","extracted":"01买或死","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"season","extracted":"OVA","rule":"special season1","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"妖精森林的小不点","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2018","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"西行纪前缘篇","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"斗罗大陆","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2018","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DDP2.0","rule":"[dD][dD][pP]2\\.0","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"第2季","rule":"第[0-9]{1,}[季]","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"D.P：逃兵追缉令","rule":"chinese name4","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"season","extracted":"第二季","rule":"第[\\p{Han}]{1,}[季]","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"狩火之王","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"AVC","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"E67","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"第一神拳","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"S02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E20","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Modern.Family.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"season","extracted":"第二季","rule":"第[\\p{Han}]{1,}[季]","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E10","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H265","rule":"[hH]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"SP","rule":"special season3","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E02","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"Romance.Of.A.Twin.Flower.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"HEVC","rule":"[hH][eE][vV][cC]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"S5","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"末路狂花钱","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2024","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"The.Last.Frenzy","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"度华年","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"E25","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"一起吃晚餐吗2020","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"episode","extracted":"7","rule":"^\\.([0-9]{1,})\\.","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DDP2.0","rule":"[dD][dD][pP]2\\.0","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"S02","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"BASTARD！！暗黑破坏神","rule":"chinese name4","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"name","extracted":"Pending.Train-8点23分，明天和你","rule":"chinese name4","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"year","extracted":"1840","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"year","extracted":".2023.","rule":"\\.[12][0-9]{3}\\.","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"4月的东京","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"season","extracted":"第二季","rule":"第[\\p{Han}]{1,}[季]","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"局中人","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"season","extracted":"第二季","rule":"第[\\p{Han}]{1,}[季]","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"测试名称第","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"Stealer：七个朝鲜通宝","rule":"chinese name4","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"69两头勾","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"雾都","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2012","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"神盾局特工","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"神盾局特工","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T21:02:23+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"The.Days","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":".608X336","rule":"([hHbB][dD]){0,1}\\.{0,1}[0-9]{3,4}\\.{0,1}[xX×]\\.{0,1}[0-9]{3,4}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E06","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"IT狂人","rule":"(?:^|\\.)([a-zA-Z]{1,}(?:\\.[a-zA-Z]{1,}){0,}[\\p{Han}]{1,})","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"The.IT.Crowd.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"source","extracted":"DVDrip","rule":"([bB][dD]|[wW][eE][bB]|[dD][vV][dD])-{0,1}[rR][iI][pP]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"name","extracted":"LV1魔王與獨居廢勇者","rule":"chinese name4","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:23+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Baha","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E03","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"是,大臣","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"Yes,Minister","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E01","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"year","extracted":"1994","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"Friends","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"season","extracted":"S01","rule":"[sS][eE]{0,1}[0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured season"}
+{"level":"info","key":"episode","extracted":"E05","rule":"\\b([eE][pP]{0,1}[0-9]{1,}[上下]{0,1})","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"name","extracted":"韩剧","rule":"chinese name3","time":"2026-02-16T21:02:23+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2005","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured year"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:23+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:02:23+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:23+08:00","message":"Captured original_name"}
+{"level":"info","key":"episode","extracted":"-456","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:02:32+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"STARS.uncensored","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"episode","extracted":"001","rule":"[0-9]{1,}(\\.[0-9]{1,}){0,1}$","time":"2026-02-16T21:02:32+08:00","message":"Captured episode"}
+{"level":"info","key":"original_name","extracted":"SSIS.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"TrueHD","rule":"[tT][rR][uU][eE][hH][dD]","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"HEVC","rule":"[hH][eE][vV][cC]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"UHD.Bluray","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Everything.Everywhere.All.At.Once","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"请回答1988","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"玩具总动员4","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"4K.","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"year","extracted":"1990","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"碟中谍7：致命清算（上）","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"潜伏","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2010","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"4K.","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"封神：祸商","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"4K...","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"original_name","extracted":"MOJH.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"HD1080P","rule":"HD(360|720|1080|2160)[pP]{0,1}(×265){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"Warriors.of.Future","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DDP5.1","rule":"[dD][dD][pP]5\\.1","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H.264","rule":"[xX×]{0,1}[hH]{0,1}[dD]{0,1}\\.26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"original_name","extracted":"Spider-Man.Across.the.Spider-Verse.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"4K..","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"需支持切换音轨的播放器","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"Die.Wannseekonferenz","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"万里归途","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"奇迹笨小孩","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"一场很（没）有必要的春晚","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"x265","rule":"[xX]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"放牛班的春天","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2004","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"Bluray","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"The.Chorus","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"x265","rule":"[xX]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"十二怒汉","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"1957","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"Bluray","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DTSHD-MA","rule":"[dD][tT][sS]-{0,1}[hH][dD]([\\.-][Mm][Aa]){0,1}(\\.5\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"name","extracted":"007：大破天幕杀机","rule":"chinese name1","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"封神第一部","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"黄海","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"K站","rule":"(?:^|\\.)([a-zA-Z]{1,}(?:\\.[a-zA-Z]{1,}){0,}[\\p{Han}]{1,})","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"咒","rule":"chinese name2","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"夏日重现","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2022","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"奇迹·笨小孩","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"法比安","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2021","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Fabian.oder.Der.Gang.vor.die.Hunde","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"encode","extracted":"H.264","rule":"[xX×]{0,1}[hH]{0,1}[dD]{0,1}\\.26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"乡村里的中国","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2017","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"Oblivion.Verses","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"name","extracted":"雷神4：爱与雷霆","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"source","extracted":"WEB-IMAX","rule":"(HMAX){0,1}[wW][eE][bB](-IMAX){0,1}(-HR){0,1}([Rr][i][p]){0,1}(-{0,1}[dD][lL]){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Thor.Love.and.Thunder","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DDP5.1","rule":"[dD][dD][pP]5\\.1","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H.265","rule":"[xX×]{0,1}[hH]{0,1}[dD]{0,1}\\.26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"II","rule":"\\bVI{1,3}\\b|\\bIX|\\bIV|\\bIII|Ⅱ|\\bII","time":"2026-02-16T21:02:32+08:00","message":"Captured season"}
+{"level":"info","key":"original_name","extracted":"The.Nun.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"4K","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"S三贵情史","rule":"(?:^|\\.)([a-zA-Z]{1,}(?:\\.[a-zA-Z]{1,}){0,}[\\p{Han}]{1,})","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DTS-HD.MA.5.1","rule":"[dD][tT][sS]-{0,1}[hH][dD]([\\.-][Mm][Aa]){0,1}(\\.5\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"x265","rule":"[xX]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"original_name","extracted":"The.Transformers.The.Movie.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"1986","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"UHD.BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"episode","extracted":"-6","rule":"[_-][0-9]{1,}","time":"2026-02-16T21:02:32+08:00","message":"Captured episode"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"倩女幽魂2","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"1990","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"TrueHD","rule":"[tT][rR][uU][eE][hH][dD]","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H265","rule":"[hH]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"电锯惊魂8：竖锯","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2017","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Jigsaw","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DTS-HD.MA","rule":"[dD][tT][sS]-{0,1}[hH][dD]([\\.-][Mm][Aa]){0,1}(\\.5\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"season","extracted":"IV","rule":"\\bVI{1,3}\\b|\\bIX|\\bIV|\\bIII|Ⅱ|\\bII","time":"2026-02-16T21:02:32+08:00","message":"Captured season"}
+{"level":"info","key":"year","extracted":"2007","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"Blu-ray","rule":"[bB][lL][uU]-[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Saw","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"x265","rule":"[xX]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"X","rule":"\\.(X)\\.[^a-zA-Z]","time":"2026-02-16T21:02:32+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"悬吧猪栏2367电锯惊魂10","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"SAW","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DTS-HD","rule":"[dD][tT][sS]-{0,1}[hH][dD]([\\.-][Mm][Aa]){0,1}(\\.5\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"season","extracted":"III","rule":"\\bVI{1,3}\\b|\\bIX|\\bIV|\\bIII|Ⅱ|\\bII","time":"2026-02-16T21:02:32+08:00","message":"Captured season"}
+{"level":"info","key":"year","extracted":"2006","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"Blu-ray","rule":"[bB][lL][uU]-[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Saw","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":".1024X576","rule":"([hHbB][dD]){0,1}\\.{0,1}[0-9]{3,4}\\.{0,1}[xX×]\\.{0,1}[0-9]{3,4}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AC3","rule":"[aA][cC]3","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"original_name","extracted":"Shrek.Thriller.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"source","extracted":"HDTV","rule":"[hH][dD][tT][vV]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"year","extracted":"2019","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"The.Lego.Movie.2.The.Second.Part","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"电锯惊魂7","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"resolution","extracted":"BD720P","rule":"[bB][dD](720|1080|2160)[pP]","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"熔炉","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2011","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"Silenced","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080i","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"encode","extracted":"H264","rule":"[hH]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"year","extracted":"2009","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"HDTV","rule":"[hH][dD][tT][vV]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"My.Beloved.China","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080P","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"AAC","rule":"[aA][aA][cC]([257]\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H264","rule":"[hH]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"original_name","extracted":"화란","rule":"korean name","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"祸乱","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEBRip","rule":"[wW][eE][bB][rR][iI][pP]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DDP5.1","rule":"[dD][dD][pP]5\\.1","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"HEVC","rule":"[hH][eE][vV][cC]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"original_name","extracted":"Tetris.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DTS-HD.MA.5.1","rule":"[dD][tT][sS]-{0,1}[hH][dD]([\\.-][Mm][Aa]){0,1}(\\.5\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H265","rule":"[hH]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"season","extracted":"VII","rule":"\\bVI{1,3}\\b|\\bIX|\\bIV|\\bIII|Ⅱ|\\bII","time":"2026-02-16T21:02:32+08:00","message":"Captured season"}
+{"level":"info","key":"name","extracted":"电锯惊魂7","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2010","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Saw","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"1080p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"original_name","extracted":"Detective.Chinatown.","rule":"^([a-zA-Z-!]{1,}\\.{1}){0,}[a-zA-Z-!]{1,}(\\.[0-9]{1,2}){0,1}(\\.|$)","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"year","extracted":"2015","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"name","extracted":"苦菜花","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"1965","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"大蛇4","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"name","extracted":"壮志凌云","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"1936","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"year","extracted":"1994","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"original_name","extracted":"Leon.The.Professional","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DDP2.0","rule":"[dD][dD][pP]2\\.0","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"H265","rule":"[hH]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"画江湖之天罡","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"WEB-DL","rule":"[wW][eE][bB]-[dD][lL]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"The.Legend","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"2160p","rule":"（{0,1}(360|720|1080|2160)[pPiI]）{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"voice_encode","extracted":"DTS-HD.MA","rule":"[dD][tT][sS]-{0,1}[hH][dD]([\\.-][Mm][Aa]){0,1}(\\.5\\.1){0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"voice_encode","extracted":"TrueHD","rule":"[tT][rR][uU][eE][hH][dD]","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"x265","rule":"[xX]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"电锯惊魂9","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2021","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"UHD.BluRay","rule":"(UHD)[-.]?[bB][lL][uU][-.]?[rR][aA][yY]|[bB][lL][uU][-.]?[rR][aA][yY]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"Atmos-SWTYBLZ","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"name","extracted":"小城之春","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"1948","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"7号房的礼物","rule":"chinese name1","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2013","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"name","extracted":"喂帅哥！！","rule":"japanese name","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"original_name","extracted":"おいハンサム!!","rule":"japanese original name","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
+{"level":"info","key":"resolution","extracted":"4K..","rule":"(蓝光){0,1}(4[kK])\\.{0,}","time":"2026-02-16T21:02:32+08:00","message":"Captured resolution"}
+{"level":"info","key":"name","extracted":"别叫我\"赌神\"","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2023","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"voice_encode","extracted":"AC3","rule":"[aA][cC]3","time":"2026-02-16T21:02:32+08:00","message":"Captured voice_encode"}
+{"level":"info","key":"encode","extracted":"x264","rule":"[xX]26[45]","time":"2026-02-16T21:02:32+08:00","message":"Captured encode"}
+{"level":"info","key":"name","extracted":"电焊工波力","rule":"chinese name3","time":"2026-02-16T21:02:32+08:00","message":"Captured name"}
+{"level":"info","key":"year","extracted":"2008","rule":"[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}","time":"2026-02-16T21:02:32+08:00","message":"Captured year"}
+{"level":"info","key":"source","extracted":"HDTV","rule":"[hH][dD][tT][vV]","time":"2026-02-16T21:02:32+08:00","message":"Captured source"}
+{"level":"info","key":"original_name","extracted":"BURN-E","rule":"[\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[ \\.\\-&!,'（）：！？～×－\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z]{1,}[）\\x{0400}-\\x{04FF}\\x{0800}-\\x{4e00}\\x{4e00}-\\x{9fa5}\\x{ac00}-\\x{d7a3}0-9a-zA-Z!！？－]","time":"2026-02-16T21:02:32+08:00","message":"Captured original_name"}
