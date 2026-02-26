@@ -196,7 +196,8 @@ func (r *wechatRepository) GetMedia(ctx context.Context, id, userID string) (*mo
 }
 
 func (r *wechatRepository) ListMedia(ctx context.Context, userID string, filter WechatMediaFilter) ([]model.Media, int64, error) {
-	db := r.db.WithContext(ctx).Where("\"Media\".user_id = ?", userID)
+	db := r.db.WithContext(ctx).Where("\"Media\".user_id = ?", userID).
+		Where("\"Media\".profile_id IS NOT NULL AND \"Media\".profile_id != ''")
 	if filter.Type != nil {
 		db = db.Where("\"Media\".type = ?", *filter.Type)
 	}

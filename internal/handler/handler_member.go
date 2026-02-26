@@ -183,11 +183,33 @@ func (h *MemberHandler) CollectionList(ec echo.Context) error {
 
 func (h *MemberHandler) Validate(ec echo.Context) error {
 	c := h.NewContext(ec)
-	m, mt, err := authMember(c)
+
+	// 1. Check Authorization header (JWT)
+	authHeader := c.Header("Authorization")
+	if authHeader != "" {
+		m, mt, err := validateMemberByJWT(c, authHeader)
+		if err != nil {
+			return fail(c, 900, err.Error())
+		}
+		return ok(c, "校验通过", R{"id": m.ID, "email": m.Email, "token": mt.Token})
+	}
+
+	// 2. Check Body token (Token ID)
+	var body struct {
+		Token string `json:"token"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.Token == "" {
+		return fail(c, 900, "缺少 token")
+	}
+
+	m, mt, err := validateMemberByTokenID(c, body.Token)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
-	return ok(c, "校验通过", R{"id": m.ID, "token": mt.Token})
+	return ok(c, "校验通过", R{"id": m.ID, "email": m.Email, "token": mt.Token})
 }
 
 func (h *MemberHandler) WechatCollectionList(ec echo.Context) error {

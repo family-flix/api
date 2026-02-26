@@ -94,13 +94,31 @@ func authAdmin(c Context) (*user.User, error) {
 
 // authMember extracts the Authorization header and returns the authenticated member.
 func authMember(c Context) (*model.Member, *model.MemberToken, error) {
-	token := c.Header("Authorization")
+	return validateMemberByJWT(c, c.Header("Authorization"))
+}
+
+func validateMemberByJWT(c Context, token string) (*model.Member, *model.MemberToken, error) {
 	if token == "" {
 		return nil, nil, fmt.Errorf("缺少 token")
 	}
 	var mt model.MemberToken
 	if err := c.DB().Where("token = ?", token).First(&mt).Error; err != nil {
 		return nil, nil, fmt.Errorf("无效的 token")
+	}
+	var m model.Member
+	if err := c.DB().Where("id = ? AND `delete` = 0", mt.MemberID).First(&m).Error; err != nil {
+		return nil, nil, fmt.Errorf("无效的成员")
+	}
+	return &m, &mt, nil
+}
+
+func validateMemberByTokenID(c Context, tokenID string) (*model.Member, *model.MemberToken, error) {
+	if tokenID == "" {
+		return nil, nil, fmt.Errorf("缺少 token ID")
+	}
+	var mt model.MemberToken
+	if err := c.DB().Where("id = ?", tokenID).First(&mt).Error; err != nil {
+		return nil, nil, fmt.Errorf("无效的 token ID")
 	}
 	var m model.Member
 	if err := c.DB().Where("id = ? AND `delete` = 0", mt.MemberID).First(&m).Error; err != nil {
