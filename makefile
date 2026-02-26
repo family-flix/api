@@ -170,3 +170,7 @@ rebase:
 		git pull --rebase && \
 		git checkout $$branch && \
 		git rebase main;
+
+# 部署到 NAS
+deploy:
+	sh scripts/deploy.sh

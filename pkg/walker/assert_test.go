@@ -14,6 +14,7 @@ func AssertEqual[T any](t *testing.T, got, want T, msg ...string) {
 	var ignoreFields []string
 	wantVal := reflect.ValueOf(want)
 	wantType := wantVal.Type()
+	var opts []cmp.Option
 	if wantType.Kind() == reflect.Struct {
 		for i := 0; i < wantType.NumField(); i++ {
 			field := wantType.Field(i)
@@ -22,8 +23,10 @@ func AssertEqual[T any](t *testing.T, got, want T, msg ...string) {
 				ignoreFields = append(ignoreFields, field.Name)
 			}
 		}
+		if len(ignoreFields) > 0 {
+			opts = append(opts, cmpopts.IgnoreFields(want, ignoreFields...))
+		}
 	}
-	opts := []cmp.Option{cmpopts.IgnoreFields(want, ignoreFields...)}
 	diff := cmp.Diff(want, got, opts...)
 	if diff != "" {
 		assert.Fail(t, fmt.Sprintf("not equal\n%s", diff))

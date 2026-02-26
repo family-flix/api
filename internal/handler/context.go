@@ -21,7 +21,7 @@ type Context interface {
 
 	// Services
 	DB() *gorm.DB
-	LogDir() string
+	BaseDir() string
 	CacheDir() string
 	FFmpegBin() string
 }

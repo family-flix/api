@@ -57,7 +57,9 @@ func main() {
 		return
 	}
 	fmt.Println(detail.Actors)
-	for _, img := range detail.SampleImages {
-		fmt.Println(img)
-	}
+	fmt.Println(detail.Cover)
+	fmt.Println(detail.Backdrop)
+	// for _, img := range detail.SampleImages {
+	// 	fmt.Println(img)
+	// }
 }

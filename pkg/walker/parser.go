@@ -238,6 +238,11 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 	extra_rules = append(extra_rules, ExtraRule{Regexp: regexp.MustCompile(`[^字\.]{1,}字幕组\.{0,1}`)})
 	extra_rules = append(extra_rules, ExtraRule{Regexp: regexp.MustCompile(`[生熟]肉`)})
 	extra_rules = append(extra_rules, ExtraRule{
+		Key:      "year",
+		Regexp:   regexp.MustCompile(`[12][0-9]{3}\.[01][0-9]\.[0123][0-9]`),
+		Priority: 2,
+	})
+	extra_rules = append(extra_rules, ExtraRule{
 		Regexp: regexp.MustCompile(`^[- .]+`),
 	})
 
@@ -728,7 +733,7 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 	})
 	extra_rules = append(extra_rules, ExtraRule{
 		Key:         "episode",
-		Regexp:      regexp.MustCompile(`续集|特辑|OAD\.{0,1}[0-9]{1,}|彩蛋[0-9]{0,}|花絮[0-9]{0,}|番外[0-9]{0,}|BONUS|[pP][rR][0-9]{0,}[\.$]`),
+		Regexp:      regexp.MustCompile(`[eE][xX][tT][rR][aA][sS][-. ]{0,1}[0-9]{1,}|续集|特辑|OAD\.{0,1}[0-9]{1,}|彩蛋[0-9]{0,}|花絮[0-9]{0,}|番外[0-9]{0,}|BONUS|[pP][rR][0-9]{0,}[\.$]`),
 		Placeholder: ".",
 		Priority:    -1,
 	})
@@ -1024,6 +1029,7 @@ func ParseFilenameForVideo(filename string, opts ...interface{}) ParsedVideoInfo
 		Key:    "year",
 		Regexp: regexp.MustCompile(`[123][0-9]{3}[-/][0-9]{1,2}[-/][0-9]{1,2}`),
 	})
+
 	extra_rules = append(extra_rules, ExtraRule{
 		Key:    "year",
 		Regexp: regexp.MustCompile(`[(（]{0,1}[123]{1}[0-9]{3}[）)]{0,1}年{0,1}`),
@@ -1912,6 +1918,10 @@ func formatEpisodeNumber(n string) string {
 		return matches[1] + matches[2]
 	}
 
+	if regexp.MustCompile(`(?i)^(extras|bonus)`).MatchString(number) {
+		return number
+	}
+
 	if regexp.MustCompile(`^(特辑|OAD|彩蛋|花絮|番外|预告)`).MatchString(number) {
 		r1 := regexp.MustCompile(`^(特辑|OAD|彩蛋|花絮|番外|预告)`).FindStringSubmatch(number)
 		prefixStr := r1[1]
@@ -2000,18 +2010,29 @@ func ParseFilenameForJAV(filename string) string {
 	// Strip trailing noise glued to digits (e.g. "775ch" -> "775 ")
 	s = javTrailingNoiseRegexp.ReplaceAllString(s, "$1$3")
 
-	m := javCodeRegexp.FindString(s)
-	if m == "" {
+	matches := javCodeRegexp.FindAllString(s, -1)
+	if len(matches) == 0 {
 		return ""
 	}
-	m = strings.ToUpper(m)
-	// Strip trailing suffixes: -C(中文), -UC(无码中文), -U(无码), -SD, -CD1, etc.
-	m = javSuffixRegexp.ReplaceAllString(m, "")
-	// A valid JAV code must have a hyphen
-	if !strings.Contains(m, "-") {
-		return ""
+
+	for _, m := range matches {
+		m = strings.ToUpper(m)
+		// Strip trailing suffixes: -C(中文), -UC(无码中文), -U(无码), -SD, -CD1, etc.
+		m = javSuffixRegexp.ReplaceAllString(m, "")
+
+		// Check for false positives
+		if strings.HasPrefix(m, "EXTRAS-") {
+			continue
+		}
+
+		// A valid JAV code must have a hyphen
+		if !strings.Contains(m, "-") {
+			continue
+		}
+		return m
 	}
-	return m
+
+	return ""
 }
 
 func preprocess_filename(filename string) string {

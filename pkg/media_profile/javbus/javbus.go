@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/viper"
@@ -29,6 +30,7 @@ type Movie struct {
 }
 
 type Actor struct {
+	ID     string
 	Name   string
 	Avatar string
 }
@@ -55,23 +57,35 @@ type JavBusClient struct {
 	proxyHost  string // Cloudflare Worker URL, e.g. "https://xxx.workers.dev"
 }
 
-func NewJavBusClient(cookieFile string) *JavBusClient {
-	if cookieFile == "" {
-		cookieFile = "javbus.cookie"
-	}
-	return &JavBusClient{
-		client: &http.Client{
+var (
+	clientInstance *http.Client
+	clientOnce     sync.Once
+)
+
+func getClient() *http.Client {
+	clientOnce.Do(func() {
+		clientInstance = &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{},
+				TLSClientConfig:   &tls.Config{},
 				ForceAttemptHTTP2: false,
-				TLSNextProto:     make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+				TLSNextProto:      make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
 				DialContext: (&net.Dialer{
 					Timeout:   10 * time.Second,
 					KeepAlive: 30 * time.Second,
 				}).DialContext,
 			},
-		},
+		}
+	})
+	return clientInstance
+}
+
+func NewJavBusClient(cookieFile string) *JavBusClient {
+	if cookieFile == "" {
+		cookieFile = "javbus.cookie"
+	}
+	return &JavBusClient{
+		client:     getClient(),
 		cookieFile: cookieFile,
 		proxyHost:  strings.TrimRight(getProxy(), "/"),
 	}
@@ -91,6 +105,10 @@ func (c *JavBusClient) proxyURL(targetURL string) string {
 		return c.proxyHost + "/api/proxy/?u=" + url.QueryEscape(targetURL)
 	}
 	return targetURL
+}
+
+func (c *JavBusClient) Do(req *http.Request) (*http.Response, error) {
+	return c.client.Do(req)
 }
 
 type JavBusSearchResp struct {
@@ -327,10 +345,11 @@ func (c *JavBusClient) parseDetail(code, html string) *MovieDetail {
 	}
 
 	// Cover & Backdrop
-	reCover := regexp.MustCompile(`(?i)<a class="bigImage" href="([^"]*)"[^>]*>\s*<img src="([^"]*)"`)
-	if m := reCover.FindStringSubmatch(html); len(m) > 2 {
+	reCover := regexp.MustCompile(`(?i)<a class="bigImage" href="([^"]*)"[^>]*>`)
+	if m := reCover.FindStringSubmatch(html); len(m) > 1 {
 		detail.Backdrop = fullURL(m[1])
-		detail.Cover = fullURL(m[2])
+		detail.Cover = strings.Replace(detail.Backdrop, "/cover/", "/thumb/", 1)
+		detail.Cover = strings.Replace(detail.Cover, "_b.", ".", 1)
 	}
 
 	// Release Date
@@ -371,18 +390,20 @@ func (c *JavBusClient) parseDetail(code, html string) *MovieDetail {
 	}
 
 	// Actors
-	reActor := regexp.MustCompile(`(?i)<a[^>]*href="https?://www\.javbus\.com/star/([^"]*)"[^>]*>([^<]*)</a>`)
+	reActor := regexp.MustCompile(`(?i)<a[^>]*href\s*=\s*"\s*https?://www\.javbus\.com/star/([^"]*)"[^>]*>([^<]*)</a>`)
 	actorMatches := reActor.FindAllStringSubmatch(html, -1)
 	seen := make(map[string]bool)
 	for _, m := range actorMatches {
+		code := strings.TrimSpace(m[1])
 		name := strings.TrimSpace(m[2])
 		if name == "" || seen[name] {
 			continue
 		}
 		seen[name] = true
 		detail.Actors = append(detail.Actors, Actor{
+			ID:     code,
 			Name:   name,
-			Avatar: host + "/pics/actress/" + m[1] + "_a.jpg",
+			Avatar: host + "/pics/actress/" + code + "_a.jpg",
 		})
 	}
 

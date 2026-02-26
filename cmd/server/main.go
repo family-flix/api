@@ -26,13 +26,15 @@ import (
 
 var AppVer = "0.1.0"
 
-func pidFile(baseDir string) string {
+func PidFile(baseDir string) string {
 	return filepath.Join(baseDir, "server.pid")
 }
 
 func Main() {
 	if len(os.Args) > 1 && os.Args[1] == "stop" {
-		stopDaemon()
+		if err := StopDaemon(); err != nil {
+			os.Exit(1)
+		}
 		return
 	}
 
@@ -40,7 +42,7 @@ func Main() {
 	flag.Parse()
 
 	if *daemon {
-		startDaemon()
+		StartDaemon()
 		return
 	}
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
@@ -69,13 +71,13 @@ func Main() {
 	logger := zerolog.New(log_file).With().Timestamp().Logger()
 
 	datacfg := database.DatabaseConfig{
-		DBType:         cfg.GetString("database.type"),
-		DBHost:         cfg.GetString("database.host"),
-		DBPort:         cfg.GetString("database.port"),
-		DBUser:         cfg.GetString("database.user"),
-		DBPassword:     cfg.GetString("database.password"),
-		DBName:         cfg.GetString("database.name"),
-		DBPath:         filepath.Join(cfg.BaseDir, cfg.GetString("database.path")),
+		DBType:     cfg.GetString("database.type"),
+		DBHost:     cfg.GetString("database.host"),
+		DBPort:     cfg.GetString("database.port"),
+		DBUser:     cfg.GetString("database.user"),
+		DBPassword: cfg.GetString("database.password"),
+		DBName:     cfg.GetString("database.name"),
+		DBPath:     filepath.Join(cfg.BaseDir, cfg.GetString("database.path")),
 	}
 	db, err := database.NewDatabase(&datacfg)
 	if err != nil {
@@ -120,7 +122,7 @@ func Main() {
 	fmt.Println()
 
 	// 写入 PID 文件
-	pidPath := pidFile(cfg.BaseDir)
+	pidPath := PidFile(cfg.BaseDir)
 	os.WriteFile(pidPath, []byte(strconv.Itoa(os.Getpid())), 0644)
 	defer os.Remove(pidPath)
 
@@ -130,45 +132,74 @@ func Main() {
 	}
 }
 
-func startDaemon() {
+func StartDaemon() {
 	exe, _ := os.Executable()
 	cmd := exec.Command(exe, "server")
-	cmd.Stdout = nil
-	cmd.Stderr = nil
+
+	// 重定向输出到日志文件以便调试
+	logFile, err := os.OpenFile("daemon.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err == nil {
+		cmd.Stdout = logFile
+		cmd.Stderr = logFile
+	} else {
+		fmt.Printf("警告: 无法创建 daemon.log: %v\n", err)
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+	}
+
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if err := cmd.Start(); err != nil {
 		fmt.Printf("启动守护进程失败: %v\n", err)
 		os.Exit(1)
 	}
+
+	// 等待一秒钟，检查进程是否存活
+	time.Sleep(1 * time.Second)
+
+	// 尝试向进程发送 0 信号来检查是否存在
+	if err := cmd.Process.Signal(syscall.Signal(0)); err != nil {
+		fmt.Println("守护进程启动后立即退出! 请检查 daemon.log")
+		// 尝试读取最后几行日志并显示
+		if data, err := os.ReadFile("daemon.log"); err == nil {
+			lines := string(data)
+			if len(lines) > 500 {
+				lines = lines[len(lines)-500:]
+			}
+			fmt.Printf("日志末尾:\n%s\n", lines)
+		}
+		os.Exit(1)
+	}
+
 	fmt.Printf("守护进程已启动, PID: %d\n", cmd.Process.Pid)
 	cmd.Process.Release()
 }
 
-func stopDaemon() {
+func StopDaemon() error {
 	cfg, err := config.New()
 	if err != nil {
 		fmt.Printf("加载配置失败: %v\n", err)
-		os.Exit(1)
+		return err
 	}
-	pidPath := pidFile(cfg.BaseDir)
+	pidPath := PidFile(cfg.BaseDir)
 	data, err := os.ReadFile(pidPath)
 	if err != nil {
 		fmt.Println("未找到运行中的服务")
-		os.Exit(1)
+		return err
 	}
 	pid, _ := strconv.Atoi(string(data))
 	proc, err := os.FindProcess(pid)
 	if err != nil {
 		fmt.Println("未找到进程")
 		os.Remove(pidPath)
-		os.Exit(1)
+		return err
 	}
 	if err := proc.Signal(syscall.SIGTERM); err != nil {
 		fmt.Printf("停止服务失败: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 	os.Remove(pidPath)
 	fmt.Printf("服务已停止 (PID: %d)\n", pid)
+	return nil
 }
 
 func ensureAdmin(db *gorm.DB) {

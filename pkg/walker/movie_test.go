@@ -299,6 +299,12 @@ func TestParseFilenameForVideoMovie(t *testing.T) {
 		AssertEqual(t, got, want)
 	})
 
+	t.Run("The Red Balloon Extras", func(t *testing.T) {
+		got := ParseFilenameForVideo("The.Red.Balloon.1956.Extras-01.BDRip.1080p.Ac3.x264.BMDru.mkv")
+		want := ParsedVideoInfo{Name: "", OriginalName: "The.Red.Balloon", Season: "", Episode: "Extras-01"}
+		AssertEqual(t, got, want)
+	})
+
 	t.Run("画江湖之天罡", func(t *testing.T) {
 		got := ParseFilenameForVideo("画江湖之天罡 (2023) - The.Legend.2023.2160p.WEB-DL.H265.DV.DDP2.0.mp4")
 		want := ParsedVideoInfo{Name: "画江湖之天罡", OriginalName: "The.Legend", Season: "", Episode: ""}
@@ -338,6 +344,11 @@ func TestParseFilenameForVideoMovie(t *testing.T) {
 	t.Run("BURN-E", func(t *testing.T) {
 		got := ParseFilenameForVideo("2008.BURN-E.电焊工波力.HR-HDTV.AC3.1024X576.x264-人人影视制作.mkv")
 		want := ParsedVideoInfo{Name: "电焊工波力", OriginalName: "BURN-E", Season: "", Episode: ""}
+		AssertEqual(t, got, want)
+	})
+	t.Run("Rainy.Saturday-Saturday.afternoon.dildo.fuck", func(t *testing.T) {
+		got := ParseFilenameForVideo("Lily Ivy - Rainy.Saturday-Saturday.afternoon.dildo.fuck-2017.04.30-720p.mp4")
+		want := ParsedVideoInfo{Name: "", OriginalName: "", Season: "", Episode: "", Year: "2017.04.30"}
 		AssertEqual(t, got, want)
 	})
 }
