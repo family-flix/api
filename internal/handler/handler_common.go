@@ -4,11 +4,8 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
-	"github.com/family-flix/api/internal/assets"
-	"github.com/family-flix/api/internal/domain/user"
-	"github.com/family-flix/api/internal/model"
-	"github.com/family-flix/api/pkg/media_profile/javbus"
 	"io"
 	"mime"
 	"net/http"
@@ -16,7 +13,32 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
+
+	"github.com/family-flix/api/internal/assets"
+	"github.com/family-flix/api/internal/domain/user"
+	"github.com/family-flix/api/internal/model"
+	"github.com/family-flix/api/pkg/drive_client"
+	"github.com/family-flix/api/pkg/drive_client/localdrive"
+	"github.com/family-flix/api/pkg/media_profile/javbus"
 )
+
+type CommonHandler struct {
+	BaseHandler
+}
+
+func NewCommonHandler(db *gorm.DB, baseDir, cacheDir, ffmpegBin string) *CommonHandler {
+	return &CommonHandler{
+		BaseHandler: BaseHandler{
+			db:        db,
+			baseDir:   baseDir,
+			cacheDir:  cacheDir,
+			ffmpegBin: ffmpegBin,
+		},
+	}
+}
 
 func strPtr(s string) *string {
 	if s == "" {
@@ -37,6 +59,32 @@ var videoExts = map[string]bool{
 
 func isVideo(path string) bool {
 	return videoExts[strings.ToLower(filepath.Ext(path))]
+}
+
+func getDriveClient(c Context, driveID, userID string) (*model.Drive, drive_client.DriveClient, error) {
+	var d model.Drive
+	if err := c.DB().Where("id = ? AND user_id = ?", driveID, userID).First(&d).Error; err != nil {
+		return nil, nil, err
+	}
+
+	var t model.DriveToken
+	if err := c.DB().Where("id = ?", d.DriveTokenID).First(&t).Error; err != nil {
+		return nil, nil, err
+	}
+
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(t.Data), &config); err != nil {
+		return nil, nil, fmt.Errorf("invalid drive config")
+	}
+
+	var client drive_client.DriveClient
+	if d.Type != nil && *d.Type == 1 { // Local
+		client = localdrive.NewLocalDriveClient()
+	} else {
+		return nil, nil, fmt.Errorf("unsupported drive type: %v", d.Type)
+	}
+
+	return &d, client, nil
 }
 
 // authAdmin extracts the Authorization header and returns the authenticated admin user.
@@ -71,19 +119,22 @@ func fail(c Context, code int, msg string) error {
 	return c.JSON(http.StatusOK, R{"code": code, "msg": msg, "data": nil})
 }
 
-func Ping(c Context) error {
+func (h *CommonHandler) Ping(ec echo.Context) error {
+	c := h.NewContext(ec)
 	return ok(c, "ok", nil)
 }
 
-func Favicon(c Context) error {
+func (h *CommonHandler) Favicon(ec echo.Context) error {
+	c := h.NewContext(ec)
 	return c.Stream(http.StatusOK, "image/x-icon", bytes.NewReader(assets.Favicon))
 }
 
-func Proxy(c Context) error {
+func (h *CommonHandler) Proxy(ec echo.Context) error {
 	return nil
 }
 
-func ProxyJavbus(c Context) error {
+func (h *CommonHandler) ProxyJavbus(ec echo.Context) error {
+	c := h.NewContext(ec)
 	urlStr := c.QueryParam("url")
 	if urlStr == "" {
 		return fail(c, 400, "缺少 url 参数")

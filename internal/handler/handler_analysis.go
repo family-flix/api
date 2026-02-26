@@ -9,6 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
+
 	"github.com/family-flix/api/internal/model"
 	"github.com/family-flix/api/pkg/drive_client/localdrive"
 	"github.com/family-flix/api/pkg/folder"
@@ -16,15 +19,31 @@ import (
 	"github.com/family-flix/api/pkg/media_profile/tmdb"
 	"github.com/family-flix/api/pkg/types"
 	"github.com/family-flix/api/pkg/walker"
-	"gorm.io/gorm"
 )
 
-func CommonAnalysis(c Context) error {
+type AnalysisHandler struct {
+	BaseHandler
+}
+
+func NewAnalysisHandler(db *gorm.DB, baseDir, cacheDir, ffmpegBin string) *AnalysisHandler {
+	return &AnalysisHandler{
+		BaseHandler: BaseHandler{
+			db:        db,
+			baseDir:   baseDir,
+			cacheDir:  cacheDir,
+			ffmpegBin: ffmpegBin,
+		},
+	}
+}
+
+func (h *AnalysisHandler) CommonAnalysis(ec echo.Context) error {
+	c := h.NewContext(ec)
 	// TODO: requires drive client for analysis
 	return fail(c, 501, "未实现")
 }
 
-func AdminAnalysis(c Context) error {
+func (h *AnalysisHandler) AdminAnalysis(ec echo.Context) error {
+	c := h.NewContext(ec)
 	u, err := authAdmin(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
@@ -699,7 +718,8 @@ func searchParsedMediaSources(db *gorm.DB, d *model.Drive, userID, taskID string
 	writeOutput("搜索影视剧信息完成")
 }
 
-func AdminAnalysisFiles(c Context) error {
+func (h *AnalysisHandler) AdminAnalysisFiles(ec echo.Context) error {
+	c := h.NewContext(ec)
 	u, err := authAdmin(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
@@ -749,7 +769,8 @@ func AdminAnalysisFiles(c Context) error {
 	return ok(c, "开始索引任务", R{"job_id": taskID})
 }
 
-func AdminAnalysisNewFiles(c Context) error {
+func (h *AnalysisHandler) AdminAnalysisNewFiles(ec echo.Context) error {
+	c := h.NewContext(ec)
 	u, err := authAdmin(c)
 	if err != nil {
 		return fail(c, 900, err.Error())

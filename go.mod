@@ -1,6 +1,6 @@
 module github.com/family-flix/api
 
-go 1.24.11
+go 1.24.0
 
 require (
 	github.com/glebarez/sqlite v1.11.0

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"io"
 
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ type Context interface {
 	Header(name string) string
 	Bind(v interface{}) error
 	Body() io.ReadCloser
+	Context() context.Context
 
 	// Response
 	JSON(code int, v interface{}) error

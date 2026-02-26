@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"io"
 
 	"github.com/labstack/echo/v4"
@@ -25,6 +26,7 @@ func (c *EchoContext) QueryParam(name string) string      { return c.ec.QueryPar
 func (c *EchoContext) Header(name string) string          { return c.ec.Request().Header.Get(name) }
 func (c *EchoContext) Bind(v interface{}) error           { return c.ec.Bind(v) }
 func (c *EchoContext) Body() io.ReadCloser                { return c.ec.Request().Body }
+func (c *EchoContext) Context() context.Context           { return c.ec.Request().Context() }
 func (c *EchoContext) JSON(code int, v interface{}) error { return c.ec.JSON(code, v) }
 func (c *EchoContext) Stream(code int, contentType string, body io.Reader) error {
 	return c.ec.Stream(code, contentType, body)

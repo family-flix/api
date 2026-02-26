@@ -1,13 +1,44 @@
 package handler
 
 import (
-	"encoding/json"
-	"github.com/family-flix/api/internal/domain/member"
-	"github.com/family-flix/api/internal/domain/user"
+	"fmt"
+
+	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
+
 	"github.com/family-flix/api/internal/model"
+	"github.com/family-flix/api/internal/service"
 )
 
-func AdminUserLogin(c Context) error {
+type AdminUserHandler struct {
+	BaseHandler
+	userService   service.UserService
+	memberService service.MemberService
+}
+
+func NewAdminUserHandler(userService service.UserService, memberService service.MemberService, db *gorm.DB, baseDir, cacheDir, ffmpegBin string) *AdminUserHandler {
+	return &AdminUserHandler{
+		BaseHandler: BaseHandler{
+			db:        db,
+			baseDir:   baseDir,
+			cacheDir:  cacheDir,
+			ffmpegBin: ffmpegBin,
+		},
+		userService:   userService,
+		memberService: memberService,
+	}
+}
+
+func (h *AdminUserHandler) auth(c Context) (*model.User, error) {
+	token := c.Header("Authorization")
+	if token == "" {
+		return nil, fmt.Errorf("缺少 token")
+	}
+	return h.userService.GetProfile(c.Context(), token)
+}
+
+func (h *AdminUserHandler) Login(ec echo.Context) error {
+	c := h.NewContext(ec)
 	var body struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -15,14 +46,15 @@ func AdminUserLogin(c Context) error {
 	if err := c.Bind(&body); err != nil {
 		return fail(c, 400, "参数错误")
 	}
-	u, err := user.GetByPassword(body.Email, body.Password, c.DB())
+	u, token, err := h.userService.Login(c.Context(), body.Email, body.Password)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
-	return ok(c, "", R{"id": u.ID, "token": u.Token})
+	return ok(c, "", R{"id": u.ID, "token": token})
 }
 
-func AdminUserRegister(c Context) error {
+func (h *AdminUserHandler) Register(ec echo.Context) error {
+	c := h.NewContext(ec)
 	var body struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -30,51 +62,62 @@ func AdminUserRegister(c Context) error {
 	if err := c.Bind(&body); err != nil {
 		return fail(c, 400, "参数错误")
 	}
-	res, err := user.Create(body.Email, body.Password, c.DB())
+	id, token, err := h.userService.Register(c.Context(), body.Email, body.Password)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
-	return ok(c, "注册成功", res)
+	return ok(c, "注册成功", R{"id": id, "token": token})
 }
 
-func AdminUserLogout(c Context) error {
+func (h *AdminUserHandler) Logout(ec echo.Context) error {
+	c := h.NewContext(ec)
 	return ok(c, "", nil)
 }
 
-func AdminUserProfile(c Context) error {
-	token := c.Header("Authorization")
-	u, err := user.New(token, c.DB())
+func (h *AdminUserHandler) Profile(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
-	var record model.User
-	c.DB().First(&record, "id = ?", u.ID)
-	return ok(c, "", record)
+	// Return full user object as before?
+	// The original code did: c.DB().First(&record, "id = ?", u.ID)
+	// u from auth IS the user record (from service.GetProfile -> repo.Get).
+	return ok(c, "", u)
 }
 
-func AdminUserValidate(c Context) error {
+func (h *AdminUserHandler) Validate(ec echo.Context) error {
+	c := h.NewContext(ec)
 	var body struct {
 		Token string `json:"token"`
 	}
 	if err := c.Bind(&body); err != nil {
 		return fail(c, 400, "参数错误")
 	}
-	u, err := user.New(body.Token, c.DB())
+	u, err := h.userService.ValidateToken(c.Context(), body.Token)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
 	return ok(c, "校验通过", R{"id": u.ID})
 }
 
-func AdminUserExisting(c Context) error {
-	var count int64
-	c.DB().Model(&model.User{}).Count(&count)
-	return ok(c, "获取成功", R{"existing": count > 0})
+func (h *AdminUserHandler) Existing(ec echo.Context) error {
+	c := h.NewContext(ec)
+	// Original code checked count of users.
+	// But userService.Existing(email) checks specific email.
+	// The handler `AdminUserExisting` returned `{"existing": count > 0}`.
+	// So it checks if ANY admin exists (to determine if we need to show register or login page).
+
+	initialized, err := h.userService.IsInitialized(c.Context())
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "获取成功", R{"existing": initialized})
 }
 
-func AdminMemberList(c Context) error {
-	token := c.Header("Authorization")
-	u, err := user.New(token, c.DB())
+func (h *AdminUserHandler) MemberList(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
@@ -87,19 +130,13 @@ func AdminMemberList(c Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
-	db := c.DB().Where("user_id = ? AND `delete` = 0", u.ID)
-	if body.Name != "" {
-		db = db.Where("remark LIKE ?", "%"+body.Name+"%")
+
+	members, total, nextMarker, err := h.memberService.List(c.Context(), u.ID, body.Name, body.NextMarker, body.PageSize)
+	if err != nil {
+		return fail(c, 500, err.Error())
 	}
-	var total int64
-	db.Model(&model.Member{}).Count(&total)
-	if body.NextMarker != "" {
-		db = db.Where("id < ?", body.NextMarker)
-	}
-	var members []model.Member
-	db.Preload("Tokens").Order("created DESC").Limit(body.PageSize).Find(&members)
+
 	list := make([]R, 0, len(members))
-	var nextMarker string
 	for _, m := range members {
 		tokens := make([]R, 0, len(m.Tokens))
 		for _, t := range m.Tokens {
@@ -111,14 +148,13 @@ func AdminMemberList(c Context) error {
 			"email":  m.Email,
 			"tokens": tokens,
 		})
-		nextMarker = m.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
 
-func AdminMemberAdd(c Context) error {
-	token := c.Header("Authorization")
-	u, err := user.New(token, c.DB())
+func (h *AdminUserHandler) MemberAdd(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
@@ -131,20 +167,17 @@ func AdminMemberAdd(c Context) error {
 	if body.Remark == "" {
 		return fail(c, 400, "缺少成员备注")
 	}
-	var existing model.Member
-	if err := c.DB().Where("remark = ? AND inviter_id = '' AND user_id = ?", body.Remark, u.ID).First(&existing).Error; err == nil {
-		return fail(c, 400, "已存在相同备注的成员了")
-	}
-	memberID, tokenID, tokenValue, err := member.CreateWithoutAccount(body.Remark, u.ID, c.DB())
+
+	memberID, tokenID, tokenValue, err := h.memberService.Create(c.Context(), u.ID, body.Remark)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
 	return ok(c, "添加成员成功", R{"id": memberID, "token": R{"id": tokenID, "code": tokenValue}})
 }
 
-func AdminMemberProfile(c Context) error {
-	token := c.Header("Authorization")
-	u, err := user.New(token, c.DB())
+func (h *AdminUserHandler) MemberProfile(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
@@ -154,16 +187,17 @@ func AdminMemberProfile(c Context) error {
 	if err := c.Bind(&body); err != nil || body.MemberID == "" {
 		return fail(c, 400, "缺少成员 id")
 	}
-	var m model.Member
-	if err := c.DB().Where("id = ? AND user_id = ?", body.MemberID, u.ID).First(&m).Error; err != nil {
+
+	m, err := h.memberService.Get(c.Context(), body.MemberID, u.ID)
+	if err != nil {
 		return fail(c, 404, "没有匹配的成员")
 	}
 	return ok(c, "", R{"id": m.ID, "remark": m.Remark})
 }
 
-func AdminMemberDelete(c Context) error {
-	token := c.Header("Authorization")
-	u, err := user.New(token, c.DB())
+func (h *AdminUserHandler) MemberDelete(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
@@ -173,17 +207,16 @@ func AdminMemberDelete(c Context) error {
 	if err := c.Bind(&body); err != nil || body.ID == "" {
 		return fail(c, 400, "缺少成员 id")
 	}
-	var m model.Member
-	if err := c.DB().Where("id = ? AND user_id = ?", body.ID, u.ID).First(&m).Error; err != nil {
-		return fail(c, 404, "没有匹配的成员")
+
+	if err := h.memberService.Delete(c.Context(), u.ID, body.ID); err != nil {
+		return fail(c, 500, err.Error())
 	}
-	c.DB().Model(&m).Update("delete", 1)
 	return ok(c, "删除成员成功", nil)
 }
 
-func AdminMemberUpdatePermission(c Context) error {
-	token := c.Header("Authorization")
-	u, err := user.New(token, c.DB())
+func (h *AdminUserHandler) MemberUpdatePermission(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
@@ -200,19 +233,16 @@ func AdminMemberUpdatePermission(c Context) error {
 	if body.Permissions == nil {
 		return fail(c, 400, "缺少权限信息")
 	}
-	var m model.Member
-	if err := c.DB().Where("id = ? AND user_id = ?", body.MemberID, u.ID).First(&m).Error; err != nil {
-		return fail(c, 404, "没有匹配的记录")
+
+	if err := h.memberService.UpdatePermissions(c.Context(), u.ID, body.MemberID, body.Permissions); err != nil {
+		return fail(c, 500, err.Error())
 	}
-	permJSON, _ := json.Marshal(body.Permissions)
-	permStr := string(permJSON)
-	c.DB().Model(&m).Update("permission", permStr)
 	return ok(c, "更新成功", nil)
 }
 
-func AdminMemberAddToken(c Context) error {
-	token := c.Header("Authorization")
-	u, err := user.New(token, c.DB())
+func (h *AdminUserHandler) MemberAddToken(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
@@ -222,24 +252,17 @@ func AdminMemberAddToken(c Context) error {
 	if err := c.Bind(&body); err != nil || body.ID == "" {
 		return fail(c, 400, "缺少成员 id")
 	}
-	var m model.Member
-	if err := c.DB().Where("id = ? AND user_id = ?", body.ID, u.ID).First(&m).Error; err != nil {
-		return fail(c, 404, "没有匹配的成员记录")
-	}
-	tokenValue, err := user.EncodeToken(body.ID)
+
+	tokenID, tokenValue, err := h.memberService.AddToken(c.Context(), u.ID, body.ID)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
-	rec := model.MemberToken{ID: member.Rid(), Token: tokenValue, MemberID: body.ID}
-	if err := c.DB().Create(&rec).Error; err != nil {
-		return fail(c, 500, err.Error())
-	}
-	return ok(c, "", R{"id": rec.ID, "token": tokenValue})
+	return ok(c, "", R{"id": tokenID, "token": tokenValue})
 }
 
-func AdminMemberHistories(c Context) error {
-	token := c.Header("Authorization")
-	u, err := user.New(token, c.DB())
+func (h *AdminUserHandler) MemberHistories(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
@@ -252,20 +275,18 @@ func AdminMemberHistories(c Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
-	// Verify member belongs to user
-	var m model.Member
-	if err := c.DB().Where("id = ? AND user_id = ?", body.MemberID, u.ID).First(&m).Error; err != nil {
+
+	// Check ownership
+	if _, err := h.memberService.Get(c.Context(), body.MemberID, u.ID); err != nil {
 		return fail(c, 404, "没有匹配的成员")
 	}
-	db := c.DB().Where("member_id = ?", body.MemberID)
-	if body.NextMarker != "" {
-		db = db.Where("id < ?", body.NextMarker)
+
+	histories, _, nextMarker, err := h.memberService.GetHistories(c.Context(), body.MemberID, body.NextMarker, body.PageSize)
+	if err != nil {
+		return fail(c, 500, err.Error())
 	}
-	var histories []model.PlayHistoryV2
-	db.Preload("Media.Profile").Preload("MediaSource.Profile").
-		Order("updated DESC").Limit(body.PageSize).Find(&histories)
+
 	list := make([]R, 0, len(histories))
-	var nextMarker string
 	for _, h := range histories {
 		item := R{
 			"id":           h.ID,
@@ -282,61 +303,22 @@ func AdminMemberHistories(c Context) error {
 			item["source"] = h.MediaSource.Profile.Name
 		}
 		list = append(list, item)
-		nextMarker = h.ID
 	}
 	return ok(c, "", R{"list": list, "next_marker": nextMarker})
 }
 
-func InviteeAdd(c Context) error {
-	m, _, err := authMember(c)
+func (h *AdminUserHandler) PermissionList(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
-	var body struct {
-		Remark string `json:"remark"`
-	}
-	if err := c.Bind(&body); err != nil || body.Remark == "" {
-		return fail(c, 400, "缺少备注")
-	}
-	memberID, tokenID, tokenValue, err := member.CreateWithoutAccount(body.Remark, m.UserID, c.DB())
+
+	permissions, err := h.userService.ListPermissions(c.Context(), u.ID)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
-	// Set inviter
-	c.DB().Model(&model.Member{}).Where("id = ?", memberID).Update("inviter_id", m.ID)
-	return ok(c, "添加成功", R{"id": memberID, "token": R{"id": tokenID, "code": tokenValue}})
-}
 
-func InviteeList(c Context) error {
-	m, _, err := authMember(c)
-	if err != nil {
-		return fail(c, 900, err.Error())
-	}
-	var invitees []model.Member
-	c.DB().Where("inviter_id = ? AND `delete` = 0", m.ID).Preload("Tokens").Find(&invitees)
-	list := make([]R, 0, len(invitees))
-	for _, inv := range invitees {
-		tokens := make([]R, 0)
-		for _, t := range inv.Tokens {
-			tokens = append(tokens, R{"id": t.ID, "token": t.Token})
-		}
-		list = append(list, R{"id": inv.ID, "remark": inv.Remark, "tokens": tokens})
-	}
-	return ok(c, "", R{"list": list})
-}
-
-func AccountMerge(c Context) error {
-	// TODO: complex account merging logic
-	return fail(c, 501, "未实现")
-}
-
-func AdminPermissionList(c Context) error {
-	u, err := authAdmin(c)
-	if err != nil {
-		return fail(c, 900, err.Error())
-	}
-	var permissions []model.Permission
-	c.DB().Where("user_id = ?", u.ID).Order("created DESC").Find(&permissions)
 	list := make([]R, 0, len(permissions))
 	for _, p := range permissions {
 		list = append(list, R{"id": p.ID, "code": p.Code, "desc": p.Desc})
@@ -344,8 +326,9 @@ func AdminPermissionList(c Context) error {
 	return ok(c, "", R{"list": list})
 }
 
-func AdminPermissionAdd(c Context) error {
-	u, err := authAdmin(c)
+func (h *AdminUserHandler) PermissionAdd(ec echo.Context) error {
+	c := h.NewContext(ec)
+	u, err := h.auth(c)
 	if err != nil {
 		return fail(c, 900, err.Error())
 	}
@@ -356,39 +339,10 @@ func AdminPermissionAdd(c Context) error {
 	if err := c.Bind(&body); err != nil || body.Code == "" || body.Desc == "" {
 		return fail(c, 400, "参数错误")
 	}
-	var existing model.Permission
-	if err := c.DB().Where("code = ? AND user_id = ?", body.Code, u.ID).First(&existing).Error; err == nil {
-		return fail(c, 400, "已存在相同 code 的权限")
-	}
-	p := model.Permission{ID: member.Rid(), Code: body.Code, Desc: body.Desc, UserID: u.ID}
-	if err := c.DB().Create(&p).Error; err != nil {
-		return fail(c, 500, err.Error())
-	}
-	return ok(c, "添加成功", R{"id": p.ID})
-}
 
-func AdminMemberTokenAdd(c Context) error {
-	u, err := authAdmin(c)
-	if err != nil {
-		return fail(c, 900, err.Error())
-	}
-	var body struct {
-		MemberID string `json:"member_id"`
-	}
-	if err := c.Bind(&body); err != nil || body.MemberID == "" {
-		return fail(c, 400, "缺少 member_id")
-	}
-	var m model.Member
-	if err := c.DB().Where("id = ? AND user_id = ?", body.MemberID, u.ID).First(&m).Error; err != nil {
-		return fail(c, 404, "没有匹配的成员")
-	}
-	tokenValue, err := user.EncodeToken(body.MemberID)
+	id, err := h.userService.CreatePermission(c.Context(), u.ID, body.Code, body.Desc)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
-	rec := model.MemberToken{ID: member.Rid(), Token: tokenValue, MemberID: body.MemberID}
-	if err := c.DB().Create(&rec).Error; err != nil {
-		return fail(c, 500, err.Error())
-	}
-	return ok(c, "", R{"id": rec.ID, "token": tokenValue})
+	return ok(c, "添加成功", R{"id": id})
 }
