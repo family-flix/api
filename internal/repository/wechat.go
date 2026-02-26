@@ -48,6 +48,10 @@ type WechatRepository interface {
 	GetReport(ctx context.Context, id, memberID string) (*model.ReportV2, error)
 	UpdateReport(ctx context.Context, report *model.ReportV2) error
 	ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int) ([]model.MemberDiary, error)
+
+	GetLatestMediaSource(ctx context.Context, mediaID string) (*model.MediaSource, error)
+	ListMediaSourcesByRange(ctx context.Context, mediaID string, start, end int) ([]model.MediaSource, error)
+	GetParsedMediaSource(ctx context.Context, id, userID string) (*model.ParsedMediaSource, error)
 }
 
 type WechatMediaFilter struct {
@@ -72,20 +76,14 @@ func (r *wechatRepository) GetAdminUser(ctx context.Context) (*model.User, error
 }
 
 func (r *wechatRepository) GetMemberByEmail(ctx context.Context, email string) (*model.Member, error) {
-	var auth model.MemberAuthentication
-	if err := r.db.WithContext(ctx).Where("provider = 'credential' AND provider_id = ?", email).First(&auth).Error; err != nil {
-		return nil, err
-	}
 	var m model.Member
-	if err := r.db.WithContext(ctx).Where("id = ? AND `delete` = 0", auth.MemberID).First(&m).Error; err != nil {
-		return nil, err
-	}
-	return &m, nil
+	err := r.db.WithContext(ctx).Where("email = ?", email).First(&m).Error
+	return &m, err
 }
 
 func (r *wechatRepository) GetAuthByEmail(ctx context.Context, email string) (*model.MemberAuthentication, error) {
 	var auth model.MemberAuthentication
-	err := r.db.WithContext(ctx).Where("provider = 'credential' AND provider_id = ?", email).First(&auth).Error
+	err := r.db.WithContext(ctx).Where("provider_key = ? AND provider = 'credential'", email).First(&auth).Error
 	return &auth, err
 }
 
@@ -98,9 +96,9 @@ func (r *wechatRepository) UpdateAuth(ctx context.Context, auth *model.MemberAut
 }
 
 func (r *wechatRepository) GetInvitationCode(ctx context.Context, code string) (*model.InvitationCode, error) {
-	var ic model.InvitationCode
-	err := r.db.WithContext(ctx).Where("text = ?", code).First(&ic).Error
-	return &ic, err
+	var c model.InvitationCode
+	err := r.db.WithContext(ctx).Where("text = ?", code).First(&c).Error
+	return &c, err
 }
 
 func (r *wechatRepository) UpdateInvitationCode(ctx context.Context, code *model.InvitationCode) error {
@@ -112,9 +110,9 @@ func (r *wechatRepository) CreateAuthQRCode(ctx context.Context, code *model.Aut
 }
 
 func (r *wechatRepository) GetAuthQRCode(ctx context.Context, id string) (*model.AuthQRCode, error) {
-	var code model.AuthQRCode
-	err := r.db.WithContext(ctx).Preload("Member").Where("id = ?", id).First(&code).Error
-	return &code, err
+	var c model.AuthQRCode
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&c).Error
+	return &c, err
 }
 
 func (r *wechatRepository) UpdateAuthQRCode(ctx context.Context, code *model.AuthQRCode) error {
@@ -126,9 +124,9 @@ func (r *wechatRepository) CreateMemberToken(ctx context.Context, token *model.M
 }
 
 func (r *wechatRepository) GetMemberToken(ctx context.Context, memberID string) (*model.MemberToken, error) {
-	var mt model.MemberToken
-	err := r.db.WithContext(ctx).Where("member_id = ?", memberID).First(&mt).Error
-	return &mt, err
+	var t model.MemberToken
+	err := r.db.WithContext(ctx).Where("member_id = ?", memberID).First(&t).Error
+	return &t, err
 }
 
 func (r *wechatRepository) GetAuthByMemberID(ctx context.Context, memberID string) (*model.MemberAuthentication, error) {
@@ -148,29 +146,18 @@ func (r *wechatRepository) UpdateMember(ctx context.Context, member *model.Membe
 }
 
 func (r *wechatRepository) CreateMemberWithAuth(ctx context.Context, member *model.Member, auth *model.MemberAuthentication, token *model.MemberToken, code *model.InvitationCode) error {
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.WithContext(ctx).Create(member).Error; err != nil {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(member).Error; err != nil {
 			return err
 		}
-		if err := tx.WithContext(ctx).Create(auth).Error; err != nil {
+		if err := tx.Create(auth).Error; err != nil {
 			return err
 		}
-		if err := tx.WithContext(ctx).Create(token).Error; err != nil {
+		if err := tx.Create(token).Error; err != nil {
 			return err
 		}
-		// Create default settings
-		settings := model.MemberSetting{
-			MemberID: member.ID,
-			Data:     "{\"language\":\"zh-CN\"}", // JSON string as per schema
-		}
-		if err := tx.WithContext(ctx).Create(&settings).Error; err != nil {
-			return err
-		}
-
 		if code != nil {
-			code.Used = 1
-			code.InviteeID = &member.ID
-			if err := tx.WithContext(ctx).Save(code).Error; err != nil {
+			if err := tx.Save(code).Error; err != nil {
 				return err
 			}
 		}
@@ -218,7 +205,7 @@ func (r *wechatRepository) ListMedia(ctx context.Context, userID string, filter 
 
 func (r *wechatRepository) GetMediaSource(ctx context.Context, id, userID string) (*model.MediaSource, error) {
 	var ms model.MediaSource
-	err := r.db.WithContext(ctx).Preload("Files").Where("id = ? AND user_id = ?", id, userID).First(&ms).Error
+	err := r.db.WithContext(ctx).Preload("Files").Where("id = ?", id).First(&ms).Error
 	return &ms, err
 }
 
@@ -316,4 +303,31 @@ func (r *wechatRepository) ListDiaries(ctx context.Context, memberID string, nex
 	var diaries []model.MemberDiary
 	err := db.Preload("MediaSource.Media.Profile").Order("created DESC").Limit(pageSize).Find(&diaries).Error
 	return diaries, err
+}
+
+func (r *wechatRepository) GetLatestMediaSource(ctx context.Context, mediaID string) (*model.MediaSource, error) {
+	var ms model.MediaSource
+	err := r.db.WithContext(ctx).
+		Joins("Profile").
+		Where("media_id = ?", mediaID).
+		Order("`Profile`.`order` DESC").
+		First(&ms).Error
+	return &ms, err
+}
+
+func (r *wechatRepository) ListMediaSourcesByRange(ctx context.Context, mediaID string, start, end int) ([]model.MediaSource, error) {
+	var sources []model.MediaSource
+	err := r.db.WithContext(ctx).
+		Joins("Profile").
+		Where("media_id = ? AND `Profile`.`order` >= ? AND `Profile`.`order` <= ?", mediaID, start, end).
+		Preload("Profile").Preload("Files").Preload("Subtitles").
+		Order("`Profile`.`order` ASC").
+		Find(&sources).Error
+	return sources, err
+}
+
+func (r *wechatRepository) GetParsedMediaSource(ctx context.Context, id, userID string) (*model.ParsedMediaSource, error) {
+	var ps model.ParsedMediaSource
+	err := r.db.WithContext(ctx).Where("id = ? AND user_id = ?", id, userID).First(&ps).Error
+	return &ps, err
 }

@@ -420,7 +420,28 @@ func (h *AdminDriveHandler) FileSearch(ec echo.Context) error {
 }
 func (h *AdminDriveHandler) FilePreview(ec echo.Context) error {
 	c := h.NewContext(ec)
-	return fail(c, 501, "未实现")
+	u, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+	var body struct {
+		DriveID string `json:"drive_id"`
+		FileID  string `json:"file_id"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+
+	_, client, err := h.driveService.GetDriveClient(c.DB().Statement.Context, body.DriveID, u.ID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+
+	info, err := client.Preview(body.FileID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", info)
 }
 func (h *AdminDriveHandler) RenameFiles(ec echo.Context) error {
 	c := h.NewContext(ec)

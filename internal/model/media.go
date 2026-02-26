@@ -1,6 +1,5 @@
 package model
 
-
 type Media struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
 	Created LocalTime `gorm:"autoCreateTime" json:"created"`
@@ -48,15 +47,15 @@ type MediaSeriesProfile struct {
 	Created LocalTime `gorm:"autoCreateTime" json:"created"`
 	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
-	Type            int     `gorm:"default:1" json:"type"`
-	Name            string  `json:"name"`
-	OriginalName    *string `json:"original_name"`
-	Alias           *string `json:"alias"`
-	Overview        *string `gorm:"type:text" json:"overview"`
-	PosterPath      *string `json:"poster_path"`
-	BackdropPath    *string `json:"backdrop_path"`
-	AirDate         *string `json:"air_date"`
-	TMDBID          *string `gorm:"uniqueIndex" json:"tmdb_id"`
+	Type         int     `gorm:"default:1" json:"type"`
+	Name         string  `json:"name"`
+	OriginalName *string `json:"original_name"`
+	Alias        *string `json:"alias"`
+	Overview     *string `gorm:"type:text" json:"overview"`
+	PosterPath   *string `json:"poster_path"`
+	BackdropPath *string `json:"backdrop_path"`
+	AirDate      *string `json:"air_date"`
+	TMDBID       *string `gorm:"uniqueIndex" json:"tmdb_id"`
 
 	MediaProfiles []MediaProfile `gorm:"foreignKey:SeriesID" json:"media_profiles,omitempty"`
 }

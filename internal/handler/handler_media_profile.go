@@ -174,11 +174,24 @@ func (h *MediaProfileHandler) Profile(ec echo.Context) error {
 		persons = append(persons, pr)
 	}
 	item := R{
-		"id": p.ID, "type": p.Type, "name": p.Name, "original_name": p.OriginalName,
-		"poster_path": p.PosterPath, "backdrop_path": p.BackdropPath, "air_date": p.AirDate,
-		"vote_average": p.VoteAverage, "source_count": p.SourceCount, "overview": p.Overview,
-		"genres": genres, "origin_country": countries, "episodes": episodes, "persons": persons,
-		"tmdb_id": p.TMDBID, "imdb_id": p.IMDBID, "douban_id": p.DoubanID, "jav_code": p.JavCode,
+		"id":             p.ID,
+		"type":           p.Type,
+		"name":           p.Name,
+		"original_name":  p.OriginalName,
+		"poster_path":    p.PosterPath,
+		"backdrop_path":  p.BackdropPath,
+		"air_date":       p.AirDate,
+		"vote_average":   p.VoteAverage,
+		"source_count":   p.SourceCount,
+		"overview":       p.Overview,
+		"genres":         genres,
+		"origin_country": countries,
+		"episodes":       episodes,
+		"persons":        persons,
+		"tmdb_id":        p.TMDBID,
+		"imdb_id":        p.IMDBID,
+		"douban_id":      p.DoubanID,
+		"jav_code":       p.JavCode,
 	}
 	if p.Tips != nil {
 		var tips R

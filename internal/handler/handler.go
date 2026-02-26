@@ -55,7 +55,7 @@ func SetupRouter(e *echo.Echo, db *gorm.DB, baseDir, cacheDir, ffmpegBin string)
 	toolRepo := repository.NewToolRepository(db)
 	toolService := service.NewToolService(toolRepo)
 	wechatRepo := repository.NewWechatRepository(db)
-	wechatService := service.NewWechatService(wechatRepo, userService)
+	wechatService := service.NewWechatService(wechatRepo, userService, driveService)
 
 	// Handlers
 	commonHandler := NewCommonHandler(db, baseDir, cacheDir, ffmpegBin)

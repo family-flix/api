@@ -1,13 +1,16 @@
 package handler
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
+	"github.com/family-flix/api/internal/model"
 	"github.com/family-flix/api/internal/repository"
 	"github.com/family-flix/api/internal/service"
 )
@@ -350,32 +353,70 @@ func (h *WechatHandler) MediaEpisode(ec echo.Context) error {
 
 func (h *WechatHandler) MediaPlaying(ec echo.Context) error {
 	c := h.NewContext(ec)
-	// Returns play URL/info
 	m, _, err := authMember(c)
 	if err != nil {
 		return fail(c, 901, err.Error())
 	}
 	var body struct {
-		ID string `json:"id"`
+		MediaID string `json:"media_id"`
+		Type    int    `json:"type"`
 	}
-	if err := c.Bind(&body); err != nil || body.ID == "" {
+	if err := c.Bind(&body); err != nil {
 		return fail(c, 400, "参数错误")
 	}
+	if body.MediaID == "" {
+		return fail(c, 400, "缺少 media_id 参数")
+	}
 
-	source, err := h.wechatService.GetSource(c.Context(), body.ID, m.UserID)
+	// 1. Get Media to ensure it exists and get profile
+	media, err := h.wechatService.GetMedia(c.Context(), body.MediaID, m.UserID)
 	if err != nil {
-		return fail(c, 404, "未找到")
+		return fail(c, 404, "未找到该媒体")
 	}
 
-	// Simplified response construction
-	res := R{"id": source.ID}
-	if len(source.Files) > 0 {
-		// Logic to pick best file (m3u8 > mp4 etc)
-		// Original handler logic needed here?
-		// Assuming first file for now or simplified
-		f := source.Files[0]
-		res["url"] = fmt.Sprintf("/api/v2/preview?path=%s", f.FileID)
+	// 2. Get History (optional)
+	var history *model.PlayHistoryV2
+	// hReq, err := h.historyService.GetHistory(c.Context(), m.ID, body.MediaID)
+	// if err == nil && hReq != nil {
+	// 	history = hReq
+	// }
+
+	// 3. Get Playing Info (Sources and CurSource)
+	info, err := h.wechatService.GetPlayingInfo(c.Context(), body.MediaID, history)
+	if err != nil {
+		return fail(c, 500, err.Error())
 	}
+
+	// 4. Construct Response matching TS structure
+	res := R{
+		"id":            media.ID,
+		"cur_source":    info.CurSource,
+		"sources":       info.Sources,
+		"source_groups": info.SourceGroups,
+	}
+
+	if media.Profile != nil {
+		res["name"] = media.Profile.Name
+		res["overview"] = media.Profile.Overview
+		res["poster_path"] = media.Profile.PosterPath
+		res["air_date"] = media.Profile.AirDate
+		res["vote_average"] = media.Profile.VoteAverage
+		res["source_count"] = media.Profile.SourceCount
+		// Map genres to value/label if needed, or return as is.
+		// TS does map, let's try to match TS for genres/countries too to be safe
+		genres := make([]R, 0, len(media.Profile.Genres))
+		for _, g := range media.Profile.Genres {
+			genres = append(genres, R{"value": g.ID, "label": g.Text})
+		}
+		res["genres"] = genres
+
+		countries := make([]string, 0, len(media.Profile.OriginCountries))
+		for _, country := range media.Profile.OriginCountries {
+			countries = append(countries, country.ID)
+		}
+		res["origin_country"] = countries
+	}
+
 	return ok(c, "", res)
 }
 
@@ -414,8 +455,31 @@ func (h *WechatHandler) SeasonList(ec echo.Context) error {
 }
 
 func (h *WechatHandler) Source(ec echo.Context) error {
+	bodyBytes, _ := io.ReadAll(ec.Request().Body)
+	fmt.Printf("Source Body: %s\n", string(bodyBytes))
+	ec.Request().Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 	c := h.NewContext(ec)
-	return fail(c, 501, "未实现")
+	m, _, err := authMember(c)
+	if err != nil {
+		return fail(c, 901, err.Error())
+	}
+	var body struct {
+		ID   string `json:"id"`
+		Type string `json:"type"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+	if body.ID == "" {
+		return fail(c, 400, "缺少视频文件 id")
+	}
+
+	res, err := h.wechatService.GetSourcePreview(c.Context(), body.ID, m.UserID)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	return ok(c, "", res)
 }
 
 func (h *WechatHandler) Rank(ec echo.Context) error {

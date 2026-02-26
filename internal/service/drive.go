@@ -29,6 +29,7 @@ type DriveService interface {
 	DeleteDriveFile(ctx context.Context, userID string, driveID string, fileID string) error
 	GetDriveFileDownloadURL(ctx context.Context, userID string, driveID string, fileID string) (string, error)
 	RenameDriveFile(ctx context.Context, userID string, driveID string, fileID string, newName string) (*drive_client.DriveFile, error)
+	GetDriveClient(ctx context.Context, driveID string, userID string) (*model.Drive, drive_client.DriveClient, error)
 }
 
 type DriveCreateRequest struct {
@@ -212,7 +213,7 @@ func (s *driveService) ExportDrive(ctx context.Context, id string, userID string
 }
 
 // Internal helper to get drive client
-func (s *driveService) getDriveClient(ctx context.Context, driveID string, userID string) (*model.Drive, drive_client.DriveClient, error) {
+func (s *driveService) GetDriveClient(ctx context.Context, driveID string, userID string) (*model.Drive, drive_client.DriveClient, error) {
 	d, err := s.repo.Get(ctx, driveID, userID)
 	if err != nil {
 		return nil, nil, err
@@ -244,7 +245,7 @@ func (s *driveService) getDriveClient(ctx context.Context, driveID string, userI
 	}
 
 	switch *d.Type {
-	case 1: // Local
+	case 5: // Local
 		if _, ok := config["dir"].(string); ok {
 			client = localdrive.NewLocalDriveClient()
 		} else {
@@ -269,7 +270,7 @@ func (s *driveService) DriveFileAdd(ctx context.Context, userID string, req Driv
 		return nil, fmt.Errorf("缺少必要参数")
 	}
 
-	d, client, err := s.getDriveClient(ctx, req.DriveID, userID)
+	d, client, err := s.GetDriveClient(ctx, req.DriveID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +292,7 @@ func (s *driveService) DriveFileList(ctx context.Context, userID string, req Dri
 		return nil, fmt.Errorf("请指定云盘")
 	}
 
-	d, client, err := s.getDriveClient(ctx, req.DriveID, userID)
+	d, client, err := s.GetDriveClient(ctx, req.DriveID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +316,7 @@ func (s *driveService) GetDriveFile(ctx context.Context, userID string, driveID 
 	if driveID == "" || fileID == "" {
 		return nil, fmt.Errorf("缺少必要参数")
 	}
-	_, client, err := s.getDriveClient(ctx, driveID, userID)
+	_, client, err := s.GetDriveClient(ctx, driveID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +327,7 @@ func (s *driveService) DeleteDriveFile(ctx context.Context, userID string, drive
 	if driveID == "" || fileID == "" {
 		return fmt.Errorf("缺少必要参数")
 	}
-	_, client, err := s.getDriveClient(ctx, driveID, userID)
+	_, client, err := s.GetDriveClient(ctx, driveID, userID)
 	if err != nil {
 		return err
 	}
@@ -337,7 +338,7 @@ func (s *driveService) GetDriveFileDownloadURL(ctx context.Context, userID strin
 	if driveID == "" || fileID == "" {
 		return "", fmt.Errorf("缺少必要参数")
 	}
-	_, client, err := s.getDriveClient(ctx, driveID, userID)
+	_, client, err := s.GetDriveClient(ctx, driveID, userID)
 	if err != nil {
 		return "", err
 	}
@@ -348,7 +349,7 @@ func (s *driveService) RenameDriveFile(ctx context.Context, userID string, drive
 	if driveID == "" || fileID == "" || newName == "" {
 		return nil, fmt.Errorf("缺少必要参数")
 	}
-	_, client, err := s.getDriveClient(ctx, driveID, userID)
+	_, client, err := s.GetDriveClient(ctx, driveID, userID)
 	if err != nil {
 		return nil, err
 	}
