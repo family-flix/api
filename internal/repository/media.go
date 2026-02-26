@@ -20,6 +20,7 @@ type MediaFilter struct {
 	Preload           []string
 	PreloadConditions map[string][]interface{}
 	Order             string
+	HasProfile        bool
 }
 
 type MediaRepository interface {
@@ -144,9 +145,11 @@ func (r *mediaRepository) List(ctx context.Context, filter MediaFilter) ([]model
 	if filter.UserID != "" {
 		db = db.Where("\"Media\".user_id = ?", filter.UserID)
 	}
+	if filter.Name != "" || filter.HasProfile {
+		db = db.Joins("JOIN \"MediaProfile\" ON \"MediaProfile\".id = \"Media\".profile_id")
+	}
 	if filter.Name != "" {
-		db = db.Joins("JOIN \"MediaProfile\" ON \"MediaProfile\".id = \"Media\".profile_id").
-			Where("\"MediaProfile\".name LIKE ? OR \"MediaProfile\".original_name LIKE ? OR \"MediaProfile\".alias LIKE ?", "%"+filter.Name+"%", "%"+filter.Name+"%", "%"+filter.Name+"%")
+		db = db.Where("\"MediaProfile\".name LIKE ? OR \"MediaProfile\".original_name LIKE ? OR \"MediaProfile\".alias LIKE ?", "%"+filter.Name+"%", "%"+filter.Name+"%", "%"+filter.Name+"%")
 	}
 	if filter.Type != nil {
 		db = db.Where("\"Media\".type = ?", *filter.Type)

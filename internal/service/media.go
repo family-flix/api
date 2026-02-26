@@ -325,13 +325,15 @@ func (s *mediaService) ListAVs(ctx context.Context, name string, page int, pageS
 		offset = (page - 1) * pageSize
 	}
 	filter := repository.MediaFilter{
-		UserID:     userID,
-		Type:       &t,
-		Name:       name,
-		NextMarker: nextMarker,
-		PageSize:   pageSize,
-		Offset:     offset,
-		Preload:    []string{"Profile", "Profile.Persons.Profile", "MediaSources.Files.Drive"},
+		UserID:      userID,
+		Type:        &t,
+		Name:        name,
+		NextMarker:  nextMarker,
+		PageSize:    pageSize,
+		Offset:      offset,
+		Preload:     []string{"Profile", "Profile.Persons.Profile", "MediaSources.Files.Drive"},
+		HasProfile:  true,
+		Order:       "\"MediaProfile\".air_date DESC",
 	}
 	return s.repo.List(ctx, filter)
 }

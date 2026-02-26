@@ -57,7 +57,7 @@ func (r *mediaProfileRepository) List(ctx context.Context, name string, typeVal 
 		db = db.Where("id < ?", nextMarker)
 	}
 	var profiles []model.MediaProfile
-	if err := db.Preload("Genres").Preload("OriginCountries").Preload("Persons").Preload("Persons.Profile").Order("created DESC").Limit(pageSize).Find(&profiles).Error; err != nil {
+	if err := db.Preload("Genres").Preload("OriginCountries").Preload("Persons").Preload("Persons.Profile").Order("air_date DESC").Limit(pageSize).Find(&profiles).Error; err != nil {
 		return nil, 0, "", err
 	}
 	var next string
