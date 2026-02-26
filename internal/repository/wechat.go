@@ -196,14 +196,14 @@ func (r *wechatRepository) GetMedia(ctx context.Context, id, userID string) (*mo
 }
 
 func (r *wechatRepository) ListMedia(ctx context.Context, userID string, filter WechatMediaFilter) ([]model.Media, int64, error) {
-	db := r.db.WithContext(ctx).Where("\"Media\".user_id = ?", userID).
-		Where("\"Media\".profile_id IS NOT NULL AND \"Media\".profile_id != ''")
+	db := r.db.WithContext(ctx).
+		Joins("JOIN \"MediaProfile\" ON \"MediaProfile\".id = \"Media\".profile_id").
+		Where("\"Media\".user_id = ?", userID)
 	if filter.Type != nil {
 		db = db.Where("\"Media\".type = ?", *filter.Type)
 	}
 	if filter.Name != "" {
-		db = db.Joins("JOIN \"MediaProfile\" ON \"MediaProfile\".id = \"Media\".profile_id").
-			Where("\"MediaProfile\".name LIKE ? OR \"MediaProfile\".original_name LIKE ?", "%"+filter.Name+"%", "%"+filter.Name+"%")
+		db = db.Where("\"MediaProfile\".name LIKE ? OR \"MediaProfile\".original_name LIKE ?", "%"+filter.Name+"%", "%"+filter.Name+"%")
 	}
 	var total int64
 	db.Model(&model.Media{}).Count(&total)
@@ -212,7 +212,7 @@ func (r *wechatRepository) ListMedia(ctx context.Context, userID string, filter 
 	}
 	var medias []model.Media
 	err := db.Preload("Profile.Genres").Preload("Profile.OriginCountries").Preload("MediaSources").
-		Order("\"Media\".created DESC").Limit(filter.PageSize).Find(&medias).Error
+		Order("\"MediaProfile\".air_date DESC, \"Media\".created DESC").Limit(filter.PageSize).Find(&medias).Error
 	return medias, total, err
 }
 
