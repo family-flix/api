@@ -10,7 +10,7 @@ import (
 )
 
 type MemberService interface {
-	List(ctx context.Context, userID, name, nextMarker string, pageSize int) ([]model.Member, int64, string, error)
+	List(ctx context.Context, userID, name, nextMarker string, pageSize int, page int) ([]model.Member, int64, string, error)
 	Get(ctx context.Context, id, userID string) (*model.Member, error)
 	Create(ctx context.Context, userID, remark string) (string, string, string, error)
 	UpdatePermissions(ctx context.Context, userID, memberID string, permissions []string) error
@@ -30,12 +30,13 @@ func NewMemberService(repo repository.MemberRepository, userService UserService)
 	return &memberService{repo: repo, userService: userService}
 }
 
-func (s *memberService) List(ctx context.Context, userID, name, nextMarker string, pageSize int) ([]model.Member, int64, string, error) {
+func (s *memberService) List(ctx context.Context, userID, name, nextMarker string, pageSize int, page int) ([]model.Member, int64, string, error) {
 	filter := repository.MemberFilter{
 		UserID:     userID,
 		Name:       name,
 		NextMarker: nextMarker,
 		PageSize:   pageSize,
+		Page:       page,
 	}
 	return s.repo.List(ctx, filter)
 }

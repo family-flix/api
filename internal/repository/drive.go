@@ -27,6 +27,7 @@ type DriveFilter struct {
 	Hidden     *int
 	NextMarker string
 	PageSize   int
+	Page       int
 }
 
 type driveRepository struct {
@@ -71,7 +72,9 @@ func (r *driveRepository) List(ctx context.Context, userID string, filter DriveF
 	var total int64
 	db.Model(&model.Drive{}).Count(&total)
 
-	if filter.NextMarker != "" {
+	if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
+	} else if filter.NextMarker != "" {
 		db = db.Where("id < ?", filter.NextMarker)
 	}
 

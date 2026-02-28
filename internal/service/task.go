@@ -7,7 +7,7 @@ import (
 
 type TaskService interface {
 	GetTask(id, userID string) (*model.AsyncTask, error)
-	ListTasks(userID string, status *int, nextMarker string, pageSize int) ([]model.AsyncTask, int64, error)
+	ListTasks(userID string, status *int, nextMarker string, pageSize int, page int) ([]model.AsyncTask, int64, error)
 	PauseTask(id, userID string) error
 }
 
@@ -23,8 +23,8 @@ func (s *taskService) GetTask(id, userID string) (*model.AsyncTask, error) {
 	return s.repo.GetTaskByID(id, userID)
 }
 
-func (s *taskService) ListTasks(userID string, status *int, nextMarker string, pageSize int) ([]model.AsyncTask, int64, error) {
-	return s.repo.ListTasks(userID, status, nextMarker, pageSize)
+func (s *taskService) ListTasks(userID string, status *int, nextMarker string, pageSize int, page int) ([]model.AsyncTask, int64, error) {
+	return s.repo.ListTasks(userID, status, nextMarker, pageSize, page)
 }
 
 func (s *taskService) PauseTask(id, userID string) error {

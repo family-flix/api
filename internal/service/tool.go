@@ -9,8 +9,8 @@ import (
 
 type ToolService interface {
 	CheckSharedFile(url, userID string) (*model.SharedFile, bool, error)
-	SearchSharedFiles(userID, name, nextMarker string, pageSize int) ([]model.SharedFile, int64, error)
-	ListSharedFileSaveInProgress(userID, nextMarker string, pageSize int) ([]model.SharedFileInProgress, error)
+	SearchSharedFiles(userID, name, nextMarker string, pageSize int, page int) ([]model.SharedFile, int64, error)
+	ListSharedFileSaveInProgress(userID, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, error)
 }
 
 type toolService struct {
@@ -29,18 +29,18 @@ func (s *toolService) CheckSharedFile(url, userID string) (*model.SharedFile, bo
 	return nil, false, nil
 }
 
-func (s *toolService) SearchSharedFiles(userID, name, nextMarker string, pageSize int) ([]model.SharedFile, int64, error) {
+func (s *toolService) SearchSharedFiles(userID, name, nextMarker string, pageSize int, page int) ([]model.SharedFile, int64, error) {
 	if pageSize <= 0 {
 		pageSize = 20
 	}
-	return s.repo.ListSharedFiles(userID, name, nextMarker, pageSize)
+	return s.repo.ListSharedFiles(userID, name, nextMarker, pageSize, page)
 }
 
-func (s *toolService) ListSharedFileSaveInProgress(userID, nextMarker string, pageSize int) ([]model.SharedFileInProgress, error) {
+func (s *toolService) ListSharedFileSaveInProgress(userID, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, error) {
 	if pageSize <= 0 {
 		pageSize = 20
 	}
-	return s.repo.ListSharedFileSaveInProgress(userID, nextMarker, pageSize)
+	return s.repo.ListSharedFileSaveInProgress(userID, nextMarker, pageSize, page)
 }
 
 // Stubs for future implementation

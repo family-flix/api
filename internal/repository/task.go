@@ -7,7 +7,7 @@ import (
 
 type TaskRepository interface {
 	GetTaskByID(id string, userID string) (*model.AsyncTask, error)
-	ListTasks(userID string, status *int, nextMarker string, pageSize int) ([]model.AsyncTask, int64, error)
+	ListTasks(userID string, status *int, nextMarker string, pageSize int, page int) ([]model.AsyncTask, int64, error)
 	UpdateTask(task *model.AsyncTask) error
 }
 
@@ -27,7 +27,7 @@ func (r *taskRepository) GetTaskByID(id string, userID string) (*model.AsyncTask
 	return &task, nil
 }
 
-func (r *taskRepository) ListTasks(userID string, status *int, nextMarker string, pageSize int) ([]model.AsyncTask, int64, error) {
+func (r *taskRepository) ListTasks(userID string, status *int, nextMarker string, pageSize int, page int) ([]model.AsyncTask, int64, error) {
 	var total int64
 	db := r.db.Model(&model.AsyncTask{}).Where("user_id = ?", userID)
 	if status != nil {
@@ -35,7 +35,9 @@ func (r *taskRepository) ListTasks(userID string, status *int, nextMarker string
 	}
 	db.Count(&total)
 
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 

@@ -7,8 +7,8 @@ import (
 
 type ToolRepository interface {
 	CheckSharedFileExists(url, userID string) (*model.SharedFile, error)
-	ListSharedFiles(userID, name, nextMarker string, pageSize int) ([]model.SharedFile, int64, error)
-	ListSharedFileSaveInProgress(userID, nextMarker string, pageSize int) ([]model.SharedFileInProgress, error)
+	ListSharedFiles(userID, name, nextMarker string, pageSize int, page int) ([]model.SharedFile, int64, error)
+	ListSharedFileSaveInProgress(userID, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, error)
 }
 
 type toolRepository struct {
@@ -27,7 +27,7 @@ func (r *toolRepository) CheckSharedFileExists(url, userID string) (*model.Share
 	return &existing, nil
 }
 
-func (r *toolRepository) ListSharedFiles(userID, name, nextMarker string, pageSize int) ([]model.SharedFile, int64, error) {
+func (r *toolRepository) ListSharedFiles(userID, name, nextMarker string, pageSize int, page int) ([]model.SharedFile, int64, error) {
 	var total int64
 	db := r.db.Model(&model.SharedFile{}).Where("user_id = ?", userID)
 	if name != "" {
@@ -35,7 +35,9 @@ func (r *toolRepository) ListSharedFiles(userID, name, nextMarker string, pageSi
 	}
 	db.Count(&total)
 
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 
@@ -46,9 +48,11 @@ func (r *toolRepository) ListSharedFiles(userID, name, nextMarker string, pageSi
 	return files, total, nil
 }
 
-func (r *toolRepository) ListSharedFileSaveInProgress(userID, nextMarker string, pageSize int) ([]model.SharedFileInProgress, error) {
+func (r *toolRepository) ListSharedFileSaveInProgress(userID, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, error) {
 	db := r.db.Model(&model.SharedFileInProgress{}).Where("user_id = ?", userID)
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	var files []model.SharedFileInProgress

@@ -10,7 +10,7 @@ import (
 )
 
 type ReportService interface {
-	ListReports(userID string, typeVal *int, nextMarker string, pageSize int) ([]model.ReportV2, int64, error)
+	ListReports(userID string, typeVal *int, nextMarker string, pageSize int, page int) ([]model.ReportV2, int64, error)
 	ReplyReport(id, content, mediaID, userID string) error
 }
 
@@ -22,8 +22,8 @@ func NewReportService(repo repository.ReportRepository) ReportService {
 	return &reportService{repo: repo}
 }
 
-func (s *reportService) ListReports(userID string, typeVal *int, nextMarker string, pageSize int) ([]model.ReportV2, int64, error) {
-	return s.repo.ListReports(userID, typeVal, nextMarker, pageSize)
+func (s *reportService) ListReports(userID string, typeVal *int, nextMarker string, pageSize int, page int) ([]model.ReportV2, int64, error) {
+	return s.repo.ListReports(userID, typeVal, nextMarker, pageSize, page)
 }
 
 func (s *reportService) ReplyReport(id, content, mediaID, userID string) error {
@@ -31,7 +31,7 @@ func (s *reportService) ReplyReport(id, content, mediaID, userID string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	report.Answer = &content
 	if mediaID != "" {
 		report.ReplyMediaID = &mediaID
@@ -39,7 +39,7 @@ func (s *reportService) ReplyReport(id, content, mediaID, userID string) error {
 	if err := s.repo.UpdateReport(report); err != nil {
 		return err
 	}
-	
+
 	// Create notification for member
 	type Content struct {
 		Content string `json:"content"`
@@ -47,7 +47,7 @@ func (s *reportService) ReplyReport(id, content, mediaID, userID string) error {
 	contentJSON, _ := json.Marshal(Content{Content: content})
 	contentStr := string(contentJSON)
 	uniqueID := fmt.Sprintf("report_reply_%s", report.ID)
-	
+
 	if _, err := s.repo.GetNotificationByUniqueID(uniqueID); err != nil {
 		// Not found, create
 		notification := model.MemberNotification{

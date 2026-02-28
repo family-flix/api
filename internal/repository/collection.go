@@ -20,6 +20,7 @@ type CollectionFilter struct {
 	Name       string
 	NextMarker string
 	PageSize   int
+	Page       int
 }
 
 type collectionRepository struct {
@@ -55,7 +56,9 @@ func (r *collectionRepository) List(ctx context.Context, userID string, filter C
 	var total int64
 	db.Model(&model.CollectionV2{}).Count(&total)
 
-	if filter.NextMarker != "" {
+	if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
+	} else if filter.NextMarker != "" {
 		db = db.Where("id < ?", filter.NextMarker)
 	}
 

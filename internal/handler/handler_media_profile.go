@@ -41,7 +41,9 @@ func (h *MediaProfileHandler) List(ec echo.Context) error {
 		PageSize   int    `json:"page_size"`
 		Page       int    `json:"page"`
 	}
-	c.Bind(&body)
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}

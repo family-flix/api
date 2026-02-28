@@ -9,7 +9,7 @@ import (
 
 type HistoryRepository interface {
 	Get(ctx context.Context, memberID, mediaID string) (*model.PlayHistoryV2, error)
-	List(ctx context.Context, memberID string, pageSize int, nextMarker string) ([]model.PlayHistoryV2, int64, error)
+	List(ctx context.Context, memberID string, pageSize int, nextMarker string, page int) ([]model.PlayHistoryV2, int64, error)
 	Save(ctx context.Context, history *model.PlayHistoryV2) error
 	Create(ctx context.Context, history *model.PlayHistoryV2) error
 	Update(ctx context.Context, history *model.PlayHistoryV2, updates map[string]interface{}) error
@@ -33,30 +33,16 @@ func (r *historyRepository) Get(ctx context.Context, memberID, mediaID string) (
 	return &h, nil
 }
 
-func (r *historyRepository) List(ctx context.Context, memberID string, pageSize int, nextMarker string) ([]model.PlayHistoryV2, int64, error) {
-	db := r.db.WithContext(ctx).Where("member_id = ?", memberID)
+func (r *historyRepository) List(ctx context.Context, memberID string, pageSize int, nextMarker string, page int) ([]model.PlayHistoryV2, int64, error) {
+	db := r.db.WithContext(ctx).Model(&model.PlayHistoryV2{}).Where("member_id = ?", memberID)
 	var total int64
-	db.Model(&model.PlayHistoryV2{}).Count(&total)
+	db.Count(&total)
 
-	if nextMarker != "" {
-		db = db.Where("updated < ?", nextMarker) // Note: original code ordered by updated DESC. Pagination by updated timestamp? Or ID?
-		// Wait, original code used "Order(\"updated DESC\")".
-		// But in pagination logic here I see `Where("id < ?", nextMarker)` usually.
-		// Let's check original implementation in repository/history.go provided in Read output.
-		// It didn't show `Where("id < ...")` in the snippet I read.
-		// Ah, wait. I read lines 1-63.
-		// The read output showed:
-		// if nextMarker != "" {
-		// 	db = db.Where("id < ?", nextMarker)
-		// }
-		// But order is "updated DESC". This is weird if ID is not correlated with updated time.
-		// But I shouldn't change existing logic unless I'm sure.
-		// I'll keep existing logic.
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
+		db = db.Where("updated < ?", nextMarker)
 	}
-
-	// Wait, I am overwriting the file. I need to be careful not to break existing logic.
-	// The `List` method I read had `db = db.Where("id < ?", nextMarker)` but `Order("updated DESC")`.
-	// I will keep it as is.
 
 	var histories []model.PlayHistoryV2
 	err := db.Preload("Media.Profile").

@@ -7,7 +7,7 @@ import (
 
 type SyncTaskRepository interface {
 	GetSyncTask(id, userID string) (*model.ResourceSyncTask, error)
-	ListSyncTasks(userID string, name string, status, invalid *int, nextMarker string, pageSize int) ([]model.ResourceSyncTask, int64, error)
+	ListSyncTasks(userID string, name string, status, invalid *int, nextMarker string, pageSize int, page int) ([]model.ResourceSyncTask, int64, error)
 	CreateSyncTask(task *model.ResourceSyncTask) error
 	UpdateSyncTask(task *model.ResourceSyncTask) error
 	DeleteSyncTask(id, userID string) error
@@ -31,7 +31,7 @@ func (r *syncTaskRepository) GetSyncTask(id, userID string) (*model.ResourceSync
 	return &task, nil
 }
 
-func (r *syncTaskRepository) ListSyncTasks(userID string, name string, status, invalid *int, nextMarker string, pageSize int) ([]model.ResourceSyncTask, int64, error) {
+func (r *syncTaskRepository) ListSyncTasks(userID string, name string, status, invalid *int, nextMarker string, pageSize int, page int) ([]model.ResourceSyncTask, int64, error) {
 	var total int64
 	db := r.db.Model(&model.ResourceSyncTask{}).Where("\"ResourceSyncTask\".user_id = ?", userID)
 	if name != "" {
@@ -45,7 +45,9 @@ func (r *syncTaskRepository) ListSyncTasks(userID string, name string, status, i
 	}
 	db.Count(&total)
 
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("\"ResourceSyncTask\".id < ?", nextMarker)
 	}
 

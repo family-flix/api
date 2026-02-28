@@ -9,7 +9,7 @@ import (
 
 type SyncTaskService interface {
 	GetSyncTask(id, userID string) (*model.ResourceSyncTask, error)
-	ListSyncTasks(userID string, name string, status, invalid *int, nextMarker string, pageSize int) ([]model.ResourceSyncTask, int64, error)
+	ListSyncTasks(userID string, name string, status, invalid *int, nextMarker string, pageSize int, page int) ([]model.ResourceSyncTask, int64, error)
 	CreateSyncTask(task *model.ResourceSyncTask) error
 	UpdateSyncTask(task *model.ResourceSyncTask) error
 	DeleteSyncTask(id, userID string) error
@@ -30,8 +30,8 @@ func (s *syncTaskService) GetSyncTask(id, userID string) (*model.ResourceSyncTas
 	return s.repo.GetSyncTask(id, userID)
 }
 
-func (s *syncTaskService) ListSyncTasks(userID string, name string, status, invalid *int, nextMarker string, pageSize int) ([]model.ResourceSyncTask, int64, error) {
-	return s.repo.ListSyncTasks(userID, name, status, invalid, nextMarker, pageSize)
+func (s *syncTaskService) ListSyncTasks(userID string, name string, status, invalid *int, nextMarker string, pageSize int, page int) ([]model.ResourceSyncTask, int64, error) {
+	return s.repo.ListSyncTasks(userID, name, status, invalid, nextMarker, pageSize, page)
 }
 
 func (s *syncTaskService) CreateSyncTask(task *model.ResourceSyncTask) error {

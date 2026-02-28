@@ -59,10 +59,11 @@ func (h *MemberHandler) HistoryList(ec echo.Context) error {
 	var body struct {
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 
-	histories, total, err := h.historyService.ListHistory(c.DB().Statement.Context, m.ID, body.PageSize, body.NextMarker)
+	histories, total, err := h.historyService.ListHistory(c.DB().Statement.Context, m.ID, body.PageSize, body.NextMarker, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
@@ -148,6 +149,7 @@ func (h *MemberHandler) CollectionList(ec echo.Context) error {
 		Type       *int   `json:"type"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 
@@ -155,6 +157,7 @@ func (h *MemberHandler) CollectionList(ec echo.Context) error {
 		Type:       body.Type,
 		NextMarker: body.NextMarker,
 		PageSize:   body.PageSize,
+		Page:       body.Page,
 	}
 
 	collections, total, err := h.collectionService.ListCollection(c.DB().Statement.Context, m.UserID, filter)
@@ -222,6 +225,7 @@ func (h *MemberHandler) WechatCollectionList(ec echo.Context) error {
 		Type       *int   `json:"type"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
@@ -237,6 +241,7 @@ func (h *MemberHandler) WechatCollectionList(ec echo.Context) error {
 		Type:       &typeVal,
 		NextMarker: body.NextMarker,
 		PageSize:   body.PageSize,
+		Page:       body.Page,
 	}
 
 	collections, total, err := h.collectionService.ListCollection(c.DB().Statement.Context, m.UserID, filter)

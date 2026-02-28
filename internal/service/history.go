@@ -11,7 +11,7 @@ import (
 
 type HistoryService interface {
 	GetHistory(ctx context.Context, memberID, mediaID string) (*model.PlayHistoryV2, error)
-	ListHistory(ctx context.Context, memberID string, pageSize int, nextMarker string) ([]model.PlayHistoryV2, int64, error)
+	ListHistory(ctx context.Context, memberID string, pageSize int, nextMarker string, page int) ([]model.PlayHistoryV2, int64, error)
 	UpdateHistory(ctx context.Context, memberID string, req HistoryUpdateRequest) error
 	DeleteHistory(ctx context.Context, memberID, mediaID string) error
 	ClearThumbnails(ctx context.Context, userID string) error
@@ -37,11 +37,11 @@ func (s *historyService) GetHistory(ctx context.Context, memberID, mediaID strin
 	return s.repo.Get(ctx, memberID, mediaID)
 }
 
-func (s *historyService) ListHistory(ctx context.Context, memberID string, pageSize int, nextMarker string) ([]model.PlayHistoryV2, int64, error) {
+func (s *historyService) ListHistory(ctx context.Context, memberID string, pageSize int, nextMarker string, page int) ([]model.PlayHistoryV2, int64, error) {
 	if pageSize <= 0 {
 		pageSize = 20
 	}
-	return s.repo.List(ctx, memberID, pageSize, nextMarker)
+	return s.repo.List(ctx, memberID, pageSize, nextMarker, page)
 }
 
 func (s *historyService) UpdateHistory(ctx context.Context, memberID string, req HistoryUpdateRequest) error {

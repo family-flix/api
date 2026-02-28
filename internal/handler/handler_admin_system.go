@@ -48,6 +48,7 @@ func (h *SystemHandler) PersonList(ec echo.Context) error {
 		Name       string `json:"name"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
@@ -60,7 +61,10 @@ func (h *SystemHandler) PersonList(ec echo.Context) error {
 	}
 	var total int64
 	db.Model(&model.PersonProfile{}).Count(&total)
-	if body.NextMarker != "" {
+
+	if body.Page > 0 {
+		db = db.Offset((body.Page - 1) * body.PageSize)
+	} else if body.NextMarker != "" {
 		db = db.Where("id < ?", body.NextMarker)
 	}
 	var persons []model.PersonProfile

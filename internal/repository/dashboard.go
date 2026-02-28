@@ -10,7 +10,7 @@ import (
 type DashboardRepository interface {
 	GetStatistics(userID string) (*model.Statistics, error)
 	UpdateStatistics(userID string, data string) error
-	
+
 	CountDrives(userID string) (int64, error)
 	CountMovies(userID string) (int64, error)
 	CountSeasons(userID string) (int64, error)
@@ -20,8 +20,8 @@ type DashboardRepository interface {
 	CountInvalidMovies(userID string) (int64, error)
 	CountInvalidSeasons(userID string) (int64, error)
 	CountUnknownMedia(userID string) (int64, error)
-	
-	ListRecentMediaSources(userID string, startTime, endTime time.Time, nextMarker string, pageSize int) ([]model.MediaSource, error)
+
+	ListRecentMediaSources(userID string, startTime, endTime time.Time, nextMarker string, pageSize int, page int) ([]model.MediaSource, error)
 }
 
 type dashboardRepository struct {
@@ -98,9 +98,11 @@ func (r *dashboardRepository) CountUnknownMedia(userID string) (int64, error) {
 	return count, err
 }
 
-func (r *dashboardRepository) ListRecentMediaSources(userID string, startTime, endTime time.Time, nextMarker string, pageSize int) ([]model.MediaSource, error) {
+func (r *dashboardRepository) ListRecentMediaSources(userID string, startTime, endTime time.Time, nextMarker string, pageSize int, page int) ([]model.MediaSource, error) {
 	db := r.db.Where("\"MediaSource\".user_id = ? AND \"MediaSource\".created >= ? AND \"MediaSource\".created < ?", userID, startTime, endTime)
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("\"MediaSource\".id < ?", nextMarker)
 	}
 	var sources []model.MediaSource

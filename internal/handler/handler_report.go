@@ -34,13 +34,14 @@ func (h *ReportHandler) List(ec echo.Context) error {
 		Type       *int   `json:"type"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	reports, total, err := h.reportService.ListReports(u.ID, body.Type, body.NextMarker, body.PageSize)
+	reports, total, err := h.reportService.ListReports(u.ID, body.Type, body.NextMarker, body.PageSize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}

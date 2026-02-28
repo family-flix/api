@@ -13,6 +13,7 @@ type MemberFilter struct {
 	Name       string
 	NextMarker string
 	PageSize   int
+	Page       int
 }
 
 type MemberRepository interface {
@@ -49,7 +50,9 @@ func (r *memberRepository) List(ctx context.Context, filter MemberFilter) ([]mod
 		return nil, 0, "", err
 	}
 
-	if filter.NextMarker != "" {
+	if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
+	} else if filter.NextMarker != "" {
 		db = db.Where("id < ?", filter.NextMarker)
 	}
 

@@ -7,7 +7,7 @@ import (
 
 type ReportRepository interface {
 	GetReport(id, userID string) (*model.ReportV2, error)
-	ListReports(userID string, typeVal *int, nextMarker string, pageSize int) ([]model.ReportV2, int64, error)
+	ListReports(userID string, typeVal *int, nextMarker string, pageSize int, page int) ([]model.ReportV2, int64, error)
 	UpdateReport(report *model.ReportV2) error
 	CreateNotification(notification *model.MemberNotification) error
 	GetNotificationByUniqueID(uniqueID string) (*model.MemberNotification, error)
@@ -29,7 +29,7 @@ func (r *reportRepository) GetReport(id, userID string) (*model.ReportV2, error)
 	return &report, nil
 }
 
-func (r *reportRepository) ListReports(userID string, typeVal *int, nextMarker string, pageSize int) ([]model.ReportV2, int64, error) {
+func (r *reportRepository) ListReports(userID string, typeVal *int, nextMarker string, pageSize int, page int) ([]model.ReportV2, int64, error) {
 	var total int64
 	db := r.db.Model(&model.ReportV2{}).Where("user_id = ?", userID)
 	if typeVal != nil {
@@ -37,7 +37,9 @@ func (r *reportRepository) ListReports(userID string, typeVal *int, nextMarker s
 	}
 	db.Count(&total)
 
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 

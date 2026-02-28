@@ -71,13 +71,14 @@ func (h *ToolHandler) SharedFileSearch(ec echo.Context) error {
 		Name       string `json:"name"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	files, total, err := h.toolService.SearchSharedFiles(u.ID, body.Name, body.NextMarker, body.PageSize)
+	files, total, err := h.toolService.SearchSharedFiles(u.ID, body.Name, body.NextMarker, body.PageSize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
@@ -100,13 +101,14 @@ func (h *ToolHandler) SharedFileSaveList(ec echo.Context) error {
 	var body struct {
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	files, err := h.toolService.ListSharedFileSaveInProgress(u.ID, body.NextMarker, body.PageSize)
+	files, err := h.toolService.ListSharedFileSaveInProgress(u.ID, body.NextMarker, body.PageSize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}

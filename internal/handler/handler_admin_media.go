@@ -48,6 +48,7 @@ func (h *AdminMediaHandler) ArchiveList(ec echo.Context) error {
 		DriveIDs   string `json:"drive_ids"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
@@ -61,6 +62,7 @@ func (h *AdminMediaHandler) ArchiveList(ec echo.Context) error {
 		DriveIDs:   body.DriveIDs,
 		NextMarker: body.NextMarker,
 		PageSize:   body.PageSize,
+		Page:       body.Page,
 	}
 
 	medias, total, nextMarker, err := h.service.ListMedia(c.Context(), filter)
@@ -293,13 +295,14 @@ func (h *AdminMediaHandler) ListMediaSource(ec echo.Context) error {
 		MediaID    string `json:"media_id"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	sources, total, nextMarker, err := h.service.ListMediaSources(c.Context(), body.MediaID, u.ID, body.NextMarker, body.PageSize)
+	sources, total, nextMarker, err := h.service.ListMediaSources(c.Context(), body.MediaID, u.ID, body.NextMarker, body.PageSize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
@@ -335,13 +338,14 @@ func (h *AdminMediaHandler) ListSeason(ec echo.Context) error {
 		Name       string `json:"name"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	medias, total, nextMarker, err := h.service.ListSeasons(c.Context(), body.Name, body.NextMarker, body.PageSize, u.ID)
+	medias, total, nextMarker, err := h.service.ListSeasons(c.Context(), body.Name, body.NextMarker, body.PageSize, body.Page, u.ID)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
@@ -521,13 +525,14 @@ func (h *AdminMediaHandler) ListMovie(ec echo.Context) error {
 		Name       string `json:"name"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	medias, total, nextMarker, err := h.service.ListMovies(c.Context(), body.Name, body.NextMarker, body.PageSize, u.ID)
+	medias, total, nextMarker, err := h.service.ListMovies(c.Context(), body.Name, body.NextMarker, body.PageSize, body.Page, u.ID)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
@@ -675,6 +680,7 @@ func (h *AdminMediaHandler) ListArtist(ec echo.Context) error {
 		Name       string `json:"name"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
@@ -682,7 +688,7 @@ func (h *AdminMediaHandler) ListArtist(ec echo.Context) error {
 	}
 	_ = u
 
-	persons, total, nextMarker, err := h.service.ListArtists(c.Context(), body.Name, body.NextMarker, body.PageSize)
+	persons, total, nextMarker, err := h.service.ListArtists(c.Context(), body.Name, body.NextMarker, body.PageSize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
@@ -733,6 +739,7 @@ func (h *AdminMediaHandler) GetMovieProfile(ec echo.Context) error {
 			countries = append(countries, c.Text)
 		}
 		item["origin_country"] = countries
+		item["persons"] = m.Profile.Persons
 	}
 	sources := make([]R, 0)
 	for _, s := range m.MediaSources {
@@ -912,6 +919,7 @@ func (h *AdminMediaHandler) AdminParsedMediaList(ec echo.Context) error {
 		Type       *int   `json:"type"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
@@ -929,7 +937,10 @@ func (h *AdminMediaHandler) AdminParsedMediaList(ec echo.Context) error {
 	}
 	var total int64
 	db.Model(&model.ParsedMedia{}).Count(&total)
-	if body.NextMarker != "" {
+
+	if body.Page > 0 {
+		db = db.Offset((body.Page - 1) * body.PageSize)
+	} else if body.NextMarker != "" {
 		db = db.Where("\"ParsedMedia\".id < ?", body.NextMarker)
 	}
 	var items []model.ParsedMedia
@@ -1087,6 +1098,7 @@ func (h *AdminMediaHandler) AdminParsedMediaSourceList(ec echo.Context) error {
 		ParsedMediaID string `json:"parsed_media_id"`
 		NextMarker    string `json:"next_marker"`
 		PageSize      int    `json:"page_size"`
+		Page          int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
@@ -1107,7 +1119,10 @@ func (h *AdminMediaHandler) AdminParsedMediaSourceList(ec echo.Context) error {
 	}
 	var total int64
 	db.Model(&model.ParsedMediaSource{}).Count(&total)
-	if body.NextMarker != "" {
+
+	if body.Page > 0 {
+		db = db.Offset((body.Page - 1) * body.PageSize)
+	} else if body.NextMarker != "" {
 		db = db.Where("\"ParsedSource\".id < ?", body.NextMarker)
 	}
 	var items []model.ParsedMediaSource
@@ -1206,6 +1221,7 @@ func (h *AdminMediaHandler) AdminTvList(ec echo.Context) error {
 		Name       string `json:"name"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
@@ -1217,7 +1233,10 @@ func (h *AdminMediaHandler) AdminTvList(ec echo.Context) error {
 	}
 	var total int64
 	db.Model(&model.TVLive{}).Count(&total)
-	if body.NextMarker != "" {
+
+	if body.Page > 0 {
+		db = db.Offset((body.Page - 1) * body.PageSize)
+	} else if body.NextMarker != "" {
 		db = db.Where("id < ?", body.NextMarker)
 	}
 	var lives []model.TVLive

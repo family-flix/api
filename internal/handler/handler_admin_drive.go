@@ -39,6 +39,7 @@ func (h *AdminDriveHandler) List(ec echo.Context) error {
 		Hidden     *int   `json:"hidden"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 
@@ -48,6 +49,7 @@ func (h *AdminDriveHandler) List(ec echo.Context) error {
 		Hidden:     body.Hidden,
 		NextMarker: body.NextMarker,
 		PageSize:   body.PageSize,
+		Page:       body.Page,
 	}
 
 	drives, total, err := h.driveService.ListDrive(c.DB().Statement.Context, u.ID, filter)

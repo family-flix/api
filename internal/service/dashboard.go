@@ -11,7 +11,7 @@ import (
 type DashboardService interface {
 	GetDashboard(userID string) (map[string]interface{}, error)
 	RefreshDashboard(userID string) error
-	ListAddedMedia(userID string, startTime, endTime string, nextMarker string, pageSize int) ([]model.MediaSource, string, error)
+	ListAddedMedia(userID string, startTime, endTime string, nextMarker string, pageSize int, page int) ([]model.MediaSource, string, error)
 }
 
 type dashboardService struct {
@@ -44,7 +44,7 @@ func (s *dashboardService) RefreshDashboard(userID string) error {
 	invalidMovieCount, _ := s.repo.CountInvalidMovies(userID)
 	invalidSeasonCount, _ := s.repo.CountInvalidSeasons(userID)
 	unknownCount, _ := s.repo.CountUnknownMedia(userID)
-	
+
 	data := map[string]interface{}{
 		"drive_count":          driveCount,
 		"movie_count":          movieCount,
@@ -57,16 +57,16 @@ func (s *dashboardService) RefreshDashboard(userID string) error {
 		"unknown_media_count":  unknownCount,
 		"updated_at":           time.Now(),
 	}
-	
+
 	dataJSON, _ := json.Marshal(data)
 	return s.repo.UpdateStatistics(userID, string(dataJSON))
 }
 
-func (s *dashboardService) ListAddedMedia(userID string, startTimeStr, endTimeStr string, nextMarker string, pageSize int) ([]model.MediaSource, string, error) {
+func (s *dashboardService) ListAddedMedia(userID string, startTimeStr, endTimeStr string, nextMarker string, pageSize int, page int) ([]model.MediaSource, string, error) {
 	now := time.Now()
 	startTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	endTime := startTime.Add(24 * time.Hour)
-	
+
 	if startTimeStr != "" {
 		if t, err := time.Parse("2006-01-02", startTimeStr); err == nil {
 			startTime = t
@@ -77,16 +77,16 @@ func (s *dashboardService) ListAddedMedia(userID string, startTimeStr, endTimeSt
 			endTime = t
 		}
 	}
-	
-	sources, err := s.repo.ListRecentMediaSources(userID, startTime, endTime, nextMarker, pageSize)
+
+	sources, err := s.repo.ListRecentMediaSources(userID, startTime, endTime, nextMarker, pageSize, page)
 	if err != nil {
 		return nil, "", err
 	}
-	
+
 	uniqueSources := make([]model.MediaSource, 0)
 	seen := make(map[string]bool)
 	var lastID string
-	
+
 	for _, s := range sources {
 		lastID = s.ID
 		if s.Media == nil {
@@ -99,6 +99,6 @@ func (s *dashboardService) ListAddedMedia(userID string, startTimeStr, endTimeSt
 		seen[s.MediaID] = true
 		uniqueSources = append(uniqueSources, s)
 	}
-	
+
 	return uniqueSources, lastID, nil
 }

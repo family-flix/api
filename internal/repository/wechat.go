@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"math/rand"
+	"time"
 
 	"github.com/family-flix/api/internal/model"
 	"gorm.io/gorm"
@@ -34,20 +36,20 @@ type WechatRepository interface {
 	GetMedia(ctx context.Context, id, userID string) (*model.Media, error)
 	ListMedia(ctx context.Context, userID string, filter WechatMediaFilter) ([]model.Media, int64, error)
 	GetMediaSource(ctx context.Context, id, userID string) (*model.MediaSource, error)
-	ListMediaSources(ctx context.Context, mediaID string, nextMarker string, pageSize int) ([]model.MediaSource, error)
+	ListMediaSources(ctx context.Context, mediaID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, error)
 	ListTVLives(ctx context.Context, userID string) ([]model.TVLive, error)
 	ListCollections(ctx context.Context, userID string) ([]model.CollectionV2, error)
 
 	// Notification & Report & Diary
-	ListNotifications(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int) ([]model.MemberNotification, int64, error)
+	ListNotifications(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int, page int) ([]model.MemberNotification, int64, error)
 	UpdateNotification(ctx context.Context, notification *model.MemberNotification) error
 	UpdateNotificationsStatus(ctx context.Context, memberID string, status int) error
 	GetNotification(ctx context.Context, id, memberID string) (*model.MemberNotification, error)
 	CreateReport(ctx context.Context, report *model.ReportV2) error
-	ListReports(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int) ([]model.ReportV2, error)
+	ListReports(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int, page int) ([]model.ReportV2, error)
 	GetReport(ctx context.Context, id, memberID string) (*model.ReportV2, error)
 	UpdateReport(ctx context.Context, report *model.ReportV2) error
-	ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int) ([]model.MemberDiary, error)
+	ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int, page int) ([]model.MemberDiary, error)
 
 	GetLatestMediaSource(ctx context.Context, mediaID string) (*model.MediaSource, error)
 	ListMediaSourcesByRange(ctx context.Context, mediaID string, start, end int) ([]model.MediaSource, error)
@@ -59,6 +61,9 @@ type WechatMediaFilter struct {
 	Name       string
 	NextMarker string
 	PageSize   int
+	Page       int
+	Random     bool
+	Seed       int64
 }
 
 type wechatRepository struct {
@@ -185,20 +190,78 @@ func (r *wechatRepository) GetMedia(ctx context.Context, id, userID string) (*mo
 func (r *wechatRepository) ListMedia(ctx context.Context, userID string, filter WechatMediaFilter) ([]model.Media, int64, error) {
 	db := r.db.WithContext(ctx).
 		Joins("JOIN \"MediaProfile\" ON \"MediaProfile\".id = \"Media\".profile_id").
-		Where("\"Media\".user_id = ?", userID)
+		Where("\"Media\".user_id = ? AND \"Media\".profile_id IS NOT NULL AND \"Media\".profile_id != '' AND \"MediaProfile\".name != ''", userID)
+
 	if filter.Type != nil {
 		db = db.Where("\"Media\".type = ?", *filter.Type)
 	}
+
 	if filter.Name != "" {
 		db = db.Where("\"MediaProfile\".name LIKE ? OR \"MediaProfile\".original_name LIKE ?", "%"+filter.Name+"%", "%"+filter.Name+"%")
 	}
+
 	var total int64
 	db.Model(&model.Media{}).Count(&total)
-	if filter.NextMarker != "" {
+
+	if filter.Random {
+		var ids []string
+		// Ensure deterministic order before shuffling
+		if err := db.Order("\"Media\".id ASC").Model(&model.Media{}).Pluck("\"Media\".id", &ids).Error; err != nil {
+			return nil, 0, err
+		}
+
+		seed := filter.Seed
+		if seed == 0 {
+			seed = time.Now().UnixMilli()
+		}
+		rng := rand.New(rand.NewSource(seed))
+		rng.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
+
+		page := filter.Page
+		if page <= 0 {
+			page = 1
+		}
+		start := (page - 1) * filter.PageSize
+		if start >= len(ids) {
+			return []model.Media{}, total, nil
+		}
+		end := start + filter.PageSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+		pageIDs := ids[start:end]
+
+		var medias []model.Media
+		if len(pageIDs) == 0 {
+			return medias, total, nil
+		}
+
+		if err := r.db.WithContext(ctx).Preload("Profile.Genres").Preload("Profile.OriginCountries").Preload("Profile.Persons").Preload("Profile.Persons.Profile").Preload("MediaSources").
+			Where("id IN ?", pageIDs).Find(&medias).Error; err != nil {
+			return nil, 0, err
+		}
+
+		// Reorder to match shuffled IDs
+		mediaMap := make(map[string]model.Media)
+		for _, m := range medias {
+			mediaMap[m.ID] = m
+		}
+		medias = make([]model.Media, 0, len(pageIDs))
+		for _, id := range pageIDs {
+			if m, ok := mediaMap[id]; ok {
+				medias = append(medias, m)
+			}
+		}
+		return medias, total, nil
+	}
+
+	if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
+	} else if filter.NextMarker != "" {
 		db = db.Where("\"Media\".id < ?", filter.NextMarker)
 	}
 	var medias []model.Media
-	err := db.Preload("Profile.Genres").Preload("Profile.OriginCountries").Preload("MediaSources").
+	err := db.Preload("Profile.Genres").Preload("Profile.OriginCountries").Preload("Profile.Persons").Preload("Profile.Persons.Profile").Preload("MediaSources").
 		Order("\"MediaProfile\".air_date DESC, \"Media\".created DESC").Limit(filter.PageSize).Find(&medias).Error
 	return medias, total, err
 }
@@ -209,9 +272,11 @@ func (r *wechatRepository) GetMediaSource(ctx context.Context, id, userID string
 	return &ms, err
 }
 
-func (r *wechatRepository) ListMediaSources(ctx context.Context, mediaID string, nextMarker string, pageSize int) ([]model.MediaSource, error) {
+func (r *wechatRepository) ListMediaSources(ctx context.Context, mediaID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, error) {
 	db := r.db.WithContext(ctx).Where("media_id = ?", mediaID)
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	var sources []model.MediaSource
@@ -232,7 +297,7 @@ func (r *wechatRepository) ListCollections(ctx context.Context, userID string) (
 	return collections, err
 }
 
-func (r *wechatRepository) ListNotifications(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int) ([]model.MemberNotification, int64, error) {
+func (r *wechatRepository) ListNotifications(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int, page int) ([]model.MemberNotification, int64, error) {
 	db := r.db.WithContext(ctx).Where("member_id = ? AND is_delete = 0", memberID)
 	if status != nil {
 		db = db.Where("status = ?", *status)
@@ -242,7 +307,10 @@ func (r *wechatRepository) ListNotifications(ctx context.Context, memberID strin
 	}
 	var total int64
 	db.Model(&model.MemberNotification{}).Count(&total)
-	if nextMarker != "" {
+
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	var notifications []model.MemberNotification
@@ -268,7 +336,7 @@ func (r *wechatRepository) CreateReport(ctx context.Context, report *model.Repor
 	return r.db.WithContext(ctx).Create(report).Error
 }
 
-func (r *wechatRepository) ListReports(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int) ([]model.ReportV2, error) {
+func (r *wechatRepository) ListReports(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int, page int) ([]model.ReportV2, error) {
 	db := r.db.WithContext(ctx).Where("member_id = ? AND hidden = 0", memberID)
 	if status != nil {
 		db = db.Where("status = ?", *status)
@@ -276,7 +344,10 @@ func (r *wechatRepository) ListReports(ctx context.Context, memberID string, sta
 	if typeVal != nil {
 		db = db.Where("type = ?", *typeVal)
 	}
-	if nextMarker != "" {
+
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	var reports []model.ReportV2
@@ -295,9 +366,11 @@ func (r *wechatRepository) UpdateReport(ctx context.Context, report *model.Repor
 	return r.db.WithContext(ctx).Save(report).Error
 }
 
-func (r *wechatRepository) ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int) ([]model.MemberDiary, error) {
+func (r *wechatRepository) ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int, page int) ([]model.MemberDiary, error) {
 	db := r.db.WithContext(ctx).Where("member_id = ?", memberID)
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	var diaries []model.MemberDiary

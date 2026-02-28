@@ -31,7 +31,7 @@ type WechatService interface {
 	// Media
 	ListMedia(ctx context.Context, userID string, filter repository.WechatMediaFilter) ([]model.Media, int64, error)
 	GetMedia(ctx context.Context, mediaID, userID string) (*model.Media, error)
-	ListEpisodes(ctx context.Context, mediaID string, nextMarker string, pageSize int) ([]model.MediaSource, error)
+	ListEpisodes(ctx context.Context, mediaID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, error)
 	GetSource(ctx context.Context, sourceID, userID string) (*model.MediaSource, error)
 	GetDriveSource(ctx context.Context, sourceID, userID, resolutionType string) (*DriveSourceInfo, error)
 	GetSourcePreview(ctx context.Context, sourceID, userID string) (*drive_client.PreviewInfo, error)
@@ -41,13 +41,13 @@ type WechatService interface {
 	GetPlayingInfo(ctx context.Context, mediaID string, history *model.PlayHistoryV2) (*PlayingInfo, error)
 
 	// Notifications & Reports
-	ListNotifications(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int) ([]model.MemberNotification, int64, error)
+	ListNotifications(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int, page int) ([]model.MemberNotification, int64, error)
 	ReadNotification(ctx context.Context, id, memberID string) error
 	ReadAllNotifications(ctx context.Context, memberID string) error
 	CreateReport(ctx context.Context, report *model.ReportV2) error
 	HideReport(ctx context.Context, id, memberID string) error
-	ListReports(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int) ([]model.ReportV2, error)
-	ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int) ([]model.MemberDiary, error)
+	ListReports(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int, page int) ([]model.ReportV2, error)
+	ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int, page int) ([]model.MemberDiary, error)
 }
 
 type wechatService struct {
@@ -259,8 +259,8 @@ func (s *wechatService) GetMedia(ctx context.Context, mediaID, userID string) (*
 	return s.repo.GetMedia(ctx, mediaID, userID)
 }
 
-func (s *wechatService) ListEpisodes(ctx context.Context, mediaID string, nextMarker string, pageSize int) ([]model.MediaSource, error) {
-	return s.repo.ListMediaSources(ctx, mediaID, nextMarker, pageSize)
+func (s *wechatService) ListEpisodes(ctx context.Context, mediaID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, error) {
+	return s.repo.ListMediaSources(ctx, mediaID, nextMarker, pageSize, page)
 }
 
 func (s *wechatService) GetSource(ctx context.Context, sourceID, userID string) (*model.MediaSource, error) {
@@ -288,8 +288,8 @@ func (s *wechatService) GetSeries(ctx context.Context, mediaID, userID string) (
 	return []model.Media{*media}, nil
 }
 
-func (s *wechatService) ListNotifications(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int) ([]model.MemberNotification, int64, error) {
-	return s.repo.ListNotifications(ctx, memberID, status, typeVal, nextMarker, pageSize)
+func (s *wechatService) ListNotifications(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int, page int) ([]model.MemberNotification, int64, error) {
+	return s.repo.ListNotifications(ctx, memberID, status, typeVal, nextMarker, pageSize, page)
 }
 
 func (s *wechatService) ReadNotification(ctx context.Context, id, memberID string) error {
@@ -318,12 +318,12 @@ func (s *wechatService) HideReport(ctx context.Context, id, memberID string) err
 	return s.repo.UpdateReport(ctx, r)
 }
 
-func (s *wechatService) ListReports(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int) ([]model.ReportV2, error) {
-	return s.repo.ListReports(ctx, memberID, status, typeVal, nextMarker, pageSize)
+func (s *wechatService) ListReports(ctx context.Context, memberID string, status, typeVal *int, nextMarker string, pageSize int, page int) ([]model.ReportV2, error) {
+	return s.repo.ListReports(ctx, memberID, status, typeVal, nextMarker, pageSize, page)
 }
 
-func (s *wechatService) ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int) ([]model.MemberDiary, error) {
-	return s.repo.ListDiaries(ctx, memberID, nextMarker, pageSize)
+func (s *wechatService) ListDiaries(ctx context.Context, memberID string, nextMarker string, pageSize int, page int) ([]model.MemberDiary, error) {
+	return s.repo.ListDiaries(ctx, memberID, nextMarker, pageSize, page)
 }
 
 type PlayingInfo struct {
@@ -397,7 +397,7 @@ func (s *wechatService) GetPlayingInfo(ctx context.Context, mediaID string, hist
 	fmt.Printf("GetPlayingInfo mediaID: %s, rangeStart: %d, rangeEnd: %d\n", mediaID, rangeStart, rangeEnd)
 
 	// 2. Fetch Sources (Fetch all like GetAVProfile)
-	sources, err := s.repo.ListMediaSources(ctx, mediaID, "", 10000)
+	sources, err := s.repo.ListMediaSources(ctx, mediaID, "", 10000, 1)
 	if err != nil {
 		return nil, err
 	}

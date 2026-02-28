@@ -60,13 +60,14 @@ func (h *DashboardHandler) AddedMedia(ec echo.Context) error {
 		EndTime    string `json:"end_time"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	sources, nextMarker, err := h.dashboardService.ListAddedMedia(u.ID, body.StartTime, body.EndTime, body.NextMarker, body.PageSize)
+	sources, nextMarker, err := h.dashboardService.ListAddedMedia(u.ID, body.StartTime, body.EndTime, body.NextMarker, body.PageSize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}

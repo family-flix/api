@@ -16,6 +16,7 @@ type MediaFilter struct {
 	ProfileID         string
 	NextMarker        string
 	PageSize          int
+	Page              int
 	Offset            int
 	Preload           []string
 	PreloadConditions map[string][]interface{}
@@ -33,7 +34,7 @@ type MediaRepository interface {
 
 	GetInvalidList(ctx context.Context, filter MediaFilter) ([]model.InvalidMedia, int64, string, error)
 
-	GetSourceList(ctx context.Context, mediaID string, userID string, nextMarker string, pageSize int) ([]model.MediaSource, int64, string, error)
+	GetSourceList(ctx context.Context, mediaID string, userID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, int64, string, error)
 
 	// MediaProfile related
 	GetProfile(ctx context.Context, id string) (*model.MediaProfile, error)
@@ -80,17 +81,18 @@ type MediaRepository interface {
 
 	// SharedFile related
 	GetSharedFileByURL(ctx context.Context, url string, userID string) (*model.SharedFile, error)
-	ListSharedFiles(ctx context.Context, userID string, name string, nextMarker string, pageSize int) ([]model.SharedFile, int64, string, error)
-	ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int) ([]model.SharedFileInProgress, string, error)
+	ListSharedFiles(ctx context.Context, userID string, name string, nextMarker string, pageSize int, page int) ([]model.SharedFile, int64, string, error)
+	ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, string, error)
 
 	// TVLive related
-	ListTVLives(ctx context.Context, userID string, name string, nextMarker string, pageSize int) ([]model.TVLive, int64, string, error)
+	ListTVLives(ctx context.Context, userID string, name string, nextMarker string, pageSize int, page int) ([]model.TVLive, int64, string, error)
 }
 
 type PersonProfileFilter struct {
 	Name       string
 	NextMarker string
 	PageSize   int
+	Page       int
 }
 
 type SubtitleFilter struct {
@@ -107,6 +109,7 @@ type ParsedMediaFilter struct {
 	Type       *int
 	NextMarker string
 	PageSize   int
+	Page       int
 }
 
 type ParsedMediaSourceFilter struct {
@@ -118,6 +121,7 @@ type ParsedMediaSourceFilter struct {
 	FileID        string
 	NextMarker    string
 	PageSize      int
+	Page          int
 }
 
 type mediaRepository struct {
@@ -166,6 +170,8 @@ func (r *mediaRepository) List(ctx context.Context, filter MediaFilter) ([]model
 
 	if filter.Offset > 0 {
 		db = db.Offset(filter.Offset)
+	} else if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
 	} else if filter.NextMarker != "" {
 		db = db.Where("\"Media\".id < ?", filter.NextMarker)
 	}
@@ -258,7 +264,9 @@ func (r *mediaRepository) GetInvalidList(ctx context.Context, filter MediaFilter
 		return nil, 0, "", err
 	}
 
-	if filter.NextMarker != "" {
+	if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
+	} else if filter.NextMarker != "" {
 		db = db.Where("id < ?", filter.NextMarker)
 	}
 
@@ -281,7 +289,7 @@ func (r *mediaRepository) GetInvalidList(ctx context.Context, filter MediaFilter
 	return invalids, total, nextMarker, nil
 }
 
-func (r *mediaRepository) GetSourceList(ctx context.Context, mediaID string, userID string, nextMarker string, pageSize int) ([]model.MediaSource, int64, string, error) {
+func (r *mediaRepository) GetSourceList(ctx context.Context, mediaID string, userID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, int64, string, error) {
 	db := r.db.WithContext(ctx).Model(&model.MediaSource{})
 	db = db.Where("user_id = ?", userID)
 	if mediaID != "" {
@@ -293,7 +301,9 @@ func (r *mediaRepository) GetSourceList(ctx context.Context, mediaID string, use
 		return nil, 0, "", err
 	}
 
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 
@@ -377,7 +387,9 @@ func (r *mediaRepository) ListPersonProfiles(ctx context.Context, filter PersonP
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
-	if filter.NextMarker != "" {
+	if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
+	} else if filter.NextMarker != "" {
 		db = db.Where("id < ?", filter.NextMarker)
 	}
 	db = db.Order("created DESC")
@@ -492,7 +504,9 @@ func (r *mediaRepository) ListParsedMedia(ctx context.Context, filter ParsedMedi
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
-	if filter.NextMarker != "" {
+	if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
+	} else if filter.NextMarker != "" {
 		db = db.Where("\"ParsedMedia\".id < ?", filter.NextMarker)
 	}
 	db = db.Preload("MediaProfile").Preload("ParsedSources", func(tx *gorm.DB) *gorm.DB {
@@ -552,7 +566,9 @@ func (r *mediaRepository) ListParsedMediaSource(ctx context.Context, filter Pars
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
-	if filter.NextMarker != "" {
+	if filter.Page > 0 {
+		db = db.Offset((filter.Page - 1) * filter.PageSize)
+	} else if filter.NextMarker != "" {
 		db = db.Where("\"ParsedSource\".id < ?", filter.NextMarker)
 	}
 	db = db.Preload("MediaSource.Profile").Preload("Drive").Order("\"ParsedSource\".created DESC")
@@ -597,7 +613,7 @@ func (r *mediaRepository) GetSharedFileByURL(ctx context.Context, url string, us
 	return &f, nil
 }
 
-func (r *mediaRepository) ListSharedFiles(ctx context.Context, userID string, name string, nextMarker string, pageSize int) ([]model.SharedFile, int64, string, error) {
+func (r *mediaRepository) ListSharedFiles(ctx context.Context, userID string, name string, nextMarker string, pageSize int, page int) ([]model.SharedFile, int64, string, error) {
 	db := r.db.WithContext(ctx).Model(&model.SharedFile{}).Where("user_id = ?", userID)
 	if name != "" {
 		db = db.Where("name LIKE ?", "%"+name+"%")
@@ -606,7 +622,9 @@ func (r *mediaRepository) ListSharedFiles(ctx context.Context, userID string, na
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	db = db.Order("created DESC")
@@ -624,9 +642,11 @@ func (r *mediaRepository) ListSharedFiles(ctx context.Context, userID string, na
 	return files, total, nextMarkerOut, nil
 }
 
-func (r *mediaRepository) ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int) ([]model.SharedFileInProgress, string, error) {
+func (r *mediaRepository) ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, string, error) {
 	db := r.db.WithContext(ctx).Model(&model.SharedFileInProgress{}).Where("user_id = ?", userID)
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	db = db.Preload("Drive").Order("created DESC")
@@ -644,7 +664,7 @@ func (r *mediaRepository) ListSharedFilesInProgress(ctx context.Context, userID 
 	return files, nextMarkerOut, nil
 }
 
-func (r *mediaRepository) ListTVLives(ctx context.Context, userID string, name string, nextMarker string, pageSize int) ([]model.TVLive, int64, string, error) {
+func (r *mediaRepository) ListTVLives(ctx context.Context, userID string, name string, nextMarker string, pageSize int, page int) ([]model.TVLive, int64, string, error) {
 	db := r.db.WithContext(ctx).Model(&model.TVLive{}).Where("user_id = ? AND hidden = 0", userID)
 	if name != "" {
 		db = db.Where("name LIKE ?", "%"+name+"%")
@@ -653,7 +673,9 @@ func (r *mediaRepository) ListTVLives(ctx context.Context, userID string, name s
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
-	if nextMarker != "" {
+	if page > 0 {
+		db = db.Offset((page - 1) * pageSize)
+	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	db = db.Order("\"order\" ASC")

@@ -36,6 +36,7 @@ func (h *AdminCollectionHandler) List(ec echo.Context) error {
 		Name       string `json:"name"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 
@@ -44,6 +45,7 @@ func (h *AdminCollectionHandler) List(ec echo.Context) error {
 		Name:       body.Name,
 		NextMarker: body.NextMarker,
 		PageSize:   body.PageSize,
+		Page:       body.Page,
 	}
 
 	collections, total, err := h.collectionService.ListCollection(c.DB().Statement.Context, u.ID, filter)

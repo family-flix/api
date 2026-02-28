@@ -27,19 +27,19 @@ type MediaService interface {
 	SetMediaProfile(ctx context.Context, mediaID string, tmdbID string, mediaType int, userID string) (string, error)
 
 	// Media Source related
-	ListMediaSources(ctx context.Context, mediaID string, userID string, nextMarker string, pageSize int) ([]model.MediaSource, int64, string, error)
+	ListMediaSources(ctx context.Context, mediaID string, userID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, int64, string, error)
 
 	// Season/Movie/AV specialized lists
-	ListSeasons(ctx context.Context, name string, nextMarker string, pageSize int, userID string) ([]model.Media, int64, string, error)
+	ListSeasons(ctx context.Context, name string, nextMarker string, pageSize int, page int, userID string) ([]model.Media, int64, string, error)
 	GetSeasonProfile(ctx context.Context, seasonID string, userID string) (*model.Media, error)
 	GetSeasonPartial(ctx context.Context, mediaID string, userID string) (*model.Media, error)
-	ListMovies(ctx context.Context, name string, nextMarker string, pageSize int, userID string) ([]model.Media, int64, string, error)
+	ListMovies(ctx context.Context, name string, nextMarker string, pageSize int, page int, userID string) ([]model.Media, int64, string, error)
 	GetMovieProfile(ctx context.Context, movieID string, userID string) (*model.Media, error)
 	ListAVs(ctx context.Context, name string, page int, pageSize int, nextMarker string, userID string) ([]model.Media, int64, string, error)
 	GetAVProfile(ctx context.Context, avID string, userID string) (*model.Media, error)
 
 	// Artist/Person
-	ListArtists(ctx context.Context, name string, nextMarker string, pageSize int) ([]model.PersonProfile, int64, string, error)
+	ListArtists(ctx context.Context, name string, nextMarker string, pageSize int, page int) ([]model.PersonProfile, int64, string, error)
 
 	// Subtitle
 	ListSubtitles(ctx context.Context, filter repository.SubtitleFilter) ([]model.SubtitleV2, int64, error)
@@ -57,12 +57,12 @@ type MediaService interface {
 	GetParsedSourcesForProfile(ctx context.Context, profileID string, userID string) ([]model.ParsedMediaSource, error)
 
 	// SharedFile
-	ListSharedFiles(ctx context.Context, userID string, name string, nextMarker string, pageSize int) ([]model.SharedFile, int64, string, error)
+	ListSharedFiles(ctx context.Context, userID string, name string, nextMarker string, pageSize int, page int) ([]model.SharedFile, int64, string, error)
 	GetSharedFileByURL(ctx context.Context, url string, userID string) (*model.SharedFile, error)
-	ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int) ([]model.SharedFileInProgress, string, error)
+	ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, string, error)
 
 	// TVLive
-	ListTVLives(ctx context.Context, userID string, name string, nextMarker string, pageSize int) ([]model.TVLive, int64, string, error)
+	ListTVLives(ctx context.Context, userID string, name string, nextMarker string, pageSize int, page int) ([]model.TVLive, int64, string, error)
 }
 
 type ParsedMediaProfilePayload struct {
@@ -251,18 +251,24 @@ func (s *mediaService) SetMediaProfile(ctx context.Context, mediaID string, tmdb
 	return p.ID, nil
 }
 
-func (s *mediaService) ListMediaSources(ctx context.Context, mediaID string, userID string, nextMarker string, pageSize int) ([]model.MediaSource, int64, string, error) {
-	return s.repo.GetSourceList(ctx, mediaID, userID, nextMarker, pageSize)
+func (s *mediaService) ListMediaSources(ctx context.Context, mediaID string, userID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, int64, string, error) {
+	return s.repo.GetSourceList(ctx, mediaID, userID, nextMarker, pageSize, page)
 }
 
-func (s *mediaService) ListSeasons(ctx context.Context, name string, nextMarker string, pageSize int, userID string) ([]model.Media, int64, string, error) {
+func (s *mediaService) ListSeasons(ctx context.Context, name string, nextMarker string, pageSize int, page int, userID string) ([]model.Media, int64, string, error) {
 	// Complex logic from handler: if name is present, find profile IDs first.
 	// But my repo.List supports name filtering via join.
+	offset := 0
+	if page > 0 {
+		offset = (page - 1) * pageSize
+	}
 	filter := repository.MediaFilter{
 		UserID:     userID,
 		Name:       name,
 		NextMarker: nextMarker,
 		PageSize:   pageSize,
+		Page:       page,
+		Offset:     offset,
 		Preload:    []string{"Profile", "Profile.Genres", "Profile.OriginCountries", "MediaSources", "ResourceSyncTasks"},
 		PreloadConditions: map[string][]interface{}{
 			"ResourceSyncTasks": {"invalid = 0 AND status = 1"},
@@ -301,14 +307,20 @@ func (s *mediaService) GetSeasonPartial(ctx context.Context, mediaID string, use
 	return s.repo.Get(ctx, mediaID, userID, "Profile.Genres", "Profile.OriginCountries", "MediaSources", "ResourceSyncTasks")
 }
 
-func (s *mediaService) ListMovies(ctx context.Context, name string, nextMarker string, pageSize int, userID string) ([]model.Media, int64, string, error) {
+func (s *mediaService) ListMovies(ctx context.Context, name string, nextMarker string, pageSize int, page int, userID string) ([]model.Media, int64, string, error) {
 	t := 2
+	offset := 0
+	if page > 0 {
+		offset = (page - 1) * pageSize
+	}
 	filter := repository.MediaFilter{
 		UserID:     userID,
 		Type:       &t,
 		Name:       name,
 		NextMarker: nextMarker,
 		PageSize:   pageSize,
+		Page:       page,
+		Offset:     offset,
 		Preload:    []string{"Profile.Genres", "Profile.OriginCountries", "MediaSources"},
 	}
 	return s.repo.List(ctx, filter)
@@ -325,32 +337,34 @@ func (s *mediaService) ListAVs(ctx context.Context, name string, page int, pageS
 		offset = (page - 1) * pageSize
 	}
 	filter := repository.MediaFilter{
-		UserID:      userID,
-		Type:        &t,
-		Name:        name,
-		NextMarker:  nextMarker,
-		PageSize:    pageSize,
-		Offset:      offset,
-		Preload:     []string{"Profile", "Profile.Persons.Profile", "MediaSources.Files.Drive"},
-		HasProfile:  true,
-		Order:       "\"MediaProfile\".air_date DESC",
+		UserID:     userID,
+		Type:       &t,
+		Name:       name,
+		NextMarker: nextMarker,
+		PageSize:   pageSize,
+		Page:       page,
+		Offset:     offset,
+		Preload:    []string{"Profile", "Profile.Persons.Profile", "MediaSources.Files.Drive"},
+		HasProfile: true,
+		Order:      "\"MediaProfile\".air_date DESC",
 	}
 	return s.repo.List(ctx, filter)
 }
 
 func (s *mediaService) GetAVProfile(ctx context.Context, avID string, userID string) (*model.Media, error) {
-	return s.repo.Get(ctx, avID, userID, "Profile.Genres", "Profile.OriginCountries", "MediaSources.Profile", "MediaSources.Files.Drive")
+	return s.repo.Get(ctx, avID, userID, "Profile.Genres", "Profile.OriginCountries", "Profile.Persons", "Profile.Persons.Profile", "MediaSources.Profile", "MediaSources.Files.Drive")
 }
 
 func (s *mediaService) GetParsedSourcesForProfile(ctx context.Context, profileID string, userID string) ([]model.ParsedMediaSource, error) {
 	return s.repo.GetParsedSourcesForProfile(ctx, profileID, userID)
 }
 
-func (s *mediaService) ListArtists(ctx context.Context, name string, nextMarker string, pageSize int) ([]model.PersonProfile, int64, string, error) {
+func (s *mediaService) ListArtists(ctx context.Context, name string, nextMarker string, pageSize int, page int) ([]model.PersonProfile, int64, string, error) {
 	filter := repository.PersonProfileFilter{
 		Name:       name,
 		NextMarker: nextMarker,
 		PageSize:   pageSize,
+		Page:       page,
 	}
 	return s.repo.ListPersonProfiles(ctx, filter)
 }
@@ -604,18 +618,18 @@ func rid() string {
 	return hex.EncodeToString(b)[:15]
 }
 
-func (s *mediaService) ListSharedFiles(ctx context.Context, userID string, name string, nextMarker string, pageSize int) ([]model.SharedFile, int64, string, error) {
-	return s.repo.ListSharedFiles(ctx, userID, name, nextMarker, pageSize)
+func (s *mediaService) ListSharedFiles(ctx context.Context, userID string, name string, nextMarker string, pageSize int, page int) ([]model.SharedFile, int64, string, error) {
+	return s.repo.ListSharedFiles(ctx, userID, name, nextMarker, pageSize, page)
 }
 
 func (s *mediaService) GetSharedFileByURL(ctx context.Context, url string, userID string) (*model.SharedFile, error) {
 	return s.repo.GetSharedFileByURL(ctx, url, userID)
 }
 
-func (s *mediaService) ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int) ([]model.SharedFileInProgress, string, error) {
-	return s.repo.ListSharedFilesInProgress(ctx, userID, nextMarker, pageSize)
+func (s *mediaService) ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, string, error) {
+	return s.repo.ListSharedFilesInProgress(ctx, userID, nextMarker, pageSize, page)
 }
 
-func (s *mediaService) ListTVLives(ctx context.Context, userID string, name string, nextMarker string, pageSize int) ([]model.TVLive, int64, string, error) {
-	return s.repo.ListTVLives(ctx, userID, name, nextMarker, pageSize)
+func (s *mediaService) ListTVLives(ctx context.Context, userID string, name string, nextMarker string, pageSize int, page int) ([]model.TVLive, int64, string, error) {
+	return s.repo.ListTVLives(ctx, userID, name, nextMarker, pageSize, page)
 }

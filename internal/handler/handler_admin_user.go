@@ -125,13 +125,14 @@ func (h *AdminUserHandler) MemberList(ec echo.Context) error {
 		Name       string `json:"name"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	members, total, nextMarker, err := h.memberService.List(c.Context(), u.ID, body.Name, body.NextMarker, body.PageSize)
+	members, total, nextMarker, err := h.memberService.List(c.Context(), u.ID, body.Name, body.NextMarker, body.PageSize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}

@@ -37,13 +37,14 @@ func (h *TaskHandler) List(ec echo.Context) error {
 		Status     *int   `json:"status"`
 		NextMarker string `json:"next_marker"`
 		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
 
-	tasks, total, err := h.taskService.ListTasks(u.ID, body.Status, body.NextMarker, body.PageSize)
+	tasks, total, err := h.taskService.ListTasks(u.ID, body.Status, body.NextMarker, body.PageSize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
