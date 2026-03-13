@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
@@ -62,14 +64,31 @@ func (h *MemberHandler) HistoryList(ec echo.Context) error {
 		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
+	if body.PageSize <= 0 {
+		body.PageSize = 20
+	}
+	pageSize := body.PageSize
 
-	histories, total, err := h.historyService.ListHistory(c.DB().Statement.Context, m.ID, body.PageSize, body.NextMarker, body.Page)
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
+	histories, total, err := h.historyService.ListHistory(c.DB().Statement.Context, m.ID, querySize, body.NextMarker, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(histories))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(histories) > 0 {
+			nextMarker = histories[len(histories)-1].Updated.Time.Format(time.RFC3339Nano)
+		}
+	} else if len(histories) > pageSize {
+		nextMarker = histories[pageSize-1].Updated.Time.Format(time.RFC3339Nano)
+		histories = histories[:pageSize]
+	}
+
+	list := make([]R, 0, len(histories))
 	for _, h := range histories {
 		item := R{
 			"id":             h.ID,
@@ -93,7 +112,6 @@ func (h *MemberHandler) HistoryList(ec echo.Context) error {
 			item["cur_episode_number"] = h.MediaSource.Profile.Order
 		}
 		list = append(list, item)
-		nextMarker = h.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
@@ -152,11 +170,19 @@ func (h *MemberHandler) CollectionList(ec echo.Context) error {
 		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
+	if body.PageSize <= 0 {
+		body.PageSize = 20
+	}
+	pageSize := body.PageSize
+	filterPageSize := pageSize
+	if body.Page <= 0 {
+		filterPageSize = pageSize + 1
+	}
 
 	filter := repository.CollectionFilter{
 		Type:       body.Type,
 		NextMarker: body.NextMarker,
-		PageSize:   body.PageSize,
+		PageSize:   filterPageSize,
 		Page:       body.Page,
 	}
 
@@ -165,8 +191,17 @@ func (h *MemberHandler) CollectionList(ec echo.Context) error {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(collections))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(collections) > 0 {
+			nextMarker = collections[len(collections)-1].ID
+		}
+	} else if len(collections) > pageSize {
+		nextMarker = collections[pageSize-1].ID
+		collections = collections[:pageSize]
+	}
+
+	list := make([]R, 0, len(collections))
 	for _, col := range collections {
 		medias := make([]R, 0)
 		for _, media := range col.Medias {
@@ -179,7 +214,6 @@ func (h *MemberHandler) CollectionList(ec echo.Context) error {
 			medias = append(medias, mi)
 		}
 		list = append(list, R{"id": col.ID, "type": col.Type, "title": col.Title, "desc": col.Desc, "medias": medias})
-		nextMarker = col.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
@@ -231,16 +265,22 @@ func (h *MemberHandler) WechatCollectionList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
 
 	typeVal := 1
 	if body.Type != nil {
 		typeVal = *body.Type
 	}
 
+	filterPageSize := pageSize
+	if body.Page <= 0 {
+		filterPageSize = pageSize + 1
+	}
+
 	filter := repository.CollectionFilter{
 		Type:       &typeVal,
 		NextMarker: body.NextMarker,
-		PageSize:   body.PageSize,
+		PageSize:   filterPageSize,
 		Page:       body.Page,
 	}
 
@@ -249,8 +289,17 @@ func (h *MemberHandler) WechatCollectionList(ec echo.Context) error {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(collections))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(collections) > 0 {
+			nextMarker = collections[len(collections)-1].ID
+		}
+	} else if len(collections) > pageSize {
+		nextMarker = collections[pageSize-1].ID
+		collections = collections[:pageSize]
+	}
+
+	list := make([]R, 0, len(collections))
 	for _, col := range collections {
 		medias := make([]R, 0)
 		for _, media := range col.Medias {
@@ -263,7 +312,6 @@ func (h *MemberHandler) WechatCollectionList(ec echo.Context) error {
 			medias = append(medias, mi)
 		}
 		list = append(list, R{"id": col.ID, "type": col.Type, "title": col.Title, "desc": col.Desc, "medias": medias})
-		nextMarker = col.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }

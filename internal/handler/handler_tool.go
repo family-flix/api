@@ -77,17 +77,30 @@ func (h *ToolHandler) SharedFileSearch(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
 
-	files, total, err := h.toolService.SearchSharedFiles(u.ID, body.Name, body.NextMarker, body.PageSize, body.Page)
+	files, total, err := h.toolService.SearchSharedFiles(u.ID, body.Name, body.NextMarker, querySize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(files))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(files) > 0 {
+			nextMarker = files[len(files)-1].ID
+		}
+	} else if len(files) > pageSize {
+		nextMarker = files[pageSize-1].ID
+		files = files[:pageSize]
+	}
+
+	list := make([]R, 0, len(files))
 	for _, f := range files {
 		list = append(list, R{"id": f.ID, "title": f.Title, "url": f.URL, "created": f.Created})
-		nextMarker = f.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
@@ -107,21 +120,30 @@ func (h *ToolHandler) SharedFileSaveList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
 
-	files, err := h.toolService.ListSharedFileSaveInProgress(u.ID, body.NextMarker, body.PageSize, body.Page)
+	files, err := h.toolService.ListSharedFileSaveInProgress(u.ID, body.NextMarker, querySize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(files))
 	var nextMarker string
+	if body.Page <= 0 && len(files) > pageSize {
+		nextMarker = files[pageSize-1].ID
+		files = files[:pageSize]
+	}
+
+	list := make([]R, 0, len(files))
 	for _, f := range files {
 		item := R{"id": f.ID, "url": f.URL, "name": f.Name, "file_id": f.FileID, "created": f.Created}
 		if f.Drive != nil {
 			item["drive"] = R{"id": f.Drive.ID, "name": f.Drive.Name}
 		}
 		list = append(list, item)
-		nextMarker = f.ID
 	}
 	return ok(c, "", R{"list": list, "next_marker": nextMarker})
 }

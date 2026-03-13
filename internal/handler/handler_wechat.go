@@ -254,15 +254,21 @@ func (h *WechatHandler) MediaList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
 	if body.Random && body.Seed == 0 {
 		body.Seed = time.Now().UnixMilli()
+	}
+
+	filterPageSize := pageSize
+	if !body.Random && body.Page <= 0 {
+		filterPageSize = pageSize + 1
 	}
 
 	medias, total, err := h.wechatService.ListMedia(c.Context(), m.UserID, repository.WechatMediaFilter{
 		Type:       body.Type,
 		Name:       body.Name,
 		NextMarker: body.NextMarker,
-		PageSize:   body.PageSize,
+		PageSize:   filterPageSize,
 		Page:       body.Page,
 		Random:     body.Random,
 		Seed:       body.Seed,
@@ -271,8 +277,21 @@ func (h *WechatHandler) MediaList(ec echo.Context) error {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(medias))
 	var nextMarker string
+	if body.Random || body.Page > 0 {
+		page := body.Page
+		if page <= 0 {
+			page = 1
+		}
+		if int64(page)*int64(pageSize) < total && len(medias) > 0 {
+			nextMarker = medias[len(medias)-1].ID
+		}
+	} else if len(medias) > pageSize {
+		nextMarker = medias[pageSize-1].ID
+		medias = medias[:pageSize]
+	}
+
+	list := make([]R, 0, len(medias))
 	for _, v := range medias {
 		if v.Profile == nil {
 			continue
@@ -300,7 +319,6 @@ func (h *WechatHandler) MediaList(ec echo.Context) error {
 			item["external_ids"] = externalIDs
 		}
 		list = append(list, item)
-		nextMarker = v.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker, "seed": body.Seed})
 }
@@ -503,7 +521,10 @@ func (h *WechatHandler) Source(ec echo.Context) error {
 		return fail(c, 400, "缺少视频文件 id")
 	}
 
-	res, err := h.wechatService.GetSourcePreview(c.Context(), body.ID, m.UserID)
+	if body.Type == "" {
+		body.Type = "SD"
+	}
+	res, err := h.wechatService.GetDriveSource(c.Context(), body.ID, m.UserID, body.Type)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
@@ -556,11 +577,21 @@ func (h *WechatHandler) DiaryList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
-	diaries, err := h.wechatService.ListDiaries(c.Context(), m.ID, body.NextMarker, body.PageSize, body.Page)
+	pageSize := body.PageSize
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
+	diaries, err := h.wechatService.ListDiaries(c.Context(), m.ID, body.NextMarker, querySize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
-	return ok(c, "", R{"list": diaries})
+	var nextMarker string
+	if body.Page <= 0 && len(diaries) > pageSize {
+		nextMarker = diaries[pageSize-1].ID
+		diaries = diaries[:pageSize]
+	}
+	return ok(c, "", R{"list": diaries, "page_size": body.PageSize, "next_marker": nextMarker})
 }
 
 // History
@@ -580,21 +611,35 @@ func (h *WechatHandler) HistoryList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
 
-	histories, total, err := h.historyService.ListHistory(c.Context(), m.ID, body.PageSize, body.NextMarker, body.Page)
+	histories, total, err := h.historyService.ListHistory(c.Context(), m.ID, querySize, body.NextMarker, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(histories))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(histories) > 0 {
+			nextMarker = histories[len(histories)-1].Updated.Time.Format(time.RFC3339Nano)
+		}
+	} else if len(histories) > pageSize {
+		nextMarker = histories[pageSize-1].Updated.Time.Format(time.RFC3339Nano)
+		histories = histories[:pageSize]
+	}
+
+	list := make([]R, 0, len(histories))
 	for _, v := range histories {
 		item := R{
 			"media_id":        v.MediaID,
 			"media_source_id": v.MediaSourceID,
 			"current_time":    v.CurrentTime,
 			"duration":        v.Duration,
-			"updated":         v.Updated,
+			"updated":         v.Updated.Format("2006-01-02 15:04"),
 			"thumbnail_path":  v.ThumbnailPath,
 		}
 		if v.Media != nil && v.Media.Profile != nil {
@@ -608,9 +653,8 @@ func (h *WechatHandler) HistoryList(ec echo.Context) error {
 			}
 		}
 		list = append(list, item)
-		nextMarker = v.Updated.Time.Format(time.RFC3339Nano) // Or ID depending on pagination
 	}
-	return ok(c, "", R{"list": list, "total": total, "next_marker": nextMarker})
+	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
 
 func (h *WechatHandler) HistoryDelete(ec echo.Context) error {
@@ -664,7 +708,50 @@ func (h *WechatHandler) HistoryUpdate(ec echo.Context) error {
 }
 
 func (h *WechatHandler) HistoryUpdated(ec echo.Context) error {
-	return h.HistoryUpdate(ec)
+	c := h.NewContext(ec)
+	m, _, err := authMember(c)
+	if err != nil {
+		return fail(c, 901, err.Error())
+	}
+	var body struct {
+		Page     int `json:"page"`
+		PageSize int `json:"page_size"`
+	}
+	c.Bind(&body)
+	if body.Page <= 0 {
+		body.Page = 1
+	}
+	if body.PageSize <= 0 {
+		body.PageSize = 20
+	}
+
+	items, err := h.historyService.ListUpdatedHistory(c.Context(), m.ID, body.Page, body.PageSize)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+
+	list := make([]R, 0, len(items))
+	for _, v := range items {
+		list = append(list, R{
+			"id":                     v.ID,
+			"name":                   v.Name,
+			"poster_path":            v.PosterPath,
+			"updated":                v.Updated.Format("2006-01-02 15:04"),
+			"thumbnail_path":         v.ThumbnailPath,
+			"cur_episode_order":      v.CurEpisodeOrder,
+			"cur_episode_name":       v.CurEpisodeName,
+			"latest_episode_order":   v.LatestEpisodeOrder,
+			"latest_episode_name":    v.LatestEpisodeName,
+			"latest_episode_created": v.LatestEpisodeCreated.Format("2006-01-02 15:04"),
+		})
+	}
+
+	return ok(c, "", R{
+		"list":      list,
+		"no_more":   len(items) < body.PageSize,
+		"page":      body.Page,
+		"page_size": body.PageSize,
+	})
 }
 
 // Notification & Report
@@ -686,12 +773,26 @@ func (h *WechatHandler) NotificationList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
 
-	notifications, total, err := h.wechatService.ListNotifications(c.Context(), m.ID, body.Status, body.Type, body.NextMarker, body.PageSize, body.Page)
+	notifications, total, err := h.wechatService.ListNotifications(c.Context(), m.ID, body.Status, body.Type, body.NextMarker, querySize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
-	return ok(c, "", R{"list": notifications, "total": total})
+	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(notifications) > 0 {
+			nextMarker = notifications[len(notifications)-1].ID
+		}
+	} else if len(notifications) > pageSize {
+		nextMarker = notifications[pageSize-1].ID
+		notifications = notifications[:pageSize]
+	}
+	return ok(c, "", R{"list": notifications, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
 
 func (h *WechatHandler) NotificationRead(ec echo.Context) error {
@@ -765,12 +866,36 @@ func (h *WechatHandler) ReportHide(ec echo.Context) error {
 
 func (h *WechatHandler) ReportList(ec echo.Context) error {
 	c := h.NewContext(ec)
-	_, _, err := authMember(c)
+	m, _, err := authMember(c)
 	if err != nil {
 		return fail(c, 901, err.Error())
 	}
-	// ... logic similar to NotificationList
-	return ok(c, "", nil)
+	var body struct {
+		Status     *int   `json:"status"`
+		Type       *int   `json:"type"`
+		NextMarker string `json:"next_marker"`
+		PageSize   int    `json:"page_size"`
+		Page       int    `json:"page"`
+	}
+	c.Bind(&body)
+	if body.PageSize <= 0 {
+		body.PageSize = 20
+	}
+	pageSize := body.PageSize
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
+	reports, err := h.wechatService.ListReports(c.Context(), m.ID, body.Status, body.Type, body.NextMarker, querySize, body.Page)
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+	var nextMarker string
+	if body.Page <= 0 && len(reports) > pageSize {
+		nextMarker = reports[pageSize-1].ID
+		reports = reports[:pageSize]
+	}
+	return ok(c, "", R{"list": reports, "page_size": body.PageSize, "next_marker": nextMarker})
 }
 
 func (h *WechatHandler) Proxy(ec echo.Context) error {

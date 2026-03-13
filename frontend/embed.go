@@ -2,5 +2,5 @@ package frontend
 
 import "embed"
 
-//go:embed dist/*
+//go:embed *
 var FS embed.FS

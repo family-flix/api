@@ -26,7 +26,7 @@ func (h *BaseHandler) NewContext(ec echo.Context) Context {
 	return NewEchoContext(ec, h.db, h.baseDir, h.cacheDir, h.ffmpegBin)
 }
 
-func SetupRouter(e *echo.Echo, db *gorm.DB, baseDir, cacheDir, ffmpegBin string) {
+func SetupRouter(e *echo.Echo, db *gorm.DB, baseDir, cache_dir, ffmpeg_bin string, localFileIgnoreNames []string) {
 	// Dependencies
 	historyRepo := repository.NewHistoryRepository(db)
 	collectionRepo := repository.NewCollectionRepository(db)
@@ -58,22 +58,22 @@ func SetupRouter(e *echo.Echo, db *gorm.DB, baseDir, cacheDir, ffmpegBin string)
 	wechatService := service.NewWechatService(wechatRepo, userService, driveService)
 
 	// Handlers
-	commonHandler := NewCommonHandler(db, baseDir, cacheDir, ffmpegBin)
-	memberHandler := NewMemberHandler(historyService, collectionService, memberService, db, baseDir, cacheDir, ffmpegBin)
-	adminCollectionHandler := NewAdminCollectionHandler(collectionService, db, baseDir, cacheDir, ffmpegBin)
-	adminDriveHandler := NewAdminDriveHandler(driveService, db, baseDir, cacheDir, ffmpegBin)
-	adminMediaHandler := NewAdminMediaHandler(mediaService, db, baseDir, cacheDir, ffmpegBin)
-	adminUserHandler := NewAdminUserHandler(userService, memberService, db, baseDir, cacheDir, ffmpegBin)
-	mediaProfileHandler := NewMediaProfileHandler(mediaProfileService, db, baseDir, cacheDir, ffmpegBin)
-	taskHandler := NewTaskHandler(taskService, db, baseDir, cacheDir, ffmpegBin)
-	syncTaskHandler := NewSyncTaskHandler(syncTaskService, db, baseDir, cacheDir, ffmpegBin)
-	reportHandler := NewReportHandler(reportService, db, baseDir, cacheDir, ffmpegBin)
-	settingsHandler := NewSettingsHandler(settingsService, db, baseDir, cacheDir, ffmpegBin)
-	dashboardHandler := NewDashboardHandler(dashboardService, db, baseDir, cacheDir, ffmpegBin)
-	systemHandler := NewSystemHandler(historyService, db, baseDir, cacheDir, ffmpegBin)
-	toolHandler := NewToolHandler(toolService, db, baseDir, cacheDir, ffmpegBin)
-	wechatHandler := NewWechatHandler(wechatService, historyService, db, baseDir, cacheDir, ffmpegBin)
-	analysisHandler := NewAnalysisHandler(db, baseDir, cacheDir, ffmpegBin)
+	commonHandler := NewCommonHandler(db, baseDir, cache_dir, ffmpeg_bin)
+	memberHandler := NewMemberHandler(historyService, collectionService, memberService, db, baseDir, cache_dir, ffmpeg_bin)
+	adminCollectionHandler := NewAdminCollectionHandler(collectionService, db, baseDir, cache_dir, ffmpeg_bin)
+	adminDriveHandler := NewAdminDriveHandler(driveService, db, baseDir, cache_dir, ffmpeg_bin, localFileIgnoreNames)
+	adminMediaHandler := NewAdminMediaHandler(mediaService, db, baseDir, cache_dir, ffmpeg_bin)
+	adminUserHandler := NewAdminUserHandler(userService, memberService, db, baseDir, cache_dir, ffmpeg_bin)
+	mediaProfileHandler := NewMediaProfileHandler(mediaProfileService, db, baseDir, cache_dir, ffmpeg_bin)
+	taskHandler := NewTaskHandler(taskService, db, baseDir, cache_dir, ffmpeg_bin)
+	syncTaskHandler := NewSyncTaskHandler(syncTaskService, db, baseDir, cache_dir, ffmpeg_bin)
+	reportHandler := NewReportHandler(reportService, db, baseDir, cache_dir, ffmpeg_bin)
+	settingsHandler := NewSettingsHandler(settingsService, db, baseDir, cache_dir, ffmpeg_bin)
+	dashboardHandler := NewDashboardHandler(dashboardService, db, baseDir, cache_dir, ffmpeg_bin)
+	systemHandler := NewSystemHandler(historyService, db, baseDir, cache_dir, ffmpeg_bin)
+	toolHandler := NewToolHandler(toolService, db, baseDir, cache_dir, ffmpeg_bin)
+	wechatHandler := NewWechatHandler(wechatService, historyService, db, baseDir, cache_dir, ffmpeg_bin)
+	analysisHandler := NewAnalysisHandler(db, baseDir, cache_dir, ffmpeg_bin)
 
 	e.GET("/api/ping", commonHandler.Ping)
 	e.GET("/favicon.ico", commonHandler.Favicon)
@@ -269,7 +269,7 @@ func SetupRouter(e *echo.Echo, db *gorm.DB, baseDir, cacheDir, ffmpegBin string)
 	e.GET("/api/v2/alipan/access_token", adminDriveHandler.AlipanGetAccessToken)
 	e.GET("/api/v2/wechat/proxy", wechatHandler.Proxy)
 
-	ff := ffmpeg.New(ffmpegBin, cacheDir)
+	ff := ffmpeg.New(ffmpeg_bin, cache_dir)
 
 	e.GET("/api/v2/preview", func(c echo.Context) error {
 		filePath := c.QueryParam("path")
@@ -292,17 +292,40 @@ func SetupRouter(e *echo.Echo, db *gorm.DB, baseDir, cacheDir, ffmpegBin string)
 		if hash == "" || rest == "" {
 			return c.JSON(400, R{"code": 400, "msg": "invalid path"})
 		}
-		hlsDir := filepath.Join(cacheDir, "hls", hash)
+		hlsDir := filepath.Join(cache_dir, "hls", hash)
 		target := filepath.Join(hlsDir, rest)
 		http.ServeFile(c.Response(), c.Request(), target)
 		return nil
 	})
 
-	distFS, _ := fs.Sub(frontend.FS, "dist")
-	assetsFS, _ := fs.Sub(distFS, "assets")
-	e.GET("/admin/assets/*", echo.WrapHandler(http.StripPrefix("/admin/assets/", http.FileServer(http.FS(assetsFS)))))
-	e.GET("/admin*", func(c echo.Context) error {
-		index, _ := fs.ReadFile(distFS, "index.html")
-		return c.HTMLBlob(http.StatusOK, index)
-	})
+	mount_spa := func(url_prefix string, dist_candidates ...string) {
+		var distFS fs.FS
+		for _, candidate := range dist_candidates {
+			sub, err := fs.Sub(frontend.FS, candidate)
+			if err == nil {
+				distFS = sub
+				break
+			}
+		}
+		if distFS == nil {
+			return
+		}
+
+		if assetsFS, err := fs.Sub(distFS, "assets"); err == nil {
+			stripPrefix := url_prefix + "/assets/"
+			e.GET(url_prefix+"/assets/*", echo.WrapHandler(http.StripPrefix(stripPrefix, http.FileServer(http.FS(assetsFS)))))
+		}
+
+		e.GET(url_prefix+"*", func(c echo.Context) error {
+			index, err := fs.ReadFile(distFS, "index.html")
+			if err != nil {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return c.HTMLBlob(http.StatusOK, index)
+		})
+	}
+
+	mount_spa("/admin", "admin/dist", "dist")
+	mount_spa("/mobile", "mobile/dist")
+	mount_spa("/pc", "pc/dist")
 }

@@ -43,14 +43,29 @@ func (h *TaskHandler) List(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
 
-	tasks, total, err := h.taskService.ListTasks(u.ID, body.Status, body.NextMarker, body.PageSize, body.Page)
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
+
+	tasks, total, err := h.taskService.ListTasks(u.ID, body.Status, body.NextMarker, querySize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(tasks))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(tasks) > 0 {
+			nextMarker = tasks[len(tasks)-1].ID
+		}
+	} else if len(tasks) > pageSize {
+		nextMarker = tasks[pageSize-1].ID
+		tasks = tasks[:pageSize]
+	}
+
+	list := make([]R, 0, len(tasks))
 	for _, t := range tasks {
 		list = append(list, R{
 			"id":        t.ID,
@@ -63,7 +78,6 @@ func (h *TaskHandler) List(ec echo.Context) error {
 			"created":   t.Created,
 			"updated":   t.Updated,
 		})
-		nextMarker = t.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }

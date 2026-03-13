@@ -52,10 +52,12 @@ type DriveFileAddRequest struct {
 }
 
 type DriveFileListRequest struct {
-	DriveID    string
-	FileID     string
-	NextMarker string
-	PageSize   int
+	DriveID     string
+	FileID      string
+	NextMarker  string
+	PageSize    int
+	Name        string
+	IgnoreNames []string
 }
 
 type driveService struct {
@@ -126,12 +128,13 @@ func (s *driveService) CreateDrive(ctx context.Context, userID string, req Drive
 	drive := model.Drive{
 		ID:           member.Rid(),
 		UserID:       userID,
-		Type:         req.Type,
 		Name:         uniqueID, // Default name
 		DriveTokenID: tokenID,
 		Profile:      string(req.Payload),
 		UniqueID:     uniqueID,
 	}
+	driveType := model.DriveType(*req.Type)
+	drive.Type = &driveType
 	if v, ok := payloadMap["name"]; ok {
 		drive.Name = fmt.Sprintf("%v", v)
 	}
@@ -245,7 +248,7 @@ func (s *driveService) GetDriveClient(ctx context.Context, driveID string, userI
 	}
 
 	switch *d.Type {
-	case 5: // Local
+	case model.DriveTypeLocal:
 		if _, ok := config["dir"].(string); ok {
 			client = localdrive.NewLocalDriveClient()
 		} else {
@@ -277,11 +280,14 @@ func (s *driveService) DriveFileAdd(ctx context.Context, userID string, req Driv
 
 	parentID := req.ParentFileID
 	if parentID == "" || parentID == "root" {
-		if d.RootFolderID != nil {
-			parentID = *d.RootFolderID
-		} else {
-			return nil, fmt.Errorf("云盘未设置根目录")
+		config, err := parseDriveProfileConfig(d.Profile)
+		if err != nil {
+			return nil, err
 		}
+		parentID = resolveDefaultRootFileID(d, config)
+	}
+	if parentID == "" {
+		return nil, fmt.Errorf("缺少文件 id")
 	}
 
 	return client.CreateFolder(req.Name, parentID)
@@ -297,19 +303,74 @@ func (s *driveService) DriveFileList(ctx context.Context, userID string, req Dri
 		return nil, err
 	}
 
+	if req.Name != "" {
+		return client.SearchFiles(req.Name, "folder", req.NextMarker)
+	}
+
+	config, err := parseDriveProfileConfig(d.Profile)
+	if err != nil {
+		return nil, err
+	}
+
 	fileID := req.FileID
 	if fileID == "" || fileID == "root" {
-		if d.RootFolderID != nil {
-			fileID = *d.RootFolderID
-		} else {
-			return nil, fmt.Errorf("云盘未设置根目录")
-		}
+		fileID = resolveDefaultRootFileID(d, config)
+	}
+	if fileID == "" {
+		return nil, fmt.Errorf("缺少文件 id")
 	}
 
 	return client.FetchFiles(fileID, drive_client.FetchFilesOptions{
-		PageSize: req.PageSize,
-		Marker:   req.NextMarker,
+		PageSize:    req.PageSize,
+		Marker:      req.NextMarker,
+		IgnoreNames: req.IgnoreNames,
 	})
+}
+
+func parseDriveProfileConfig(profile string) (map[string]interface{}, error) {
+	if profile == "" {
+		return map[string]interface{}{}, nil
+	}
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(profile), &config); err != nil {
+		return nil, fmt.Errorf("invalid drive config")
+	}
+	return config, nil
+}
+
+func resolveDefaultRootFileID(d *model.Drive, config map[string]interface{}) string {
+	driveType := model.DriveType(-1)
+	if d.Type != nil {
+		driveType = *d.Type
+	}
+
+	switch driveType {
+	case model.DriveTypeAlipanOpen, model.DriveTypeAlipanResourceOpen, model.DriveTypeAliyunBackup, model.DriveTypeAliyunResource:
+		return "root"
+	case model.DriveTypeLocal:
+		if v, ok := config["dir"].(string); ok && v != "" {
+			return v
+		}
+		if d.RootFolderID != nil && *d.RootFolderID != "" {
+			return *d.RootFolderID
+		}
+		if d.UniqueID != "" {
+			return d.UniqueID
+		}
+		return ""
+	case model.DriveType115:
+		return "0"
+	case model.DriveTypeAlist:
+		return "/"
+	case model.DriveTypeBojuCC:
+		return "root"
+	case model.DriveTypeCloud189:
+		return "-11"
+	case model.DriveTypeQuark:
+		return "0"
+	default:
+		return ""
+	}
 }
 
 func (s *driveService) GetDriveFile(ctx context.Context, userID string, driveID string, fileID string) (*drive_client.DriveFile, error) {

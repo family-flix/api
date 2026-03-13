@@ -39,12 +39,20 @@ func (h *AdminCollectionHandler) List(ec echo.Context) error {
 		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
+	if body.PageSize <= 0 {
+		body.PageSize = 20
+	}
+	pageSize := body.PageSize
+	filterPageSize := pageSize
+	if body.Page <= 0 {
+		filterPageSize = pageSize + 1
+	}
 
 	filter := repository.CollectionFilter{
 		Type:       body.Type,
 		Name:       body.Name,
 		NextMarker: body.NextMarker,
-		PageSize:   body.PageSize,
+		PageSize:   filterPageSize,
 		Page:       body.Page,
 	}
 
@@ -53,8 +61,17 @@ func (h *AdminCollectionHandler) List(ec echo.Context) error {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(collections))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(collections) > 0 {
+			nextMarker = collections[len(collections)-1].ID
+		}
+	} else if len(collections) > pageSize {
+		nextMarker = collections[pageSize-1].ID
+		collections = collections[:pageSize]
+	}
+
+	list := make([]R, 0, len(collections))
 	for _, col := range collections {
 		medias := make([]R, 0)
 		for _, m := range col.Medias {
@@ -67,7 +84,6 @@ func (h *AdminCollectionHandler) List(ec echo.Context) error {
 			medias = append(medias, mi)
 		}
 		list = append(list, R{"id": col.ID, "title": col.Title, "desc": col.Desc, "medias": medias})
-		nextMarker = col.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }

@@ -51,18 +51,25 @@ func (r *mediaProfileRepository) List(ctx context.Context, name string, typeVal 
 	}
 	var total int64
 	db.Model(&model.MediaProfile{}).Count(&total)
+
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if page > 0 {
 		db = db.Offset((page - 1) * pageSize)
 	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	var profiles []model.MediaProfile
-	if err := db.Preload("Genres").Preload("OriginCountries").Preload("Persons").Preload("Persons.Profile").Order("air_date DESC").Limit(pageSize).Find(&profiles).Error; err != nil {
+	if err := db.Preload("Genres").Preload("OriginCountries").Preload("Persons").Preload("Persons.Profile").Order("air_date DESC").Limit(querySize).Find(&profiles).Error; err != nil {
 		return nil, 0, "", err
 	}
 	var next string
-	if len(profiles) > 0 {
-		next = profiles[len(profiles)-1].ID
+	if len(profiles) > pageSize {
+		next = profiles[pageSize-1].ID
+		profiles = profiles[:pageSize]
 	}
 	return profiles, total, next, nil
 }

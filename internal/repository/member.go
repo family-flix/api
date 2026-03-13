@@ -50,20 +50,27 @@ func (r *memberRepository) List(ctx context.Context, filter MemberFilter) ([]mod
 		return nil, 0, "", err
 	}
 
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if filter.Page > 0 {
-		db = db.Offset((filter.Page - 1) * filter.PageSize)
+		db = db.Offset((filter.Page - 1) * pageSize)
 	} else if filter.NextMarker != "" {
 		db = db.Where("id < ?", filter.NextMarker)
 	}
 
 	var members []model.Member
-	if err := db.Preload("Tokens").Order("created DESC").Limit(filter.PageSize).Find(&members).Error; err != nil {
+	if err := db.Preload("Tokens").Order("created DESC").Limit(querySize).Find(&members).Error; err != nil {
 		return nil, 0, "", err
 	}
 
 	var nextMarker string
-	if len(members) > 0 {
-		nextMarker = members[len(members)-1].ID
+	if len(members) > pageSize {
+		nextMarker = members[pageSize-1].ID
+		members = members[:pageSize]
 	}
 
 	return members, total, nextMarker, nil
@@ -135,19 +142,25 @@ func (r *memberRepository) GetHistories(ctx context.Context, memberID string, ne
 	var total int64 // Not really used in handler but good to have
 	// db.Count(&total) // Optional optimization: skip count if not needed
 
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 
 	var histories []model.PlayHistoryV2
 	if err := db.Preload("Media.Profile").Preload("MediaSource.Profile").
-		Order("updated DESC").Limit(pageSize).Find(&histories).Error; err != nil {
+		Order("updated DESC").Limit(querySize).Find(&histories).Error; err != nil {
 		return nil, 0, "", err
 	}
 
 	var nextMarkerOut string
-	if len(histories) > 0 {
-		nextMarkerOut = histories[len(histories)-1].ID
+	if len(histories) > pageSize {
+		nextMarkerOut = histories[pageSize-1].ID
+		histories = histories[:pageSize]
 	}
 
 	return histories, total, nextMarkerOut, nil

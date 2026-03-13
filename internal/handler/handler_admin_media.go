@@ -88,7 +88,7 @@ func (h *AdminMediaHandler) ArchiveList(ec echo.Context) error {
 				src["order"] = s.Profile.Order
 			}
 			files := make([]R, 0)
-			for _, f := range s.Files {
+			for _, f := range s.Sources {
 				fi := R{"id": f.ID, "file_id": f.FileID, "file_name": f.FileName, "parent_paths": f.ParentPaths, "size": f.Size}
 				if f.Drive != nil {
 					fi["drive"] = R{"id": f.Drive.ID, "name": f.Drive.Name}
@@ -138,7 +138,7 @@ func (h *AdminMediaHandler) ArchivePartial(ec echo.Context) error {
 			src["order"] = s.Profile.Order
 		}
 		files := make([]R, 0)
-		for _, f := range s.Files {
+		for _, f := range s.Sources {
 			fi := R{"id": f.ID, "file_id": f.FileID, "file_name": f.FileName, "parent_paths": f.ParentPaths, "size": f.Size}
 			if f.Drive != nil {
 				fi["drive"] = R{"id": f.Drive.ID, "name": f.Drive.Name}
@@ -315,7 +315,7 @@ func (h *AdminMediaHandler) ListMediaSource(ec echo.Context) error {
 			item["order"] = s.Profile.Order
 		}
 		files := make([]R, 0)
-		for _, f := range s.Files {
+		for _, f := range s.Sources {
 			fi := R{"id": f.ID, "file_id": f.FileID, "file_name": f.FileName, "parent_paths": f.ParentPaths, "size": f.Size}
 			if f.Drive != nil {
 				fi["drive"] = R{"id": f.Drive.ID, "name": f.Drive.Name}
@@ -460,7 +460,7 @@ func (h *AdminMediaHandler) GetSeasonProfile(ec echo.Context) error {
 			ep["runtime"] = s.Profile.Runtime
 		}
 		files := make([]R, 0)
-		for _, f := range s.Files {
+		for _, f := range s.Sources {
 			fi := R{"id": f.ID, "file_id": f.FileID, "file_name": f.FileName, "parent_paths": f.ParentPaths, "size": f.Size, "created": f.Created}
 			if f.Drive != nil {
 				fi["drive"] = R{"id": f.Drive.ID, "name": f.Drive.Name}
@@ -640,7 +640,7 @@ func (h *AdminMediaHandler) ListAV(ec echo.Context) error {
 		if len(m.MediaSources) > 0 {
 			for _, s := range m.MediaSources {
 				src := R{"id": s.ID}
-				for _, f := range s.Files {
+				for _, f := range s.Sources {
 					src["file_id"] = f.FileID
 					src["file_name"] = f.FileName
 					src["parent_paths"] = f.ParentPaths
@@ -744,7 +744,7 @@ func (h *AdminMediaHandler) GetMovieProfile(ec echo.Context) error {
 	sources := make([]R, 0)
 	for _, s := range m.MediaSources {
 		src := R{"id": s.ID}
-		for _, f := range s.Files {
+		for _, f := range s.Sources {
 			src["file_id"] = f.FileID
 			src["file_name"] = f.FileName
 			src["parent_paths"] = f.ParentPaths
@@ -803,7 +803,7 @@ func (h *AdminMediaHandler) GetAVProfile(ec echo.Context) error {
 	if len(m.MediaSources) > 0 {
 		for _, s := range m.MediaSources {
 			src := R{"id": s.ID}
-			for _, f := range s.Files {
+			for _, f := range s.Sources {
 				src["file_id"] = f.FileID
 				src["file_name"] = f.FileName
 				src["parent_paths"] = f.ParentPaths
@@ -925,6 +925,7 @@ func (h *AdminMediaHandler) AdminParsedMediaList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
 	db := c.DB().Where("\"ParsedMedia\".user_id = ?", u.ID)
 	if body.Name != "" {
 		db = db.Where("\"ParsedMedia\".name LIKE ? OR \"ParsedMedia\".original_name LIKE ?", "%"+body.Name+"%", "%"+body.Name+"%")
@@ -939,7 +940,7 @@ func (h *AdminMediaHandler) AdminParsedMediaList(ec echo.Context) error {
 	db.Model(&model.ParsedMedia{}).Count(&total)
 
 	if body.Page > 0 {
-		db = db.Offset((body.Page - 1) * body.PageSize)
+		db = db.Offset((body.Page - 1) * pageSize)
 	} else if body.NextMarker != "" {
 		db = db.Where("\"ParsedMedia\".id < ?", body.NextMarker)
 	}
@@ -947,9 +948,15 @@ func (h *AdminMediaHandler) AdminParsedMediaList(ec echo.Context) error {
 	db.Preload("MediaProfile").Preload("ParsedSources", func(tx *gorm.DB) *gorm.DB {
 		return tx.Limit(5)
 	}).Preload("ParsedSources.MediaSource.Profile").Preload("ParsedSources.Drive").
-		Order("\"ParsedMedia\".created DESC").Limit(body.PageSize).Find(&items)
-	list := make([]R, 0, len(items))
+		Order("\"ParsedMedia\".created DESC").Limit(pageSize + 1).Find(&items)
+
 	var nextMarker string
+	if len(items) > pageSize {
+		nextMarker = items[pageSize-1].ID
+		items = items[:pageSize]
+	}
+
+	list := make([]R, 0, len(items))
 	for _, pm := range items {
 		item := R{
 			"id":          pm.ID,
@@ -981,7 +988,6 @@ func (h *AdminMediaHandler) AdminParsedMediaList(ec echo.Context) error {
 		item["sources"] = sources
 		item["source_count"] = len(pm.ParsedSources)
 		list = append(list, item)
-		nextMarker = pm.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
@@ -1104,6 +1110,7 @@ func (h *AdminMediaHandler) AdminParsedMediaSourceList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
 	db := c.DB().Where("\"ParsedSource\".user_id = ?", u.ID)
 	if body.Name != "" {
 		db = db.Where("\"ParsedSource\".name LIKE ? OR \"ParsedSource\".file_name LIKE ?", "%"+body.Name+"%", "%"+body.Name+"%")
@@ -1121,15 +1128,21 @@ func (h *AdminMediaHandler) AdminParsedMediaSourceList(ec echo.Context) error {
 	db.Model(&model.ParsedMediaSource{}).Count(&total)
 
 	if body.Page > 0 {
-		db = db.Offset((body.Page - 1) * body.PageSize)
+		db = db.Offset((body.Page - 1) * pageSize)
 	} else if body.NextMarker != "" {
 		db = db.Where("\"ParsedSource\".id < ?", body.NextMarker)
 	}
 	var items []model.ParsedMediaSource
 	db.Preload("ParsedMedia.MediaProfile").Preload("Drive").
-		Order("\"ParsedSource\".created DESC").Limit(body.PageSize).Find(&items)
-	list := make([]R, 0, len(items))
+		Order("\"ParsedSource\".created DESC").Limit(pageSize + 1).Find(&items)
+
 	var nextMarker string
+	if len(items) > pageSize {
+		nextMarker = items[pageSize-1].ID
+		items = items[:pageSize]
+	}
+
+	list := make([]R, 0, len(items))
 	for _, ps := range items {
 		item := R{
 			"id":           ps.ID,
@@ -1147,7 +1160,6 @@ func (h *AdminMediaHandler) AdminParsedMediaSourceList(ec echo.Context) error {
 			item["drive"] = R{"id": ps.Drive.ID, "name": ps.Drive.Name}
 		}
 		list = append(list, item)
-		nextMarker = ps.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
@@ -1227,6 +1239,7 @@ func (h *AdminMediaHandler) AdminTvList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
 	db := c.DB().Where("user_id = ? AND hidden = 0", u.ID)
 	if body.Name != "" {
 		db = db.Where("name LIKE ?", "%"+body.Name+"%")
@@ -1235,17 +1248,22 @@ func (h *AdminMediaHandler) AdminTvList(ec echo.Context) error {
 	db.Model(&model.TVLive{}).Count(&total)
 
 	if body.Page > 0 {
-		db = db.Offset((body.Page - 1) * body.PageSize)
+		db = db.Offset((body.Page - 1) * pageSize)
 	} else if body.NextMarker != "" {
 		db = db.Where("id < ?", body.NextMarker)
 	}
 	var lives []model.TVLive
-	db.Order("\"order\" ASC").Limit(body.PageSize).Find(&lives)
-	list := make([]R, 0, len(lives))
+	db.Order("\"order\" ASC").Limit(pageSize + 1).Find(&lives)
+
 	var nextMarker string
+	if len(lives) > pageSize {
+		nextMarker = lives[pageSize-1].ID
+		lives = lives[:pageSize]
+	}
+
+	list := make([]R, 0, len(lives))
 	for _, l := range lives {
 		list = append(list, R{"id": l.ID, "name": l.Name, "url": l.URL, "logo": l.Logo, "group_name": l.GroupName, "order": l.Order})
-		nextMarker = l.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }

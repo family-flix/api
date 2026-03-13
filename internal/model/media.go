@@ -34,7 +34,7 @@ type MediaSource struct {
 	Profile   *MediaSourceProfile `gorm:"foreignKey:ProfileID" json:"profile,omitempty"`
 	UserID    string              `gorm:"index;size:36" json:"user_id"`
 
-	Files     []ParsedMediaSource `gorm:"foreignKey:MediaSourceID" json:"files,omitempty"`
+	Sources   []ParsedMediaSource `gorm:"foreignKey:MediaSourceID" json:"sources,omitempty"`
 	Subtitles []SubtitleV2        `gorm:"foreignKey:MediaSourceID" json:"subtitles,omitempty"`
 }
 

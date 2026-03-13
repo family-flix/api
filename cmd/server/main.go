@@ -101,7 +101,8 @@ func Main() {
 
 	ffmpegBin := cfg.GetString("ffmpeg.bin")
 	cacheDir := filepath.Join(cfg.BaseDir, cfg.GetString("ffmpeg.cache_dir"))
-	handler.SetupRouter(e, db, cfg.BaseDir, cacheDir, ffmpegBin)
+	localFileIgnoreNames := cfg.GetStringSlice("drive.local.ignore_names")
+	handler.SetupRouter(e, db, cfg.BaseDir, cacheDir, ffmpegBin, localFileIgnoreNames)
 
 	port := cfg.GetInt("server.port")
 	addr := fmt.Sprintf(":%d", port)

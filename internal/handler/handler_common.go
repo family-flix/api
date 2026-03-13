@@ -78,7 +78,7 @@ func getDriveClient(c Context, driveID, userID string) (*model.Drive, drive_clie
 	}
 
 	var client drive_client.DriveClient
-	if d.Type != nil && *d.Type == 1 { // Local
+	if d.Type != nil && *d.Type == model.DriveTypeLocal {
 		client = localdrive.NewLocalDriveClient()
 	} else {
 		return nil, nil, fmt.Errorf("unsupported drive type: %v", d.Type)

@@ -54,6 +54,7 @@ func (h *SystemHandler) PersonList(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
 	_ = u
 	db := c.DB()
 	if body.Name != "" {
@@ -63,17 +64,22 @@ func (h *SystemHandler) PersonList(ec echo.Context) error {
 	db.Model(&model.PersonProfile{}).Count(&total)
 
 	if body.Page > 0 {
-		db = db.Offset((body.Page - 1) * body.PageSize)
+		db = db.Offset((body.Page - 1) * pageSize)
 	} else if body.NextMarker != "" {
 		db = db.Where("id < ?", body.NextMarker)
 	}
 	var persons []model.PersonProfile
-	db.Order("created DESC").Limit(body.PageSize).Find(&persons)
-	list := make([]R, 0, len(persons))
+	db.Order("created DESC").Limit(pageSize + 1).Find(&persons)
+
 	var nextMarker string
+	if len(persons) > pageSize {
+		nextMarker = persons[pageSize-1].ID
+		persons = persons[:pageSize]
+	}
+
+	list := make([]R, 0, len(persons))
 	for _, p := range persons {
 		list = append(list, R{"id": p.ID, "name": p.Name, "profile_path": p.ProfilePath, "birthday": p.Birthday})
-		nextMarker = p.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }

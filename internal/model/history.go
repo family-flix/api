@@ -1,6 +1,5 @@
 package model
 
-
 type PlayHistory struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
 	Created LocalTime `gorm:"autoCreateTime" json:"created"`
@@ -43,4 +42,17 @@ type PlayHistoryV2 struct {
 
 func (PlayHistoryV2) TableName() string {
 	return "PlayHistoryV2"
+}
+
+type HistoryUpdatedItem struct {
+	ID                   string    `json:"id"`
+	Name                 string    `json:"name"`
+	PosterPath           *string   `json:"poster_path"`
+	Updated              LocalTime `json:"updated"`
+	CurEpisodeOrder      int       `json:"cur_episode_order"`
+	CurEpisodeName       string    `json:"cur_episode_name"`
+	ThumbnailPath        *string   `json:"thumbnail_path"`
+	LatestEpisodeOrder   int       `json:"latest_episode_order"`
+	LatestEpisodeName    string    `json:"latest_episode_name"`
+	LatestEpisodeCreated LocalTime `json:"latest_episode_created"`
 }

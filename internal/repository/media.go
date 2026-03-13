@@ -168,10 +168,15 @@ func (r *mediaRepository) List(ctx context.Context, filter MediaFilter) ([]model
 		return nil, 0, "", err
 	}
 
+	pageSize := filter.PageSize
+	if pageSize <= 0 && filter.Page > 0 {
+		pageSize = 20
+	}
+
 	if filter.Offset > 0 {
 		db = db.Offset(filter.Offset)
 	} else if filter.Page > 0 {
-		db = db.Offset((filter.Page - 1) * filter.PageSize)
+		db = db.Offset((filter.Page - 1) * pageSize)
 	} else if filter.NextMarker != "" {
 		db = db.Where("\"Media\".id < ?", filter.NextMarker)
 	}
@@ -190,8 +195,8 @@ func (r *mediaRepository) List(ctx context.Context, filter MediaFilter) ([]model
 		db = db.Order("\"Media\".created DESC")
 	}
 
-	if filter.PageSize > 0 {
-		db = db.Limit(filter.PageSize)
+	if pageSize > 0 {
+		db = db.Limit(pageSize + 1)
 	}
 
 	var medias []model.Media
@@ -200,8 +205,9 @@ func (r *mediaRepository) List(ctx context.Context, filter MediaFilter) ([]model
 	}
 
 	var nextMarker string
-	if len(medias) > 0 {
-		nextMarker = medias[len(medias)-1].ID
+	if pageSize > 0 && len(medias) > pageSize {
+		nextMarker = medias[pageSize-1].ID
+		medias = medias[:pageSize]
 	}
 
 	return medias, total, nextMarker, nil
@@ -264,17 +270,20 @@ func (r *mediaRepository) GetInvalidList(ctx context.Context, filter MediaFilter
 		return nil, 0, "", err
 	}
 
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
 	if filter.Page > 0 {
-		db = db.Offset((filter.Page - 1) * filter.PageSize)
+		db = db.Offset((filter.Page - 1) * pageSize)
 	} else if filter.NextMarker != "" {
 		db = db.Where("id < ?", filter.NextMarker)
 	}
 
 	db = db.Preload("Media.Profile").Order("created DESC")
 
-	if filter.PageSize > 0 {
-		db = db.Limit(filter.PageSize)
-	}
+	db = db.Limit(pageSize + 1)
 
 	var invalids []model.InvalidMedia
 	if err := db.Find(&invalids).Error; err != nil {
@@ -282,8 +291,9 @@ func (r *mediaRepository) GetInvalidList(ctx context.Context, filter MediaFilter
 	}
 
 	var nextMarker string
-	if len(invalids) > 0 {
-		nextMarker = invalids[len(invalids)-1].ID
+	if len(invalids) > pageSize {
+		nextMarker = invalids[pageSize-1].ID
+		invalids = invalids[:pageSize]
 	}
 
 	return invalids, total, nextMarker, nil
@@ -301,6 +311,11 @@ func (r *mediaRepository) GetSourceList(ctx context.Context, mediaID string, use
 		return nil, 0, "", err
 	}
 
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if page > 0 {
 		db = db.Offset((page - 1) * pageSize)
 	} else if nextMarker != "" {
@@ -309,9 +324,7 @@ func (r *mediaRepository) GetSourceList(ctx context.Context, mediaID string, use
 
 	db = db.Preload("Profile").Preload("Files.Drive").Order("created DESC")
 
-	if pageSize > 0 {
-		db = db.Limit(pageSize)
-	}
+	db = db.Limit(querySize)
 
 	var sources []model.MediaSource
 	if err := db.Find(&sources).Error; err != nil {
@@ -319,8 +332,9 @@ func (r *mediaRepository) GetSourceList(ctx context.Context, mediaID string, use
 	}
 
 	var nextMarkerOut string
-	if len(sources) > 0 {
-		nextMarkerOut = sources[len(sources)-1].ID
+	if len(sources) > pageSize {
+		nextMarkerOut = sources[pageSize-1].ID
+		sources = sources[:pageSize]
 	}
 
 	return sources, total, nextMarkerOut, nil
@@ -387,22 +401,28 @@ func (r *mediaRepository) ListPersonProfiles(ctx context.Context, filter PersonP
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
+
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if filter.Page > 0 {
-		db = db.Offset((filter.Page - 1) * filter.PageSize)
+		db = db.Offset((filter.Page - 1) * pageSize)
 	} else if filter.NextMarker != "" {
 		db = db.Where("id < ?", filter.NextMarker)
 	}
 	db = db.Order("created DESC")
-	if filter.PageSize > 0 {
-		db = db.Limit(filter.PageSize)
-	}
+	db = db.Limit(querySize)
 	var persons []model.PersonProfile
 	if err := db.Find(&persons).Error; err != nil {
 		return nil, 0, "", err
 	}
 	var nextMarker string
-	if len(persons) > 0 {
-		nextMarker = persons[len(persons)-1].ID
+	if len(persons) > pageSize {
+		nextMarker = persons[pageSize-1].ID
+		persons = persons[:pageSize]
 	}
 	return persons, total, nextMarker, nil
 }
@@ -504,24 +524,30 @@ func (r *mediaRepository) ListParsedMedia(ctx context.Context, filter ParsedMedi
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
+
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if filter.Page > 0 {
-		db = db.Offset((filter.Page - 1) * filter.PageSize)
+		db = db.Offset((filter.Page - 1) * pageSize)
 	} else if filter.NextMarker != "" {
 		db = db.Where("\"ParsedMedia\".id < ?", filter.NextMarker)
 	}
 	db = db.Preload("MediaProfile").Preload("ParsedSources", func(tx *gorm.DB) *gorm.DB {
 		return tx.Limit(5)
 	}).Preload("ParsedSources.MediaSource.Profile").Preload("ParsedSources.Drive").Order("\"ParsedMedia\".created DESC")
-	if filter.PageSize > 0 {
-		db = db.Limit(filter.PageSize)
-	}
+	db = db.Limit(querySize)
 	var items []model.ParsedMedia
 	if err := db.Find(&items).Error; err != nil {
 		return nil, 0, "", err
 	}
 	var nextMarker string
-	if len(items) > 0 {
-		nextMarker = items[len(items)-1].ID
+	if len(items) > pageSize {
+		nextMarker = items[pageSize-1].ID
+		items = items[:pageSize]
 	}
 	return items, total, nextMarker, nil
 }
@@ -566,22 +592,28 @@ func (r *mediaRepository) ListParsedMediaSource(ctx context.Context, filter Pars
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
+
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if filter.Page > 0 {
-		db = db.Offset((filter.Page - 1) * filter.PageSize)
+		db = db.Offset((filter.Page - 1) * pageSize)
 	} else if filter.NextMarker != "" {
 		db = db.Where("\"ParsedSource\".id < ?", filter.NextMarker)
 	}
 	db = db.Preload("MediaSource.Profile").Preload("Drive").Order("\"ParsedSource\".created DESC")
-	if filter.PageSize > 0 {
-		db = db.Limit(filter.PageSize)
-	}
+	db = db.Limit(querySize)
 	var sources []model.ParsedMediaSource
 	if err := db.Find(&sources).Error; err != nil {
 		return nil, 0, "", err
 	}
 	var nextMarker string
-	if len(sources) > 0 {
-		nextMarker = sources[len(sources)-1].ID
+	if len(sources) > pageSize {
+		nextMarker = sources[pageSize-1].ID
+		sources = sources[:pageSize]
 	}
 	return sources, total, nextMarker, nil
 }
@@ -622,44 +654,52 @@ func (r *mediaRepository) ListSharedFiles(ctx context.Context, userID string, na
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
+
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if page > 0 {
 		db = db.Offset((page - 1) * pageSize)
 	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	db = db.Order("created DESC")
-	if pageSize > 0 {
-		db = db.Limit(pageSize)
-	}
+	db = db.Limit(querySize)
 	var files []model.SharedFile
 	if err := db.Find(&files).Error; err != nil {
 		return nil, 0, "", err
 	}
 	var nextMarkerOut string
-	if len(files) > 0 {
-		nextMarkerOut = files[len(files)-1].ID
+	if len(files) > pageSize {
+		nextMarkerOut = files[pageSize-1].ID
+		files = files[:pageSize]
 	}
 	return files, total, nextMarkerOut, nil
 }
 
 func (r *mediaRepository) ListSharedFilesInProgress(ctx context.Context, userID string, nextMarker string, pageSize int, page int) ([]model.SharedFileInProgress, string, error) {
 	db := r.db.WithContext(ctx).Model(&model.SharedFileInProgress{}).Where("user_id = ?", userID)
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
 	if page > 0 {
 		db = db.Offset((page - 1) * pageSize)
 	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	db = db.Preload("Drive").Order("created DESC")
-	if pageSize > 0 {
-		db = db.Limit(pageSize)
-	}
+	db = db.Limit(querySize)
 	var files []model.SharedFileInProgress
 	if err := db.Find(&files).Error; err != nil {
 		return nil, "", err
 	}
 	var nextMarkerOut string
-	if len(files) > 0 {
-		nextMarkerOut = files[len(files)-1].ID
+	if len(files) > pageSize {
+		nextMarkerOut = files[pageSize-1].ID
+		files = files[:pageSize]
 	}
 	return files, nextMarkerOut, nil
 }
@@ -673,22 +713,27 @@ func (r *mediaRepository) ListTVLives(ctx context.Context, userID string, name s
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, "", err
 	}
+
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	querySize := pageSize + 1
+
 	if page > 0 {
 		db = db.Offset((page - 1) * pageSize)
 	} else if nextMarker != "" {
 		db = db.Where("id < ?", nextMarker)
 	}
 	db = db.Order("\"order\" ASC")
-	if pageSize > 0 {
-		db = db.Limit(pageSize)
-	}
+	db = db.Limit(querySize)
 	var lives []model.TVLive
 	if err := db.Find(&lives).Error; err != nil {
 		return nil, 0, "", err
 	}
 	var nextMarkerOut string
-	if len(lives) > 0 {
-		nextMarkerOut = lives[len(lives)-1].ID
+	if len(lives) > pageSize {
+		nextMarkerOut = lives[pageSize-1].ID
+		lives = lives[:pageSize]
 	}
 	return lives, total, nextMarkerOut, nil
 }

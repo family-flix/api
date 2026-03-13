@@ -35,8 +35,8 @@ type WechatRepository interface {
 	// Media
 	GetMedia(ctx context.Context, id, userID string) (*model.Media, error)
 	ListMedia(ctx context.Context, userID string, filter WechatMediaFilter) ([]model.Media, int64, error)
-	GetMediaSource(ctx context.Context, id, userID string) (*model.MediaSource, error)
-	ListMediaSources(ctx context.Context, mediaID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, error)
+	GetMediaSource(ctx context.Context, id, user_id string) (*model.MediaSource, error)
+	ListMediaSources(ctx context.Context, media_id string, next_marker string, page_size int, page int) ([]model.MediaSource, error)
 	ListTVLives(ctx context.Context, userID string) ([]model.TVLive, error)
 	ListCollections(ctx context.Context, userID string) ([]model.CollectionV2, error)
 
@@ -266,21 +266,21 @@ func (r *wechatRepository) ListMedia(ctx context.Context, userID string, filter 
 	return medias, total, err
 }
 
-func (r *wechatRepository) GetMediaSource(ctx context.Context, id, userID string) (*model.MediaSource, error) {
+func (r *wechatRepository) GetMediaSource(ctx context.Context, id, user_id string) (*model.MediaSource, error) {
 	var ms model.MediaSource
-	err := r.db.WithContext(ctx).Preload("Files").Where("id = ?", id).First(&ms).Error
+	err := r.db.WithContext(ctx).Preload("Sources").Preload("Subtitles").Preload("Profile").Where("id = ?", id).First(&ms).Error
 	return &ms, err
 }
 
-func (r *wechatRepository) ListMediaSources(ctx context.Context, mediaID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, error) {
-	db := r.db.WithContext(ctx).Where("media_id = ?", mediaID)
+func (r *wechatRepository) ListMediaSources(ctx context.Context, media_id string, next_marker string, pageSize int, page int) ([]model.MediaSource, error) {
+	db := r.db.WithContext(ctx).Where("media_id = ?", media_id)
 	if page > 0 {
 		db = db.Offset((page - 1) * pageSize)
-	} else if nextMarker != "" {
-		db = db.Where("id < ?", nextMarker)
+	} else if next_marker != "" {
+		db = db.Where("id < ?", next_marker)
 	}
 	var sources []model.MediaSource
-	err := db.Preload("Profile").Preload("Files").Preload("Subtitles").
+	err := db.Preload("Profile").Preload("Sources").Preload("Subtitles").
 		Order("created ASC").Limit(pageSize).Find(&sources).Error
 	return sources, err
 }
@@ -393,7 +393,7 @@ func (r *wechatRepository) ListMediaSourcesByRange(ctx context.Context, mediaID 
 	err := r.db.WithContext(ctx).
 		Joins("Profile").
 		Where("media_id = ? AND `Profile`.`order` >= ? AND `Profile`.`order` <= ?", mediaID, start, end).
-		Preload("Profile").Preload("Files").Preload("Subtitles").
+		Preload("Profile").Preload("Sources").Preload("Subtitles").
 		Order("`Profile`.`order` ASC").
 		Find(&sources).Error
 	return sources, err

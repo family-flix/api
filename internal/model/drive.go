@@ -1,13 +1,12 @@
 package model
 
-
 type Drive struct {
 	ID      string    `gorm:"primaryKey;size:36" json:"id"`
 	Created LocalTime `gorm:"autoCreateTime" json:"created"`
 	Updated LocalTime `gorm:"autoUpdateTime" json:"updated"`
 
 	UniqueID       string     `gorm:"uniqueIndex:idx_user_unique" json:"unique_id"`
-	Type           *int       `gorm:"default:0" json:"type"`
+	Type           *DriveType `gorm:"default:0" json:"type"`
 	Name           string     `json:"name"`
 	Remark         *string    `json:"remark"`
 	Avatar         string     `json:"avatar"`

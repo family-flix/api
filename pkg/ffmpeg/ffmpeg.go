@@ -14,11 +14,11 @@ type FFmpeg struct {
 	CacheDir string
 }
 
-func New(bin, cacheDir string) *FFmpeg {
+func New(bin, cache_dir string) *FFmpeg {
 	if bin == "" {
 		bin = "ffmpeg"
 	}
-	return &FFmpeg{Bin: bin, CacheDir: cacheDir}
+	return &FFmpeg{Bin: bin, CacheDir: cache_dir}
 }
 
 func (f *FFmpeg) Available() bool {

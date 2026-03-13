@@ -6,16 +6,23 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
+	"github.com/family-flix/api/internal/model"
 	"github.com/family-flix/api/internal/repository"
 	"github.com/family-flix/api/internal/service"
+	"github.com/family-flix/api/pkg/drive_client"
+	"github.com/family-flix/api/pkg/drive_client/localdrive"
 )
 
 type AdminDriveHandler struct {
 	BaseHandler
-	driveService service.DriveService
+	driveService         service.DriveService
+	localFileIgnoreNames []string
 }
 
-func NewAdminDriveHandler(driveService service.DriveService, db *gorm.DB, baseDir, cacheDir, ffmpegBin string) *AdminDriveHandler {
+func NewAdminDriveHandler(driveService service.DriveService, db *gorm.DB, baseDir, cacheDir, ffmpegBin string, localFileIgnoreNames []string) *AdminDriveHandler {
+	if len(localFileIgnoreNames) == 0 {
+		localFileIgnoreNames = []string{".DS_Store", "@eaDir", "#recycle"}
+	}
 	return &AdminDriveHandler{
 		BaseHandler: BaseHandler{
 			db:        db,
@@ -23,7 +30,8 @@ func NewAdminDriveHandler(driveService service.DriveService, db *gorm.DB, baseDi
 			cacheDir:  cacheDir,
 			ffmpegBin: ffmpegBin,
 		},
-		driveService: driveService,
+		driveService:         driveService,
+		localFileIgnoreNames: localFileIgnoreNames,
 	}
 }
 
@@ -42,13 +50,21 @@ func (h *AdminDriveHandler) List(ec echo.Context) error {
 		Page       int    `json:"page"`
 	}
 	c.Bind(&body)
+	if body.PageSize <= 0 {
+		body.PageSize = 20
+	}
+	pageSize := body.PageSize
+	filterPageSize := pageSize
+	if body.Page <= 0 {
+		filterPageSize = pageSize + 1
+	}
 
 	filter := repository.DriveFilter{
 		Type:       body.Type,
 		Name:       body.Name,
 		Hidden:     body.Hidden,
 		NextMarker: body.NextMarker,
-		PageSize:   body.PageSize,
+		PageSize:   filterPageSize,
 		Page:       body.Page,
 	}
 
@@ -57,8 +73,17 @@ func (h *AdminDriveHandler) List(ec echo.Context) error {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(drives))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(drives) > 0 {
+			nextMarker = drives[len(drives)-1].ID
+		}
+	} else if len(drives) > pageSize {
+		nextMarker = drives[pageSize-1].ID
+		drives = drives[:pageSize]
+	}
+
+	list := make([]R, 0, len(drives))
 	for _, d := range drives {
 		item := R{
 			"id":             d.ID,
@@ -70,7 +95,6 @@ func (h *AdminDriveHandler) List(ec echo.Context) error {
 			"root_folder_id": d.RootFolderID,
 		}
 		list = append(list, item)
-		nextMarker = d.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }
@@ -223,6 +247,22 @@ func (h *AdminDriveHandler) Update(ec echo.Context) error {
 		RootFolderID:   body.RootFolderID,
 		RootFolderName: body.RootFolderName,
 	}
+	if body.RootFolderID != nil && *body.RootFolderID == "root" {
+		d, err := h.driveService.GetDrive(c.DB().Statement.Context, body.ID, u.ID)
+		if err != nil {
+			return fail(c, 404, err.Error())
+		}
+		if d.Type == nil {
+			return fail(c, 400, "云盘类型错误")
+		}
+		if *d.Type != model.DriveTypeLocal {
+			return fail(c, 400, "非本地盘不支持 root")
+		}
+		if d.UniqueID == "" {
+			return fail(c, 500, "本地盘 unique_id 为空")
+		}
+		req.RootFolderID = &d.UniqueID
+	}
 
 	if err := h.driveService.UpdateDrive(c.DB().Statement.Context, u.ID, req); err != nil {
 		return fail(c, 500, err.Error())
@@ -272,6 +312,7 @@ func (h *AdminDriveHandler) FileList(ec echo.Context) error {
 		return fail(c, 900, err.Error())
 	}
 	var body struct {
+		Name       string `json:"name"`
 		DriveID    string `json:"drive_id"`
 		FileID     string `json:"file_id"`
 		NextMarker string `json:"next_marker"`
@@ -282,10 +323,12 @@ func (h *AdminDriveHandler) FileList(ec echo.Context) error {
 	}
 
 	req := service.DriveFileListRequest{
-		DriveID:    body.DriveID,
-		FileID:     body.FileID,
-		NextMarker: body.NextMarker,
-		PageSize:   body.PageSize,
+		DriveID:     body.DriveID,
+		FileID:      body.FileID,
+		NextMarker:  body.NextMarker,
+		PageSize:    body.PageSize,
+		Name:        body.Name,
+		IgnoreNames: h.localFileIgnoreNames,
 	}
 
 	result, err := h.driveService.DriveFileList(c.DB().Statement.Context, u.ID, req)
@@ -305,7 +348,7 @@ func (h *AdminDriveHandler) FileList(ec echo.Context) error {
 			"mime_type":      f.MimeType,
 		})
 	}
-	return ok(c, "", R{"list": list, "next_marker": result.NextMarker})
+	return ok(c, "", R{"items": list, "next_marker": result.NextMarker})
 }
 
 func (h *AdminDriveHandler) FileProfile(ec echo.Context) error {
@@ -451,7 +494,47 @@ func (h *AdminDriveHandler) RenameFiles(ec echo.Context) error {
 }
 func (h *AdminDriveHandler) LocalFileList(ec echo.Context) error {
 	c := h.NewContext(ec)
-	return fail(c, 501, "未实现")
+	_, err := authAdmin(c)
+	if err != nil {
+		return fail(c, 900, err.Error())
+	}
+
+	var body struct {
+		FileId     string `json:"file_id"`
+		NextMarker string `json:"next_marker"`
+		PageSize   int    `json:"page_size"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return fail(c, 400, "参数错误")
+	}
+
+	if body.FileId == "" || body.FileId == "root" {
+		body.FileId = "/"
+	}
+
+	client := localdrive.NewLocalDriveClient()
+	res, err := client.FetchFiles(body.FileId, drive_client.FetchFilesOptions{
+		Marker:      body.NextMarker,
+		PageSize:    body.PageSize,
+		IgnoreNames: h.localFileIgnoreNames,
+	})
+	if err != nil {
+		return fail(c, 500, err.Error())
+	}
+
+	list := make([]R, 0, len(res.Items))
+	for _, f := range res.Items {
+		list = append(list, R{
+			"file_id":        f.FileID,
+			"name":           f.Name,
+			"type":           f.Type,
+			"size":           f.Size,
+			"parent_file_id": f.ParentFileID,
+			"mime_type":      f.MimeType,
+		})
+	}
+
+	return ok(c, "", R{"items": list, "next_marker": res.NextMarker})
 }
 
 // V1 Legacy endpoints

@@ -44,14 +44,28 @@ func (h *SyncTaskHandler) List(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
 
-	tasks, total, err := h.syncTaskService.ListSyncTasks(u.ID, body.Name, body.Status, body.Invalid, body.NextMarker, body.PageSize, body.Page)
+	tasks, total, err := h.syncTaskService.ListSyncTasks(u.ID, body.Name, body.Status, body.Invalid, body.NextMarker, querySize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(tasks))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(tasks) > 0 {
+			nextMarker = tasks[len(tasks)-1].ID
+		}
+	} else if len(tasks) > pageSize {
+		nextMarker = tasks[pageSize-1].ID
+		tasks = tasks[:pageSize]
+	}
+
+	list := make([]R, 0, len(tasks))
 	for _, t := range tasks {
 		item := R{
 			"id":                      t.ID,
@@ -74,7 +88,6 @@ func (h *SyncTaskHandler) List(ec echo.Context) error {
 			item["drive"] = R{"id": t.Drive.ID, "name": t.Drive.Name, "avatar": t.Drive.Avatar}
 		}
 		list = append(list, item)
-		nextMarker = t.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }

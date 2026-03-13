@@ -15,6 +15,13 @@ ffmpeg:
   bin: ffmpeg
   cache_dir: data/cache
 
+drive:
+  local:
+    ignore_names:
+      - ".DS_Store"
+      - "@eaDir"
+      - "#recycle"
+
 cloudflare:
   accountId: "13ca31f4970253df1202e534bf8309be"
   apiToken: "pscKuPH4gqndJQiHddGD6hAZeHvlbnw3vjKIIXy8"

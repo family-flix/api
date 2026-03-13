@@ -128,6 +128,9 @@ func (c *Config) GetString(path string) string   { return viper.GetString(path) 
 func (c *Config) GetInt(path string) int         { return viper.GetInt(path) }
 func (c *Config) GetBool(path string) bool       { return viper.GetBool(path) }
 func (c *Config) GetFloat64(path string) float64 { return viper.GetFloat64(path) }
+func (c *Config) GetStringSlice(path string) []string {
+	return viper.GetStringSlice(path)
+}
 
 func EnsureDirIfMissing(path string) error {
 	_, err := os.Stat(path)

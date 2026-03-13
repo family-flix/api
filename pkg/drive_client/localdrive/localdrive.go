@@ -8,6 +8,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"mime"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,6 +19,61 @@ import (
 )
 
 const DefaultPageSize = 50
+
+var extensionMimeFallback = map[string]string{
+	".mp4":  "video/mp4",
+	".m4v":  "video/x-m4v",
+	".mkv":  "video/x-matroska",
+	".mov":  "video/quicktime",
+	".avi":  "video/x-msvideo",
+	".wmv":  "video/x-ms-wmv",
+	".flv":  "video/x-flv",
+	".webm": "video/webm",
+	".mpg":  "video/mpeg",
+	".mpeg": "video/mpeg",
+	".ts":   "video/mp2t",
+	".m3u8": "application/vnd.apple.mpegurl",
+	".srt":  "application/x-subrip",
+}
+
+func mimeTypeByExtension(name string) string {
+	ext := strings.ToLower(filepath.Ext(name))
+	if ext == "" {
+		return ""
+	}
+
+	if t := mime.TypeByExtension(ext); t != "" {
+		if base, _, ok := strings.Cut(t, ";"); ok {
+			return base
+		}
+		return t
+	}
+
+	if t, ok := extensionMimeFallback[ext]; ok {
+		return t
+	}
+
+	return ""
+}
+
+func detectMimeType(path string) string {
+	if t := mimeTypeByExtension(path); t != "" {
+		return t
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	buf := make([]byte, 512)
+	n, _ := f.Read(buf)
+	if n <= 0 {
+		return ""
+	}
+	return http.DetectContentType(buf[:n])
+}
 
 type LocalDriveClient struct {
 	// RootPath string // Optional: if we want to restrict access or use relative paths
@@ -42,6 +98,22 @@ func (c *LocalDriveClient) FetchFiles(id string, options drive_client.FetchFiles
 	entries, err := os.ReadDir(id)
 	if err != nil {
 		return nil, err
+	}
+
+	// 过滤需要忽略的文件/文件夹
+	if len(options.IgnoreNames) > 0 {
+		ignoreMap := make(map[string]bool)
+		for _, name := range options.IgnoreNames {
+			ignoreMap[name] = true
+		}
+
+		filtered := make([]os.DirEntry, 0, len(entries))
+		for _, entry := range entries {
+			if !ignoreMap[entry.Name()] {
+				filtered = append(filtered, entry)
+			}
+		}
+		entries = filtered
 	}
 
 	var startIndex int
@@ -81,9 +153,14 @@ func (c *LocalDriveClient) FetchFiles(id string, options drive_client.FetchFiles
 	var items []drive_client.DriveFile
 	var nextMarker string
 
+	pageSize := options.PageSize
+	if pageSize <= 0 {
+		pageSize = DefaultPageSize
+	}
+
 	count := 0
 	for i := startIndex; i < len(entries); i++ {
-		if count >= DefaultPageSize {
+		if count >= pageSize {
 			nextMarker = entries[i-1].Name()
 			break
 		}
@@ -104,7 +181,7 @@ func (c *LocalDriveClient) FetchFiles(id string, options drive_client.FetchFiles
 		// This happens if we broke loop? No, we break only if count >= limit.
 		// Wait, the logic above: if we break, nextMarker is set.
 		// If we finish loop normally, nextMarker remains empty, which is correct (no more pages).
-	} else if nextMarker == "" && count == DefaultPageSize && startIndex+count < len(entries) {
+	} else if nextMarker == "" && count == pageSize && startIndex+count < len(entries) {
 		// We hit the limit exactly at the end?
 		// If there are more items remaining:
 		nextMarker = items[len(items)-1].Name
@@ -149,38 +226,39 @@ func (c *LocalDriveClient) Download(fileID string) (string, error) {
 	return fileID, nil
 }
 
-func (c *LocalDriveClient) FetchVideoPreviewInfo(fileID string) (*drive_client.VideoPreviewInfo, error) {
-	if _, err := os.Stat(fileID); err != nil {
+func (c *LocalDriveClient) FetchVideoPreviewInfo(file_id string) (*drive_client.VideoPreviewInfo, error) {
+	if _, err := os.Stat(file_id); err != nil {
 		return nil, err
 	}
-	mimeType := mime.TypeByExtension(filepath.Ext(fileID))
-	if strings.HasPrefix(mimeType, "video/") {
+	mime_type := detectMimeType(file_id)
+	url := "/api/v2/preview?path=" + file_id
+	if strings.HasPrefix(mime_type, "video/") {
 		return &drive_client.VideoPreviewInfo{
 			Sources: []drive_client.VideoSource{
-				{Name: filepath.Base(fileID), URL: fileID, Type: mimeType},
+				{Name: filepath.Base(file_id), URL: url, Type: mime_type},
 			},
 		}, nil
 	}
-	if strings.HasPrefix(mimeType, "image/") {
+	if strings.HasPrefix(mime_type, "image/") {
 		return &drive_client.VideoPreviewInfo{
-			ThumbURL: fileID,
+			ThumbURL: url,
 		}, nil
 	}
-	return nil, fmt.Errorf("unsupported file type: %s", mimeType)
+	return nil, fmt.Errorf("unsupported file type: %s, id is %s", mime_type, file_id)
 }
 
-func (c *LocalDriveClient) Preview(fileID string) (*drive_client.PreviewInfo, error) {
-	if _, err := os.Stat(fileID); err != nil {
+func (c *LocalDriveClient) Preview(file_id string) (*drive_client.PreviewInfo, error) {
+	if _, err := os.Stat(file_id); err != nil {
 		return nil, err
 	}
-	mimeType := mime.TypeByExtension(filepath.Ext(fileID))
-	url := "/api/v2/preview?path=" + fileID
+	mimeType := detectMimeType(file_id)
+	url := "/api/v2/preview?path=" + file_id
 
 	switch {
 	case strings.HasPrefix(mimeType, "video/"):
-		hash := ffmpeg.CacheKey(fileID)
+		hash := ffmpeg.CacheKey(file_id)
 		return &drive_client.PreviewInfo{
-			ID:       fileID,
+			ID:       file_id,
 			FileType: "video",
 			URL:      url,
 			Type:     "SD",
@@ -191,14 +269,14 @@ func (c *LocalDriveClient) Preview(fileID string) (*drive_client.PreviewInfo, er
 
 	case strings.HasPrefix(mimeType, "image/"):
 		var w, h int
-		if f, err := os.Open(fileID); err == nil {
+		if f, err := os.Open(file_id); err == nil {
 			if cfg, _, err := image.DecodeConfig(f); err == nil {
 				w, h = cfg.Width, cfg.Height
 			}
 			f.Close()
 		}
 		return &drive_client.PreviewInfo{
-			ID:        fileID,
+			ID:        file_id,
 			FileType:  "image",
 			URL:       url,
 			Width:     w,
@@ -207,8 +285,8 @@ func (c *LocalDriveClient) Preview(fileID string) (*drive_client.PreviewInfo, er
 			Other:     []drive_client.PreviewResolution{},
 		}, nil
 
-	case mimeType == "application/zip" || filepath.Ext(fileID) == ".zip":
-		zr, err := zip.OpenReader(fileID)
+	case mimeType == "application/zip" || filepath.Ext(file_id) == ".zip":
+		zr, err := zip.OpenReader(file_id)
 		if err != nil {
 			return nil, fmt.Errorf("无法读取压缩包: %w", err)
 		}
@@ -222,7 +300,7 @@ func (c *LocalDriveClient) Preview(fileID string) (*drive_client.PreviewInfo, er
 			})
 		}
 		return &drive_client.PreviewInfo{
-			ID:       fileID,
+			ID:       file_id,
 			FileType: "archive",
 			URL:      url,
 			Files:    files,
@@ -231,7 +309,7 @@ func (c *LocalDriveClient) Preview(fileID string) (*drive_client.PreviewInfo, er
 
 	default:
 		return &drive_client.PreviewInfo{
-			ID:       fileID,
+			ID:       file_id,
 			FileType: "unknown",
 			URL:      url,
 			Other:    []drive_client.PreviewResolution{},
@@ -250,7 +328,7 @@ func (c *LocalDriveClient) fileInfoToDriveFile(path string, info os.FileInfo) *d
 		parentID = ""
 	}
 
-	mimeType := mime.TypeByExtension(filepath.Ext(info.Name()))
+	mimeType := mimeTypeByExtension(info.Name())
 
 	return &drive_client.DriveFile{
 		FileID:       path,

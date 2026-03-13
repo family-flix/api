@@ -40,14 +40,29 @@ func (h *ReportHandler) List(ec echo.Context) error {
 	if body.PageSize <= 0 {
 		body.PageSize = 20
 	}
+	pageSize := body.PageSize
 
-	reports, total, err := h.reportService.ListReports(u.ID, body.Type, body.NextMarker, body.PageSize, body.Page)
+	querySize := pageSize
+	if body.Page <= 0 {
+		querySize = pageSize + 1
+	}
+
+	reports, total, err := h.reportService.ListReports(u.ID, body.Type, body.NextMarker, querySize, body.Page)
 	if err != nil {
 		return fail(c, 500, err.Error())
 	}
 
-	list := make([]R, 0, len(reports))
 	var nextMarker string
+	if body.Page > 0 {
+		if int64(body.Page)*int64(pageSize) < total && len(reports) > 0 {
+			nextMarker = reports[len(reports)-1].ID
+		}
+	} else if len(reports) > pageSize {
+		nextMarker = reports[pageSize-1].ID
+		reports = reports[:pageSize]
+	}
+
+	list := make([]R, 0, len(reports))
 	for _, r := range reports {
 		item := R{"id": r.ID, "type": r.Type, "data": r.Data, "answer": r.Answer, "created": r.Created}
 		if r.Media != nil && r.Media.Profile != nil {
@@ -57,7 +72,6 @@ func (h *ReportHandler) List(ec echo.Context) error {
 			item["member"] = R{"id": r.Member.ID, "name": r.Member.Remark}
 		}
 		list = append(list, item)
-		nextMarker = r.ID
 	}
 	return ok(c, "", R{"list": list, "total": total, "page_size": body.PageSize, "next_marker": nextMarker})
 }

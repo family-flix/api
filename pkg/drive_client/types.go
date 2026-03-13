@@ -22,10 +22,11 @@ type SortField struct {
 }
 
 type FetchFilesOptions struct {
-	Page     int
-	PageSize int
-	Marker   string
-	Sort     []SortField
+	Page        int
+	PageSize    int
+	Marker      string
+	Sort        []SortField
+	IgnoreNames []string // 需要忽略的文件/文件夹名称列表
 }
 
 type FetchFilesResult struct {

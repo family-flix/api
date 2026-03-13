@@ -34,7 +34,7 @@ type WechatService interface {
 	ListEpisodes(ctx context.Context, mediaID string, nextMarker string, pageSize int, page int) ([]model.MediaSource, error)
 	GetSource(ctx context.Context, sourceID, userID string) (*model.MediaSource, error)
 	GetDriveSource(ctx context.Context, sourceID, userID, resolutionType string) (*DriveSourceInfo, error)
-	GetSourcePreview(ctx context.Context, sourceID, userID string) (*drive_client.PreviewInfo, error)
+	GetSourcePreview(ctx context.Context, source_id, user_id string) (*drive_client.PreviewInfo, error)
 	ListTVLives(ctx context.Context, userID string) ([]model.TVLive, error)
 	ListRanks(ctx context.Context, userID string) ([]model.CollectionV2, error)
 	GetSeries(ctx context.Context, mediaID, userID string) ([]model.Media, error)
@@ -340,16 +340,23 @@ type CurSource struct {
 	ThumbnailPath   *string        `json:"thumbnail_path"`
 	Index           int            `json:"index"`
 	Subtitles       []SubtitleInfo `json:"subtitles"`
-	Files           []FileInfo     `json:"files"`
+	Sources         []FileInfo     `json:"sources"`
 	Order           int            `json:"order"`
 }
 
 type SourceInfo struct {
-	ID        string  `json:"id"`
-	Name      string  `json:"name"`
-	Order     int     `json:"order"`
-	FileName  string  `json:"file_name"`
-	StillPath *string `json:"still_path"`
+	ID        string           `json:"id"`
+	Name      string           `json:"name"`
+	Order     int              `json:"order"`
+	FileName  string           `json:"file_name"`
+	StillPath *string          `json:"still_path"`
+	Sources   []SourceFileInfo `json:"sources"`
+}
+
+type SourceFileInfo struct {
+	ID          string `json:"id"`
+	FileName    string `json:"file_name"`
+	ParentPaths string `json:"parent_paths"`
 }
 
 type SubtitleInfo struct {
@@ -366,63 +373,62 @@ type FileInfo struct {
 	FileName string `json:"file_name"`
 }
 
-func (s *wechatService) GetPlayingInfo(ctx context.Context, mediaID string, history *model.PlayHistoryV2) (*PlayingInfo, error) {
+func (s *wechatService) GetPlayingInfo(ctx context.Context, media_id string, history *model.PlayHistoryV2) (*PlayingInfo, error) {
 	// 1. Get Latest Source
-	latestSource, err := s.repo.GetLatestMediaSource(ctx, mediaID)
+	latest_source, err := s.repo.GetLatestMediaSource(ctx, media_id)
 	if err != nil {
 		return nil, fmt.Errorf("没有找到剧集")
 	}
-
-	totalCount := 0
-	if latestSource.Profile != nil {
-		totalCount = latestSource.Profile.Order
+	total_count := 0
+	if latest_source.Profile != nil {
+		total_count = latest_source.Profile.Order
 	}
-
-	groupSize := 20
-	rangeStart := 1
-	rangeEnd := groupSize
-
+	group_size := 20
+	range_start := 1
+	range_end := group_size
 	if history != nil && history.MediaSource != nil && history.MediaSource.Profile != nil {
 		order := history.MediaSource.Profile.Order
-		groupIndex := (order - 1) / groupSize
-		rangeStart = groupIndex*groupSize + 1
-		rangeEnd = (groupIndex + 1) * groupSize
+		groupIndex := (order - 1) / group_size
+		range_start = groupIndex*group_size + 1
+		range_end = (groupIndex + 1) * group_size
 	}
 
-	if rangeEnd > totalCount {
-		rangeEnd = totalCount
+	if range_end > total_count {
+		range_end = total_count
 	}
 
 	// 1. Log
-	fmt.Printf("GetPlayingInfo mediaID: %s, rangeStart: %d, rangeEnd: %d\n", mediaID, rangeStart, rangeEnd)
+	fmt.Printf("GetPlayingInfo mediaID: %s, rangeStart: %d, rangeEnd: %d\n", media_id, range_start, range_end)
 
 	// 2. Fetch Sources (Fetch all like GetAVProfile)
-	sources, err := s.repo.ListMediaSources(ctx, mediaID, "", 10000, 1)
+	sources, err := s.repo.ListMediaSources(ctx, media_id, "", 10000, 1)
 	if err != nil {
 		return nil, err
 	}
 
 	// 3. Construct Response
-	resSources := make([]SourceInfo, 0, len(sources))
-	for _, src := range sources {
+	res_sources := make([]SourceInfo, 0, len(sources))
+	for _, mediasource := range sources {
 		info := SourceInfo{
-			ID:    src.ID,
-			Order: 0,
+			ID:      mediasource.ID,
+			Order:   0,
+			Sources: make([]SourceFileInfo, 0),
 		}
-		if src.Profile != nil {
-			info.Name = src.Profile.Name
-			info.Order = src.Profile.Order
-			info.StillPath = src.Profile.StillPath
+		if mediasource.Profile != nil {
+			info.Name = mediasource.Profile.Name
+			info.Order = mediasource.Profile.Order
+			info.StillPath = mediasource.Profile.StillPath
 		}
-		if len(src.Files) > 0 {
-			info.FileName = src.Files[0].FileName
+		if len(mediasource.Sources) > 0 {
+			info.FileName = mediasource.Sources[0].FileName
+			info.Sources = mapSourceFiles(mediasource.Sources)
 		}
-		resSources = append(resSources, info)
+		res_sources = append(res_sources, info)
 	}
 
-	var curSource *CurSource
+	var cur_mediasource *CurSource
 	if history != nil {
-		curSource = &CurSource{
+		cur_mediasource = &CurSource{
 			ID:              history.MediaSourceID,
 			CurSourceFileID: history.FileID,
 			CurrentTime:     history.CurrentTime,
@@ -430,47 +436,47 @@ func (s *wechatService) GetPlayingInfo(ctx context.Context, mediaID string, hist
 			Order:           0,
 		}
 		if history.MediaSource != nil && history.MediaSource.Profile != nil {
-			curSource.Order = history.MediaSource.Profile.Order
+			cur_mediasource.Order = history.MediaSource.Profile.Order
 		}
 		// Find index in sources
 		for i, s := range sources {
 			if s.ID == history.MediaSourceID {
-				curSource.Index = i
-				curSource.Subtitles = mapSubtitles(s.Subtitles)
-				curSource.Files = mapFiles(s.Files)
+				cur_mediasource.Index = i
+				cur_mediasource.Subtitles = mapSubtitles(s.Subtitles)
+				cur_mediasource.Sources = mapFiles(s.Sources)
 				break
 			}
 		}
 		// If not found in sources (because history is out of range? should not happen due to range logic),
 		// we might need to fetch it separately or handle it.
 		// For now assume it's in range.
-		if curSource.Files == nil {
+		if cur_mediasource.Sources == nil {
 			// fallback if not found in list (e.g. if we want to ensure robust code)
 			// But for now let's assume it works.
 		}
 	} else if len(sources) > 0 {
 		src := sources[0]
-		curSource = &CurSource{
+		cur_mediasource = &CurSource{
 			ID:          src.ID,
 			Index:       0,
 			Order:       0,
 			CurrentTime: 0,
 		}
 		if src.Profile != nil {
-			curSource.Order = src.Profile.Order
-			curSource.ThumbnailPath = src.Profile.StillPath
+			cur_mediasource.Order = src.Profile.Order
+			cur_mediasource.ThumbnailPath = src.Profile.StillPath
 		}
-		if len(src.Files) > 0 {
-			curSource.CurSourceFileID = &src.Files[0].ID
+		if len(src.Sources) > 0 {
+			cur_mediasource.CurSourceFileID = &src.Sources[0].ID
 		}
-		curSource.Subtitles = mapSubtitles(src.Subtitles)
-		curSource.Files = mapFiles(src.Files)
+		cur_mediasource.Subtitles = mapSubtitles(src.Subtitles)
+		cur_mediasource.Sources = mapFiles(src.Sources)
 	}
 
 	return &PlayingInfo{
-		MediaID:      mediaID,
-		CurSource:    curSource,
-		Sources:      resSources,
+		MediaID:      media_id,
+		CurSource:    cur_mediasource,
+		Sources:      res_sources,
 		SourceGroups: []struct{}{},
 	}, nil
 }
@@ -496,6 +502,18 @@ func mapFiles(files []model.ParsedMediaSource) []FileInfo {
 			ID:       f.ID,
 			Name:     f.Name,
 			FileName: f.FileName,
+		})
+	}
+	return res
+}
+
+func mapSourceFiles(files []model.ParsedMediaSource) []SourceFileInfo {
+	res := make([]SourceFileInfo, 0, len(files))
+	for _, f := range files {
+		res = append(res, SourceFileInfo{
+			ID:          f.ID,
+			FileName:    f.FileName,
+			ParentPaths: f.ParentPaths,
 		})
 	}
 	return res
@@ -637,26 +655,16 @@ func (s *wechatService) GetDriveSource(ctx context.Context, sourceID, userID, re
 	return res, nil
 }
 
-func (s *wechatService) GetSourcePreview(ctx context.Context, sourceID, userID string) (*drive_client.PreviewInfo, error) {
-	// 1. Get MediaSource to find files
-	source, err := s.repo.GetMediaSource(ctx, sourceID, userID)
+func (s *wechatService) GetSourcePreview(ctx context.Context, source_id, user_id string) (*drive_client.PreviewInfo, error) {
+	source, err := s.repo.GetParsedMediaSource(ctx, source_id, user_id)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(source.Files) == 0 {
-		return nil, fmt.Errorf("该资源没有关联的文件")
-	}
-
-	// 2. Use the first file
-	file := source.Files[0]
-
-	// 3. Get Drive Client
-	_, client, err := s.driveService.GetDriveClient(ctx, file.DriveID, userID)
+	_, client, err := s.driveService.GetDriveClient(ctx, source.DriveID, user_id)
 	if err != nil {
 		return nil, err
 	}
 
-	// 4. Get Preview Info
-	return client.Preview(file.FileID)
+	return client.Preview(source.FileID)
 }
