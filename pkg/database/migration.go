@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/family-flix/api/migrations"
 	"github.com/golang-migrate/migrate/v4"
@@ -97,20 +98,28 @@ func (m *Migrator) MigrateTo(version uint) error {
 // createMigrator 创建迁移实例
 func (m *Migrator) createMigrator() (*migrate.Migrate, error) {
 	var dsn string
-	var driver string
+	// var driver string // driver is no longer used separately
 
 	switch m.config.DBType {
 	case "mysql":
-		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?multiStatements=true",
+		dsn = fmt.Sprintf("mysql://%s:%s@tcp(%s:%s)/%s?multiStatements=true",
 			m.config.DBUser, m.config.DBPassword, m.config.DBHost, m.config.DBPort, m.config.DBName)
-		driver = "mysql"
 	case "postgres":
 		dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 			m.config.DBUser, m.config.DBPassword, m.config.DBHost, m.config.DBPort, m.config.DBName)
-		driver = "postgres"
 	case "sqlite":
-		dsn = m.config.DBPath
-		driver = "sqlite3"
+		// On Windows, absolute paths like C:\Users\... can be parsed as scheme:host.
+		// migrate uses net/url.Parse to parse the connection string.
+		// We need to properly encode the path for Windows.
+		// "sqlite3:///" + path (where path uses forward slashes) usually works.
+		path := filepath.ToSlash(m.config.DBPath)
+		if len(path) > 1 && path[1] == ':' {
+			// Windows drive letter, e.g. C:/Users...
+			// Prepend extra slash to make it ///C:/Users...
+			dsn = "sqlite3:///" + path
+		} else {
+			dsn = "sqlite3://" + path
+		}
 	default:
 		return nil, fmt.Errorf("unsupported database type: %s", m.config.DBType)
 	}
@@ -120,7 +129,7 @@ func (m *Migrator) createMigrator() (*migrate.Migrate, error) {
 		return nil, fmt.Errorf("failed to create migration source: %w", err)
 	}
 
-	migrator, err := migrate.NewWithSourceInstance("iofs", source, fmt.Sprintf("%s://%s", driver, dsn))
+	migrator, err := migrate.NewWithSourceInstance("iofs", source, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create migrator: %w", err)
 	}

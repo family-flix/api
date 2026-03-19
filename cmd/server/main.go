@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/family-flix/api/internal/config"
@@ -52,23 +51,33 @@ func Main() {
 		Str("service", "main.go").
 		Str("version", AppVer).
 		Logger()
+	
+	fmt.Println("Starting server initialization...")
 
 	cfg, err := config.New()
 	if err != nil {
 		fmt.Printf("ERROR 加载配置文件失败: %v\n", err.Error())
 		os.Exit(1)
 	}
+	fmt.Printf("Config loaded: BaseDir=%s, Existing=%v\n", cfg.BaseDir, cfg.Existing)
+	if cfg.Error != nil {
+		fmt.Printf("ERROR 读取配置文件失败: %v\n", cfg.Error)
+		os.Exit(1)
+	}
 
 	// Ensure logs directory exists
 	log_filepath := filepath.Join(cfg.BaseDir, "app.log")
+	fmt.Printf("Opening log file: %s\n", log_filepath)
 	log_file, err := os.OpenFile(log_filepath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
+		fmt.Printf("创建日志文件失败: %v\n", err)
 		log.Error().Err(err).Msg("创建日志文件失败")
 		return
 	}
 	defer log_file.Close()
 
 	logger := zerolog.New(log_file).With().Timestamp().Logger()
+	fmt.Println("Logger initialized")
 
 	datacfg := database.DatabaseConfig{
 		DBType:     cfg.GetString("database.type"),
@@ -81,17 +90,22 @@ func Main() {
 	}
 	db, err := database.NewDatabase(&datacfg)
 	if err != nil {
+		fmt.Printf("Failed to connect to database: %v\n", err)
 		logger.Fatal().Err(err).Msg("Failed to connect to database")
 		os.Exit(1)
 	}
+	fmt.Println("Database connected")
 
 	migrator := database.NewMigrator(&datacfg)
 	if err := migrator.MigrateUp(); err != nil {
+		fmt.Printf("Failed to run migrations: %v\n", err)
 		logger.Fatal().Err(err).Msg("Failed to run migrations")
 		os.Exit(1)
 	}
+	fmt.Println("Migrations run")
 
 	ensureAdmin(db)
+	fmt.Println("Admin ensured")
 
 	e := echo.New()
 	e.HideBanner = true
@@ -148,7 +162,7 @@ func StartDaemon() {
 		cmd.Stderr = nil
 	}
 
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	configureDaemon(cmd)
 	if err := cmd.Start(); err != nil {
 		fmt.Printf("启动守护进程失败: %v\n", err)
 		os.Exit(1)
@@ -158,16 +172,7 @@ func StartDaemon() {
 	time.Sleep(1 * time.Second)
 
 	// 尝试向进程发送 0 信号来检查是否存在
-	if err := cmd.Process.Signal(syscall.Signal(0)); err != nil {
-		fmt.Println("守护进程启动后立即退出! 请检查 daemon.log")
-		// 尝试读取最后几行日志并显示
-		if data, err := os.ReadFile("daemon.log"); err == nil {
-			lines := string(data)
-			if len(lines) > 500 {
-				lines = lines[len(lines)-500:]
-			}
-			fmt.Printf("日志末尾:\n%s\n", lines)
-		}
+	if err := checkProcessAlive(cmd); err != nil {
 		os.Exit(1)
 	}
 
@@ -194,7 +199,7 @@ func StopDaemon() error {
 		os.Remove(pidPath)
 		return err
 	}
-	if err := proc.Signal(syscall.SIGTERM); err != nil {
+	if err := terminateProcess(proc); err != nil {
 		fmt.Printf("停止服务失败: %v\n", err)
 		return err
 	}
